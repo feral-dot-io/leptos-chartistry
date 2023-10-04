@@ -1,4 +1,5 @@
 use leptos::*;
+use leptos_chartistry::*;
 
 fn main() {
     _ = console_log::init_with_level(log::Level::Debug);
@@ -8,7 +9,11 @@ fn main() {
 
 #[component]
 pub fn App() -> impl IntoView {
+    let font = Font::new(16.0, 10.0);
+    let chart =
+        Chart::new(font).add_text_label(RotatedLabel::middle("Hello and welcome to chartistry!"));
+
     view! {
-        "Hello, World!"
+        <Chart chart=chart />
     }
 }

@@ -673,6 +673,7 @@ dependencies = [
  "console_log",
  "leptos",
  "log",
+ "web-sys",
 ]
 
 [[package]]
