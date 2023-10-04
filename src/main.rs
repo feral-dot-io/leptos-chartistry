@@ -11,7 +11,7 @@ fn main() {
 pub fn App() -> impl IntoView {
     let font = Font::new(16.0, 10.0);
     let chart =
-        Chart::new(font).add_text_label(RotatedLabel::middle("Hello and welcome to chartistry!"));
+        Chart::new(font).add_layout(RotatedLabel::middle("Hello and welcome to chartistry!"));
 
     view! {
         <Chart chart=chart />

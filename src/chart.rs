@@ -25,8 +25,8 @@ impl Chart {
         }
     }
 
-    pub fn add_text_label(mut self, layout: impl Into<RotatedLabel>) -> Self {
-        self.layout.push(Layout::TextLabel(layout.into()));
+    pub fn add_layout(mut self, opt: impl Into<Layout>) -> Self {
+        self.layout.push(opt.into());
         self
     }
 }
@@ -44,7 +44,7 @@ impl Attr {
 
 #[component]
 pub fn Chart(chart: Chart) -> impl IntoView {
-    let Chart { layout, attr } = chart;
+    let Chart { attr, layout } = chart;
 
     let layout = (layout.into_iter())
         .map(|layout| view!(<Layout layout=layout attr=&attr />))
@@ -56,6 +56,12 @@ pub fn Chart(chart: Chart) -> impl IntoView {
                 {layout}
             </svg>
         </div>
+    }
+}
+
+impl From<RotatedLabel> for Layout {
+    fn from(label: RotatedLabel) -> Self {
+        Layout::TextLabel(label)
     }
 }
 
