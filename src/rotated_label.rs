@@ -1,5 +1,4 @@
-use super::chart::Attr;
-use super::Font;
+use crate::{chart::Attr, Font};
 use leptos::*;
 
 #[derive(Copy, Clone, Debug)]

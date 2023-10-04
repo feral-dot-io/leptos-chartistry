@@ -1,4 +1,4 @@
-use super::{Font, RotatedLabel};
+use crate::{Font, RotatedLabel};
 use leptos::*;
 
 #[derive(Clone, Debug)]
