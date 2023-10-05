@@ -1,4 +1,6 @@
-use crate::{bounds::Bounds, chart::Attr, edge::Edge, layout::LayoutOption, Font, Padding};
+use crate::{
+    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, layout::LayoutOption, Font, Padding,
+};
 use leptos::*;
 
 #[derive(Copy, Clone, Debug)]
@@ -13,7 +15,8 @@ pub struct RotatedLabel {
     text: MaybeSignal<String>,
     anchor: RwSignal<Anchor>,
     font: MaybeSignal<Option<Font>>,
-    padding: MaybeSignal<Padding>,
+    padding: MaybeSignal<Option<Padding>>,
+    debug: MaybeSignal<Option<bool>>,
 }
 
 impl RotatedLabel {
@@ -23,6 +26,7 @@ impl RotatedLabel {
             anchor: RwSignal::new(anchor),
             font: MaybeSignal::default(),
             padding: MaybeSignal::default(),
+            debug: MaybeSignal::default(),
         }
     }
 
@@ -45,14 +49,14 @@ impl RotatedLabel {
         self
     }
 
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
+    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Option<Padding>>>) -> Self {
         self.padding = padding.into();
         self
     }
 
     pub(super) fn size(&self, attr: &Attr) -> Signal<f64> {
         let text = self.text.clone();
-        let padding = self.padding;
+        let padding = attr.padding(self.padding);
         let font = attr.font(self.font);
         Signal::derive(move || {
             if text.with(|t| t.is_empty()) {
@@ -95,10 +99,15 @@ pub fn RotatedLabel<'a>(
     edge: Edge,
     bounds: Bounds,
 ) -> impl IntoView {
+    let font = attr.font(config.font);
+    let padding = attr.padding(config.padding);
+    let debug = attr.debug(config.debug);
+    let content = Signal::derive(move || padding.get().apply(bounds));
+
     let position = Signal::derive(move || {
-        let bounds = config.padding.get().apply(bounds);
-        let (top, right, bottom, left) = bounds.as_css_tuple();
-        let (centre_x, centre_y) = (bounds.centre_x(), bounds.centre_y());
+        let content = content.get();
+        let (top, right, bottom, left) = content.as_css_tuple();
+        let (centre_x, centre_y) = (content.centre_x(), content.centre_y());
 
         let anchor = config.anchor.get();
         match edge {
@@ -109,8 +118,8 @@ pub fn RotatedLabel<'a>(
         }
     });
 
-    let font = attr.font(config.font);
     view! {
+        <DebugRect label="RotatedLabel" debug=debug bounds=move || vec![bounds, content.get()] />
         <text
             x=move || position.with(|(_, x, _)| x.to_string())
             y=move || position.with(|(_, _, y)| y.to_string())

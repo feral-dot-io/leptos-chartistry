@@ -1,5 +1,6 @@
 mod bounds;
 mod chart;
+mod debug;
 mod edge;
 mod font;
 mod layout;

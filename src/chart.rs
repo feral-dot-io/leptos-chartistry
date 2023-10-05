@@ -1,4 +1,4 @@
-use crate::{bounds::Bounds, layout::LayoutOption, Font, Padding};
+use crate::{bounds::Bounds, debug::DebugRect, layout::LayoutOption, Font, Padding};
 use leptos::*;
 
 #[derive(Clone, Debug)]
@@ -6,6 +6,8 @@ pub struct Chart {
     width: MaybeSignal<f64>,
     height: MaybeSignal<f64>,
     padding: MaybeSignal<Option<Padding>>,
+    debug: MaybeSignal<Option<bool>>,
+
     attr: Attr,
     top: Vec<LayoutOption>,
     right: Vec<LayoutOption>,
@@ -15,8 +17,9 @@ pub struct Chart {
 
 #[derive(Clone, Debug)]
 pub struct Attr {
-    padding: MaybeSignal<Padding>,
     font: MaybeSignal<Font>,
+    padding: MaybeSignal<Padding>,
+    debug: MaybeSignal<bool>,
 }
 
 impl Chart {
@@ -29,6 +32,8 @@ impl Chart {
             width: width.into(),
             height: height.into(),
             padding: MaybeSignal::default(),
+            debug: MaybeSignal::default(),
+
             attr: Attr::new(font.into()),
             top: vec![],
             right: vec![],
@@ -43,6 +48,15 @@ impl Chart {
     }
     pub fn with_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
         self.attr.padding = padding.into();
+        self
+    }
+
+    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<Option<bool>>>) -> Self {
+        self.debug = debug.into();
+        self
+    }
+    pub fn with_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
+        self.attr.debug = debug.into();
         self
     }
 
@@ -70,8 +84,9 @@ impl Chart {
 impl Attr {
     pub fn new(font: MaybeSignal<Font>) -> Self {
         Self {
-            padding: Padding::default().into(),
             font,
+            padding: MaybeSignal::default(),
+            debug: MaybeSignal::default(),
         }
     }
 
@@ -90,6 +105,10 @@ impl Attr {
     pub fn padding(&self, optional: MaybeSignal<Option<Padding>>) -> MaybeSignal<Padding> {
         self.inherit(optional, self.padding)
     }
+
+    pub fn debug(&self, optional: MaybeSignal<Option<bool>>) -> MaybeSignal<bool> {
+        self.inherit(optional, self.debug)
+    }
 }
 
 #[component]
@@ -98,6 +117,8 @@ pub fn Chart(chart: Chart) -> impl IntoView {
         width,
         height,
         padding,
+        debug,
+
         attr,
         top,
         right,
@@ -105,8 +126,10 @@ pub fn Chart(chart: Chart) -> impl IntoView {
         left,
     } = chart;
 
-    let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let chart_padding = attr.padding(padding);
+    let debug = attr.debug(debug);
+
+    let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let outer_bounds = Signal::derive(move || chart_padding.get().apply(chart_bounds.get()));
     let layout = LayoutOption::compose(outer_bounds, attr, top, right, bottom, left);
 
@@ -118,6 +141,7 @@ pub fn Chart(chart: Chart) -> impl IntoView {
             <svg
                 style="overflow: visible;"
                 viewBox=move || format!("0 0 {} {}", width.get(), height.get())>
+                <DebugRect label="Chart" debug=debug bounds=move || vec![chart_bounds.get(), outer_bounds.get()] />
                 {layout}
             </svg>
         </div>

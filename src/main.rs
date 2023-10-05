@@ -11,6 +11,7 @@ fn main() {
 pub fn App() -> impl IntoView {
     let (em, _) = create_signal(16.0);
     let (ex, _) = create_signal(10.0);
+    let (debug, _) = create_signal(false);
 
     let (width, _) = create_signal(1100.0);
     let font = Signal::derive(move || Font::new(em.get(), ex.get()));
@@ -18,6 +19,7 @@ pub fn App() -> impl IntoView {
 
     let chart = Chart::new(width, 600.0, font)
         .with_padding(padding)
+        .with_debug(debug)
         .add_top(RotatedLabel::middle("Hello and welcome to chartistry!"))
         .add_bottom(RotatedLabel::middle("Hello and welcome to chartistry!"))
         .add_left(RotatedLabel::middle("Hello and welcome to chartistry!"))
