@@ -9,6 +9,10 @@ impl Font {
         Self { height, width }
     }
 
+    pub fn height(&self) -> f64 {
+        self.height
+    }
+
     pub fn svg_size(&self) -> String {
         format!("{}px", self.height)
     }

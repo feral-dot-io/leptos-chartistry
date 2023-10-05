@@ -1,4 +1,4 @@
-use crate::{chart::Attr, Font};
+use crate::{bounds::Bounds, chart::Attr, edge::Edge, layout::LayoutOption, Font, Padding};
 use leptos::*;
 
 #[derive(Copy, Clone, Debug)]
@@ -13,6 +13,7 @@ pub struct RotatedLabel {
     text: MaybeSignal<String>,
     anchor: RwSignal<Anchor>,
     font: MaybeSignal<Option<Font>>,
+    padding: MaybeSignal<Padding>,
 }
 
 impl RotatedLabel {
@@ -21,6 +22,7 @@ impl RotatedLabel {
             text: text.into(),
             anchor: RwSignal::new(anchor),
             font: MaybeSignal::default(),
+            padding: MaybeSignal::default(),
         }
     }
 
@@ -42,25 +44,79 @@ impl RotatedLabel {
         self.font = font.into();
         self
     }
+
+    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
+        self.padding = padding.into();
+        self
+    }
+
+    pub(super) fn size(&self, attr: &Attr) -> Signal<f64> {
+        let text = self.text.clone();
+        let padding = self.padding;
+        let font = attr.font(self.font);
+        Signal::derive(move || {
+            if text.with(|t| t.is_empty()) {
+                0.0
+            } else {
+                with!(|font, padding| font.height() + padding.height())
+            }
+        })
+    }
+}
+
+impl From<RotatedLabel> for LayoutOption {
+    fn from(label: RotatedLabel) -> Self {
+        LayoutOption::RotatedLabel(label)
+    }
 }
 
 impl Anchor {
-    fn svg_text_anchor(&self) -> &'static str {
+    fn as_svg_attr(&self) -> &'static str {
         match self {
             Anchor::Start => "start",
             Anchor::Middle => "middle",
             Anchor::End => "end",
         }
     }
+
+    fn map_points(&self, left: f64, middle: f64, right: f64) -> f64 {
+        match self {
+            Anchor::Start => left,
+            Anchor::Middle => middle,
+            Anchor::End => right,
+        }
+    }
 }
 
 #[component]
-pub fn RotatedLabel<'a>(config: RotatedLabel, attr: &'a Attr) -> impl IntoView {
+pub fn RotatedLabel<'a>(
+    config: RotatedLabel,
+    attr: &'a Attr,
+    edge: Edge,
+    bounds: Bounds,
+) -> impl IntoView {
+    let position = Signal::derive(move || {
+        let bounds = config.padding.get().apply(bounds);
+        let (top, right, bottom, left) = bounds.as_css_tuple();
+        let (centre_x, centre_y) = (bounds.centre_x(), bounds.centre_y());
+
+        let anchor = config.anchor.get();
+        match edge {
+            Edge::Top | Edge::Bottom => (0, anchor.map_points(left, centre_x, right), centre_y),
+            Edge::Left => (270, centre_x, anchor.map_points(bottom, centre_y, top)),
+            // Right rotates the opposite way to Left inverting the anchor points
+            Edge::Right => (90, centre_x, anchor.map_points(top, centre_y, bottom)),
+        }
+    });
+
     let font = attr.font(config.font);
     view! {
         <text
+            x=move || position.with(|(_, x, _)| x.to_string())
+            y=move || position.with(|(_, _, y)| y.to_string())
+            transform=move || position.with(|(rotate, x, y)| format!("rotate({rotate}, {x}, {y})"))
             dominant-baseline="middle"
-            text-anchor=move || config.anchor.get().svg_text_anchor()
+            text-anchor=move || config.anchor.get().as_svg_attr()
             font-family=move || font.get().svg_family()
             font-size=move || font.get().svg_size()>
             { config.text }

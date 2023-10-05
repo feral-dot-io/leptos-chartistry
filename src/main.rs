@@ -9,9 +9,19 @@ fn main() {
 
 #[component]
 pub fn App() -> impl IntoView {
-    let font = Font::new(16.0, 10.0);
-    let chart =
-        Chart::new(font).add_layout(RotatedLabel::middle("Hello and welcome to chartistry!"));
+    let (em, _) = create_signal(16.0);
+    let (ex, _) = create_signal(10.0);
+
+    let (width, _) = create_signal(1100.0);
+    let font = Signal::derive(move || Font::new(em.get(), ex.get()));
+    let padding = Signal::derive(move || Padding::from(ex.get()));
+
+    let chart = Chart::new(width, 600.0, font)
+        .with_padding(padding)
+        .add_top(RotatedLabel::middle("Hello and welcome to chartistry!"))
+        .add_bottom(RotatedLabel::middle("Hello and welcome to chartistry!"))
+        .add_left(RotatedLabel::middle("Hello and welcome to chartistry!"))
+        .add_right(RotatedLabel::middle("Hello and welcome to chartistry!"));
 
     view! {
         <Chart chart=chart />

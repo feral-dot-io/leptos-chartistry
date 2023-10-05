@@ -1,73 +1,125 @@
-use crate::{Font, RotatedLabel};
+use crate::{bounds::Bounds, layout::LayoutOption, Font, Padding};
 use leptos::*;
 
 #[derive(Clone, Debug)]
 pub struct Chart {
+    width: MaybeSignal<f64>,
+    height: MaybeSignal<f64>,
+    padding: MaybeSignal<Option<Padding>>,
     attr: Attr,
-    layout: Vec<Layout>,
+    top: Vec<LayoutOption>,
+    right: Vec<LayoutOption>,
+    bottom: Vec<LayoutOption>,
+    left: Vec<LayoutOption>,
 }
 
 #[derive(Clone, Debug)]
 pub struct Attr {
+    padding: MaybeSignal<Padding>,
     font: MaybeSignal<Font>,
 }
 
-#[derive(Clone, Debug)]
-pub enum Layout {
-    TextLabel(RotatedLabel),
-}
-
 impl Chart {
-    pub fn new(font: impl Into<MaybeSignal<Font>>) -> Self {
+    pub fn new(
+        width: impl Into<MaybeSignal<f64>>,
+        height: impl Into<MaybeSignal<f64>>,
+        font: impl Into<MaybeSignal<Font>>,
+    ) -> Self {
         Self {
-            attr: Attr::new(font),
-            layout: vec![],
+            width: width.into(),
+            height: height.into(),
+            padding: MaybeSignal::default(),
+            attr: Attr::new(font.into()),
+            top: vec![],
+            right: vec![],
+            bottom: vec![],
+            left: vec![],
         }
     }
 
-    pub fn add_layout(mut self, opt: impl Into<Layout>) -> Self {
-        self.layout.push(opt.into());
+    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Option<Padding>>>) -> Self {
+        self.padding = padding.into();
+        self
+    }
+    pub fn with_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
+        self.attr.padding = padding.into();
+        self
+    }
+
+    pub fn add_top(mut self, opt: impl Into<LayoutOption>) -> Self {
+        self.top.push(opt.into());
+        self
+    }
+
+    pub fn add_right(mut self, opt: impl Into<LayoutOption>) -> Self {
+        self.right.push(opt.into());
+        self
+    }
+
+    pub fn add_bottom(mut self, opt: impl Into<LayoutOption>) -> Self {
+        self.bottom.push(opt.into());
+        self
+    }
+
+    pub fn add_left(mut self, opt: impl Into<LayoutOption>) -> Self {
+        self.left.push(opt.into());
         self
     }
 }
 
 impl Attr {
-    pub fn new(font: impl Into<MaybeSignal<Font>>) -> Self {
-        Self { font: font.into() }
+    pub fn new(font: MaybeSignal<Font>) -> Self {
+        Self {
+            padding: Padding::default().into(),
+            font,
+        }
     }
 
-    pub fn font(&self, priority: MaybeSignal<Option<Font>>) -> MaybeSignal<Font> {
-        let fallback = self.font;
-        MaybeSignal::derive(move || priority.with(|f| f.unwrap_or_else(|| fallback.get())))
+    fn inherit<T: Clone>(
+        &self,
+        optional: MaybeSignal<Option<T>>,
+        fallback: MaybeSignal<T>,
+    ) -> MaybeSignal<T> {
+        MaybeSignal::derive(move || optional.get().unwrap_or_else(|| fallback.get()))
+    }
+
+    pub fn font(&self, optional: MaybeSignal<Option<Font>>) -> MaybeSignal<Font> {
+        self.inherit(optional, self.font)
+    }
+
+    pub fn padding(&self, optional: MaybeSignal<Option<Padding>>) -> MaybeSignal<Padding> {
+        self.inherit(optional, self.padding)
     }
 }
 
 #[component]
 pub fn Chart(chart: Chart) -> impl IntoView {
-    let Chart { attr, layout } = chart;
+    let Chart {
+        width,
+        height,
+        padding,
+        attr,
+        top,
+        right,
+        bottom,
+        left,
+    } = chart;
 
-    let layout = (layout.into_iter())
-        .map(|layout| view!(<Layout layout=layout attr=&attr />))
-        .collect_view();
+    let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
+    let chart_padding = attr.padding(padding);
+    let outer_bounds = Signal::derive(move || chart_padding.get().apply(chart_bounds.get()));
+    let layout = LayoutOption::compose(outer_bounds, attr, top, right, bottom, left);
 
     view! {
-        <div style="margin: 0 auto;">
-            <svg style="overflow: visible;">
+        <div
+            style="margin: 0 auto;"
+            style:width=move || format!("{}px", width.get())
+            style:height=move || format!("{}px", height.get())>
+            <svg
+                style="overflow: visible;"
+                viewBox=move || format!("0 0 {} {}", width.get(), height.get())>
                 {layout}
             </svg>
         </div>
-    }
-}
-
-impl From<RotatedLabel> for Layout {
-    fn from(label: RotatedLabel) -> Self {
-        Layout::TextLabel(label)
-    }
-}
-
-#[component]
-pub fn Layout<'a>(layout: Layout, attr: &'a Attr) -> impl IntoView {
-    match layout {
-        Layout::TextLabel(config) => view! { <RotatedLabel config=config attr=attr /> }.into_view(),
     }
 }
