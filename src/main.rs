@@ -7,6 +7,24 @@ fn main() {
     mount_to_body(|| view! { <App/> })
 }
 
+pub struct Wave {
+    x: f64,
+    sine: f64,
+    cosine: f64,
+}
+
+fn load_data() -> Vec<Wave> {
+    const SCALE: f64 = 1.0;
+    let mut data = Vec::new();
+    for i in 0..1000 {
+        let x = i as f64 / 1000.0 * std::f64::consts::PI * 2.0 * 2.0;
+        let sine = x.sin() * SCALE;
+        let cosine = x.cos() * SCALE;
+        data.push(Wave { x, sine, cosine });
+    }
+    data
+}
+
 #[component]
 pub fn App() -> impl IntoView {
     let (em, _) = create_signal(16.0);
@@ -17,7 +35,13 @@ pub fn App() -> impl IntoView {
     let font = Signal::derive(move || Font::new(em.get(), ex.get()));
     let padding = Signal::derive(move || Padding::from(ex.get()));
 
-    let chart = Chart::new(width, 600.0, font)
+    let (data, _) = create_signal(load_data());
+    let series = Series::new(&|w: &Wave| w.x)
+        .add(Line::new("Sphinx"), &|w: &Wave| w.sine)
+        .add(Line::new("Cophine"), &|w: &Wave| w.cosine)
+        .with_data::<Vec<_>>(data);
+
+    let chart = Chart::new(width, 600.0, font, series)
         .with_padding(padding)
         .with_debug(debug)
         .add_top(RotatedLabel::middle("Hello and welcome to chartistry!"))

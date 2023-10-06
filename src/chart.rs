@@ -1,18 +1,25 @@
-use crate::{bounds::Bounds, debug::DebugRect, layout::LayoutOption, Font, Padding};
+use crate::{
+    bounds::Bounds,
+    debug::DebugRect,
+    layout::{Layout, LayoutOption},
+    Font, Padding, Series,
+};
 use leptos::*;
 
 #[derive(Clone, Debug)]
-pub struct Chart {
+pub struct Chart<X: 'static, Y: 'static> {
     width: MaybeSignal<f64>,
     height: MaybeSignal<f64>,
     padding: MaybeSignal<Option<Padding>>,
     debug: MaybeSignal<Option<bool>>,
-
     attr: Attr,
+
     top: Vec<LayoutOption>,
     right: Vec<LayoutOption>,
     bottom: Vec<LayoutOption>,
     left: Vec<LayoutOption>,
+
+    series: Signal<Series<X, Y>>,
 }
 
 #[derive(Clone, Debug)]
@@ -22,23 +29,26 @@ pub struct Attr {
     debug: MaybeSignal<bool>,
 }
 
-impl Chart {
+impl<X, Y> Chart<X, Y> {
     pub fn new(
         width: impl Into<MaybeSignal<f64>>,
         height: impl Into<MaybeSignal<f64>>,
         font: impl Into<MaybeSignal<Font>>,
+        series: Signal<Series<X, Y>>,
     ) -> Self {
         Self {
             width: width.into(),
             height: height.into(),
             padding: MaybeSignal::default(),
             debug: MaybeSignal::default(),
-
             attr: Attr::new(font.into()),
+
             top: vec![],
             right: vec![],
             bottom: vec![],
             left: vec![],
+
+            series,
         }
     }
 
@@ -112,18 +122,20 @@ impl Attr {
 }
 
 #[component]
-pub fn Chart(chart: Chart) -> impl IntoView {
+pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
     let Chart {
         width,
         height,
         padding,
         debug,
-
         attr,
+
         top,
         right,
         bottom,
         left,
+
+        series,
     } = chart;
 
     let chart_padding = attr.padding(padding);
@@ -131,7 +143,7 @@ pub fn Chart(chart: Chart) -> impl IntoView {
 
     let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let outer_bounds = Signal::derive(move || chart_padding.get().apply(chart_bounds.get()));
-    let layout = LayoutOption::compose(outer_bounds, attr, top, right, bottom, left);
+    let layout = Layout::compose(outer_bounds, attr.clone(), top, right, bottom, left);
 
     view! {
         <div
@@ -142,7 +154,8 @@ pub fn Chart(chart: Chart) -> impl IntoView {
                 style="overflow: visible;"
                 viewBox=move || format!("0 0 {} {}", width.get(), height.get())>
                 <DebugRect label="Chart" debug=debug bounds=move || vec![chart_bounds.get(), outer_bounds.get()] />
-                {layout}
+                {layout.view}
+                <Series series=series projection=layout.projection />
             </svg>
         </div>
     }

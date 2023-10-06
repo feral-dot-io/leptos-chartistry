@@ -2,6 +2,7 @@ use crate::{
     bounds::Bounds,
     chart::Attr,
     edge::{Edge, IntoEdgeBounds},
+    projection::Projection,
     RotatedLabel,
 };
 use leptos::*;
@@ -25,6 +26,12 @@ impl LayoutOption {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct Layout {
+    pub projection: Signal<Projection>,
+    pub view: Signal<View>,
+}
+
 fn with_block_size(
     edge: Edge,
     opts: Vec<LayoutOption>,
@@ -42,7 +49,7 @@ fn with_block_size(
     (opts, total_size)
 }
 
-impl LayoutOption {
+impl Layout {
     pub fn compose(
         outer_bounds: Signal<Bounds>,
         attr: Attr,
@@ -50,7 +57,7 @@ impl LayoutOption {
         right: Vec<LayoutOption>,
         bottom: Vec<LayoutOption>,
         left: Vec<LayoutOption>,
-    ) -> impl IntoView {
+    ) -> Layout {
         // Note:
         // Vertical (left, right, y-axis) options are generated at layout time (constrains the layout)
         // Horizontal (top, bottom, x-axis) options are generated at render time (constrained by layout)
@@ -87,8 +94,8 @@ impl LayoutOption {
             )
         });
 
-        // Composed layout
-        Signal::derive(move || {
+        // Compose sides
+        let view = Signal::derive(move || {
             (top.iter())
                 .chain(bottom.iter())
                 .chain(left.iter())
@@ -97,7 +104,16 @@ impl LayoutOption {
                 .into_edge_bounds(outer_bounds.get(), inner_bounds.get())
                 .map(|(opt, edge, bounds)| view!(<Layout layout=opt attr=&attr edge=edge bounds=bounds />))
                 .collect_view()
-        })
+        });
+
+        // TODO
+        let range = Bounds::from_points(0.0, -1.0, 13.0, 1.0);
+        let proj = move || Projection::new(inner_bounds.get(), range);
+
+        Self {
+            projection: proj.into(),
+            view,
+        }
     }
 }
 
