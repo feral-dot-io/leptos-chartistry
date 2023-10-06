@@ -7,12 +7,11 @@ mod layout;
 mod line;
 mod padding;
 mod projection;
-mod rotated_label;
 mod series;
 
 pub use chart::Chart;
 pub use font::Font;
+pub use layout::rotated_label::RotatedLabel;
 pub use line::Line;
 pub use padding::Padding;
-pub use rotated_label::RotatedLabel;
 pub use series::Series;
