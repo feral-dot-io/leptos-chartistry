@@ -41,13 +41,15 @@ pub fn App() -> impl IntoView {
         .add(Line::new("Cophine"), &|w: &Wave| w.cosine)
         .with_data::<Vec<_>>(data);
 
+    let (anchor, _) = create_signal(Anchor::Middle);
+    let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
     let chart = Chart::new(width, 600.0, font, series)
         .with_padding(padding)
         .with_debug(debug)
-        .add_top(RotatedLabel::middle("Hello and welcome to chartistry!"))
-        .add_bottom(RotatedLabel::middle("Hello and welcome to chartistry!"))
-        .add_left(RotatedLabel::middle("Hello and welcome to chartistry!"))
-        .add_right(RotatedLabel::middle("Hello and welcome to chartistry!"));
+        .add_top(RotatedLabel::new(anchor, text))
+        .add_bottom(RotatedLabel::new(anchor, text))
+        .add_left(RotatedLabel::new(anchor, text))
+        .add_right(RotatedLabel::new(anchor, text));
 
     view! {
         <Chart chart=chart />

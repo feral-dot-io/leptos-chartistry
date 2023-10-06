@@ -1,30 +1,11 @@
+use super::rotated_label::{RotatedLabel, UseRotatedLabel};
 use crate::{
     bounds::Bounds,
     chart::Attr,
     edge::{Edge, IntoEdgeBounds},
     projection::Projection,
-    RotatedLabel,
 };
 use leptos::*;
-
-#[derive(Clone, Debug)]
-pub enum LayoutOption {
-    RotatedLabel(RotatedLabel),
-}
-
-impl LayoutOption {
-    fn horizontal_size(&self, attr: &Attr) -> Signal<f64> {
-        match self {
-            Self::RotatedLabel(config) => config.size(attr),
-        }
-    }
-
-    fn vertical_size(&self, attr: &Attr, avail_height: Signal<f64>) -> Signal<f64> {
-        match self {
-            Self::RotatedLabel(config) => config.size(attr),
-        }
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct Layout {
@@ -32,13 +13,25 @@ pub struct Layout {
     pub view: Signal<View>,
 }
 
+#[derive(Clone, Debug)]
+pub enum LayoutOption {
+    RotatedLabel(RotatedLabel),
+}
+
+#[derive(Clone, Debug)]
+enum UseLayoutOption {
+    RotatedLabel(UseRotatedLabel),
+}
+
 fn with_block_size(
     edge: Edge,
     opts: Vec<LayoutOption>,
-    sizer: impl Fn(&LayoutOption) -> Signal<f64>,
-) -> (Vec<(LayoutOption, Edge, Signal<f64>)>, Signal<f64>) {
+    attr: &Attr,
+    sizer: impl Fn(&UseLayoutOption) -> Signal<f64>,
+) -> (Vec<(UseLayoutOption, Edge, Signal<f64>)>, Signal<f64>) {
     let opts = (opts.into_iter())
         .map(|opt| {
+            let opt = opt.to_use(attr);
             let size = sizer(&opt);
             (opt, edge, size)
         })
@@ -50,9 +43,9 @@ fn with_block_size(
 }
 
 impl Layout {
-    pub fn compose(
+    pub fn compose<'a>(
         outer_bounds: Signal<Bounds>,
-        attr: Attr,
+        attr: &'a Attr,
         top: Vec<LayoutOption>,
         right: Vec<LayoutOption>,
         bottom: Vec<LayoutOption>,
@@ -63,9 +56,9 @@ impl Layout {
         // Horizontal (top, bottom, x-axis) options are generated at render time (constrained by layout)
 
         // Top / bottom options
-        let horizontal_sizer = |opt: &LayoutOption| opt.horizontal_size(&attr);
-        let (top, top_height) = with_block_size(Edge::Top, top, horizontal_sizer);
-        let (bottom, bottom_height) = with_block_size(Edge::Bottom, bottom, horizontal_sizer);
+        let horizontal_sizer = |opt: &UseLayoutOption| opt.horizontal_size();
+        let (top, top_height) = with_block_size(Edge::Top, top, attr, horizontal_sizer);
+        let (bottom, bottom_height) = with_block_size(Edge::Bottom, bottom, attr, horizontal_sizer);
         let avail_height = move || {
             with!(
                 |outer_bounds, top_height, bottom_height| outer_bounds.height()
@@ -75,9 +68,9 @@ impl Layout {
         };
 
         // Left / right options (requires height)
-        let vertical_sizer = |opt: &LayoutOption| opt.vertical_size(&attr, avail_height.into());
-        let (left, left_width) = with_block_size(Edge::Left, left, vertical_sizer);
-        let (right, right_width) = with_block_size(Edge::Right, right, vertical_sizer);
+        let vertical_sizer = |opt: &UseLayoutOption| opt.vertical_size(avail_height.into());
+        let (left, left_width) = with_block_size(Edge::Left, left, attr, vertical_sizer);
+        let (right, right_width) = with_block_size(Edge::Right, right, attr, vertical_sizer);
         let avail_width = move || {
             with!(|outer_bounds, left_width, right_width| {
                 outer_bounds.width() - left_width - right_width
@@ -102,7 +95,7 @@ impl Layout {
                 .chain(right.iter())
                 .map(|(opt, edge, size)| (opt.clone(), *edge, size.get())) // Undo & and reactive
                 .into_edge_bounds(outer_bounds.get(), inner_bounds.get())
-                .map(|(opt, edge, bounds)| view!(<Layout layout=opt attr=&attr edge=edge bounds=bounds />))
+                .map(|(opt, edge, bounds)| opt.view(edge, bounds))
                 .collect_view()
         });
 
@@ -117,16 +110,32 @@ impl Layout {
     }
 }
 
-#[component]
-pub fn Layout<'a>(
-    layout: LayoutOption,
-    attr: &'a Attr,
-    edge: Edge,
-    bounds: Bounds,
-) -> impl IntoView {
-    match layout {
-        LayoutOption::RotatedLabel(config) => {
-            view! { <RotatedLabel label=config attr=attr edge=edge bounds=bounds /> }.into_view()
+impl LayoutOption {
+    fn to_use(self, attr: &Attr) -> UseLayoutOption {
+        match self {
+            Self::RotatedLabel(config) => UseLayoutOption::RotatedLabel(config.to_use(attr)),
+        }
+    }
+}
+
+impl UseLayoutOption {
+    fn horizontal_size(&self) -> Signal<f64> {
+        match self {
+            Self::RotatedLabel(config) => config.size(),
+        }
+    }
+
+    fn vertical_size(&self, avail_height: Signal<f64>) -> Signal<f64> {
+        match self {
+            Self::RotatedLabel(config) => config.size(),
+        }
+    }
+
+    fn view(self, edge: Edge, bounds: Bounds) -> impl IntoView {
+        match self {
+            Self::RotatedLabel(label) => {
+                view! { <RotatedLabel label=label edge=edge bounds=bounds /> }
+            }
         }
     }
 }
