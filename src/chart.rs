@@ -20,7 +20,7 @@ pub struct Chart<X: 'static, Y: 'static> {
     bottom: Vec<LayoutOption>,
     left: Vec<LayoutOption>,
 
-    series: Signal<UseSeries<X, Y>>,
+    series: UseSeries<X, Y>,
 }
 
 #[derive(Clone, Debug)]
@@ -35,7 +35,7 @@ impl<X, Y> Chart<X, Y> {
         width: impl Into<MaybeSignal<f64>>,
         height: impl Into<MaybeSignal<f64>>,
         font: impl Into<MaybeSignal<Font>>,
-        series: Signal<UseSeries<X, Y>>,
+        series: UseSeries<X, Y>,
     ) -> Self {
         Self {
             width: width.into(),
@@ -144,7 +144,7 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
 
     let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let outer_bounds = Signal::derive(move || chart_padding.get().apply(chart_bounds.get()));
-    let layout = Layout::compose(outer_bounds, top, right, bottom, left, &attr, series);
+    let layout = Layout::compose(outer_bounds, top, right, bottom, left, &attr, &series);
 
     view! {
         <div

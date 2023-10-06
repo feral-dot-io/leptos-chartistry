@@ -22,7 +22,7 @@ pub struct UseLegend {
     anchor: MaybeSignal<Anchor>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
-    lines: Signal<Vec<Line>>,
+    lines: Vec<Line>,
 }
 
 impl Legend {
@@ -50,13 +50,13 @@ impl Legend {
         self
     }
 
-    pub(super) fn to_use<X, Y>(self, attr: &Attr, series: Signal<UseSeries<X, Y>>) -> UseLegend {
+    pub(super) fn to_use<X, Y>(self, attr: &Attr, series: &UseSeries<X, Y>) -> UseLegend {
         UseLegend {
             snippet: self.snippet.to_use(attr),
             anchor: self.anchor,
             padding: attr.padding(self.padding),
             debug: attr.debug(self.debug),
-            lines: Signal::derive(move || series.with(|series| series.lines.clone())),
+            lines: series.lines.clone(),
         }
     }
 }
@@ -70,7 +70,7 @@ impl UseLegend {
     pub fn width(&self) -> Signal<f64> {
         let snip_width = self.snippet.width();
         let (font, padding) = (self.snippet.font, self.padding);
-        let lines = (self.lines.get().iter())
+        let lines = (self.lines.iter())
             .map(|line| line.name.clone())
             .collect::<Vec<_>>();
         Signal::derive(move || {
@@ -109,9 +109,9 @@ pub fn Legend(legend: UseLegend, edge: Edge, bounds: Bounds) -> impl IntoView {
     };
 
     let body = move || {
-        let tds = lines.get().into_iter().map(|line| {
+        let tds = lines.iter().map(|line| {
             let name = line.name.clone();
-            view!(<SnippetTd snippet=snippet.clone() line=line>{name}</SnippetTd>)
+            view!(<SnippetTd snippet=snippet.clone() line=line.clone()>{name}</SnippetTd>)
         });
 
         if edge.is_horizontal() {

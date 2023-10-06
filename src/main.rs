@@ -39,7 +39,7 @@ pub fn App() -> impl IntoView {
     let series = Series::new(&|w: &Wave| w.x)
         .add(Line::new("Sphinx"), &|w: &Wave| w.sine)
         .add(Line::new("Cophine"), &|w: &Wave| w.cosine)
-        .with_data::<Vec<_>>(data);
+        .use_data::<Vec<_>>(data);
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());

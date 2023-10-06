@@ -34,7 +34,7 @@ fn with_block_size<X, Y>(
     opts: Vec<LayoutOption>,
     sizer: impl Fn(&UseLayoutOption) -> Signal<f64>,
     attr: &Attr,
-    series: Signal<UseSeries<X, Y>>,
+    series: &UseSeries<X, Y>,
 ) -> (Vec<(UseLayoutOption, Edge, Signal<f64>)>, Signal<f64>) {
     let opts = (opts.into_iter())
         .map(|opt| {
@@ -50,14 +50,14 @@ fn with_block_size<X, Y>(
 }
 
 impl Layout {
-    pub fn compose<'a, X, Y>(
+    pub fn compose<X, Y>(
         outer_bounds: Signal<Bounds>,
         top: Vec<LayoutOption>,
         right: Vec<LayoutOption>,
         bottom: Vec<LayoutOption>,
         left: Vec<LayoutOption>,
-        attr: &'a Attr,
-        series: Signal<UseSeries<X, Y>>,
+        attr: &Attr,
+        series: &UseSeries<X, Y>,
     ) -> Layout {
         // Note:
         // Vertical (left, right, y-axis) options are generated at layout time (constrains the layout)
@@ -121,7 +121,7 @@ impl Layout {
 }
 
 impl LayoutOption {
-    fn to_use<X, Y>(self, attr: &Attr, series: Signal<UseSeries<X, Y>>) -> UseLayoutOption {
+    fn to_use<X, Y>(self, attr: &Attr, series: &UseSeries<X, Y>) -> UseLayoutOption {
         match self {
             Self::RotatedLabel(config) => UseLayoutOption::RotatedLabel(config.to_use(attr)),
             Self::Legend(config) => UseLayoutOption::Legend(config.to_use(attr, series)),

@@ -11,10 +11,13 @@ pub struct Series<T: 'static, X: 'static, Y: 'static> {
 #[derive(Clone, Debug)]
 pub struct UseSeries<X: 'static, Y: 'static> {
     pub(crate) lines: Vec<Line>,
+    data: Signal<Data<X, Y>>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Data<X: 'static, Y: 'static> {
     x_points: Vec<X>,
     x_positions: Vec<f64>,
-    // Capacity: no. of series * x_points.len() == y_points.len()
-    // Indexed by all points from first series, then second series, etc.
     y_points: Vec<Y>,
     y_positions: Vec<f64>,
 }
@@ -34,23 +37,21 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    pub fn with_data<Ts>(
-        self,
-        data: impl Into<MaybeSignal<Ts>> + 'static,
-    ) -> Signal<UseSeries<X, Y>>
+    pub fn use_data<Ts>(self, data: impl Into<MaybeSignal<Ts>> + 'static) -> UseSeries<X, Y>
     where
         Ts: Borrow<[T]> + 'static,
-        T: 'static,
         X: PartialOrd + Position,
         Y: PartialOrd + Position,
     {
+        let Series {
+            get_x,
+            get_ys,
+            lines,
+        } = self;
+
         let data = data.into();
-        Signal::derive(move || {
-            let Series {
-                get_x,
-                get_ys,
-                lines,
-            } = &self;
+        let data = Signal::derive(move || {
+            let get_ys = get_ys.iter();
             data.with(move |data| {
                 let data = data.borrow();
 
@@ -72,15 +73,16 @@ impl<T, X, Y> Series<T, X, Y> {
                     })
                     .unzip();
 
-                UseSeries {
-                    lines: lines.clone(),
+                Data {
                     x_points,
                     x_positions,
                     y_points,
                     y_positions,
                 }
             })
-        })
+        });
+
+        UseSeries { lines, data }
     }
 }
 
@@ -96,20 +98,20 @@ impl Position for f64 {
 
 #[component]
 pub(crate) fn Series<X: 'static, Y: 'static>(
-    series: Signal<UseSeries<X, Y>>,
+    series: UseSeries<X, Y>,
     projection: Signal<Projection>,
 ) -> impl IntoView {
     let lines = move || {
         let proj = projection.get();
-        series.with(|series| {
-            let points = series.x_points.len();
+        series.data.with(|data| {
+            let points = data.x_points.len();
             (series.lines.iter())
                 .enumerate()
                 .map(|(line_i, line)| {
-                    let positions = (series.x_positions.iter())
+                    let positions = (data.x_positions.iter())
                         .enumerate()
                         .map(|(i, &x)| {
-                            let y = series.y_positions[line_i * points + i];
+                            let y = data.y_positions[line_i * points + i];
                             // Map from data to viewport coords
                             proj.data_to_svg(x, y)
                         })
