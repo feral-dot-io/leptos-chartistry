@@ -2,7 +2,8 @@ use crate::{
     bounds::Bounds,
     debug::DebugRect,
     layout::{Layout, LayoutOption},
-    Font, Padding, Series,
+    series::{Series, UseSeries},
+    Font, Padding,
 };
 use leptos::*;
 
@@ -19,7 +20,7 @@ pub struct Chart<X: 'static, Y: 'static> {
     bottom: Vec<LayoutOption>,
     left: Vec<LayoutOption>,
 
-    series: Signal<Series<X, Y>>,
+    series: Signal<UseSeries<X, Y>>,
 }
 
 #[derive(Clone, Debug)]
@@ -34,7 +35,7 @@ impl<X, Y> Chart<X, Y> {
         width: impl Into<MaybeSignal<f64>>,
         height: impl Into<MaybeSignal<f64>>,
         font: impl Into<MaybeSignal<Font>>,
-        series: Signal<Series<X, Y>>,
+        series: Signal<UseSeries<X, Y>>,
     ) -> Self {
         Self {
             width: width.into(),

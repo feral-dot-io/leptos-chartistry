@@ -3,7 +3,9 @@ use super::{
     snippet::{Snippet, SnippetTd, UseSnippet},
     LayoutOption,
 };
-use crate::{bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, Line, Padding, Series};
+use crate::{
+    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, series::UseSeries, Line, Padding,
+};
 use leptos::*;
 
 #[derive(Clone, Debug)]
@@ -48,7 +50,7 @@ impl Legend {
         self
     }
 
-    pub(super) fn to_use<X, Y>(self, attr: &Attr, series: Signal<Series<X, Y>>) -> UseLegend {
+    pub(super) fn to_use<X, Y>(self, attr: &Attr, series: Signal<UseSeries<X, Y>>) -> UseLegend {
         UseLegend {
             snippet: self.snippet.to_use(attr),
             anchor: self.anchor,

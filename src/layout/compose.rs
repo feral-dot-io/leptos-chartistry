@@ -7,7 +7,7 @@ use crate::{
     chart::Attr,
     edge::{Edge, IntoEdgeBounds},
     projection::Projection,
-    Series,
+    series::UseSeries,
 };
 use leptos::*;
 
@@ -34,7 +34,7 @@ fn with_block_size<X, Y>(
     opts: Vec<LayoutOption>,
     sizer: impl Fn(&UseLayoutOption) -> Signal<f64>,
     attr: &Attr,
-    series: Signal<Series<X, Y>>,
+    series: Signal<UseSeries<X, Y>>,
 ) -> (Vec<(UseLayoutOption, Edge, Signal<f64>)>, Signal<f64>) {
     let opts = (opts.into_iter())
         .map(|opt| {
@@ -57,7 +57,7 @@ impl Layout {
         bottom: Vec<LayoutOption>,
         left: Vec<LayoutOption>,
         attr: &'a Attr,
-        series: Signal<Series<X, Y>>,
+        series: Signal<UseSeries<X, Y>>,
     ) -> Layout {
         // Note:
         // Vertical (left, right, y-axis) options are generated at layout time (constrains the layout)
@@ -121,7 +121,7 @@ impl Layout {
 }
 
 impl LayoutOption {
-    fn to_use<X, Y>(self, attr: &Attr, series: Signal<Series<X, Y>>) -> UseLayoutOption {
+    fn to_use<X, Y>(self, attr: &Attr, series: Signal<UseSeries<X, Y>>) -> UseLayoutOption {
         match self {
             Self::RotatedLabel(config) => UseLayoutOption::RotatedLabel(config.to_use(attr)),
             Self::Legend(config) => UseLayoutOption::Legend(config.to_use(attr, series)),

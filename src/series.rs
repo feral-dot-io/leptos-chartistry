@@ -2,14 +2,14 @@ use crate::{projection::Projection, Line};
 use leptos::*;
 use std::borrow::Borrow;
 
-pub struct SeriesBuilder<T: 'static, X: 'static, Y: 'static> {
+pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: &'static dyn Fn(&T) -> X,
     get_ys: Vec<&'static dyn Fn(&T) -> Y>,
     lines: Vec<Line>,
 }
 
 #[derive(Clone, Debug)]
-pub struct Series<X: 'static, Y: 'static> {
+pub struct UseSeries<X: 'static, Y: 'static> {
     pub(crate) lines: Vec<Line>,
     x_points: Vec<X>,
     x_positions: Vec<f64>,
@@ -19,24 +19,25 @@ pub struct Series<X: 'static, Y: 'static> {
     y_positions: Vec<f64>,
 }
 
-impl<X, Y> Series<X, Y> {
-    pub fn new<T>(get_x: &'static dyn Fn(&T) -> X) -> SeriesBuilder<T, X, Y> {
-        SeriesBuilder {
+impl<T, X, Y> Series<T, X, Y> {
+    pub fn new(get_x: &'static dyn Fn(&T) -> X) -> Self {
+        Series {
             get_x,
             get_ys: Vec::new(),
             lines: Vec::new(),
         }
     }
-}
 
-impl<T, X, Y> SeriesBuilder<T, X, Y> {
     pub fn add(mut self, line: Line, get_y: &'static dyn Fn(&T) -> Y) -> Self {
         self.get_ys.push(get_y);
         self.lines.push(line);
         self
     }
 
-    pub fn with_data<Ts>(self, data: impl Into<MaybeSignal<Ts>> + 'static) -> Signal<Series<X, Y>>
+    pub fn with_data<Ts>(
+        self,
+        data: impl Into<MaybeSignal<Ts>> + 'static,
+    ) -> Signal<UseSeries<X, Y>>
     where
         Ts: Borrow<[T]> + 'static,
         T: 'static,
@@ -45,7 +46,7 @@ impl<T, X, Y> SeriesBuilder<T, X, Y> {
     {
         let data = data.into();
         Signal::derive(move || {
-            let SeriesBuilder {
+            let Series {
                 get_x,
                 get_ys,
                 lines,
@@ -71,7 +72,7 @@ impl<T, X, Y> SeriesBuilder<T, X, Y> {
                     })
                     .unzip();
 
-                Series {
+                UseSeries {
                     lines: lines.clone(),
                     x_points,
                     x_positions,
@@ -94,8 +95,8 @@ impl Position for f64 {
 }
 
 #[component]
-pub fn Series<X: 'static, Y: 'static>(
-    series: Signal<Series<X, Y>>,
+pub(crate) fn Series<X: 'static, Y: 'static>(
+    series: Signal<UseSeries<X, Y>>,
     projection: Signal<Projection>,
 ) -> impl IntoView {
     let lines = move || {
