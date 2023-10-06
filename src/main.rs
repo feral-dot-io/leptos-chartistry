@@ -29,7 +29,7 @@ fn load_data() -> Vec<Wave> {
 pub fn App() -> impl IntoView {
     let (em, _) = create_signal(16.0);
     let (ex, _) = create_signal(10.0);
-    let (debug, _) = create_signal(false);
+    let (debug, set_debug) = create_signal(false);
 
     let (width, _) = create_signal(1100.0);
     let font = Signal::derive(move || Font::new(em.get(), ex.get()));
@@ -49,9 +49,22 @@ pub fn App() -> impl IntoView {
         .add_top(RotatedLabel::new(anchor, text))
         .add_bottom(RotatedLabel::new(anchor, text))
         .add_left(RotatedLabel::new(anchor, text))
-        .add_right(RotatedLabel::new(anchor, text));
+        .add_right(RotatedLabel::new(anchor, text))
+        .add_top(Legend::end(Snippet::horizontal()));
 
     view! {
+        <form>
+            <p>
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={debug}
+                        on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
+                    "Debug"
+                </label>
+            </p>
+        </form>
+
         <Chart chart=chart />
     }
 }

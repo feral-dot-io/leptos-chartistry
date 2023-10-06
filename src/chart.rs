@@ -143,7 +143,7 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
 
     let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let outer_bounds = Signal::derive(move || chart_padding.get().apply(chart_bounds.get()));
-    let layout = Layout::compose(outer_bounds, &attr, top, right, bottom, left);
+    let layout = Layout::compose(outer_bounds, top, right, bottom, left, &attr, series);
 
     view! {
         <div

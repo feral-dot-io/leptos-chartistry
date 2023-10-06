@@ -11,7 +11,11 @@ mod series;
 
 pub use chart::Chart;
 pub use font::Font;
-pub use layout::rotated_label::{Anchor, RotatedLabel};
+pub use layout::{
+    legend::Legend,
+    rotated_label::{Anchor, RotatedLabel},
+    snippet::Snippet,
+};
 pub use line::Line;
 pub use padding::Padding;
 pub use series::Series;

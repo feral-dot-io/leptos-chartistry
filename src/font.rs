@@ -9,6 +9,10 @@ impl Font {
         Self { height, width }
     }
 
+    pub fn width(&self) -> f64 {
+        self.width
+    }
+
     pub fn height(&self) -> f64 {
         self.height
     }

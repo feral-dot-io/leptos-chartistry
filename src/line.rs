@@ -2,8 +2,8 @@ use leptos::*;
 
 #[derive(Clone, Debug)]
 pub struct Line {
-    name: MaybeSignal<String>,
-    width: MaybeSignal<f64>,
+    pub(crate) name: MaybeSignal<String>,
+    pub(crate) width: MaybeSignal<f64>,
 }
 
 impl Line {

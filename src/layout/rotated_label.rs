@@ -108,6 +108,14 @@ impl Anchor {
             Anchor::End => right,
         }
     }
+
+    pub fn css_justify_content(&self) -> &'static str {
+        match self {
+            Anchor::Start => "flex-start",
+            Anchor::Middle => "center",
+            Anchor::End => "flex-end",
+        }
+    }
 }
 
 #[component]

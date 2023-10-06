@@ -10,7 +10,7 @@ pub struct SeriesBuilder<T: 'static, X: 'static, Y: 'static> {
 
 #[derive(Clone, Debug)]
 pub struct Series<X: 'static, Y: 'static> {
-    lines: Vec<Line>,
+    pub(crate) lines: Vec<Line>,
     x_points: Vec<X>,
     x_positions: Vec<f64>,
     // Capacity: no. of series * x_points.len() == y_points.len()
