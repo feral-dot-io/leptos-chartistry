@@ -94,14 +94,14 @@ impl Anchor {
 
 #[component]
 pub fn RotatedLabel<'a>(
-    config: RotatedLabel,
+    label: RotatedLabel,
     attr: &'a Attr,
     edge: Edge,
     bounds: Bounds,
 ) -> impl IntoView {
-    let font = attr.font(config.font);
-    let padding = attr.padding(config.padding);
-    let debug = attr.debug(config.debug);
+    let font = attr.font(label.font);
+    let padding = attr.padding(label.padding);
+    let debug = attr.debug(label.debug);
     let content = Signal::derive(move || padding.get().apply(bounds));
 
     let position = Signal::derive(move || {
@@ -109,7 +109,7 @@ pub fn RotatedLabel<'a>(
         let (top, right, bottom, left) = content.as_css_tuple();
         let (centre_x, centre_y) = (content.centre_x(), content.centre_y());
 
-        let anchor = config.anchor.get();
+        let anchor = label.anchor.get();
         match edge {
             Edge::Top | Edge::Bottom => (0, anchor.map_points(left, centre_x, right), centre_y),
             Edge::Left => (270, centre_x, anchor.map_points(bottom, centre_y, top)),
@@ -119,16 +119,18 @@ pub fn RotatedLabel<'a>(
     });
 
     view! {
-        <DebugRect label="RotatedLabel" debug=debug bounds=move || vec![bounds, content.get()] />
-        <text
-            x=move || position.with(|(_, x, _)| x.to_string())
-            y=move || position.with(|(_, _, y)| y.to_string())
-            transform=move || position.with(|(rotate, x, y)| format!("rotate({rotate}, {x}, {y})"))
-            dominant-baseline="middle"
-            text-anchor=move || config.anchor.get().as_svg_attr()
-            font-family=move || font.get().svg_family()
-            font-size=move || font.get().svg_size()>
-            { config.text }
-        </text>
+        <g class="_chartistry_rotated_label">
+            <DebugRect label="RotatedLabel" debug=debug bounds=move || vec![bounds, content.get()] />
+            <text
+                x=move || position.with(|(_, x, _)| x.to_string())
+                y=move || position.with(|(_, _, y)| y.to_string())
+                transform=move || position.with(|(rotate, x, y)| format!("rotate({rotate}, {x}, {y})"))
+                dominant-baseline="middle"
+                text-anchor=move || label.anchor.get().as_svg_attr()
+                font-family=move || font.get().svg_family()
+                font-size=move || font.get().svg_size()>
+                { label.text }
+            </text>
+        </g>
     }
 }

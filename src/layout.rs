@@ -126,7 +126,7 @@ pub fn Layout<'a>(
 ) -> impl IntoView {
     match layout {
         LayoutOption::RotatedLabel(config) => {
-            view! { <RotatedLabel config=config attr=attr edge=edge bounds=bounds /> }.into_view()
+            view! { <RotatedLabel label=config attr=attr edge=edge bounds=bounds /> }.into_view()
         }
     }
 }

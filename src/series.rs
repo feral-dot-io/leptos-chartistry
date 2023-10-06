@@ -98,7 +98,7 @@ pub fn Series<X: 'static, Y: 'static>(
     series: Signal<Series<X, Y>>,
     projection: Signal<Projection>,
 ) -> impl IntoView {
-    move || {
+    let lines = move || {
         let proj = projection.get();
         series.with(|series| {
             let points = series.x_points.len();
@@ -114,10 +114,15 @@ pub fn Series<X: 'static, Y: 'static>(
                         })
                         .collect::<Vec<_>>();
                     view! {
-                        <Line line=line positions=positions />
+                        <g class=format!("_chartistry_line_{}", line_i)>
+                            <Line line=line positions=positions />
+                        </g>
                     }
                 })
                 .collect_view()
         })
+    };
+    view! {
+        <g class="_chartistry_series">{lines}</g>
     }
 }
