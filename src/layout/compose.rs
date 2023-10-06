@@ -109,14 +109,12 @@ impl Layout {
                 .collect_view()
         });
 
-        // TODO
-        let range = Bounds::from_points(0.0, -1.0, 13.0, 1.0);
-        let proj = move || Projection::new(inner_bounds.get(), range);
+        let data = series.data;
+        let projection = Signal::derive(move || {
+            Projection::new(inner_bounds.get(), data.with(|data| data.position_range()))
+        });
 
-        Self {
-            projection: proj.into(),
-            view,
-        }
+        Self { projection, view }
     }
 }
 
