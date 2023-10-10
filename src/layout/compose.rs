@@ -1,7 +1,4 @@
-use super::{
-    legend::{Legend, UseLegend},
-    rotated_label::{RotatedLabel, UseRotatedLabel},
-};
+use super::{legend::Legend, rotated_label::RotatedLabel, tick_labels::TickLabels};
 use crate::{
     bounds::Bounds,
     chart::Attr,
@@ -17,45 +14,24 @@ pub struct Layout {
     pub view: Signal<View>,
 }
 
-#[derive(Clone, Debug)]
-pub enum LayoutOption {
+pub enum LayoutOption<Tick: 'static> {
     RotatedLabel(RotatedLabel),
     Legend(Legend),
+    TickLabels(TickLabels<Tick>),
 }
 
-#[derive(Clone, Debug)]
-enum UseLayoutOption {
-    RotatedLabel(UseRotatedLabel),
-    Legend(UseLegend),
-}
-
-fn with_block_size<X, Y>(
-    edge: Edge,
-    opts: Vec<LayoutOption>,
-    sizer: impl Fn(&UseLayoutOption) -> Signal<f64>,
-    attr: &Attr,
-    series: &UseSeries<X, Y>,
-) -> (Vec<(UseLayoutOption, Edge, Signal<f64>)>, Signal<f64>) {
-    let opts = (opts.into_iter())
-        .map(|opt| {
-            let opt = opt.to_use(attr, series);
-            let size = sizer(&opt);
-            (opt, edge, size)
-        })
-        .collect::<Vec<_>>();
-    let size_opts = opts.clone();
-    let total_size =
-        Signal::derive(move || size_opts.iter().map(|(_, _, size)| size.get()).sum::<f64>());
-    (opts, total_size)
+pub trait UseLayout {
+    fn width(&self) -> Signal<f64>;
+    fn render<'a>(&self, edge: Edge, bounds: Bounds, proj: Signal<Projection>) -> View;
 }
 
 impl Layout {
     pub fn compose<X, Y>(
         outer_bounds: Signal<Bounds>,
-        top: Vec<LayoutOption>,
-        right: Vec<LayoutOption>,
-        bottom: Vec<LayoutOption>,
-        left: Vec<LayoutOption>,
+        top: Vec<LayoutOption<X>>,
+        right: Vec<LayoutOption<Y>>,
+        bottom: Vec<LayoutOption<X>>,
+        left: Vec<LayoutOption<Y>>,
         attr: &Attr,
         series: &UseSeries<X, Y>,
     ) -> Layout {
@@ -63,29 +39,67 @@ impl Layout {
         // Vertical (left, right, y-axis) options are generated at layout time (constrains the layout)
         // Horizontal (top, bottom, x-axis) options are generated at render time (constrained by layout)
 
-        // Top / bottom options
-        let horizontal_sizer = |opt: &UseLayoutOption| opt.height();
-        let (top, top_height) = with_block_size(Edge::Top, top, horizontal_sizer, attr, series);
-        let (bottom, bottom_height) =
-            with_block_size(Edge::Bottom, bottom, horizontal_sizer, attr, series);
-        let avail_height = move || {
+        // Top / bottom heights
+        let top_heights = (top.iter())
+            .map(|opt| opt.height(attr, series))
+            .collect::<Vec<_>>();
+        let bottom_heights = (bottom.iter())
+            .map(|opt| opt.height(attr, series))
+            .collect::<Vec<_>>();
+        let horiz_height = |heights: Vec<Signal<f64>>| {
+            Signal::derive(move || (heights.iter()).map(|h| h.get()).sum::<f64>())
+        };
+        let top_height = horiz_height(top_heights.clone());
+        let bottom_height = horiz_height(bottom_heights.clone());
+        let avail_height = Signal::derive(move || {
             with!(
                 |outer_bounds, top_height, bottom_height| outer_bounds.height()
                     - top_height
                     - bottom_height
             )
-        };
+        });
 
-        // Left / right options (requires height)
-        let vertical_sizer = |opt: &UseLayoutOption| opt.width(avail_height.into());
-        let (left, left_width) = with_block_size(Edge::Left, left, vertical_sizer, attr, series);
-        let (right, right_width) =
-            with_block_size(Edge::Right, right, vertical_sizer, attr, series);
-        let avail_width = move || {
-            with!(|outer_bounds, left_width, right_width| {
-                outer_bounds.width() - left_width - right_width
-            })
+        // Left / right options to UseLayoutOption
+        let to_vertical = |opts: Vec<LayoutOption<Y>>, edge: Edge| {
+            (opts.into_iter())
+                .map(|opt| {
+                    let c = opt.to_vertical_use(attr, series, avail_height);
+                    let width = c.width();
+                    (c, edge, width)
+                })
+                .collect::<Vec<_>>()
         };
+        let left = to_vertical(left, Edge::Left);
+        let right = to_vertical(right, Edge::Right);
+
+        // Left / right widths
+        let vert_width = |widths: &[(_, _, Signal<f64>)]| {
+            let widths = widths.iter().map(|(_, _, w)| *w).collect::<Vec<_>>();
+            Signal::derive(move || (widths.iter()).map(|w| w.get()).sum::<f64>())
+        };
+        let left_width = vert_width(&left);
+        let right_width = vert_width(&right);
+        let avail_width = Signal::derive(move || {
+            outer_bounds.get().width() - left_width.get() - right_width.get()
+        });
+
+        // Convert top / bottom to UseLayout
+        let horizontal = (top.into_iter())
+            .zip(top_heights.into_iter())
+            .map(|(opt, height)| (opt, Edge::Top, height))
+            .chain(
+                (bottom.into_iter())
+                    .zip(bottom_heights.into_iter())
+                    .map(|(opt, height)| (opt, Edge::Bottom, height)),
+            )
+            .map(|(opt, edge, height)| {
+                (
+                    opt.to_horizontal_use(attr, series, avail_width),
+                    edge,
+                    height,
+                )
+            })
+            .collect::<Vec<_>>();
 
         // Inner chart
         let inner_bounds = Signal::derive(move || {
@@ -96,59 +110,65 @@ impl Layout {
                 left_width.get(),
             )
         });
-
-        // Compose sides
-        let view = Signal::derive(move || {
-            (top.iter())
-                .chain(bottom.iter())
-                .chain(left.iter())
-                .chain(right.iter())
-                .map(|(opt, edge, size)| (opt.clone(), *edge, size.get())) // Undo & and reactive
-                .into_edge_bounds(outer_bounds.get(), inner_bounds.get())
-                .map(|(opt, edge, bounds)| opt.view(edge, bounds))
-                .collect_view()
-        });
-
         let data = series.data;
         let projection = Signal::derive(move || {
             Projection::new(inner_bounds.get(), data.with(|data| data.position_range()))
+        });
+
+        // Top / bottom options to UseLayoutOption
+        let view = Signal::derive(move || {
+            (horizontal.iter())
+                .chain(left.iter().chain(right.iter()))
+                .map(|(opt, edge, size)| (opt, *edge, size.get()))
+                .into_edge_bounds(outer_bounds.get(), inner_bounds.get())
+                .map(|(c, edge, bounds)| c.render(edge, bounds, projection))
+                .collect_view()
         });
 
         Self { projection, view }
     }
 }
 
-impl LayoutOption {
-    fn to_use<X, Y>(self, attr: &Attr, series: &UseSeries<X, Y>) -> UseLayoutOption {
+impl<Tick> LayoutOption<Tick> {
+    fn height<X, Y>(&self, attr: &Attr, series: &UseSeries<X, Y>) -> Signal<f64> {
         match self {
-            Self::RotatedLabel(config) => UseLayoutOption::RotatedLabel(config.to_use(attr)),
-            Self::Legend(config) => UseLayoutOption::Legend(config.to_use(attr, series)),
+            Self::RotatedLabel(config) => config.clone().to_use(attr).size(),
+            Self::Legend(config) => config.clone().to_use(attr, series).height(),
+            Self::TickLabels(config) => config.height(attr),
         }
     }
 }
 
-impl UseLayoutOption {
-    fn height(&self) -> Signal<f64> {
+impl<X> LayoutOption<X> {
+    fn to_horizontal_use<Y>(
+        self,
+        attr: &Attr,
+        series: &UseSeries<X, Y>,
+        avail_width: Signal<f64>,
+    ) -> Box<dyn UseLayout> {
         match self {
-            Self::RotatedLabel(config) => config.size(),
-            Self::Legend(config) => config.height(),
-        }
-    }
-
-    fn width(&self, avail_height: Signal<f64>) -> Signal<f64> {
-        match self {
-            Self::RotatedLabel(config) => config.size(),
-            Self::Legend(config) => config.width(),
-        }
-    }
-
-    fn view(self, edge: Edge, bounds: Bounds) -> impl IntoView {
-        match self {
-            Self::RotatedLabel(label) => {
-                view! { <RotatedLabel label=label edge=edge bounds=bounds /> }
+            Self::RotatedLabel(config) => Box::new(config.to_use(attr)),
+            Self::Legend(config) => Box::new(config.to_use(attr, series)),
+            Self::TickLabels(config) => {
+                Box::new(config.to_horizontal_use(attr, series, avail_width))
             }
+        }
+    }
+}
 
-            Self::Legend(legend) => view! { <Legend legend=legend edge=edge bounds=bounds /> },
+impl<Y> LayoutOption<Y> {
+    fn to_vertical_use<X>(
+        self,
+        attr: &Attr,
+        series: &UseSeries<X, Y>,
+        avail_height: Signal<f64>,
+    ) -> Box<dyn UseLayout> {
+        match self {
+            Self::RotatedLabel(config) => Box::new(config.to_use(attr)),
+            Self::Legend(config) => Box::new(config.to_use(attr, series)),
+            Self::TickLabels(config) => {
+                Box::new(config.to_vertical_use(attr, series, avail_height))
+            }
         }
     }
 }

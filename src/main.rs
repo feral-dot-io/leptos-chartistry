@@ -46,10 +46,13 @@ pub fn App() -> impl IntoView {
     let chart = Chart::new(width, 600.0, font, series)
         .with_padding(padding)
         .with_debug(debug)
+        // Text labels
         .add_top(RotatedLabel::new(anchor, text))
-        .add_bottom(RotatedLabel::new(anchor, text))
-        .add_left(RotatedLabel::new(anchor, text))
         .add_right(RotatedLabel::new(anchor, text))
+        // Ticks
+        .add_left(TickLabels::aligned_floats().set_debug(Some(true)))
+        .add_bottom(TickLabels::aligned_floats().set_debug(Some(true)))
+        // Legend
         .add_top(Legend::end(Snippet::horizontal()));
 
     view! {

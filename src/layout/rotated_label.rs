@@ -1,5 +1,7 @@
+use super::compose::UseLayout;
 use crate::{
-    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, layout::LayoutOption, Font, Padding,
+    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, layout::LayoutOption,
+    projection::Projection, Font, Padding,
 };
 use leptos::*;
 
@@ -20,7 +22,7 @@ pub struct RotatedLabel {
 }
 
 #[derive(Clone, Debug)]
-pub(super) struct UseRotatedLabel {
+pub struct UseRotatedLabel {
     text: MaybeSignal<String>,
     anchor: MaybeSignal<Anchor>,
     font: MaybeSignal<Font>,
@@ -62,6 +64,10 @@ impl RotatedLabel {
         self
     }
 
+    pub fn height<X, Y>(&self, attr: &Attr) -> Signal<f64> {
+        self.clone().to_use(attr).size()
+    }
+
     pub(super) fn to_use(self, attr: &Attr) -> UseRotatedLabel {
         UseRotatedLabel {
             text: self.text,
@@ -83,12 +89,6 @@ impl UseRotatedLabel {
                 with!(|font, padding| font.height() + padding.height())
             }
         })
-    }
-}
-
-impl From<RotatedLabel> for LayoutOption {
-    fn from(label: RotatedLabel) -> Self {
-        LayoutOption::RotatedLabel(label)
     }
 }
 
@@ -115,6 +115,22 @@ impl Anchor {
             Anchor::Middle => "center",
             Anchor::End => "flex-end",
         }
+    }
+}
+
+impl<Tick> From<RotatedLabel> for LayoutOption<Tick> {
+    fn from(label: RotatedLabel) -> Self {
+        LayoutOption::RotatedLabel(label)
+    }
+}
+
+impl UseLayout for UseRotatedLabel {
+    fn width(&self) -> Signal<f64> {
+        self.size()
+    }
+
+    fn render<'a>(&self, edge: Edge, bounds: Bounds, _: Signal<Projection>) -> View {
+        view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds /> }
     }
 }
 

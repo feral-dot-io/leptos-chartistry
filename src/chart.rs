@@ -7,7 +7,6 @@ use crate::{
 };
 use leptos::*;
 
-#[derive(Clone, Debug)]
 pub struct Chart<X: 'static, Y: 'static> {
     width: MaybeSignal<f64>,
     height: MaybeSignal<f64>,
@@ -15,10 +14,10 @@ pub struct Chart<X: 'static, Y: 'static> {
     debug: MaybeSignal<Option<bool>>,
     attr: Attr,
 
-    top: Vec<LayoutOption>,
-    right: Vec<LayoutOption>,
-    bottom: Vec<LayoutOption>,
-    left: Vec<LayoutOption>,
+    top: Vec<LayoutOption<X>>,
+    right: Vec<LayoutOption<Y>>,
+    bottom: Vec<LayoutOption<X>>,
+    left: Vec<LayoutOption<Y>>,
 
     series: UseSeries<X, Y>,
 }
@@ -71,22 +70,22 @@ impl<X, Y> Chart<X, Y> {
         self
     }
 
-    pub fn add_top(mut self, opt: impl Into<LayoutOption>) -> Self {
+    pub fn add_top(mut self, opt: impl Into<LayoutOption<X>>) -> Self {
         self.top.push(opt.into());
         self
     }
 
-    pub fn add_right(mut self, opt: impl Into<LayoutOption>) -> Self {
+    pub fn add_right(mut self, opt: impl Into<LayoutOption<Y>>) -> Self {
         self.right.push(opt.into());
         self
     }
 
-    pub fn add_bottom(mut self, opt: impl Into<LayoutOption>) -> Self {
+    pub fn add_bottom(mut self, opt: impl Into<LayoutOption<X>>) -> Self {
         self.bottom.push(opt.into());
         self
     }
 
-    pub fn add_left(mut self, opt: impl Into<LayoutOption>) -> Self {
+    pub fn add_left(mut self, opt: impl Into<LayoutOption<Y>>) -> Self {
         self.left.push(opt.into());
         self
     }

@@ -1,10 +1,12 @@
 use super::{
+    compose::UseLayout,
     rotated_label::Anchor,
     snippet::{Snippet, SnippetTd, UseSnippet},
     LayoutOption,
 };
 use crate::{
-    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, series::UseSeries, Line, Padding,
+    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
+    series::UseSeries, Line, Padding,
 };
 use leptos::*;
 
@@ -50,6 +52,10 @@ impl Legend {
         self
     }
 
+    pub fn height<X, Y>(&self, attr: &Attr, series: &UseSeries<X, Y>) -> Signal<f64> {
+        self.clone().to_use(attr, series).height()
+    }
+
     pub(super) fn to_use<X, Y>(self, attr: &Attr, series: &UseSeries<X, Y>) -> UseLegend {
         UseLegend {
             snippet: self.snippet.to_use(attr),
@@ -66,8 +72,16 @@ impl UseLegend {
         let (snip_height, padding) = (self.snippet.height(), self.padding);
         Signal::derive(move || padding.get().height() + snip_height.get())
     }
+}
 
-    pub fn width(&self) -> Signal<f64> {
+impl<Tick> From<Legend> for LayoutOption<Tick> {
+    fn from(config: Legend) -> Self {
+        LayoutOption::Legend(config)
+    }
+}
+
+impl UseLayout for UseLegend {
+    fn width(&self) -> Signal<f64> {
         let snip_width = self.snippet.width();
         let (font, padding) = (self.snippet.font, self.padding);
         let lines = (self.lines.iter())
@@ -82,11 +96,9 @@ impl UseLegend {
             snip_width.get() + font_width + max_chars + padding.get().width()
         })
     }
-}
 
-impl From<Legend> for LayoutOption {
-    fn from(config: Legend) -> Self {
-        LayoutOption::Legend(config)
+    fn render<'a>(&self, edge: Edge, bounds: Bounds, _: Signal<Projection>) -> View {
+        view! { <Legend legend=self.clone() edge=edge bounds=bounds /> }
     }
 }
 

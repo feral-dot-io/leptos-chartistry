@@ -19,8 +19,10 @@ pub struct Data<X, Y> {
     position_range: Bounds,
     x_points: Vec<X>,
     x_positions: Vec<f64>,
+    x_range: (X, X),
     y_points: Vec<Y>,
     y_positions: Vec<f64>,
+    y_range: (Y, Y),
 }
 
 impl<T, X, Y> Series<T, X, Y> {
@@ -52,7 +54,7 @@ impl<T, X, Y> Series<T, X, Y> {
 
         let data = data.into();
         let data = Signal::derive(move || {
-            let get_ys = get_ys.iter();
+            let get_ys = get_ys.iter().as_slice();
             data.with(move |data| {
                 let data = data.borrow();
 
@@ -64,34 +66,68 @@ impl<T, X, Y> Series<T, X, Y> {
                     .collect::<Vec<_>>();
                 let y_positions = y_points.iter().map(|y| y.position()).collect::<Vec<_>>();
 
-                // Position range
-                // TODO handle empty data -- should be configurable
-                let (x_min, x_max) = (x_positions.iter())
-                    .fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), &x| {
-                        (min.min(x), max.max(x))
-                    });
-                let (y_min, y_max) = (y_positions.iter())
-                    .fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), &y| {
-                        (min.min(y), max.max(y))
-                    });
+                // Find min/max
+                let x_range_i = Self::find_min_max_index(&x_positions);
+                let y_range_i = Self::find_min_max_index(&y_positions);
+                let x_range = (get_x(&data[x_range_i.0]), get_x(&data[x_range_i.1]));
+                let y_range = (
+                    Self::reverse_get_y(get_ys, data, y_range_i.0),
+                    Self::reverse_get_y(get_ys, data, y_range_i.1),
+                );
 
                 Data {
-                    position_range: Bounds::from_points(x_min, y_min, x_max, y_max),
+                    position_range: Bounds::from_points(
+                        x_positions[x_range_i.0],
+                        y_positions[y_range_i.0],
+                        x_positions[x_range_i.1],
+                        y_positions[y_range_i.1],
+                    ),
+                    //position_range: Bounds::from_points(x_min, y_min, x_max, y_max),
                     x_points,
                     x_positions,
+                    x_range,
                     y_points,
                     y_positions,
+                    y_range,
                 }
             })
         });
 
         UseSeries { lines, data }
     }
+
+    fn find_min_max_index(positions: &[f64]) -> (usize, usize) {
+        positions
+            .iter()
+            .enumerate()
+            // TODO handle empty data
+            .fold((0, 0), |(min_i, max_i), (i, &pos)| {
+                (
+                    if pos < positions[min_i] { i } else { min_i },
+                    if pos > positions[max_i] { i } else { max_i },
+                )
+            })
+    }
+
+    /// Given an Data::y_points index, return the corresponding y value. Note that y_points is a flat map of all the y values for each series.
+    fn reverse_get_y(get_ys: &[&dyn Fn(&T) -> Y], data: &[T], index: usize) -> Y {
+        let series_i = index / data.len();
+        let data_i = index % data.len();
+        (get_ys[series_i])(&data[data_i])
+    }
 }
 
 impl<X, Y> Data<X, Y> {
     pub fn position_range(&self) -> Bounds {
         self.position_range
+    }
+
+    pub fn x_range(&self) -> (&X, &X) {
+        (&self.x_range.0, &self.x_range.1)
+    }
+
+    pub fn y_range(&self) -> (&Y, &Y) {
+        (&self.y_range.0, &self.y_range.1)
     }
 }
 
