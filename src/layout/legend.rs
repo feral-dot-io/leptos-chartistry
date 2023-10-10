@@ -69,8 +69,11 @@ impl Legend {
 
 impl UseLegend {
     pub fn height(&self) -> Signal<f64> {
-        let (snip_height, padding) = (self.snippet.height(), self.padding);
-        Signal::derive(move || padding.get().height() + snip_height.get())
+        let (snip_height, font, padding) = (self.snippet.height(), self.snippet.font, self.padding);
+        Signal::derive(move || {
+            let text_height = font.get().height() + padding.get().height();
+            text_height.max(snip_height.get())
+        })
     }
 }
 
@@ -137,8 +140,8 @@ pub fn Legend(legend: UseLegend, edge: Edge, bounds: Bounds) -> impl IntoView {
         <g class="_chartistry_legend">
             <DebugRect label="Legend" debug=debug bounds=move || vec![bounds, inner.get()] />
             <foreignObject
-                x=move || inner.get().left_x()
-                y=move || inner.get().top_y()
+                x=bounds.left_x()
+                y=bounds.top_y()
                 width=move || inner.get().width()
                 height=move || inner.get().height()
                 style="overflow: auto;">
@@ -148,7 +151,7 @@ pub fn Legend(legend: UseLegend, edge: Edge, bounds: Bounds) -> impl IntoView {
                     style:justify-content=move || anchor.get().css_justify_content()>
                     <table
                         style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; overflow: auto;"
-                        style:font-size=move || format!("{}px;", font.get().height())>
+                        style:font-size=move || format!("{}px", font.get().height())>
                         <tbody>
                             {body}
                         </tbody>
