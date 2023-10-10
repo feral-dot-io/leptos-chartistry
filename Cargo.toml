@@ -3,9 +3,8 @@ name = "leptos-chartistry"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+chrono = "0.4"
 console_error_panic_hook = "0.1"
 console_log = "1.0"
 leptos = { version = "0.5", features = ["csr"] }

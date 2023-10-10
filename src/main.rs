@@ -1,3 +1,4 @@
+use chrono::prelude::*;
 use leptos::*;
 use leptos_chartistry::*;
 
@@ -25,6 +26,11 @@ fn load_data() -> Vec<Wave> {
     data
 }
 
+pub fn f64_to_dt(at: f64) -> DateTime<Utc> {
+    let nsecs = (at.fract() * 1_000_000_000.0).round() as u32;
+    Utc.timestamp_opt(at as i64, nsecs).unwrap()
+}
+
 #[component]
 pub fn App() -> impl IntoView {
     let (em, _) = create_signal(16.0);
@@ -36,7 +42,7 @@ pub fn App() -> impl IntoView {
     let padding = Signal::derive(move || Padding::from(ex.get()));
 
     let (data, _) = create_signal(load_data());
-    let series = Series::new(&|w: &Wave| w.x)
+    let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
         .add(Line::new("Sphinx"), &|w: &Wave| w.sine)
         .add(Line::new("Cophine"), &|w: &Wave| w.cosine)
         .use_data::<Vec<_>>(data);
@@ -50,8 +56,8 @@ pub fn App() -> impl IntoView {
         .add_top(RotatedLabel::new(anchor, text))
         .add_right(RotatedLabel::new(anchor, text))
         // Ticks
-        .add_left(TickLabels::aligned_floats().set_debug(Some(true)))
-        .add_bottom(TickLabels::aligned_floats().set_debug(Some(true)))
+        .add_left(TickLabels::aligned_floats())
+        .add_bottom(TickLabels::timestamps())
         // Legend
         .add_top(Legend::end(Snippet::horizontal()));
 

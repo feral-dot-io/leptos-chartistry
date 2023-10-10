@@ -14,6 +14,15 @@ pub struct GeneratedTicks<Tick> {
     pub state: Box<dyn TickState<Tick = Tick>>,
 }
 
+impl<Tick> GeneratedTicks<Tick> {
+    pub fn none(state: impl TickState<Tick = Tick> + 'static) -> GeneratedTicks<Tick> {
+        GeneratedTicks {
+            ticks: vec![],
+            state: Box::new(state),
+        }
+    }
+}
+
 pub trait TickState {
     type Tick;
 

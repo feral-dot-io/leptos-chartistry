@@ -6,10 +6,14 @@ use crate::{
     edge::Edge,
     projection::Projection,
     series::UseSeries,
-    ticks::{AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickGen, VerticalSpan},
-    Font, Padding,
+    ticks::{
+        AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickGen, TimestampGen, VerticalSpan,
+    },
+    Font, Padding, Period,
 };
+use chrono::prelude::*;
 use leptos::*;
+use std::borrow::Borrow;
 
 pub struct TickLabels<Tick> {
     font: MaybeSignal<Option<Font>>,
@@ -61,6 +65,24 @@ impl<Tick> TickLabels<Tick> {
 impl TickLabels<f64> {
     pub fn aligned_floats() -> Self {
         Self::new(AlignedFloatsGen::new())
+    }
+}
+
+impl<Tz> TickLabels<DateTime<Tz>>
+where
+    Tz: TimeZone + std::fmt::Debug + 'static,
+    Tz::Offset: std::fmt::Display,
+{
+    pub fn timestamps() -> Self {
+        Self::new(TimestampGen::new(Period::all()))
+    }
+
+    pub fn timestamp_periods(periods: impl Borrow<[Period]>) -> Self {
+        Self::new(TimestampGen::new(periods))
+    }
+
+    pub fn timestamp_period(period: Period) -> Self {
+        Self::new(TimestampGen::new([period]))
     }
 }
 

@@ -1,4 +1,5 @@
 use crate::{bounds::Bounds, projection::Projection, Line};
+use chrono::prelude::*;
 use leptos::*;
 use std::borrow::Borrow;
 
@@ -138,6 +139,12 @@ pub trait Position {
 impl Position for f64 {
     fn position(&self) -> f64 {
         *self
+    }
+}
+
+impl<Tz: TimeZone> Position for DateTime<Tz> {
+    fn position(&self) -> f64 {
+        self.timestamp() as f64 + (self.timestamp_subsec_nanos() as f64 / 1e9)
     }
 }
 

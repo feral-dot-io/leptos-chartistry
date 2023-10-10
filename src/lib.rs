@@ -21,3 +21,4 @@ pub use layout::{
 pub use line::Line;
 pub use padding::Padding;
 pub use series::Series;
+pub use ticks::Period;
