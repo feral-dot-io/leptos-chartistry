@@ -14,8 +14,8 @@ use leptos::*;
 pub struct Legend {
     snippet: Snippet,
     anchor: MaybeSignal<Anchor>,
-    padding: MaybeSignal<Option<Padding>>,
-    debug: MaybeSignal<Option<bool>>,
+    padding: Option<MaybeSignal<Padding>>,
+    debug: Option<MaybeSignal<bool>>,
 }
 
 #[derive(Clone, Debug)]
@@ -32,8 +32,8 @@ impl Legend {
         Self {
             snippet: snippet.into(),
             anchor: anchor.into(),
-            padding: MaybeSignal::default(),
-            debug: MaybeSignal::default(),
+            padding: None,
+            debug: None,
         }
     }
 
@@ -47,8 +47,13 @@ impl Legend {
         Self::new(Anchor::End, snippet)
     }
 
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Option<Padding>>>) -> Self {
-        self.padding = padding.into();
+    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
+        self.padding = Some(padding.into());
+        self
+    }
+
+    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
+        self.debug = Some(debug.into());
         self
     }
 
@@ -60,8 +65,8 @@ impl Legend {
         UseLegend {
             snippet: self.snippet.to_use(attr),
             anchor: self.anchor,
-            padding: attr.padding(self.padding),
-            debug: attr.debug(self.debug),
+            padding: self.padding.unwrap_or(attr.padding),
+            debug: self.debug.unwrap_or(attr.debug),
             lines: series.lines.clone(),
         }
     }

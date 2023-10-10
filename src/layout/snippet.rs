@@ -10,8 +10,8 @@ pub enum Style {
 #[derive(Clone, Debug)]
 pub struct Snippet {
     style: MaybeSignal<Style>,
-    font: MaybeSignal<Option<Font>>,
-    padding: MaybeSignal<Option<Padding>>,
+    font: Option<MaybeSignal<Font>>,
+    padding: Option<MaybeSignal<Padding>>,
 }
 
 #[derive(Clone, Debug)]
@@ -25,8 +25,8 @@ impl Snippet {
     pub fn new(style: impl Into<MaybeSignal<Style>>) -> Self {
         Self {
             style: style.into(),
-            font: MaybeSignal::default(),
-            padding: MaybeSignal::default(),
+            font: None,
+            padding: None,
         }
     }
 
@@ -37,21 +37,21 @@ impl Snippet {
         Self::new(Style::VerticalTaster)
     }
 
-    pub fn set_font(mut self, font: impl Into<MaybeSignal<Option<Font>>>) -> Self {
-        self.font = font.into();
+    pub fn set_font(mut self, font: impl Into<MaybeSignal<Font>>) -> Self {
+        self.font = Some(font.into());
         self
     }
 
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Option<Padding>>>) -> Self {
-        self.padding = padding.into();
+    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
+        self.padding = Some(padding.into());
         self
     }
 
     pub(super) fn to_use(self, attr: &Attr) -> UseSnippet {
         UseSnippet {
             style: self.style,
-            font: attr.font(self.font),
-            padding: attr.padding(self.padding),
+            font: self.font.unwrap_or(attr.font),
+            padding: self.padding.unwrap_or(attr.padding),
         }
     }
 }

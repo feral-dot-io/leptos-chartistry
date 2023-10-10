@@ -16,9 +16,9 @@ pub enum Anchor {
 pub struct RotatedLabel {
     text: MaybeSignal<String>,
     anchor: MaybeSignal<Anchor>,
-    font: MaybeSignal<Option<Font>>,
-    padding: MaybeSignal<Option<Padding>>,
-    debug: MaybeSignal<Option<bool>>,
+    font: Option<MaybeSignal<Font>>,
+    padding: Option<MaybeSignal<Padding>>,
+    debug: Option<MaybeSignal<bool>>,
 }
 
 #[derive(Clone, Debug)]
@@ -38,9 +38,9 @@ impl RotatedLabel {
         Self {
             text: text.into(),
             anchor: anchor.into(),
-            font: MaybeSignal::default(),
-            padding: MaybeSignal::default(),
-            debug: MaybeSignal::default(),
+            font: None,
+            padding: None,
+            debug: None,
         }
     }
 
@@ -54,13 +54,18 @@ impl RotatedLabel {
         Self::new(Anchor::End, text)
     }
 
-    pub fn set_font(mut self, font: impl Into<MaybeSignal<Option<Font>>>) -> Self {
-        self.font = font.into();
+    pub fn set_font(mut self, font: impl Into<MaybeSignal<Font>>) -> Self {
+        self.font = Some(font.into());
         self
     }
 
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Option<Padding>>>) -> Self {
-        self.padding = padding.into();
+    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
+        self.padding = Some(padding.into());
+        self
+    }
+
+    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
+        self.debug = Some(debug.into());
         self
     }
 
@@ -72,9 +77,9 @@ impl RotatedLabel {
         UseRotatedLabel {
             text: self.text,
             anchor: self.anchor,
-            font: attr.font(self.font),
-            padding: attr.padding(self.padding),
-            debug: attr.debug(self.debug),
+            font: self.font.unwrap_or(attr.font),
+            padding: self.padding.unwrap_or(attr.padding),
+            debug: self.debug.unwrap_or(attr.debug),
         }
     }
 }

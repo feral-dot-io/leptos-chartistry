@@ -10,8 +10,8 @@ use leptos::*;
 pub struct Chart<X: 'static, Y: 'static> {
     width: MaybeSignal<f64>,
     height: MaybeSignal<f64>,
-    padding: MaybeSignal<Option<Padding>>,
-    debug: MaybeSignal<Option<bool>>,
+    padding: Option<MaybeSignal<Padding>>,
+    debug: Option<MaybeSignal<bool>>,
     attr: Attr,
 
     top: Vec<LayoutOption<X>>,
@@ -24,9 +24,9 @@ pub struct Chart<X: 'static, Y: 'static> {
 
 #[derive(Clone, Debug)]
 pub struct Attr {
-    font: MaybeSignal<Font>,
-    padding: MaybeSignal<Padding>,
-    debug: MaybeSignal<bool>,
+    pub font: MaybeSignal<Font>,
+    pub padding: MaybeSignal<Padding>,
+    pub debug: MaybeSignal<bool>,
 }
 
 impl<X, Y> Chart<X, Y> {
@@ -39,9 +39,13 @@ impl<X, Y> Chart<X, Y> {
         Self {
             width: width.into(),
             height: height.into(),
-            padding: MaybeSignal::default(),
-            debug: MaybeSignal::default(),
-            attr: Attr::new(font.into()),
+            padding: None,
+            debug: None,
+            attr: Attr {
+                font: font.into(),
+                padding: MaybeSignal::default(),
+                debug: MaybeSignal::default(),
+            },
 
             top: vec![],
             right: vec![],
@@ -52,20 +56,25 @@ impl<X, Y> Chart<X, Y> {
         }
     }
 
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Option<Padding>>>) -> Self {
-        self.padding = padding.into();
+    pub fn inherit_font(mut self, font: impl Into<MaybeSignal<Font>>) -> Self {
+        self.attr.font = font.into();
         self
     }
-    pub fn with_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
+
+    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
+        self.padding = Some(padding.into());
+        self
+    }
+    pub fn inherit_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
         self.attr.padding = padding.into();
         self
     }
 
-    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<Option<bool>>>) -> Self {
-        self.debug = debug.into();
+    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
+        self.debug = Some(debug.into());
         self
     }
-    pub fn with_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
+    pub fn inherit_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
         self.attr.debug = debug.into();
         self
     }
@@ -91,36 +100,6 @@ impl<X, Y> Chart<X, Y> {
     }
 }
 
-impl Attr {
-    pub fn new(font: MaybeSignal<Font>) -> Self {
-        Self {
-            font,
-            padding: MaybeSignal::default(),
-            debug: MaybeSignal::default(),
-        }
-    }
-
-    fn inherit<T: Clone>(
-        &self,
-        optional: MaybeSignal<Option<T>>,
-        fallback: MaybeSignal<T>,
-    ) -> MaybeSignal<T> {
-        MaybeSignal::derive(move || optional.get().unwrap_or_else(|| fallback.get()))
-    }
-
-    pub fn font(&self, optional: MaybeSignal<Option<Font>>) -> MaybeSignal<Font> {
-        self.inherit(optional, self.font)
-    }
-
-    pub fn padding(&self, optional: MaybeSignal<Option<Padding>>) -> MaybeSignal<Padding> {
-        self.inherit(optional, self.padding)
-    }
-
-    pub fn debug(&self, optional: MaybeSignal<Option<bool>>) -> MaybeSignal<bool> {
-        self.inherit(optional, self.debug)
-    }
-}
-
 #[component]
 pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
     let Chart {
@@ -138,11 +117,11 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
         series,
     } = chart;
 
-    let chart_padding = attr.padding(padding);
-    let debug = attr.debug(debug);
+    let padding = padding.unwrap_or(attr.padding);
+    let debug = debug.unwrap_or(attr.debug);
 
     let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
-    let outer_bounds = Signal::derive(move || chart_padding.get().apply(chart_bounds.get()));
+    let outer_bounds = Signal::derive(move || padding.get().apply(chart_bounds.get()));
     let layout = Layout::compose(outer_bounds, top, right, bottom, left, &attr, &series);
 
     view! {

@@ -50,10 +50,10 @@ pub fn App() -> impl IntoView {
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
     let chart = Chart::new(width, 600.0, font, series)
-        .with_padding(padding)
-        .with_debug(debug)
+        .inherit_padding(padding)
+        .inherit_debug(debug)
         // Text labels
-        .add_top(RotatedLabel::new(anchor, text))
+        .add_top(RotatedLabel::new(anchor, text).set_debug(true))
         .add_right(RotatedLabel::new(anchor, text))
         // Ticks
         .add_left(TickLabels::aligned_floats())

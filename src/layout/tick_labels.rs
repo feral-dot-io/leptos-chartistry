@@ -16,9 +16,9 @@ use leptos::*;
 use std::borrow::Borrow;
 
 pub struct TickLabels<Tick> {
-    font: MaybeSignal<Option<Font>>,
-    padding: MaybeSignal<Option<Padding>>,
-    debug: MaybeSignal<Option<bool>>,
+    font: Option<MaybeSignal<Font>>,
+    padding: Option<MaybeSignal<Padding>>,
+    debug: Option<MaybeSignal<bool>>,
     generator: Box<dyn TickGen<Tick = Tick>>,
 }
 
@@ -33,31 +33,31 @@ pub struct UseTickLabels<Tick: 'static> {
 impl<Tick> TickLabels<Tick> {
     fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
-            font: MaybeSignal::default(),
-            padding: MaybeSignal::default(),
-            debug: MaybeSignal::default(),
+            font: None,
+            padding: None,
+            debug: None,
             generator: Box::new(gen),
         }
     }
 
-    pub fn set_font(mut self, font: impl Into<MaybeSignal<Option<Font>>>) -> Self {
-        self.font = font.into();
+    pub fn set_font(mut self, font: impl Into<MaybeSignal<Font>>) -> Self {
+        self.font = Some(font.into());
         self
     }
 
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Option<Padding>>>) -> Self {
-        self.padding = padding.into();
+    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
+        self.padding = Some(padding.into());
         self
     }
 
-    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<Option<bool>>>) -> Self {
-        self.debug = debug.into();
+    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
+        self.debug = Some(debug.into());
         self
     }
 
     pub fn height(&self, attr: &Attr) -> Signal<f64> {
-        let font = attr.font(self.font);
-        let padding = attr.padding(self.padding);
+        let font = self.font.unwrap_or(attr.font);
+        let padding = self.padding.unwrap_or(attr.padding);
         Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
     }
 }
@@ -94,12 +94,12 @@ impl<X> TickLabels<X> {
         avail_width: Signal<f64>,
     ) -> UseTickLabels<X> {
         let data = series.data;
-        let font = attr.font(self.font);
-        let padding = attr.padding(self.padding);
+        let font = self.font.unwrap_or(attr.font);
+        let padding = self.padding.unwrap_or(attr.padding);
         UseTickLabels {
             font,
             padding,
-            debug: attr.debug(self.debug),
+            debug: self.debug.unwrap_or(attr.debug),
             ticks: Signal::derive(move || {
                 data.with(|data| {
                     let (first, last) = data.x_range();
@@ -121,12 +121,12 @@ impl<Y> TickLabels<Y> {
         avail_height: Signal<f64>,
     ) -> UseTickLabels<Y> {
         let data = series.data;
-        let font = attr.font(self.font);
-        let padding = attr.padding(self.padding);
+        let font = self.font.unwrap_or(attr.font);
+        let padding = self.padding.unwrap_or(attr.padding);
         UseTickLabels {
             font,
             padding,
-            debug: attr.debug(self.debug),
+            debug: self.debug.unwrap_or(attr.debug),
             ticks: Signal::derive(move || {
                 data.with(|data| {
                     let (first, last) = data.y_range();
