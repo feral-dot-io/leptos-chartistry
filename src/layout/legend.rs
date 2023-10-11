@@ -2,7 +2,7 @@ use super::{
     compose::UseLayout,
     rotated_label::Anchor,
     snippet::{Snippet, SnippetTd, UseSnippet},
-    LayoutOption, LayoutOptionAttr,
+    HorizontalOption, LayoutOption, VerticalOption,
 };
 use crate::{
     bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
@@ -62,13 +62,21 @@ impl Legend {
         self
     }
 
-    pub(super) fn apply_attr<Tick>(self, attr: &Attr) -> LayoutOptionAttr<Tick> {
-        LayoutOptionAttr::<Tick>::Legend(LegendAttr {
+    pub(super) fn apply_attr(self, attr: &Attr) -> LegendAttr {
+        LegendAttr {
             snippet: self.snippet.to_use(attr),
             anchor: self.anchor,
             padding: self.padding.unwrap_or(attr.padding),
             debug: self.debug.unwrap_or(attr.debug),
-        })
+        }
+    }
+
+    pub(super) fn apply_horizontal<X, Y>(self, attr: &Attr) -> impl HorizontalOption<X, Y> {
+        self.apply_attr(attr)
+    }
+
+    pub(super) fn apply_vertical<X, Y>(self, attr: &Attr) -> impl VerticalOption<X, Y> {
+        self.apply_attr(attr)
     }
 }
 
@@ -78,14 +86,8 @@ impl<Tick> From<Legend> for LayoutOption<Tick> {
     }
 }
 
-impl<Tick> From<LegendAttr> for LayoutOptionAttr<Tick> {
-    fn from(legend: LegendAttr) -> Self {
-        Self::Legend(legend)
-    }
-}
-
-impl LegendAttr {
-    pub fn height(&self) -> Signal<f64> {
+impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
+    fn height(&self) -> Signal<f64> {
         let (snip_height, font, padding) = (self.snippet.height(), self.snippet.font, self.padding);
         Signal::derive(move || {
             let text_height = font.get().height() + padding.get().height();
@@ -93,11 +95,20 @@ impl LegendAttr {
         })
     }
 
-    pub fn to_use<X, Y>(self, series: &UseSeries<X, Y>) -> UseLegend {
-        UseLegend {
-            attr: self,
+    fn to_use(self: Box<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        Box::new(UseLegend {
+            attr: *self,
             lines: series.lines.clone(),
-        }
+        })
+    }
+}
+
+impl<X, Y> VerticalOption<X, Y> for LegendAttr {
+    fn to_use(self: Box<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        Box::new(UseLegend {
+            attr: *self,
+            lines: series.lines.clone(),
+        })
     }
 }
 

@@ -1,7 +1,7 @@
-use super::{compose::UseLayout, LayoutOption};
+use super::{compose::UseLayout, HorizontalOption, LayoutOption, VerticalOption};
 use crate::{
-    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, layout::LayoutOptionAttr,
-    projection::Projection, Font, Padding,
+    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
+    series::UseSeries, Font, Padding,
 };
 use leptos::*;
 
@@ -80,6 +80,14 @@ impl RotatedLabel {
             debug: self.debug.unwrap_or(attr.debug),
         }
     }
+
+    pub(super) fn apply_horizontal<X, Y>(self, attr: &Attr) -> impl HorizontalOption<X, Y> {
+        self.apply_attr(attr)
+    }
+
+    pub(super) fn apply_vertical<X, Y>(self, attr: &Attr) -> impl VerticalOption<X, Y> {
+        self.apply_attr(attr)
+    }
 }
 
 impl<Tick> From<RotatedLabel> for LayoutOption<Tick> {
@@ -88,9 +96,19 @@ impl<Tick> From<RotatedLabel> for LayoutOption<Tick> {
     }
 }
 
-impl<Tick> From<RotatedLabelAttr> for LayoutOptionAttr<Tick> {
-    fn from(label: RotatedLabelAttr) -> Self {
-        Self::RotatedLabel(label)
+impl<X, Y> HorizontalOption<X, Y> for UseRotatedLabel {
+    fn height(&self) -> Signal<f64> {
+        self.size()
+    }
+
+    fn to_use(self: Box<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        self
+    }
+}
+
+impl<X, Y> VerticalOption<X, Y> for UseRotatedLabel {
+    fn to_use(self: Box<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        self
     }
 }
 

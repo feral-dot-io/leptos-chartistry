@@ -1,8 +1,4 @@
-use super::{
-    legend::{Legend, LegendAttr},
-    rotated_label::{RotatedLabel, RotatedLabelAttr},
-    tick_labels::{TickLabels, TickLabelsAttr},
-};
+use super::{legend::Legend, rotated_label::RotatedLabel, tick_labels::TickLabels};
 use crate::{
     bounds::Bounds,
     chart::Attr,
@@ -18,10 +14,21 @@ pub enum LayoutOption<Tick: 'static> {
     TickLabels(TickLabels<Tick>),
 }
 
-pub enum LayoutOptionAttr<Tick: 'static> {
-    RotatedLabel(RotatedLabelAttr),
-    Legend(LegendAttr),
-    TickLabels(TickLabelsAttr<Tick>),
+pub trait HorizontalOption<X, Y> {
+    fn height(&self) -> Signal<f64>;
+    fn to_use(
+        self: Box<Self>,
+        series: &UseSeries<X, Y>,
+        avail_width: Signal<f64>,
+    ) -> Box<dyn UseLayout>;
+}
+
+pub trait VerticalOption<X, Y> {
+    fn to_use(
+        self: Box<Self>,
+        series: &UseSeries<X, Y>,
+        avail_height: Signal<f64>,
+    ) -> Box<dyn UseLayout>;
 }
 
 pub trait UseLayout {
@@ -38,10 +45,10 @@ pub struct Layout {
 impl Layout {
     pub fn compose<X, Y>(
         outer_bounds: Signal<Bounds>,
-        top: Vec<LayoutOptionAttr<X>>,
-        right: Vec<LayoutOptionAttr<Y>>,
-        bottom: Vec<LayoutOptionAttr<X>>,
-        left: Vec<LayoutOptionAttr<Y>>,
+        top: Vec<Box<dyn HorizontalOption<X, Y>>>,
+        right: Vec<Box<dyn VerticalOption<X, Y>>>,
+        bottom: Vec<Box<dyn HorizontalOption<X, Y>>>,
+        left: Vec<Box<dyn VerticalOption<X, Y>>>,
         series: &UseSeries<X, Y>,
     ) -> Layout {
         // Note:
@@ -65,10 +72,10 @@ impl Layout {
         });
 
         // Left / right options to UseLayoutOption
-        let to_vertical = |opts: Vec<LayoutOptionAttr<Y>>, edge: Edge| {
+        let to_vertical = |opts: Vec<Box<dyn VerticalOption<X, Y>>>, edge: Edge| {
             (opts.into_iter())
                 .map(|opt| {
-                    let c = opt.to_vertical_use(series, avail_height);
+                    let c = opt.to_use(series, avail_height);
                     let width = c.width();
                     (c, edge, width)
                 })
@@ -97,7 +104,7 @@ impl Layout {
                     .zip(bottom_heights.into_iter())
                     .map(|(opt, height)| (opt, Edge::Bottom, height)),
             )
-            .map(|(opt, edge, height)| (opt.to_horizontal_use(series, avail_width), edge, height))
+            .map(|(opt, edge, height)| (opt.to_use(series, avail_width), edge, height))
             .collect::<Vec<_>>();
 
         // Inner chart
@@ -128,48 +135,25 @@ impl Layout {
     }
 }
 
-impl<Tick> LayoutOption<Tick> {
-    pub(crate) fn apply_attr(self, attr: &Attr) -> LayoutOptionAttr<Tick> {
+impl<X> LayoutOption<X> {
+    pub(crate) fn apply_horizontal<Y: 'static>(
+        self,
+        attr: &Attr,
+    ) -> Box<dyn HorizontalOption<X, Y>> {
         match self {
-            Self::RotatedLabel(config) => config.apply_attr(attr).into(),
-            Self::Legend(config) => config.apply_attr(attr).into(),
-            Self::TickLabels(config) => config.apply_attr(attr).into(),
+            Self::RotatedLabel(config) => Box::new(config.apply_horizontal(attr)),
+            Self::Legend(config) => Box::new(config.apply_horizontal(attr)),
+            Self::TickLabels(config) => Box::new(config.apply_horizontal(attr)),
         }
     }
 }
 
-impl<X> LayoutOptionAttr<X> {
-    fn height(&self) -> Signal<f64> {
+impl<Y> LayoutOption<Y> {
+    pub(crate) fn apply_vertical<X: 'static>(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
         match self {
-            Self::RotatedLabel(config) => config.size(),
-            Self::Legend(config) => config.height(),
-            Self::TickLabels(config) => config.height(),
-        }
-    }
-
-    fn to_horizontal_use<Y>(
-        self,
-        series: &UseSeries<X, Y>,
-        avail_width: Signal<f64>,
-    ) -> Box<dyn UseLayout> {
-        match self {
-            Self::RotatedLabel(config) => Box::new(config),
-            Self::Legend(config) => Box::new(config.to_use(series)),
-            Self::TickLabels(config) => Box::new(config.to_horizontal_use(series, avail_width)),
-        }
-    }
-}
-
-impl<Y> LayoutOptionAttr<Y> {
-    fn to_vertical_use<X>(
-        self,
-        series: &UseSeries<X, Y>,
-        avail_height: Signal<f64>,
-    ) -> Box<dyn UseLayout> {
-        match self {
-            Self::RotatedLabel(config) => Box::new(config),
-            Self::Legend(config) => Box::new(config.to_use(series)),
-            Self::TickLabels(config) => Box::new(config.to_vertical_use(series, avail_height)),
+            Self::RotatedLabel(config) => Box::new(config.apply_vertical(attr)),
+            Self::Legend(config) => Box::new(config.apply_vertical(attr)),
+            Self::TickLabels(config) => Box::new(config.apply_vertical(attr)),
         }
     }
 }
