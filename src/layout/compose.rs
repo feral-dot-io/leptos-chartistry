@@ -1,4 +1,8 @@
-use super::{legend::Legend, rotated_label::RotatedLabel, tick_labels::TickLabels};
+use super::{
+    legend::{Legend, LegendAttr},
+    rotated_label::{RotatedLabel, RotatedLabelAttr},
+    tick_labels::{TickLabels, TickLabelsAttr},
+};
 use crate::{
     bounds::Bounds,
     chart::Attr,
@@ -8,16 +12,16 @@ use crate::{
 };
 use leptos::*;
 
-#[derive(Clone, Debug)]
-pub struct Layout {
-    pub projection: Signal<Projection>,
-    pub view: Signal<View>,
-}
-
 pub enum LayoutOption<Tick: 'static> {
     RotatedLabel(RotatedLabel),
     Legend(Legend),
     TickLabels(TickLabels<Tick>),
+}
+
+pub enum LayoutOptionAttr<Tick: 'static> {
+    RotatedLabel(RotatedLabelAttr),
+    Legend(LegendAttr),
+    TickLabels(TickLabelsAttr<Tick>),
 }
 
 pub trait UseLayout {
@@ -25,14 +29,19 @@ pub trait UseLayout {
     fn render<'a>(&self, edge: Edge, bounds: Bounds, proj: Signal<Projection>) -> View;
 }
 
+#[derive(Clone, Debug)]
+pub struct Layout {
+    pub projection: Signal<Projection>,
+    pub view: Signal<View>,
+}
+
 impl Layout {
     pub fn compose<X, Y>(
         outer_bounds: Signal<Bounds>,
-        top: Vec<LayoutOption<X>>,
-        right: Vec<LayoutOption<Y>>,
-        bottom: Vec<LayoutOption<X>>,
-        left: Vec<LayoutOption<Y>>,
-        attr: &Attr,
+        top: Vec<LayoutOptionAttr<X>>,
+        right: Vec<LayoutOptionAttr<Y>>,
+        bottom: Vec<LayoutOptionAttr<X>>,
+        left: Vec<LayoutOptionAttr<Y>>,
         series: &UseSeries<X, Y>,
     ) -> Layout {
         // Note:
@@ -40,12 +49,8 @@ impl Layout {
         // Horizontal (top, bottom, x-axis) options are generated at render time (constrained by layout)
 
         // Top / bottom heights
-        let top_heights = (top.iter())
-            .map(|opt| opt.height(attr, series))
-            .collect::<Vec<_>>();
-        let bottom_heights = (bottom.iter())
-            .map(|opt| opt.height(attr, series))
-            .collect::<Vec<_>>();
+        let top_heights = (top.iter()).map(|opt| opt.height()).collect::<Vec<_>>();
+        let bottom_heights = (bottom.iter()).map(|opt| opt.height()).collect::<Vec<_>>();
         let horiz_height = |heights: Vec<Signal<f64>>| {
             Signal::derive(move || (heights.iter()).map(|h| h.get()).sum::<f64>())
         };
@@ -60,10 +65,10 @@ impl Layout {
         });
 
         // Left / right options to UseLayoutOption
-        let to_vertical = |opts: Vec<LayoutOption<Y>>, edge: Edge| {
+        let to_vertical = |opts: Vec<LayoutOptionAttr<Y>>, edge: Edge| {
             (opts.into_iter())
                 .map(|opt| {
-                    let c = opt.to_vertical_use(attr, series, avail_height);
+                    let c = opt.to_vertical_use(series, avail_height);
                     let width = c.width();
                     (c, edge, width)
                 })
@@ -92,13 +97,7 @@ impl Layout {
                     .zip(bottom_heights.into_iter())
                     .map(|(opt, height)| (opt, Edge::Bottom, height)),
             )
-            .map(|(opt, edge, height)| {
-                (
-                    opt.to_horizontal_use(attr, series, avail_width),
-                    edge,
-                    height,
-                )
-            })
+            .map(|(opt, edge, height)| (opt.to_horizontal_use(series, avail_width), edge, height))
             .collect::<Vec<_>>();
 
         // Inner chart
@@ -130,45 +129,47 @@ impl Layout {
 }
 
 impl<Tick> LayoutOption<Tick> {
-    fn height<X, Y>(&self, attr: &Attr, series: &UseSeries<X, Y>) -> Signal<f64> {
+    pub(crate) fn apply_attr(self, attr: &Attr) -> LayoutOptionAttr<Tick> {
         match self {
-            Self::RotatedLabel(config) => config.clone().to_use(attr).size(),
-            Self::Legend(config) => config.clone().to_use(attr, series).height(),
-            Self::TickLabels(config) => config.height(attr),
+            Self::RotatedLabel(config) => config.apply_attr(attr).into(),
+            Self::Legend(config) => config.apply_attr(attr).into(),
+            Self::TickLabels(config) => config.apply_attr(attr).into(),
         }
     }
 }
 
-impl<X> LayoutOption<X> {
+impl<X> LayoutOptionAttr<X> {
+    fn height(&self) -> Signal<f64> {
+        match self {
+            Self::RotatedLabel(config) => config.size(),
+            Self::Legend(config) => config.height(),
+            Self::TickLabels(config) => config.height(),
+        }
+    }
+
     fn to_horizontal_use<Y>(
         self,
-        attr: &Attr,
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
     ) -> Box<dyn UseLayout> {
         match self {
-            Self::RotatedLabel(config) => Box::new(config.to_use(attr)),
-            Self::Legend(config) => Box::new(config.to_use(attr, series)),
-            Self::TickLabels(config) => {
-                Box::new(config.to_horizontal_use(attr, series, avail_width))
-            }
+            Self::RotatedLabel(config) => Box::new(config),
+            Self::Legend(config) => Box::new(config.to_use(series)),
+            Self::TickLabels(config) => Box::new(config.to_horizontal_use(series, avail_width)),
         }
     }
 }
 
-impl<Y> LayoutOption<Y> {
+impl<Y> LayoutOptionAttr<Y> {
     fn to_vertical_use<X>(
         self,
-        attr: &Attr,
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
     ) -> Box<dyn UseLayout> {
         match self {
-            Self::RotatedLabel(config) => Box::new(config.to_use(attr)),
-            Self::Legend(config) => Box::new(config.to_use(attr, series)),
-            Self::TickLabels(config) => {
-                Box::new(config.to_vertical_use(attr, series, avail_height))
-            }
+            Self::RotatedLabel(config) => Box::new(config),
+            Self::Legend(config) => Box::new(config.to_use(series)),
+            Self::TickLabels(config) => Box::new(config.to_vertical_use(series, avail_height)),
         }
     }
 }

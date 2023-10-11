@@ -1,7 +1,7 @@
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
-    layout::{Layout, LayoutOption},
+    layout::{Layout, LayoutOption, LayoutOptionAttr},
     series::{Series, UseSeries},
     Font, Padding,
 };
@@ -14,10 +14,10 @@ pub struct Chart<X: 'static, Y: 'static> {
     debug: Option<MaybeSignal<bool>>,
     attr: Attr,
 
-    top: Vec<LayoutOption<X>>,
-    right: Vec<LayoutOption<Y>>,
-    bottom: Vec<LayoutOption<X>>,
-    left: Vec<LayoutOption<Y>>,
+    top: Vec<LayoutOptionAttr<X>>,
+    right: Vec<LayoutOptionAttr<Y>>,
+    bottom: Vec<LayoutOptionAttr<X>>,
+    left: Vec<LayoutOptionAttr<Y>>,
 
     series: UseSeries<X, Y>,
 }
@@ -80,22 +80,22 @@ impl<X, Y> Chart<X, Y> {
     }
 
     pub fn add_top(mut self, opt: impl Into<LayoutOption<X>>) -> Self {
-        self.top.push(opt.into());
+        self.top.push(opt.into().apply_attr(&self.attr));
         self
     }
 
     pub fn add_right(mut self, opt: impl Into<LayoutOption<Y>>) -> Self {
-        self.right.push(opt.into());
+        self.right.push(opt.into().apply_attr(&self.attr));
         self
     }
 
     pub fn add_bottom(mut self, opt: impl Into<LayoutOption<X>>) -> Self {
-        self.bottom.push(opt.into());
+        self.bottom.push(opt.into().apply_attr(&self.attr));
         self
     }
 
     pub fn add_left(mut self, opt: impl Into<LayoutOption<Y>>) -> Self {
-        self.left.push(opt.into());
+        self.left.push(opt.into().apply_attr(&self.attr));
         self
     }
 }
@@ -122,7 +122,7 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
 
     let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let outer_bounds = Signal::derive(move || padding.get().apply(chart_bounds.get()));
-    let layout = Layout::compose(outer_bounds, top, right, bottom, left, &attr, &series);
+    let layout = Layout::compose(outer_bounds, top, right, bottom, left, &series);
 
     view! {
         <div

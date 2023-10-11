@@ -2,7 +2,7 @@ use super::{
     compose::UseLayout,
     rotated_label::Anchor,
     snippet::{Snippet, SnippetTd, UseSnippet},
-    LayoutOption,
+    LayoutOption, LayoutOptionAttr,
 };
 use crate::{
     bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
@@ -19,11 +19,16 @@ pub struct Legend {
 }
 
 #[derive(Clone, Debug)]
-pub struct UseLegend {
+pub struct LegendAttr {
     snippet: UseSnippet,
     anchor: MaybeSignal<Anchor>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
+}
+
+#[derive(Clone, Debug)]
+pub struct UseLegend {
+    attr: LegendAttr,
     lines: Vec<Line>,
 }
 
@@ -57,22 +62,29 @@ impl Legend {
         self
     }
 
-    pub fn height<X, Y>(&self, attr: &Attr, series: &UseSeries<X, Y>) -> Signal<f64> {
-        self.clone().to_use(attr, series).height()
-    }
-
-    pub(super) fn to_use<X, Y>(self, attr: &Attr, series: &UseSeries<X, Y>) -> UseLegend {
-        UseLegend {
+    pub(super) fn apply_attr<Tick>(self, attr: &Attr) -> LayoutOptionAttr<Tick> {
+        LayoutOptionAttr::<Tick>::Legend(LegendAttr {
             snippet: self.snippet.to_use(attr),
             anchor: self.anchor,
             padding: self.padding.unwrap_or(attr.padding),
             debug: self.debug.unwrap_or(attr.debug),
-            lines: series.lines.clone(),
-        }
+        })
     }
 }
 
-impl UseLegend {
+impl<Tick> From<Legend> for LayoutOption<Tick> {
+    fn from(label: Legend) -> Self {
+        Self::Legend(label)
+    }
+}
+
+impl<Tick> From<LegendAttr> for LayoutOptionAttr<Tick> {
+    fn from(legend: LegendAttr) -> Self {
+        Self::Legend(legend)
+    }
+}
+
+impl LegendAttr {
     pub fn height(&self) -> Signal<f64> {
         let (snip_height, font, padding) = (self.snippet.height(), self.snippet.font, self.padding);
         Signal::derive(move || {
@@ -80,18 +92,19 @@ impl UseLegend {
             text_height.max(snip_height.get())
         })
     }
-}
 
-impl<Tick> From<Legend> for LayoutOption<Tick> {
-    fn from(config: Legend) -> Self {
-        LayoutOption::Legend(config)
+    pub fn to_use<X, Y>(self, series: &UseSeries<X, Y>) -> UseLegend {
+        UseLegend {
+            attr: self,
+            lines: series.lines.clone(),
+        }
     }
 }
 
 impl UseLayout for UseLegend {
     fn width(&self) -> Signal<f64> {
-        let snip_width = self.snippet.width();
-        let (font, padding) = (self.snippet.font, self.padding);
+        let snip_width = self.attr.snippet.width();
+        let (font, padding) = (self.attr.snippet.font, self.attr.padding);
         let lines = (self.lines.iter())
             .map(|line| line.name.clone())
             .collect::<Vec<_>>();
@@ -112,13 +125,12 @@ impl UseLayout for UseLegend {
 
 #[component]
 pub fn Legend(legend: UseLegend, edge: Edge, bounds: Bounds) -> impl IntoView {
-    let UseLegend {
+    let LegendAttr {
         snippet,
         anchor,
         padding,
         debug,
-        lines,
-    } = legend;
+    } = legend.attr;
     let font = snippet.font;
 
     let inner = Signal::derive(move || padding.get().apply(bounds));
@@ -129,7 +141,7 @@ pub fn Legend(legend: UseLegend, edge: Edge, bounds: Bounds) -> impl IntoView {
     };
 
     let body = move || {
-        let tds = lines.iter().map(|line| {
+        let tds = legend.lines.iter().map(|line| {
             let name = line.name.clone();
             view!(<SnippetTd snippet=snippet.clone() line=line.clone()>{name}</SnippetTd>)
         });

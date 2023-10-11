@@ -53,7 +53,7 @@ pub fn App() -> impl IntoView {
         .inherit_padding(padding)
         .inherit_debug(debug)
         // Text labels
-        .add_top(RotatedLabel::new(anchor, text).set_debug(true))
+        .add_top(RotatedLabel::new(anchor, text))
         .add_right(RotatedLabel::new(anchor, text))
         // Ticks
         .add_left(TickLabels::aligned_floats())

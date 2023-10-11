@@ -1,4 +1,4 @@
-use super::{compose::UseLayout, LayoutOption};
+use super::{compose::UseLayout, LayoutOption, LayoutOptionAttr};
 use crate::{
     bounds::Bounds,
     chart::Attr,
@@ -19,6 +19,13 @@ pub struct TickLabels<Tick> {
     font: Option<MaybeSignal<Font>>,
     padding: Option<MaybeSignal<Padding>>,
     debug: Option<MaybeSignal<bool>>,
+    generator: Box<dyn TickGen<Tick = Tick>>,
+}
+
+pub struct TickLabelsAttr<Tick> {
+    font: MaybeSignal<Font>,
+    padding: MaybeSignal<Padding>,
+    debug: MaybeSignal<bool>,
     generator: Box<dyn TickGen<Tick = Tick>>,
 }
 
@@ -55,10 +62,13 @@ impl<Tick> TickLabels<Tick> {
         self
     }
 
-    pub fn height(&self, attr: &Attr) -> Signal<f64> {
-        let font = self.font.unwrap_or(attr.font);
-        let padding = self.padding.unwrap_or(attr.padding);
-        Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
+    pub(super) fn apply_attr(self, attr: &Attr) -> LayoutOptionAttr<Tick> {
+        LayoutOptionAttr::<Tick>::TickLabels(TickLabelsAttr {
+            font: self.font.unwrap_or(attr.font),
+            padding: self.padding.unwrap_or(attr.padding),
+            debug: self.debug.unwrap_or(attr.debug),
+            generator: self.generator,
+        })
     }
 }
 
@@ -86,20 +96,37 @@ where
     }
 }
 
-impl<X> TickLabels<X> {
-    pub(super) fn to_horizontal_use<Y>(
+impl<Tick> TickLabelsAttr<Tick> {
+    pub fn height(&self) -> Signal<f64> {
+        let (font, padding) = (self.font, self.padding);
+        Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
+    }
+}
+
+impl<Tick> From<TickLabels<Tick>> for LayoutOption<Tick> {
+    fn from(label: TickLabels<Tick>) -> Self {
+        Self::TickLabels(label)
+    }
+}
+
+impl<Tick> From<TickLabelsAttr<Tick>> for LayoutOptionAttr<Tick> {
+    fn from(label: TickLabelsAttr<Tick>) -> Self {
+        Self::TickLabels(label)
+    }
+}
+
+impl<X> TickLabelsAttr<X> {
+    pub fn to_horizontal_use<Y>(
         self,
-        attr: &Attr,
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
     ) -> UseTickLabels<X> {
         let data = series.data;
-        let font = self.font.unwrap_or(attr.font);
-        let padding = self.padding.unwrap_or(attr.padding);
+        let (font, padding) = (self.font, self.padding);
         UseTickLabels {
             font,
             padding,
-            debug: self.debug.unwrap_or(attr.debug),
+            debug: self.debug,
             ticks: Signal::derive(move || {
                 data.with(|data| {
                     let (first, last) = data.x_range();
@@ -113,20 +140,18 @@ impl<X> TickLabels<X> {
     }
 }
 
-impl<Y> TickLabels<Y> {
-    pub(super) fn to_vertical_use<X>(
+impl<Y> TickLabelsAttr<Y> {
+    pub fn to_vertical_use<X>(
         self,
-        attr: &Attr,
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
     ) -> UseTickLabels<Y> {
         let data = series.data;
-        let font = self.font.unwrap_or(attr.font);
-        let padding = self.padding.unwrap_or(attr.padding);
+        let (font, padding) = (self.font, self.padding);
         UseTickLabels {
             font,
             padding,
-            debug: self.debug.unwrap_or(attr.debug),
+            debug: self.debug,
             ticks: Signal::derive(move || {
                 data.with(|data| {
                     let (first, last) = data.y_range();
@@ -136,12 +161,6 @@ impl<Y> TickLabels<Y> {
                 })
             }),
         }
-    }
-}
-
-impl<Tick> From<TickLabels<Tick>> for LayoutOption<Tick> {
-    fn from(ticks: TickLabels<Tick>) -> Self {
-        LayoutOption::TickLabels(ticks)
     }
 }
 
