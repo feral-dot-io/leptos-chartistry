@@ -1,6 +1,7 @@
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
+    inner::InnerOption,
     layout::{HorizontalOption, Layout, LayoutOption, VerticalOption},
     series::{Series, UseSeries},
     Font, Padding,
@@ -18,7 +19,7 @@ pub struct Chart<X: 'static, Y: 'static> {
     right: Vec<Box<dyn VerticalOption<X, Y>>>,
     bottom: Vec<Box<dyn HorizontalOption<X, Y>>>,
     left: Vec<Box<dyn VerticalOption<X, Y>>>,
-
+    inner: Vec<InnerOption>,
     series: UseSeries<X, Y>,
 }
 
@@ -51,7 +52,7 @@ impl<X, Y> Chart<X, Y> {
             right: vec![],
             bottom: vec![],
             left: vec![],
-
+            inner: vec![],
             series,
         }
     }
@@ -98,6 +99,11 @@ impl<X, Y> Chart<X, Y> {
         self.left.push(opt.into().apply_vertical(&self.attr));
         self
     }
+
+    pub fn add(mut self, opt: impl Into<InnerOption>) -> Self {
+        self.inner.push(opt.into());
+        self
+    }
 }
 
 #[component]
@@ -113,7 +119,7 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
         right,
         bottom,
         left,
-
+        inner,
         series,
     } = chart;
 
@@ -123,6 +129,10 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
     let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let outer_bounds = Signal::derive(move || padding.get().apply(chart_bounds.get()));
     let layout = Layout::compose(outer_bounds, top, right, bottom, left, &series);
+
+    let inner = (inner.into_iter())
+        .map(|opt| opt.render(layout.projection))
+        .collect_view();
 
     view! {
         <div
@@ -134,6 +144,7 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
                 viewBox=move || format!("0 0 {} {}", width.get(), height.get())>
                 <DebugRect label="Chart" debug=debug bounds=move || vec![chart_bounds.get(), outer_bounds.get()] />
                 {layout.view}
+                {inner}
                 <Series series=series projection=layout.projection />
             </svg>
         </div>

@@ -173,9 +173,9 @@ pub(super) fn RotatedLabel(label: UseRotatedLabel, edge: Edge, bounds: Bounds) -
 
     let content = Signal::derive(move || padding.get().apply(bounds));
     let position = Signal::derive(move || {
-        let content = content.get();
-        let (top, right, bottom, left) = content.as_css_tuple();
-        let (centre_x, centre_y) = (content.centre_x(), content.centre_y());
+        let c = content.get();
+        let (top, right, bottom, left) = (c.top_y(), c.right_x(), c.bottom_y(), c.left_x());
+        let (centre_x, centre_y) = (c.centre_x(), c.centre_y());
 
         let anchor = anchor.get();
         match edge {

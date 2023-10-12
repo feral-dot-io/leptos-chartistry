@@ -52,10 +52,6 @@ impl Bounds {
         Self::from_points(left, top, right, bottom)
     }
 
-    pub fn as_css_tuple(&self) -> (f64, f64, f64, f64) {
-        (self.left, self.top, self.right, self.bottom)
-    }
-
     /// Returns true if the bounds are empty i.e., zero area. Must be absolute zero, does not test for a small float delta.
     pub fn is_zero(&self) -> bool {
         self.left == self.right || self.top == self.bottom

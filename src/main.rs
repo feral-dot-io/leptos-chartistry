@@ -59,7 +59,11 @@ pub fn App() -> impl IntoView {
         .add_left(TickLabels::aligned_floats())
         .add_bottom(TickLabels::timestamps())
         // Legend
-        .add_top(Legend::end(Snippet::horizontal()));
+        .add_top(Legend::end(Snippet::horizontal()))
+        // Axis lines
+        .add(AxisMarker::bottom_edge())
+        .add(AxisMarker::left_edge())
+        .add(AxisMarker::horizontal_zero());
 
     view! {
         <form>
