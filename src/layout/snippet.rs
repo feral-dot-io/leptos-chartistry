@@ -47,7 +47,7 @@ impl Snippet {
         self
     }
 
-    pub(crate) fn to_use(self, attr: &Attr) -> UseSnippet {
+    pub(super) fn to_use(self, attr: &Attr) -> UseSnippet {
         UseSnippet {
             style: self.style,
             font: self.font.unwrap_or(attr.font),

@@ -1,12 +1,7 @@
+use super::{compose::UseLayout, HorizontalOption, LayoutOption, VerticalOption};
 use crate::{
-    bounds::Bounds,
-    chart::Attr,
-    compose::{HorizontalOption, LayoutOption, UseLayout, VerticalOption},
-    debug::DebugRect,
-    edge::Edge,
-    projection::Projection,
-    series::UseSeries,
-    Font, Padding,
+    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
+    series::UseSeries, Font, Padding,
 };
 use leptos::*;
 
@@ -76,7 +71,7 @@ impl RotatedLabel {
         self
     }
 
-    pub fn apply_attr(self, attr: &Attr) -> RotatedLabelAttr {
+    pub(super) fn apply_attr(self, attr: &Attr) -> RotatedLabelAttr {
         UseRotatedLabel {
             text: self.text,
             anchor: self.anchor,
@@ -86,11 +81,11 @@ impl RotatedLabel {
         }
     }
 
-    pub(crate) fn apply_horizontal<X, Y>(self, attr: &Attr) -> impl HorizontalOption<X, Y> {
+    pub(super) fn apply_horizontal<X, Y>(self, attr: &Attr) -> impl HorizontalOption<X, Y> {
         self.apply_attr(attr)
     }
 
-    pub(crate) fn apply_vertical<X, Y>(self, attr: &Attr) -> impl VerticalOption<X, Y> {
+    pub(super) fn apply_vertical<X, Y>(self, attr: &Attr) -> impl VerticalOption<X, Y> {
         self.apply_attr(attr)
     }
 }
@@ -167,7 +162,7 @@ impl UseLayout for UseRotatedLabel {
 }
 
 #[component]
-fn RotatedLabel(label: UseRotatedLabel, edge: Edge, bounds: Bounds) -> impl IntoView {
+pub(super) fn RotatedLabel(label: UseRotatedLabel, edge: Edge, bounds: Bounds) -> impl IntoView {
     let UseRotatedLabel {
         text,
         anchor,

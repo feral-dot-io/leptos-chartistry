@@ -1,10 +1,10 @@
+use super::{legend::Legend, rotated_label::RotatedLabel, tick_labels::TickLabels};
 use crate::{
     bounds::Bounds,
     chart::Attr,
     edge::{Edge, IntoEdgeBounds},
     projection::Projection,
     series::UseSeries,
-    Legend, RotatedLabel, TickLabels,
 };
 use leptos::*;
 

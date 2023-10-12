@@ -1,7 +1,7 @@
 use crate::{
     bounds::Bounds,
-    compose::{HorizontalOption, Layout, LayoutOption, VerticalOption},
     debug::DebugRect,
+    layout::{HorizontalOption, Layout, LayoutOption, VerticalOption},
     series::{Series, UseSeries},
     Font, Padding,
 };
