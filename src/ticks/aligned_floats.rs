@@ -149,7 +149,7 @@ fn scale10(range: f64) -> isize {
 
 #[cfg(test)]
 mod tests {
-    use super::super::gen::HorizontalSpan;
+    use super::super::use_ticks::HorizontalSpan;
     use super::*;
 
     fn mk_span(width: f64) -> Box<dyn Span> {

@@ -375,7 +375,7 @@ impl<Tz: TimeZone> PartialEq for Timestamp<Tz> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::HorizontalSpan;
+    use super::super::use_ticks::HorizontalSpan;
     use super::*;
 
     fn assert_ticks<Tz: TimeZone>(
