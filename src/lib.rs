@@ -1,5 +1,6 @@
 mod bounds;
 mod chart;
+mod compose;
 mod debug;
 mod edge;
 mod font;

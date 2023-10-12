@@ -1,12 +1,16 @@
 use super::{
-    compose::UseLayout,
     rotated_label::Anchor,
     snippet::{Snippet, SnippetTd, UseSnippet},
-    HorizontalOption, LayoutOption, VerticalOption,
 };
 use crate::{
-    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
-    series::UseSeries, Line, Padding,
+    bounds::Bounds,
+    chart::Attr,
+    compose::{HorizontalOption, LayoutOption, UseLayout, VerticalOption},
+    debug::DebugRect,
+    edge::Edge,
+    projection::Projection,
+    series::UseSeries,
+    Line, Padding,
 };
 use leptos::*;
 
@@ -62,7 +66,7 @@ impl Legend {
         self
     }
 
-    pub(super) fn apply_attr(self, attr: &Attr) -> LegendAttr {
+    fn apply_attr(self, attr: &Attr) -> LegendAttr {
         LegendAttr {
             snippet: self.snippet.to_use(attr),
             anchor: self.anchor,
@@ -71,11 +75,11 @@ impl Legend {
         }
     }
 
-    pub(super) fn apply_horizontal<X, Y>(self, attr: &Attr) -> impl HorizontalOption<X, Y> {
+    pub(crate) fn apply_horizontal<X, Y>(self, attr: &Attr) -> impl HorizontalOption<X, Y> {
         self.apply_attr(attr)
     }
 
-    pub(super) fn apply_vertical<X, Y>(self, attr: &Attr) -> impl VerticalOption<X, Y> {
+    pub(crate) fn apply_vertical<X, Y>(self, attr: &Attr) -> impl VerticalOption<X, Y> {
         self.apply_attr(attr)
     }
 }

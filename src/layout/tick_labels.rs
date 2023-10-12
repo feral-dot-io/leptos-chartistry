@@ -1,7 +1,7 @@
-use super::{compose::UseLayout, HorizontalOption, LayoutOption, VerticalOption};
 use crate::{
     bounds::Bounds,
     chart::Attr,
+    compose::{HorizontalOption, LayoutOption, UseLayout, VerticalOption},
     debug::DebugRect,
     edge::Edge,
     projection::Projection,
@@ -62,7 +62,7 @@ impl<Tick> TickLabels<Tick> {
         self
     }
 
-    pub(super) fn apply_attr(self, attr: &Attr) -> TickLabelsAttr<Tick> {
+    fn apply_attr(self, attr: &Attr) -> TickLabelsAttr<Tick> {
         TickLabelsAttr {
             font: self.font.unwrap_or(attr.font),
             padding: self.padding.unwrap_or(attr.padding),
@@ -71,11 +71,11 @@ impl<Tick> TickLabels<Tick> {
         }
     }
 
-    pub(super) fn apply_horizontal<Y>(self, attr: &Attr) -> impl HorizontalOption<Tick, Y> {
+    pub(crate) fn apply_horizontal<Y>(self, attr: &Attr) -> impl HorizontalOption<Tick, Y> {
         self.apply_attr(attr)
     }
 
-    pub(super) fn apply_vertical<X>(self, attr: &Attr) -> impl VerticalOption<X, Tick> {
+    pub(crate) fn apply_vertical<X>(self, attr: &Attr) -> impl VerticalOption<X, Tick> {
         self.apply_attr(attr)
     }
 }
