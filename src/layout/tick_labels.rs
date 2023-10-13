@@ -13,15 +13,17 @@ use crate::{
 };
 use chrono::prelude::*;
 use leptos::*;
-use std::borrow::Borrow;
+use std::{borrow::Borrow, sync::Arc};
 
-pub struct TickLabels<Tick> {
+#[derive(Clone)]
+pub struct TickLabels<Tick: Clone> {
     font: Option<MaybeSignal<Font>>,
     padding: Option<MaybeSignal<Padding>>,
     debug: Option<MaybeSignal<bool>>,
-    generator: Box<dyn TickGen<Tick = Tick>>,
+    generator: Arc<dyn TickGen<Tick = Tick>>,
 }
 
+#[derive(Clone)]
 pub struct TickLabelsAttr<Tick>(pub(crate) Ticks<Tick>);
 
 #[derive(Clone, Debug)]
@@ -51,13 +53,13 @@ where
     }
 }
 
-impl<Tick> TickLabels<Tick> {
+impl<Tick: Clone> TickLabels<Tick> {
     fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
             font: None,
             padding: None,
             debug: None,
-            generator: Box::new(gen),
+            generator: Arc::new(gen),
         }
     }
 
@@ -86,13 +88,13 @@ impl<Tick> TickLabels<Tick> {
     }
 }
 
-impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
+impl<X: Clone + 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
         Box::new(self.apply_attr(attr))
     }
 }
 
-impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for TickLabels<Y> {
+impl<X: 'static, Y: Clone + 'static> VerticalLayout<X, Y> for TickLabels<Y> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
         Box::new(self.apply_attr(attr))
     }

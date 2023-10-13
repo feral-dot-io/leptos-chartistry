@@ -1,12 +1,14 @@
 use super::{gen::Span, GeneratedTicks, TickGen};
 use crate::{series::Data, Font, Padding};
 use leptos::*;
+use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct Ticks<Tick> {
     pub(crate) font: MaybeSignal<Font>,
     pub(crate) padding: MaybeSignal<Padding>,
     pub(crate) debug: MaybeSignal<bool>,
-    pub(crate) generator: Box<dyn TickGen<Tick = Tick>>,
+    pub(crate) generator: Arc<dyn TickGen<Tick = Tick>>,
 }
 
 #[derive(Clone, Debug)]

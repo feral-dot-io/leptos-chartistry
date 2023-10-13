@@ -1,3 +1,6 @@
+use std::borrow::Borrow;
+
+use super::{InnerLayout, InnerOption, UseInner};
 use crate::{
     chart::Attr,
     debug::DebugRect,
@@ -8,22 +11,26 @@ use crate::{
 };
 use leptos::*;
 
-use super::{InnerLayout, InnerOption, UseInner};
-
-pub struct GridLine<Tick> {
+#[derive(Clone)]
+pub struct GridLine<Tick: Clone> {
     width: MaybeSignal<f64>,
     ticks: TickLabels<Tick>,
 }
 
-pub struct HorizontalGridLine<Tick>(GridLine<Tick>);
-pub struct VerticalGridLine<Tick>(GridLine<Tick>);
+#[derive(Clone)]
+pub struct HorizontalGridLine<Tick: Clone>(GridLine<Tick>);
+#[derive(Clone)]
+pub struct VerticalGridLine<Tick: Clone>(GridLine<Tick>);
 
+#[derive(Clone)]
 struct GridLineAttr<Tick> {
     width: MaybeSignal<f64>,
     ticks: Ticks<Tick>,
 }
 
+#[derive(Clone)]
 struct HorizontalGridLineAttr<Tick>(GridLineAttr<Tick>);
+#[derive(Clone)]
 struct VerticalGridLineAttr<Tick>(GridLineAttr<Tick>);
 
 #[derive(Clone, Debug)]
@@ -37,21 +44,21 @@ struct UseHorizontalGridLine<Tick: 'static>(UseGridLine<Tick>);
 #[derive(Clone, Debug)]
 struct UseVerticalGridLine<Tick: 'static>(UseGridLine<Tick>);
 
-impl<Tick> GridLine<Tick> {
-    fn new(ticks: TickLabels<Tick>) -> Self {
+impl<Tick: Clone> GridLine<Tick> {
+    fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
         Self {
             width: 1.0.into(),
-            ticks,
+            ticks: ticks.borrow().clone(),
         }
     }
 
     /// Horizontal grid lines running parallel to the x-axis. These run from left to right at each tick.
-    pub fn horizontal(ticks: impl Into<TickLabels<Tick>>) -> VerticalGridLine<Tick> {
-        VerticalGridLine(Self::new(ticks.into()))
+    pub fn horizontal(ticks: impl Borrow<TickLabels<Tick>>) -> VerticalGridLine<Tick> {
+        VerticalGridLine(Self::new(ticks))
     }
     /// Vertical grid lines running parallel to the y-axis. These run from top to bottom at each tick.
-    pub fn vertical(ticks: impl Into<TickLabels<Tick>>) -> HorizontalGridLine<Tick> {
-        HorizontalGridLine(Self::new(ticks.into()))
+    pub fn vertical(ticks: impl Borrow<TickLabels<Tick>>) -> HorizontalGridLine<Tick> {
+        HorizontalGridLine(Self::new(ticks))
     }
 
     fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
@@ -62,13 +69,13 @@ impl<Tick> GridLine<Tick> {
     }
 }
 
-impl<X: 'static, Y: 'static> InnerLayout<X, Y> for HorizontalGridLine<X> {
+impl<X: Clone + 'static, Y: 'static> InnerLayout<X, Y> for HorizontalGridLine<X> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>> {
         Box::new(HorizontalGridLineAttr(self.0.apply_attr(attr)))
     }
 }
 
-impl<X: 'static, Y: 'static> InnerLayout<X, Y> for VerticalGridLine<Y> {
+impl<X: 'static, Y: Clone + 'static> InnerLayout<X, Y> for VerticalGridLine<Y> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>> {
         Box::new(VerticalGridLineAttr(self.0.apply_attr(attr)))
     }
