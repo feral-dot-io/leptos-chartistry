@@ -62,7 +62,7 @@ impl Legend {
         self
     }
 
-    fn apply_attr(self, attr: &Attr) -> LegendAttr {
+    pub(crate) fn apply_attr(self, attr: &Attr) -> LegendAttr {
         LegendAttr {
             snippet: self.snippet.to_use(attr),
             anchor: self.anchor,
@@ -84,7 +84,7 @@ impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for Legend {
     }
 }
 
-impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
+impl LegendAttr {
     fn height(&self) -> Signal<f64> {
         let (snip_height, font, padding) = (self.snippet.height(), self.snippet.font, self.padding);
         Signal::derive(move || {
@@ -93,25 +93,36 @@ impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
         })
     }
 
-    fn to_use(self: Box<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new(UseLegend {
-            attr: *self,
+    pub fn to_use<X, Y>(self, series: &UseSeries<X, Y>) -> UseLegend {
+        UseLegend {
+            attr: self,
             lines: series.lines.clone(),
-        })
+        }
+    }
+}
+
+impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
+    fn height(&self) -> Signal<f64> {
+        self.height()
+    }
+
+    fn to_use(self: Box<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        Box::new((*self).to_use(series))
     }
 }
 
 impl<X, Y> VerticalOption<X, Y> for LegendAttr {
     fn to_use(self: Box<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new(UseLegend {
-            attr: *self,
-            lines: series.lines.clone(),
-        })
+        Box::new((*self).to_use(series))
     }
 }
 
-impl UseLayout for UseLegend {
-    fn width(&self) -> Signal<f64> {
+impl UseLegend {
+    pub fn height(&self) -> Signal<f64> {
+        self.attr.height()
+    }
+
+    pub fn width(&self) -> Signal<f64> {
         let snip_width = self.attr.snippet.width();
         let (font, padding) = (self.attr.snippet.font, self.attr.padding);
         let lines = (self.lines.iter())
@@ -126,14 +137,24 @@ impl UseLayout for UseLegend {
             snip_width.get() + font_width + max_chars + padding.get().width()
         })
     }
+}
+
+impl UseLayout for UseLegend {
+    fn width(&self) -> Signal<f64> {
+        self.width()
+    }
 
     fn render<'a>(&self, edge: Edge, bounds: Bounds, _: Signal<Projection>) -> View {
-        view! { <Legend legend=self.clone() edge=edge bounds=bounds /> }
+        view! { <Legend legend=self.clone() edge=edge bounds=move || bounds /> }
     }
 }
 
 #[component]
-pub fn Legend(legend: UseLegend, edge: Edge, bounds: Bounds) -> impl IntoView {
+pub fn Legend(
+    legend: UseLegend,
+    edge: Edge,
+    #[prop(into)] bounds: Signal<Bounds>,
+) -> impl IntoView {
     let LegendAttr {
         snippet,
         anchor,
@@ -142,7 +163,7 @@ pub fn Legend(legend: UseLegend, edge: Edge, bounds: Bounds) -> impl IntoView {
     } = legend.attr;
     let font = snippet.font;
 
-    let inner = Signal::derive(move || padding.get().apply(bounds));
+    let inner = Signal::derive(move || padding.get().apply(bounds.get()));
     let anchor_dir = if edge.is_horizontal() {
         "row"
     } else {
@@ -164,10 +185,10 @@ pub fn Legend(legend: UseLegend, edge: Edge, bounds: Bounds) -> impl IntoView {
 
     view! {
         <g class="_chartistry_legend">
-            <DebugRect label="Legend" debug=debug bounds=move || vec![bounds, inner.get()] />
+            <DebugRect label="Legend" debug=debug bounds=move || vec![bounds.get(), inner.get()] />
             <foreignObject
-                x=bounds.left_x()
-                y=bounds.top_y()
+                x=move || bounds.get().left_x()
+                y=move || bounds.get().top_y()
                 width=move || inner.get().width()
                 height=move || inner.get().height()
                 style="overflow: auto;">

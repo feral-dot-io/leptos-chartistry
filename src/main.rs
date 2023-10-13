@@ -58,12 +58,12 @@ pub fn App() -> impl IntoView {
         .inherit_debug(debug)
         // Text labels
         .add_top(&top_label)
-        .add_right(RotatedLabel::new(anchor, text))
         // Ticks
         .add_left(&left_ticks)
         .add_bottom(&bottom_ticks)
         // Legend
         .add_top(Legend::end(Snippet::horizontal()))
+        .add(InsetLegend::right(Snippet::vertical()))
         // Axis lines
         .add(AxisMarker::bottom_edge())
         .add(AxisMarker::left_edge())
