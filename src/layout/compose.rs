@@ -1,4 +1,3 @@
-use super::{legend::Legend, rotated_label::RotatedLabel, tick_labels::TickLabels};
 use crate::{
     bounds::Bounds,
     chart::Attr,
@@ -8,10 +7,12 @@ use crate::{
 };
 use leptos::*;
 
-pub enum LayoutOption<Tick: 'static> {
-    RotatedLabel(RotatedLabel),
-    Legend(Legend),
-    TickLabels(TickLabels<Tick>),
+pub trait HorizontalLayout<X, Y> {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>>;
+}
+
+pub trait VerticalLayout<X, Y> {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>>;
 }
 
 pub trait HorizontalOption<X, Y> {
@@ -135,25 +136,20 @@ impl Layout {
     }
 }
 
-impl<X> LayoutOption<X> {
-    pub(crate) fn apply_horizontal<Y: 'static>(
-        self,
-        attr: &Attr,
-    ) -> Box<dyn HorizontalOption<X, Y>> {
-        match self {
-            Self::RotatedLabel(config) => Box::new(config.apply_horizontal(attr)),
-            Self::Legend(config) => Box::new(config.apply_horizontal(attr)),
-            Self::TickLabels(config) => Box::new(config.apply_horizontal(attr)),
-        }
+impl<T, X, Y> HorizontalLayout<X, Y> for &T
+where
+    T: Clone + HorizontalLayout<X, Y>,
+{
+    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
+        self.clone().apply_attr(attr)
     }
 }
 
-impl<Y> LayoutOption<Y> {
-    pub(crate) fn apply_vertical<X: 'static>(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
-        match self {
-            Self::RotatedLabel(config) => Box::new(config.apply_vertical(attr)),
-            Self::Legend(config) => Box::new(config.apply_vertical(attr)),
-            Self::TickLabels(config) => Box::new(config.apply_vertical(attr)),
-        }
+impl<T, X, Y> VerticalLayout<X, Y> for &T
+where
+    T: Clone + VerticalLayout<X, Y>,
+{
+    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
+        self.clone().apply_attr(attr)
     }
 }

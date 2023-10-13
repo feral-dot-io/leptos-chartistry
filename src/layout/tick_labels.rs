@@ -1,4 +1,6 @@
-use super::{compose::UseLayout, HorizontalOption, LayoutOption, VerticalOption};
+use super::{
+    compose::UseLayout, HorizontalLayout, HorizontalOption, VerticalLayout, VerticalOption,
+};
 use crate::{
     bounds::Bounds,
     chart::Attr,
@@ -24,6 +26,30 @@ pub struct TickLabelsAttr<Tick>(pub(crate) Ticks<Tick>);
 
 #[derive(Clone, Debug)]
 pub struct UseTickLabels<Tick: 'static>(UseTicks<Tick>);
+
+impl TickLabels<f64> {
+    pub fn aligned_floats() -> Self {
+        Self::new(AlignedFloatsGen::new())
+    }
+}
+
+impl<Tz> TickLabels<DateTime<Tz>>
+where
+    Tz: TimeZone + std::fmt::Debug + 'static,
+    Tz::Offset: std::fmt::Display,
+{
+    pub fn timestamps() -> Self {
+        Self::new(TimestampGen::new(Period::all()))
+    }
+
+    pub fn timestamp_periods(periods: impl Borrow<[Period]>) -> Self {
+        Self::new(TimestampGen::new(periods))
+    }
+
+    pub fn timestamp_period(period: Period) -> Self {
+        Self::new(TimestampGen::new([period]))
+    }
+}
 
 impl<Tick> TickLabels<Tick> {
     fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
@@ -58,43 +84,17 @@ impl<Tick> TickLabels<Tick> {
             generator: self.generator,
         })
     }
+}
 
-    pub(super) fn apply_horizontal<Y>(self, attr: &Attr) -> impl HorizontalOption<Tick, Y> {
-        self.apply_attr(attr)
-    }
-
-    pub(super) fn apply_vertical<X>(self, attr: &Attr) -> impl VerticalOption<X, Tick> {
-        self.apply_attr(attr)
+impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
+        Box::new(self.apply_attr(attr))
     }
 }
 
-impl TickLabels<f64> {
-    pub fn aligned_floats() -> Self {
-        Self::new(AlignedFloatsGen::new())
-    }
-}
-
-impl<Tz> TickLabels<DateTime<Tz>>
-where
-    Tz: TimeZone + std::fmt::Debug + 'static,
-    Tz::Offset: std::fmt::Display,
-{
-    pub fn timestamps() -> Self {
-        Self::new(TimestampGen::new(Period::all()))
-    }
-
-    pub fn timestamp_periods(periods: impl Borrow<[Period]>) -> Self {
-        Self::new(TimestampGen::new(periods))
-    }
-
-    pub fn timestamp_period(period: Period) -> Self {
-        Self::new(TimestampGen::new([period]))
-    }
-}
-
-impl<Tick> From<TickLabels<Tick>> for LayoutOption<Tick> {
-    fn from(label: TickLabels<Tick>) -> Self {
-        Self::TickLabels(label)
+impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for TickLabels<Y> {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
+        Box::new(self.apply_attr(attr))
     }
 }
 

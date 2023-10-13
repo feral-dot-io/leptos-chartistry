@@ -2,7 +2,7 @@ use super::{
     compose::UseLayout,
     rotated_label::Anchor,
     snippet::{Snippet, SnippetTd, UseSnippet},
-    HorizontalOption, LayoutOption, VerticalOption,
+    HorizontalLayout, HorizontalOption, VerticalLayout, VerticalOption,
 };
 use crate::{
     bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
@@ -62,7 +62,7 @@ impl Legend {
         self
     }
 
-    pub(super) fn apply_attr(self, attr: &Attr) -> LegendAttr {
+    fn apply_attr(self, attr: &Attr) -> LegendAttr {
         LegendAttr {
             snippet: self.snippet.to_use(attr),
             anchor: self.anchor,
@@ -70,19 +70,17 @@ impl Legend {
             debug: self.debug.unwrap_or(attr.debug),
         }
     }
+}
 
-    pub(super) fn apply_horizontal<X, Y>(self, attr: &Attr) -> impl HorizontalOption<X, Y> {
-        self.apply_attr(attr)
-    }
-
-    pub(super) fn apply_vertical<X, Y>(self, attr: &Attr) -> impl VerticalOption<X, Y> {
-        self.apply_attr(attr)
+impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for Legend {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
+        Box::new(self.apply_attr(attr))
     }
 }
 
-impl<Tick> From<Legend> for LayoutOption<Tick> {
-    fn from(label: Legend) -> Self {
-        Self::Legend(label)
+impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for Legend {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
+        Box::new(self.apply_attr(attr))
     }
 }
 

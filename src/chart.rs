@@ -2,7 +2,7 @@ use crate::{
     bounds::Bounds,
     debug::DebugRect,
     inner::{InnerAttr, InnerOption},
-    layout::{HorizontalOption, Layout, LayoutOption, VerticalOption},
+    layout::{HorizontalLayout, HorizontalOption, Layout, VerticalLayout, VerticalOption},
     series::{Series, UseSeries},
     Font, Padding,
 };
@@ -80,23 +80,23 @@ impl<X, Y> Chart<X, Y> {
         self
     }
 
-    pub fn add_top(mut self, opt: impl Into<LayoutOption<X>>) -> Self {
-        self.top.push(opt.into().apply_horizontal(&self.attr));
+    pub fn add_top(mut self, opt: impl HorizontalLayout<X, Y>) -> Self {
+        self.top.push(opt.apply_attr(&self.attr));
         self
     }
 
-    pub fn add_right(mut self, opt: impl Into<LayoutOption<Y>>) -> Self {
-        self.right.push(opt.into().apply_vertical(&self.attr));
+    pub fn add_right(mut self, opt: impl VerticalLayout<X, Y>) -> Self {
+        self.right.push(opt.apply_attr(&self.attr));
         self
     }
 
-    pub fn add_bottom(mut self, opt: impl Into<LayoutOption<X>>) -> Self {
-        self.bottom.push(opt.into().apply_horizontal(&self.attr));
+    pub fn add_bottom(mut self, opt: impl HorizontalLayout<X, Y>) -> Self {
+        self.bottom.push(opt.apply_attr(&self.attr));
         self
     }
 
-    pub fn add_left(mut self, opt: impl Into<LayoutOption<Y>>) -> Self {
-        self.left.push(opt.into().apply_vertical(&self.attr));
+    pub fn add_left(mut self, opt: impl VerticalLayout<X, Y>) -> Self {
+        self.left.push(opt.apply_attr(&self.attr));
         self
     }
 

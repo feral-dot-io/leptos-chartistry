@@ -49,12 +49,13 @@ pub fn App() -> impl IntoView {
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
+    let top_label = RotatedLabel::new(anchor, text);
 
     let chart = Chart::new(width, 600.0, font, series)
         .inherit_padding(padding)
         .inherit_debug(debug)
         // Text labels
-        .add_top(RotatedLabel::new(anchor, text))
+        .add_top(&top_label)
         .add_right(RotatedLabel::new(anchor, text))
         // Ticks
         .add_left(TickLabels::aligned_floats())

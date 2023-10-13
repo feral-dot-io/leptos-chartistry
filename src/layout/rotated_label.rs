@@ -1,4 +1,7 @@
-use super::{compose::UseLayout, HorizontalOption, LayoutOption, VerticalOption};
+use super::{
+    compose::{UseLayout, VerticalLayout},
+    HorizontalLayout, HorizontalOption, VerticalOption,
+};
 use crate::{
     bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
     series::UseSeries, Font, Padding,
@@ -71,7 +74,7 @@ impl RotatedLabel {
         self
     }
 
-    pub(super) fn apply_attr(self, attr: &Attr) -> RotatedLabelAttr {
+    fn apply_attr(self, attr: &Attr) -> RotatedLabelAttr {
         UseRotatedLabel {
             text: self.text,
             anchor: self.anchor,
@@ -80,19 +83,17 @@ impl RotatedLabel {
             debug: self.debug.unwrap_or(attr.debug),
         }
     }
+}
 
-    pub(super) fn apply_horizontal<X, Y>(self, attr: &Attr) -> impl HorizontalOption<X, Y> {
-        self.apply_attr(attr)
-    }
-
-    pub(super) fn apply_vertical<X, Y>(self, attr: &Attr) -> impl VerticalOption<X, Y> {
-        self.apply_attr(attr)
+impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for RotatedLabel {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
+        Box::new(self.apply_attr(attr))
     }
 }
 
-impl<Tick> From<RotatedLabel> for LayoutOption<Tick> {
-    fn from(label: RotatedLabel) -> Self {
-        Self::RotatedLabel(label)
+impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for RotatedLabel {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
+        Box::new(self.apply_attr(attr))
     }
 }
 
