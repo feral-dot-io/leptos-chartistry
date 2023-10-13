@@ -20,7 +20,7 @@ pub struct TickLabels<Tick> {
     generator: Box<dyn TickGen<Tick = Tick>>,
 }
 
-pub struct TickLabelsAttr<Tick>(Ticks<Tick>);
+pub struct TickLabelsAttr<Tick>(pub(crate) Ticks<Tick>);
 
 #[derive(Clone, Debug)]
 pub struct UseTickLabels<Tick: 'static>(UseTicks<Tick>);

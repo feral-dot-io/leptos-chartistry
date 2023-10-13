@@ -49,6 +49,7 @@ pub fn App() -> impl IntoView {
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
+
     let chart = Chart::new(width, 600.0, font, series)
         .inherit_padding(padding)
         .inherit_debug(debug)
@@ -63,7 +64,10 @@ pub fn App() -> impl IntoView {
         // Axis lines
         .add(AxisMarker::bottom_edge())
         .add(AxisMarker::left_edge())
-        .add(AxisMarker::horizontal_zero());
+        .add(AxisMarker::horizontal_zero())
+        // Grid lines
+        .add(GridLine::horizontal(TickLabels::aligned_floats()))
+        .add(GridLine::vertical(TickLabels::timestamps()));
 
     view! {
         <form>

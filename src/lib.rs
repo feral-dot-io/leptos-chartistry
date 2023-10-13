@@ -13,7 +13,7 @@ mod ticks;
 
 pub use chart::Chart;
 pub use font::Font;
-pub use inner::axis_marker::AxisMarker;
+pub use inner::{axis_marker::AxisMarker, grid_line::GridLine};
 pub use layout::{
     legend::Legend,
     rotated_label::{Anchor, RotatedLabel},

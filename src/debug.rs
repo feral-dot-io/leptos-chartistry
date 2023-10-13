@@ -6,7 +6,7 @@ use crate::bounds::Bounds;
 pub fn DebugRect(
     label: &'static str,
     debug: MaybeSignal<bool>,
-    #[prop(into)] bounds: Signal<Vec<Bounds>>,
+    #[prop(optional, into)] bounds: Signal<Vec<Bounds>>,
 ) -> impl IntoView {
     move || {
         if !debug.get() {

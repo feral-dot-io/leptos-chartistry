@@ -1,4 +1,5 @@
 pub mod axis_marker;
+pub mod grid_line;
 mod options;
 
-pub use options::InnerOption;
+pub use options::{InnerAttr, InnerOption, InnerRender};

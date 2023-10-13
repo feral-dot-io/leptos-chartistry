@@ -1,4 +1,3 @@
-use super::InnerOption;
 use crate::{edge::Edge, projection::Projection};
 use leptos::*;
 
@@ -56,12 +55,6 @@ impl AxisMarker {
     pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
         self.width = width.into();
         self
-    }
-}
-
-impl From<AxisMarker> for InnerOption {
-    fn from(marker: AxisMarker) -> Self {
-        Self::AxisMarker(marker)
     }
 }
 
