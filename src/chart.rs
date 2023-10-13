@@ -6,7 +6,11 @@ use crate::{
     series::{Series, UseSeries},
     Font, Padding,
 };
-use leptos::*;
+use leptos::{svg::Svg, *};
+use leptos_use::{
+    use_intersection_observer_with_options, use_mouse_with_options, UseIntersectionObserverOptions,
+    UseMouseCoordType, UseMouseEventExtractorDefault, UseMouseOptions, UseMouseSourceType,
+};
 
 pub struct Chart<X: 'static, Y: 'static> {
     width: MaybeSignal<f64>,
@@ -126,14 +130,19 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
     let padding = padding.unwrap_or(attr.padding);
     let debug = debug.unwrap_or(attr.debug);
 
+    // Layout
     let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let outer_bounds = Signal::derive(move || padding.get().apply(chart_bounds.get()));
     let layout = Layout::compose(outer_bounds, top, right, bottom, left, &series);
 
+    // SVG root
+    let (root, svg_bounds, mouse) = root_node();
+
+    // Inner layout
     let inner = (inner.into_iter())
         .map(|opt| {
             opt.to_use(&series, layout.projection)
-                .render(layout.projection)
+                .render(layout.projection, mouse)
         })
         .collect_view();
 
@@ -143,13 +152,53 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
             style:width=move || format!("{}px", width.get())
             style:height=move || format!("{}px", height.get())>
             <svg
+                node_ref=root
                 style="overflow: visible;"
                 viewBox=move || format!("0 0 {} {}", width.get(), height.get())>
+                {inner}
                 <DebugRect label="Chart" debug=debug bounds=move || vec![chart_bounds.get(), outer_bounds.get()] />
                 {layout.view}
-                {inner}
                 <Series series=series projection=layout.projection />
             </svg>
         </div>
     }
+}
+
+fn root_node() -> (
+    NodeRef<Svg>,
+    Signal<Option<Bounds>>,
+    Signal<Option<(f64, f64)>>,
+) {
+    let root = create_node_ref::<Svg>();
+
+    // SVG bounds -- dimensions for our root <svg> element inside the document
+    let (svg_bounds, set_svg_bounds) = create_signal::<Option<Bounds>>(None);
+    use_intersection_observer_with_options(
+        root,
+        move |entries, _| {
+            let entry = &entries[0];
+            set_svg_bounds.set(Some(entry.bounding_client_rect().into()))
+        },
+        UseIntersectionObserverOptions::default().immediate(true),
+    );
+
+    // Mouse position relative to SVG
+    let page_mouse = use_mouse_with_options(
+        UseMouseOptions::default()
+            .coord_type(UseMouseCoordType::<UseMouseEventExtractorDefault>::Page)
+            .reset_on_touch_ends(true),
+    );
+    let mouse = Signal::derive(move || {
+        if page_mouse.source_type.get() != UseMouseSourceType::Unset {
+            svg_bounds.get().map(|svg| {
+                let x = page_mouse.x.get() - svg.left_x();
+                let y = page_mouse.y.get() - svg.top_y();
+                (x, y)
+            })
+        } else {
+            None
+        }
+    });
+
+    (root, svg_bounds.into(), mouse)
 }

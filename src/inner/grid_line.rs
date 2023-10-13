@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use super::{InnerLayout, InnerOption, UseInner};
 use crate::{
     chart::Attr,
@@ -10,6 +8,7 @@ use crate::{
     TickLabels,
 };
 use leptos::*;
+use std::borrow::Borrow;
 
 #[derive(Clone)]
 pub struct GridLine<Tick: Clone> {
@@ -18,9 +17,9 @@ pub struct GridLine<Tick: Clone> {
 }
 
 #[derive(Clone)]
-pub struct HorizontalGridLine<Tick: Clone>(GridLine<Tick>);
+pub struct HorizontalGridLine<X: Clone>(GridLine<X>);
 #[derive(Clone)]
-pub struct VerticalGridLine<Tick: Clone>(GridLine<Tick>);
+pub struct VerticalGridLine<Y: Clone>(GridLine<Y>);
 
 #[derive(Clone)]
 struct GridLineAttr<Tick> {
@@ -29,9 +28,9 @@ struct GridLineAttr<Tick> {
 }
 
 #[derive(Clone)]
-struct HorizontalGridLineAttr<Tick>(GridLineAttr<Tick>);
+struct HorizontalGridLineAttr<X>(GridLineAttr<X>);
 #[derive(Clone)]
-struct VerticalGridLineAttr<Tick>(GridLineAttr<Tick>);
+struct VerticalGridLineAttr<Y>(GridLineAttr<Y>);
 
 #[derive(Clone, Debug)]
 struct UseGridLine<Tick: 'static> {
@@ -40,9 +39,9 @@ struct UseGridLine<Tick: 'static> {
 }
 
 #[derive(Clone, Debug)]
-struct UseHorizontalGridLine<Tick: 'static>(UseGridLine<Tick>);
+struct UseHorizontalGridLine<X: 'static>(UseGridLine<X>);
 #[derive(Clone, Debug)]
-struct UseVerticalGridLine<Tick: 'static>(UseGridLine<Tick>);
+struct UseVerticalGridLine<Y: 'static>(UseGridLine<Y>);
 
 impl<Tick: Clone> GridLine<Tick> {
     fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
@@ -52,13 +51,13 @@ impl<Tick: Clone> GridLine<Tick> {
         }
     }
 
-    /// Horizontal grid lines running parallel to the x-axis. These run from left to right at each tick.
-    pub fn horizontal(ticks: impl Borrow<TickLabels<Tick>>) -> VerticalGridLine<Tick> {
-        VerticalGridLine(Self::new(ticks))
-    }
     /// Vertical grid lines running parallel to the y-axis. These run from top to bottom at each tick.
     pub fn vertical(ticks: impl Borrow<TickLabels<Tick>>) -> HorizontalGridLine<Tick> {
         HorizontalGridLine(Self::new(ticks))
+    }
+    /// Horizontal grid lines running parallel to the x-axis. These run from left to right at each tick.
+    pub fn horizontal(ticks: impl Borrow<TickLabels<Tick>>) -> VerticalGridLine<Tick> {
+        VerticalGridLine(Self::new(ticks))
     }
 
     fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
@@ -110,7 +109,7 @@ impl<X, Y> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
 }
 
 impl<X> UseInner for UseHorizontalGridLine<X> {
-    fn render(self: Box<Self>, proj: Signal<Projection>) -> View {
+    fn render(self: Box<Self>, proj: Signal<Projection>, _: Signal<Option<(f64, f64)>>) -> View {
         view! {
             <ViewHorizontalGridLine line=self.0 projection=proj />
         }
@@ -118,7 +117,7 @@ impl<X> UseInner for UseHorizontalGridLine<X> {
 }
 
 impl<X> UseInner for UseVerticalGridLine<X> {
-    fn render(self: Box<Self>, proj: Signal<Projection>) -> View {
+    fn render(self: Box<Self>, proj: Signal<Projection>, _: Signal<Option<(f64, f64)>>) -> View {
         view! {
             <ViewVerticalGridLine line=self.0 projection=proj />
         }
@@ -152,8 +151,8 @@ fn ViewHorizontalGridLine<X: 'static>(
         })
     });
     view! {
-        <g class="_chartistry_grid_line_horizontal">
-            <DebugRect label="HorizontalGridLine" debug=line.ticks.debug />
+        <g class="_chartistry_grid_line_x">
+            <DebugRect label="XGridLine" debug=line.ticks.debug />
             {ticks}
         </g>
     }
@@ -186,8 +185,8 @@ fn ViewVerticalGridLine<Y: 'static>(
         })
     });
     view! {
-        <g class="_chartistry_grid_line_vertical">
-            <DebugRect label="VerticalGridLine" debug=line.ticks.debug />
+        <g class="_chartistry_grid_line_y">
+            <DebugRect label="YGridLine" debug=line.ticks.debug />
             {ticks}
         </g>
     }

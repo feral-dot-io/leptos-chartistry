@@ -70,7 +70,10 @@ pub fn App() -> impl IntoView {
         .add(AxisMarker::horizontal_zero())
         // Grid lines
         .add(GridLine::horizontal(&left_ticks))
-        .add(GridLine::vertical(&bottom_ticks));
+        .add(GridLine::vertical(&bottom_ticks))
+        // Guide lines
+        .add(GuideLine::horizontal())
+        .add(GuideLine::vertical());
 
     view! {
         <form>

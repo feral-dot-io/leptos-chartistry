@@ -1,4 +1,4 @@
-use crate::{chart::Attr, edge::Edge, projection::Projection, series::UseSeries};
+use crate::{chart::Attr, edge::Edge, projection::Projection};
 use leptos::*;
 
 use super::{InnerLayout, InnerOption, UseInner};
@@ -66,14 +66,8 @@ impl<X, Y> InnerLayout<X, Y> for AxisMarker {
     }
 }
 
-impl<X, Y> InnerOption<X, Y> for AxisMarker {
-    fn to_use(self: Box<Self>, _: &UseSeries<X, Y>, _: Signal<Projection>) -> Box<dyn UseInner> {
-        self
-    }
-}
-
 impl UseInner for AxisMarker {
-    fn render(self: Box<Self>, proj: Signal<Projection>) -> View {
+    fn render(self: Box<Self>, proj: Signal<Projection>, _: Signal<Option<(f64, f64)>>) -> View {
         view! {
             <AxisMarker marker=*self projection=proj />
         }
