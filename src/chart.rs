@@ -1,7 +1,7 @@
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
-    inner::{InnerAttr, InnerOption},
+    inner::{InnerLayout, InnerOption},
     layout::{HorizontalLayout, HorizontalOption, Layout, VerticalLayout, VerticalOption},
     series::{Series, UseSeries},
     Font, Padding,
@@ -19,7 +19,7 @@ pub struct Chart<X: 'static, Y: 'static> {
     right: Vec<Box<dyn VerticalOption<X, Y>>>,
     bottom: Vec<Box<dyn HorizontalOption<X, Y>>>,
     left: Vec<Box<dyn VerticalOption<X, Y>>>,
-    inner: Vec<InnerAttr<X, Y>>,
+    inner: Vec<Box<dyn InnerOption<X, Y>>>,
     series: UseSeries<X, Y>,
 }
 
@@ -100,8 +100,8 @@ impl<X, Y> Chart<X, Y> {
         self
     }
 
-    pub fn add(mut self, opt: impl Into<InnerOption<X, Y>>) -> Self {
-        self.inner.push(opt.into().apply_attr(&self.attr));
+    pub fn add(mut self, opt: impl InnerLayout<X, Y>) -> Self {
+        self.inner.push(opt.apply_attr(&self.attr));
         self
     }
 }

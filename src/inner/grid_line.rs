@@ -8,6 +8,8 @@ use crate::{
 };
 use leptos::*;
 
+use super::{InnerLayout, InnerOption, UseInner};
+
 pub struct GridLine<Tick> {
     width: MaybeSignal<f64>,
     ticks: TickLabels<Tick>,
@@ -16,16 +18,24 @@ pub struct GridLine<Tick> {
 pub struct HorizontalGridLine<Tick>(GridLine<Tick>);
 pub struct VerticalGridLine<Tick>(GridLine<Tick>);
 
-pub struct GridLineAttr<Tick> {
+struct GridLineAttr<Tick> {
     width: MaybeSignal<f64>,
     ticks: Ticks<Tick>,
 }
 
+struct HorizontalGridLineAttr<Tick>(GridLineAttr<Tick>);
+struct VerticalGridLineAttr<Tick>(GridLineAttr<Tick>);
+
 #[derive(Clone, Debug)]
-pub struct UseGridLine<Tick: 'static> {
+struct UseGridLine<Tick: 'static> {
     width: MaybeSignal<f64>,
     ticks: UseTicks<Tick>,
 }
+
+#[derive(Clone, Debug)]
+struct UseHorizontalGridLine<Tick: 'static>(UseGridLine<Tick>);
+#[derive(Clone, Debug)]
+struct UseVerticalGridLine<Tick: 'static>(UseGridLine<Tick>);
 
 impl<Tick> GridLine<Tick> {
     fn new(ticks: TickLabels<Tick>) -> Self {
@@ -44,7 +54,7 @@ impl<Tick> GridLine<Tick> {
         HorizontalGridLine(Self::new(ticks.into()))
     }
 
-    pub(crate) fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
+    fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
         GridLineAttr {
             width: self.width,
             ticks: self.ticks.apply_attr(attr).0,
@@ -52,46 +62,64 @@ impl<Tick> GridLine<Tick> {
     }
 }
 
-impl<Tick> HorizontalGridLine<Tick> {
-    pub(crate) fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
-        self.0.apply_attr(attr)
+impl<X: 'static, Y: 'static> InnerLayout<X, Y> for HorizontalGridLine<X> {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>> {
+        Box::new(HorizontalGridLineAttr(self.0.apply_attr(attr)))
     }
 }
 
-impl<Tick> VerticalGridLine<Tick> {
-    pub(crate) fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
-        self.0.apply_attr(attr)
+impl<X: 'static, Y: 'static> InnerLayout<X, Y> for VerticalGridLine<Y> {
+    fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>> {
+        Box::new(VerticalGridLineAttr(self.0.apply_attr(attr)))
     }
 }
 
-impl<Tick> GridLineAttr<Tick> {
-    pub fn generate_x<Y>(
-        self,
-        series: &UseSeries<Tick, Y>,
+impl<X, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
+    fn to_use(
+        self: Box<Self>,
+        series: &UseSeries<X, Y>,
         proj: Signal<Projection>,
-    ) -> UseGridLine<Tick> {
+    ) -> Box<dyn UseInner> {
         let avail_width = Signal::derive(move || with!(|proj| proj.bounds().width()));
-        UseGridLine {
-            width: self.width,
-            ticks: self.ticks.generate_x(series.data, avail_width),
+        Box::new(UseHorizontalGridLine(UseGridLine {
+            width: self.0.width,
+            ticks: self.0.ticks.generate_x(series.data, avail_width),
+        }))
+    }
+}
+
+impl<X, Y> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
+    fn to_use(
+        self: Box<Self>,
+        series: &UseSeries<X, Y>,
+        proj: Signal<Projection>,
+    ) -> Box<dyn UseInner> {
+        let avail_height = Signal::derive(move || with!(|proj| proj.bounds().height()));
+        Box::new(UseVerticalGridLine(UseGridLine {
+            width: self.0.width,
+            ticks: self.0.ticks.generate_y(series.data, avail_height),
+        }))
+    }
+}
+
+impl<X> UseInner for UseHorizontalGridLine<X> {
+    fn render(self: Box<Self>, proj: Signal<Projection>) -> View {
+        view! {
+            <ViewHorizontalGridLine line=self.0 projection=proj />
         }
     }
+}
 
-    pub fn generate_y<X>(
-        self,
-        series: &UseSeries<X, Tick>,
-        proj: Signal<Projection>,
-    ) -> UseGridLine<Tick> {
-        let avail_height = Signal::derive(move || with!(|proj| proj.bounds().height()));
-        UseGridLine {
-            width: self.width,
-            ticks: self.ticks.generate_y(series.data, avail_height),
+impl<X> UseInner for UseVerticalGridLine<X> {
+    fn render(self: Box<Self>, proj: Signal<Projection>) -> View {
+        view! {
+            <ViewVerticalGridLine line=self.0 projection=proj />
         }
     }
 }
 
 #[component]
-pub fn UseHorizontalGridLine<X: 'static>(
+fn ViewHorizontalGridLine<X: 'static>(
     line: UseGridLine<X>,
     projection: Signal<Projection>,
 ) -> impl IntoView {
@@ -125,7 +153,7 @@ pub fn UseHorizontalGridLine<X: 'static>(
 }
 
 #[component]
-pub fn UseVerticalGridLine<Y: 'static>(
+fn ViewVerticalGridLine<Y: 'static>(
     line: UseGridLine<Y>,
     projection: Signal<Projection>,
 ) -> impl IntoView {

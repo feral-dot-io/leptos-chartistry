@@ -1,5 +1,7 @@
-use crate::{edge::Edge, projection::Projection};
+use crate::{chart::Attr, edge::Edge, projection::Projection, series::UseSeries};
 use leptos::*;
+
+use super::{InnerLayout, InnerOption, UseInner};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AxisMarker {
@@ -55,6 +57,26 @@ impl AxisMarker {
     pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
         self.width = width.into();
         self
+    }
+}
+
+impl<X, Y> InnerLayout<X, Y> for AxisMarker {
+    fn apply_attr(self, _: &Attr) -> Box<dyn InnerOption<X, Y>> {
+        Box::new(self)
+    }
+}
+
+impl<X, Y> InnerOption<X, Y> for AxisMarker {
+    fn to_use(self: Box<Self>, _: &UseSeries<X, Y>, _: Signal<Projection>) -> Box<dyn UseInner> {
+        self
+    }
+}
+
+impl UseInner for AxisMarker {
+    fn render(self: Box<Self>, proj: Signal<Projection>) -> View {
+        view! {
+            <AxisMarker marker=*self projection=proj />
+        }
     }
 }
 
