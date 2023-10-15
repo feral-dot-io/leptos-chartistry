@@ -11,6 +11,7 @@ mod padding;
 mod projection;
 mod series;
 mod ticks;
+mod use_watched_node;
 
 pub use chart::Chart;
 pub use font::Font;

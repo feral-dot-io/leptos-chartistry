@@ -5,6 +5,7 @@ use crate::{
     projection::Projection,
     series::UseSeries,
     ticks::Ticks,
+    use_watched_node::UseWatchedNode,
     Padding, Snippet, TickLabels,
 };
 use leptos::*;
@@ -72,31 +73,31 @@ impl<X: Clone, Y: Clone> UseOverlay<X, Y> for UseTooltip<X, Y> {
         self: Box<Self>,
         series: UseSeries<X, Y>,
         proj: Signal<Projection>,
-        mouse_abs: Signal<Option<(f64, f64)>>,
-        mouse_rel: Signal<Option<(f64, f64)>>,
+        watch: &UseWatchedNode,
     ) -> View {
+        let (mouse_abs, mouse_rel, over_inner) =
+            (watch.mouse_abs, watch.mouse_rel, watch.over_inner);
         Signal::derive(move || {
-            let series = series.clone();
-            (mouse_abs.get())
-                .zip(mouse_rel.get())
-                .map(|((abs_x, abs_y), (rel_x, rel_y))| {
-                    // Mouse outside chart bounds?
-                    if !proj.get().bounds().contains(rel_x, rel_y) {
-                        return None;
-                    }
+            if !over_inner.get() {
+                return view!().into_view();
+            }
 
-                    Some(view! {
-                        <Tooltip
-                            tooltip=*self.clone()
-                            series=series
-                            projection=proj
-                            abs_x=abs_x
-                            abs_y=abs_y
-                            rel_x=rel_x
-                            rel_y=rel_y
-                        />
-                    })
-                })
+            let series = series.clone();
+            let (abs_x, abs_y) = mouse_abs.get();
+            let (rel_x, rel_y) = mouse_rel.get();
+
+            view! {
+                <Tooltip
+                    tooltip=*self.clone()
+                    series=series
+                    projection=proj
+                    abs_x=abs_x
+                    abs_y=abs_y
+                    rel_x=rel_x
+                    rel_y=rel_y
+                />
+            }
+            .into_view()
         })
         .into_view()
     }

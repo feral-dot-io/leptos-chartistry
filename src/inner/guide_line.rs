@@ -1,5 +1,7 @@
 use super::{options::Axis, InnerLayout, InnerOption, UseInner};
-use crate::{chart::Attr, debug::DebugRect, projection::Projection};
+use crate::{
+    chart::Attr, debug::DebugRect, projection::Projection, use_watched_node::UseWatchedNode,
+};
 use leptos::*;
 
 #[derive(Clone, Debug)]
@@ -55,12 +57,8 @@ impl<X, Y> InnerLayout<X, Y> for GuideLine {
 }
 
 impl UseInner for UseGuideLine {
-    fn render(
-        self: Box<Self>,
-        proj: Signal<Projection>,
-        mouse: Signal<Option<(f64, f64)>>,
-    ) -> View {
-        view!( <GuideLine line=*self projection=proj mouse=mouse /> )
+    fn render(self: Box<Self>, proj: Signal<Projection>, watch: &UseWatchedNode) -> View {
+        view!( <GuideLine line=*self projection=proj mouse_over=watch.over_inner mouse=watch.mouse_rel /> )
     }
 }
 
@@ -68,30 +66,31 @@ impl UseInner for UseGuideLine {
 fn GuideLine(
     line: UseGuideLine,
     projection: Signal<Projection>,
-    mouse: Signal<Option<(f64, f64)>>,
+    mouse_over: Signal<bool>,
+    mouse: Signal<(f64, f64)>,
 ) -> impl IntoView {
-    let mouse = Signal::derive(move || {
-        let bounds = projection.get().bounds();
-        (mouse.get()).filter(|(x, y)| bounds.contains(*x, *y))
-    });
     let render = Signal::derive(move || {
+        if !mouse_over.get() {
+            return view!().into_view();
+        }
+
         let bounds = projection.get().bounds();
-        mouse.get().map(|(x, y)| {
-            let (x1, y1, x2, y2) = match line.axis {
-                Axis::Horizontal => (x, bounds.top_y(), x, bounds.bottom_y()),
-                Axis::Vertical => (bounds.left_x(), y, bounds.right_x(), y),
-            };
-            view! {
-                <DebugRect label=format!("GuideLine-{}", line.axis) debug=line.debug />
-                <line
-                    x1=x1
-                    y1=y1
-                    x2=x2
-                    y2=y2
-                    stroke="lightslategrey"
-                    stroke-width=move || line.width.get() />
-            }
-        })
+        let (x, y) = mouse.get();
+        let (x1, y1, x2, y2) = match line.axis {
+            Axis::Horizontal => (x, bounds.top_y(), x, bounds.bottom_y()),
+            Axis::Vertical => (bounds.left_x(), y, bounds.right_x(), y),
+        };
+        view! {
+            <DebugRect label=format!("GuideLine-{}", line.axis) debug=line.debug />
+            <line
+                x1=x1
+                y1=y1
+                x2=x2
+                y2=y2
+                stroke="lightslategrey"
+                stroke-width=move || line.width.get() />
+        }
+        .into_view()
     });
     view! {
         <g class=format!("_chartistry_guide_line_{}", line.axis)>

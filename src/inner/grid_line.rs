@@ -5,6 +5,7 @@ use crate::{
     projection::Projection,
     series::UseSeries,
     ticks::{Ticks, UseTicks},
+    use_watched_node::UseWatchedNode,
     TickLabels,
 };
 use leptos::*;
@@ -109,7 +110,7 @@ impl<X, Y> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
 }
 
 impl<X> UseInner for UseHorizontalGridLine<X> {
-    fn render(self: Box<Self>, proj: Signal<Projection>, _: Signal<Option<(f64, f64)>>) -> View {
+    fn render(self: Box<Self>, proj: Signal<Projection>, _: &UseWatchedNode) -> View {
         view! {
             <ViewHorizontalGridLine line=self.0 projection=proj />
         }
@@ -117,7 +118,7 @@ impl<X> UseInner for UseHorizontalGridLine<X> {
 }
 
 impl<X> UseInner for UseVerticalGridLine<X> {
-    fn render(self: Box<Self>, proj: Signal<Projection>, _: Signal<Option<(f64, f64)>>) -> View {
+    fn render(self: Box<Self>, proj: Signal<Projection>, _: &UseWatchedNode) -> View {
         view! {
             <ViewVerticalGridLine line=self.0 projection=proj />
         }

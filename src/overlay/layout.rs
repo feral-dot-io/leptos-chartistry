@@ -1,4 +1,6 @@
-use crate::{chart::Attr, projection::Projection, series::UseSeries};
+use crate::{
+    chart::Attr, projection::Projection, series::UseSeries, use_watched_node::UseWatchedNode,
+};
 use leptos::*;
 
 pub trait OverlayLayout<X, Y> {
@@ -10,8 +12,7 @@ pub trait UseOverlay<X, Y> {
         self: Box<Self>,
         series: UseSeries<X, Y>,
         proj: Signal<Projection>,
-        mouse_abs: Signal<Option<(f64, f64)>>,
-        mouse_rel: Signal<Option<(f64, f64)>>,
+        watch: &UseWatchedNode,
     ) -> View;
 }
 

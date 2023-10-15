@@ -7,6 +7,7 @@ use crate::{
     layout::legend::{LegendAttr, UseLegend},
     projection::Projection,
     series::UseSeries,
+    use_watched_node::UseWatchedNode,
     Anchor, Legend, Snippet,
 };
 use leptos::*;
@@ -86,7 +87,7 @@ impl<X, Y> InnerOption<X, Y> for InsetLegendAttr {
 }
 
 impl UseInner for UseInsetLegend {
-    fn render(self: Box<Self>, proj: Signal<Projection>, _: Signal<Option<(f64, f64)>>) -> View {
+    fn render(self: Box<Self>, proj: Signal<Projection>, _: &UseWatchedNode) -> View {
         view!( <InsetLegend legend=self.legend edge=self.edge projection=proj /> )
     }
 }

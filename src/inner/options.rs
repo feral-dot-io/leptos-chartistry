@@ -1,4 +1,6 @@
-use crate::{chart::Attr, projection::Projection, series::UseSeries};
+use crate::{
+    chart::Attr, projection::Projection, series::UseSeries, use_watched_node::UseWatchedNode,
+};
 use leptos::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -20,8 +22,7 @@ pub trait InnerOption<X, Y> {
 }
 
 pub trait UseInner {
-    fn render(self: Box<Self>, proj: Signal<Projection>, mouse: Signal<Option<(f64, f64)>>)
-        -> View;
+    fn render(self: Box<Self>, proj: Signal<Projection>, watch: &UseWatchedNode) -> View;
 }
 
 /// Clone references
