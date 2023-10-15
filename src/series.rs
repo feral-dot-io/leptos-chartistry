@@ -17,7 +17,6 @@ pub struct UseSeries<X: 'static, Y: 'static> {
 
 #[derive(Clone, Debug)]
 pub struct Data<X, Y> {
-    lines: usize,
     position_range: Bounds,
     x_points: Vec<X>,
     x_positions: Vec<f64>,
@@ -53,7 +52,6 @@ impl<T, X, Y> Series<T, X, Y> {
             get_ys,
             lines,
         } = self;
-        let lines_len = lines.len();
 
         let data = data.into();
         let data = Signal::derive(move || {
@@ -79,7 +77,6 @@ impl<T, X, Y> Series<T, X, Y> {
                 );
 
                 Data {
-                    lines: lines_len,
                     position_range: Bounds::from_points(
                         x_positions[x_range_i.0],
                         y_positions[y_range_i.0],
