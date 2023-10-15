@@ -1,17 +1,24 @@
 use super::{options::Axis, InnerLayout, InnerOption, UseInner};
-use crate::{chart::Attr, projection::Projection, use_watched_node::UseWatchedNode};
+use crate::{
+    chart::Attr,
+    colours::{Colour, LIGHT_GREY},
+    projection::Projection,
+    use_watched_node::UseWatchedNode,
+};
 use leptos::*;
 
 #[derive(Clone, Debug)]
 pub struct GuideLine {
     axis: Axis,
     width: MaybeSignal<f64>,
+    colour: MaybeSignal<Colour>,
 }
 
 #[derive(Clone, Debug)]
 pub struct UseGuideLine {
     axis: Axis,
     width: MaybeSignal<f64>,
+    colour: MaybeSignal<Colour>,
 }
 
 impl GuideLine {
@@ -19,6 +26,7 @@ impl GuideLine {
         Self {
             axis,
             width: 1.0.into(),
+            colour: Into::<Colour>::into(LIGHT_GREY).into(),
         }
     }
 
@@ -41,6 +49,7 @@ impl<X, Y> InnerLayout<X, Y> for GuideLine {
         Box::new(UseGuideLine {
             axis: self.axis,
             width: self.width,
+            colour: self.colour,
         })
     }
 }
@@ -84,7 +93,7 @@ fn GuideLine(
                 y1=y1
                 x2=x2
                 y2=y2
-                stroke="lightslategrey"
+                stroke=move || line.colour.get().to_string()
                 stroke-width=line.width />
         }
         .into_view()
