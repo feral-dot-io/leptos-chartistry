@@ -11,7 +11,7 @@ use std::borrow::Borrow;
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: &'static dyn Fn(&T) -> X,
     get_ys: Vec<&'static dyn Fn(&T) -> Y>,
-    lines: Vec<UseLine>,
+    lines: Vec<Line>,
     colours: ColourScheme,
 }
 
@@ -42,11 +42,12 @@ impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
         }
     }
 
+    pub fn set_colours(mut self, colours: impl Into<ColourScheme>) -> Self {
+        self.colours = colours.into();
+        self
+    }
+
     pub fn add(mut self, line: Line, get_y: &'static dyn Fn(&T) -> Y) -> Self {
-        // Build Line
-        let colour = self.colours.colour(self.lines.len());
-        let line = line.use_line(colour);
-        // Add to series
         self.get_ys.push(get_y);
         self.lines.push(line);
         self
@@ -62,9 +63,16 @@ impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
             get_x,
             get_ys,
             lines,
-            ..
+            colours,
         } = self;
 
+        // Apply colours to lines
+        let lines = (lines.into_iter())
+            .zip(colours.iter())
+            .map(|(line, colour)| line.use_line(colour))
+            .collect::<Vec<_>>();
+
+        // Convert data to a signal
         let data = data.into();
         let data = create_memo(move |_| {
             let get_ys = get_ys.iter().as_slice();

@@ -47,7 +47,11 @@ impl From<&[Colour]> for ColourScheme {
 }
 
 impl ColourScheme {
-    pub fn colour(&self, index: usize) -> Colour {
+    pub fn iter(&self) -> ColourSchemeIter<'_> {
+        ColourSchemeIter(self, 0)
+    }
+
+    pub fn by_index(&self, index: usize) -> Colour {
         let index = index.rem_euclid(self.colours.len());
         self.colours[index]
     }
@@ -56,6 +60,18 @@ impl ColourScheme {
 impl std::fmt::Display for Colour {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "#{:02X}{:02X}{:02X}", self.red, self.green, self.blue)
+    }
+}
+
+pub struct ColourSchemeIter<'a>(&'a ColourScheme, usize);
+
+impl<'a> Iterator for ColourSchemeIter<'a> {
+    type Item = Colour;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let colour = self.0.by_index(self.1);
+        self.1 += 1;
+        Some(colour)
     }
 }
 
