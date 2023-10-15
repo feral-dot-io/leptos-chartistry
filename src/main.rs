@@ -50,6 +50,7 @@ pub fn App() -> impl IntoView {
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
     let top_label = RotatedLabel::new(anchor, text);
+    let snippet = Snippet::horizontal().set_padding(Padding::zero());
     let left_ticks = TickLabels::aligned_floats();
     let bottom_ticks = TickLabels::timestamps();
 
@@ -63,7 +64,7 @@ pub fn App() -> impl IntoView {
         .add_bottom(&bottom_ticks)
         // Legend
         .add_top(Legend::end(Snippet::horizontal()))
-        .add(InsetLegend::right(Snippet::vertical()))
+        .add(InsetLegend::right(&snippet))
         // Axis lines
         .add(AxisMarker::bottom_edge())
         .add(AxisMarker::left_edge())
@@ -75,11 +76,7 @@ pub fn App() -> impl IntoView {
         .add(GuideLine::horizontal())
         .add(GuideLine::vertical())
         // Tooltip
-        .overlay(Tooltip::left_cursor(
-            Snippet::horizontal(),
-            &bottom_ticks,
-            &left_ticks,
-        ));
+        .overlay(Tooltip::left_cursor(&snippet, &bottom_ticks, &left_ticks));
 
     view! {
         <form>

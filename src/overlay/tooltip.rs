@@ -14,7 +14,7 @@ use std::borrow::Borrow;
 #[derive(Clone)]
 pub struct Tooltip<X: Clone, Y: Clone> {
     snippet: Snippet,
-    table_spacing: MaybeSignal<f64>,
+    table_margin: Option<MaybeSignal<f64>>,
     padding: Option<MaybeSignal<Padding>>,
 
     x_ticks: TickLabels<X>,
@@ -24,7 +24,7 @@ pub struct Tooltip<X: Clone, Y: Clone> {
 #[derive(Clone)]
 pub struct TooltipAttr<X: 'static, Y: 'static> {
     snippet: UseSnippet,
-    table_spacing: MaybeSignal<f64>,
+    table_margin: MaybeSignal<f64>,
     padding: MaybeSignal<Padding>,
 
     x_ticks: Ticks<X>,
@@ -34,7 +34,7 @@ pub struct TooltipAttr<X: 'static, Y: 'static> {
 #[derive(Clone)]
 pub struct UseTooltip<X: 'static, Y: 'static> {
     snippet: UseSnippet,
-    table_spacing: MaybeSignal<f64>,
+    table_margin: MaybeSignal<f64>,
     padding: MaybeSignal<Padding>,
 
     x_ticks: Signal<GeneratedTicks<X>>,
@@ -49,7 +49,7 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
     ) -> Self {
         Self {
             snippet: snippet.borrow().clone(),
-            table_spacing: 0.0.into(),
+            table_margin: None,
             padding: None,
             x_ticks: x_ticks.borrow().clone(),
             y_ticks: y_ticks.borrow().clone(),
@@ -63,15 +63,23 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
     ) -> Self {
         Self::new(snippet, x_ticks, y_ticks)
     }
+
+    pub fn set_table_margin(mut self, table_margin: impl Into<MaybeSignal<f64>>) -> Self {
+        self.table_margin = Some(table_margin.into());
+        self
+    }
 }
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayout<X, Y>
     for Tooltip<X, Y>
 {
     fn apply_attr(self, attr: &Attr) -> Box<dyn UseOverlay<X, Y>> {
+        let font = attr.font;
         Box::new(TooltipAttr {
             snippet: self.snippet.to_use(attr),
-            table_spacing: self.table_spacing,
+            table_margin: self
+                .table_margin
+                .unwrap_or_else(|| Signal::derive(move || font.get().height()).into()),
             padding: self.padding.unwrap_or(attr.padding),
 
             x_ticks: self.x_ticks.apply_attr(attr),
@@ -86,7 +94,7 @@ impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
         let avail_height = Projection::derive_height(proj);
         UseTooltip {
             snippet: self.snippet,
-            table_spacing: self.table_spacing,
+            table_margin: self.table_margin,
             padding: self.padding,
             x_ticks: self.x_ticks.generate_x(data, avail_width).ticks,
             y_ticks: self.y_ticks.generate_y(data, avail_height).ticks,
@@ -134,7 +142,7 @@ fn Tooltip<X: 'static, Y: 'static>(
 ) -> impl IntoView {
     let UseTooltip {
         snippet,
-        table_spacing,
+        table_margin,
         padding,
         x_ticks,
         y_ticks,
@@ -180,7 +188,7 @@ fn Tooltip<X: 'static, Y: 'static>(
         <div
             style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
             style:top=move || format!("calc({}px)", mouse_abs.get().1)
-            style:right=move || format!("calc(100% - {}px + {}px)", mouse_abs.get().0, table_spacing.get())
+            style:right=move || format!("calc(100% - {}px + {}px)", mouse_abs.get().0, table_margin.get())
             style:padding=move || padding.get().to_style_px()>
             <table
                 style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; text-align: right;"
