@@ -72,8 +72,8 @@ pub fn App() -> impl IntoView {
         .add(GridLine::horizontal(&left_ticks))
         .add(GridLine::vertical(&bottom_ticks))
         // Guide lines
-        //.add(GuideLine::horizontal())
-        //.add(GuideLine::vertical())
+        .add(GuideLine::horizontal())
+        .add(GuideLine::vertical())
         // Tooltip
         .overlay(Tooltip::left_cursor(
             Snippet::horizontal(),

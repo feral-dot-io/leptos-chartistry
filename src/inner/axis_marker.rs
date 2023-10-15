@@ -1,12 +1,18 @@
-use crate::{chart::Attr, edge::Edge, projection::Projection, use_watched_node::UseWatchedNode};
-use leptos::*;
-
 use super::{InnerLayout, InnerOption, UseInner};
+use crate::{
+    chart::Attr,
+    colours::{Colour, LIGHTISH_GREY},
+    edge::Edge,
+    projection::Projection,
+    use_watched_node::UseWatchedNode,
+};
+use leptos::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AxisMarker {
     edge: MaybeSignal<Edge>,
     placement: MaybeSignal<Placement>,
+    colour: MaybeSignal<Colour>,
     arrow: MaybeSignal<bool>,
     width: MaybeSignal<f64>,
 }
@@ -25,6 +31,7 @@ impl AxisMarker {
         Self {
             edge: edge.into(),
             placement: placement.into(),
+            colour: Into::<Colour>::into(LIGHTISH_GREY).into(),
             arrow: true.into(),
             width: 1.0.into(),
         }
@@ -47,6 +54,11 @@ impl AxisMarker {
     }
     pub fn vertical_zero() -> Self {
         Self::new(Edge::Left, Placement::Zero)
+    }
+
+    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Colour>>) -> Self {
+        self.colour = colour.into();
+        self
     }
 
     pub fn set_arrow(mut self, arrow: impl Into<MaybeSignal<bool>>) -> Self {
@@ -106,6 +118,7 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
         }
     };
 
+    let colour = marker.colour;
     view! {
         <g class="_chartistry_axis_marker">
             <defs>
@@ -117,7 +130,7 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
                     refX=0
                     refY=4
                     orient="auto">
-                    <path d="M0,0 L0,8 L7,4 z" fill="lightgrey" />
+                    <path d="M0,0 L0,8 L7,4 z" fill=move || colour.get().to_string() />
                 </marker>
             </defs>
             <line
@@ -125,7 +138,7 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
                 y1=move || pos.get().1
                 x2=move || pos.get().2
                 y2=move || pos.get().3
-                stroke="lightgrey"
+                stroke=move || colour.get().to_string()
                 stroke-width=marker.width
                 marker-end=arrow
             />
