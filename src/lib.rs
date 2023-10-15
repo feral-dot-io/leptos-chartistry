@@ -1,5 +1,6 @@
 mod bounds;
 mod chart;
+pub mod colours;
 mod debug;
 mod edge;
 mod font;
