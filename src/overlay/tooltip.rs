@@ -3,8 +3,8 @@ use crate::{
     chart::Attr,
     layout::snippet::{SnippetTd, UseSnippet},
     projection::Projection,
-    series::UseSeries,
-    ticks::Ticks,
+    series::{Data, UseSeries},
+    ticks::{GeneratedTicks, Ticks},
     use_watched_node::UseWatchedNode,
     Padding, Snippet, TickLabels,
 };
@@ -22,13 +22,23 @@ pub struct Tooltip<X: Clone, Y: Clone> {
 }
 
 #[derive(Clone)]
-pub struct UseTooltip<X: 'static, Y: 'static> {
+pub struct TooltipAttr<X: 'static, Y: 'static> {
     snippet: UseSnippet,
     table_spacing: MaybeSignal<f64>,
     padding: MaybeSignal<Padding>,
 
     x_ticks: Ticks<X>,
     y_ticks: Ticks<Y>,
+}
+
+#[derive(Clone)]
+pub struct UseTooltip<X: 'static, Y: 'static> {
+    snippet: UseSnippet,
+    table_spacing: MaybeSignal<f64>,
+    padding: MaybeSignal<Padding>,
+
+    x_ticks: Signal<GeneratedTicks<X>>,
+    y_ticks: Signal<GeneratedTicks<Y>>,
 }
 
 impl<X: Clone, Y: Clone> Tooltip<X, Y> {
@@ -59,7 +69,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayo
     for Tooltip<X, Y>
 {
     fn apply_attr(self, attr: &Attr) -> Box<dyn UseOverlay<X, Y>> {
-        Box::new(UseTooltip {
+        Box::new(TooltipAttr {
             snippet: self.snippet.to_use(attr),
             table_spacing: self.table_spacing,
             padding: self.padding.unwrap_or(attr.padding),
@@ -70,13 +80,28 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayo
     }
 }
 
-impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for UseTooltip<X, Y> {
+impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
+    fn to_use(self, data: Signal<Data<X, Y>>, proj: Signal<Projection>) -> UseTooltip<X, Y> {
+        let avail_width = Projection::derive_width(proj);
+        let avail_height = Projection::derive_height(proj);
+        UseTooltip {
+            snippet: self.snippet,
+            table_spacing: self.table_spacing,
+            padding: self.padding,
+            x_ticks: self.x_ticks.generate_x(data, avail_width).ticks,
+            y_ticks: self.y_ticks.generate_y(data, avail_height).ticks,
+        }
+    }
+}
+
+impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAttr<X, Y> {
     fn render(
         self: Box<Self>,
         series: UseSeries<X, Y>,
         proj: Signal<Projection>,
         watch: &UseWatchedNode,
     ) -> View {
+        let tooltip = self.to_use(series.data, proj);
         let (mouse_abs, mouse_rel, over_inner) =
             (watch.mouse_abs, watch.mouse_rel, watch.over_inner);
         create_memo(move |_| {
@@ -86,7 +111,7 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for UseTooltip
 
             view! {
                 <Tooltip
-                    tooltip=*self.clone()
+                    tooltip=tooltip.clone()
                     series=series.clone()
                     projection=proj
                     mouse_abs=mouse_abs
@@ -100,7 +125,7 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for UseTooltip
 }
 
 #[component]
-fn Tooltip<X: PartialEq + 'static, Y: PartialEq + 'static>(
+fn Tooltip<X: 'static, Y: 'static>(
     tooltip: UseTooltip<X, Y>,
     series: UseSeries<X, Y>,
     projection: Signal<Projection>,
@@ -115,10 +140,6 @@ fn Tooltip<X: PartialEq + 'static, Y: PartialEq + 'static>(
         y_ticks,
     } = tooltip;
     let data = series.data;
-    let avail_width = Projection::derive_width(projection);
-    let avail_height = Projection::derive_height(projection);
-    let x_ticks = x_ticks.generate_x(series.data, avail_width).ticks;
-    let y_ticks = y_ticks.generate_y(series.data, avail_height).ticks;
     let font = snippet.font;
 
     // Get nearest values
