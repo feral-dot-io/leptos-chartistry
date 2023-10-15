@@ -1,4 +1,4 @@
-use crate::{chart::Attr, Font, Line, Padding};
+use crate::{chart::Attr, line::UseLine, Font, Padding};
 use leptos::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -84,7 +84,7 @@ impl UseSnippet {
 }
 
 #[component]
-pub(crate) fn SnippetTd(snippet: UseSnippet, line: Line, children: Children) -> impl IntoView {
+pub(crate) fn SnippetTd(snippet: UseSnippet, line: UseLine, children: Children) -> impl IntoView {
     let padding = snippet.padding;
     view! {
         <td
@@ -100,8 +100,8 @@ pub(crate) fn SnippetTd(snippet: UseSnippet, line: Line, children: Children) -> 
 }
 
 #[component]
-fn SnippetHorizontalTaster<'a>(snippet: &'a UseSnippet, line: &'a Line) -> impl IntoView {
-    let font = snippet.font;
+fn SnippetHorizontalTaster<'a>(snippet: &'a UseSnippet, line: &'a UseLine) -> impl IntoView {
+    let (font, colour) = (snippet.font, line.colour);
     let (taster_width, taster_height) = (snippet.taster_width(), snippet.taster_height());
     view! {
         <svg
@@ -116,15 +116,15 @@ fn SnippetHorizontalTaster<'a>(snippet: &'a UseSnippet, line: &'a Line) -> impl 
                 x2=taster_width
                 y1=move || font.get().width()
                 y2=move || font.get().width()
-                stroke="red"
+                stroke=move || colour.get().to_string()
                 stroke-width=line.width />
         </svg>
     }
 }
 
 #[component]
-fn SnippetVerticalTaster<'a>(snippet: &'a UseSnippet, line: &'a Line) -> impl IntoView {
-    let font = snippet.font;
+fn SnippetVerticalTaster<'a>(snippet: &'a UseSnippet, line: &'a UseLine) -> impl IntoView {
+    let (font, colour) = (snippet.font, line.colour);
     let (taster_width, taster_height) = (snippet.taster_width(), snippet.taster_height());
     let x = Signal::derive(move || taster_width.get() / 2.0);
     view! {
@@ -146,7 +146,7 @@ fn SnippetVerticalTaster<'a>(snippet: &'a UseSnippet, line: &'a Line) -> impl In
                     x2=x
                     y1=0
                     y2=snippet.taster_height()
-                    stroke="red"
+                    stroke=move || colour.get().to_string()
                     stroke-width=line.width />
             </svg>
         </div>

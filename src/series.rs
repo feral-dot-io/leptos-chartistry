@@ -1,4 +1,9 @@
-use crate::{bounds::Bounds, projection::Projection, Line};
+use crate::{
+    bounds::Bounds,
+    colours::{self, ColourScheme},
+    line::{Line, UseLine},
+    projection::Projection,
+};
 use chrono::prelude::*;
 use leptos::*;
 use std::borrow::Borrow;
@@ -6,12 +11,13 @@ use std::borrow::Borrow;
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: &'static dyn Fn(&T) -> X,
     get_ys: Vec<&'static dyn Fn(&T) -> Y>,
-    lines: Vec<Line>,
+    lines: Vec<UseLine>,
+    colours: ColourScheme,
 }
 
 #[derive(Clone, Debug)]
 pub struct UseSeries<X: 'static, Y: 'static> {
-    pub(crate) lines: Vec<Line>,
+    pub(crate) lines: Vec<UseLine>,
     pub(crate) data: Signal<Data<X, Y>>,
 }
 
@@ -32,10 +38,15 @@ impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
             get_x,
             get_ys: Vec::new(),
             lines: Vec::new(),
+            colours: colours::ARBITRARY.as_ref().into(),
         }
     }
 
     pub fn add(mut self, line: Line, get_y: &'static dyn Fn(&T) -> Y) -> Self {
+        // Build Line
+        let colour = self.colours.colour(self.lines.len());
+        let line = line.use_line(colour);
+        // Add to series
         self.get_ys.push(get_y);
         self.lines.push(line);
         self
@@ -51,6 +62,7 @@ impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
             get_x,
             get_ys,
             lines,
+            ..
         } = self;
 
         let data = data.into();

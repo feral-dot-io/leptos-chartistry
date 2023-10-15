@@ -6,7 +6,7 @@ use super::{
 };
 use crate::{
     bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
-    series::UseSeries, Line, Padding,
+    series::UseSeries, Padding, line::UseLine,
 };
 use leptos::*;
 
@@ -29,7 +29,7 @@ pub struct LegendAttr {
 #[derive(Clone, Debug)]
 pub struct UseLegend {
     attr: LegendAttr,
-    lines: Vec<Line>,
+    lines: Vec<UseLine>,
 }
 
 impl Legend {
