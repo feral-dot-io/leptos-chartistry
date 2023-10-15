@@ -77,24 +77,18 @@ impl<X: Clone, Y: Clone> UseOverlay<X, Y> for UseTooltip<X, Y> {
     ) -> View {
         let (mouse_abs, mouse_rel, over_inner) =
             (watch.mouse_abs, watch.mouse_rel, watch.over_inner);
-        Signal::derive(move || {
+        create_memo(move |_| {
             if !over_inner.get() {
                 return view!().into_view();
             }
 
-            let series = series.clone();
-            let (abs_x, abs_y) = mouse_abs.get();
-            let (rel_x, rel_y) = mouse_rel.get();
-
             view! {
                 <Tooltip
                     tooltip=*self.clone()
-                    series=series
+                    series=series.clone()
                     projection=proj
-                    abs_x=abs_x
-                    abs_y=abs_y
-                    rel_x=rel_x
-                    rel_y=rel_y
+                    mouse_abs=mouse_abs
+                    mouse_rel=mouse_rel
                 />
             }
             .into_view()
@@ -108,10 +102,8 @@ fn Tooltip<X: 'static, Y: 'static>(
     tooltip: UseTooltip<X, Y>,
     series: UseSeries<X, Y>,
     projection: Signal<Projection>,
-    abs_x: f64,
-    abs_y: f64,
-    rel_x: f64,
-    rel_y: f64,
+    mouse_abs: Signal<(f64, f64)>,
+    mouse_rel: Signal<(f64, f64)>,
 ) -> impl IntoView {
     let UseTooltip {
         snippet,
@@ -129,38 +121,43 @@ fn Tooltip<X: 'static, Y: 'static>(
 
     // Get nearest values
     let data_x = Signal::derive(move || {
-        let (data_x, _) = projection.get().svg_to_data(rel_x, rel_y);
-        data_x
+        with!(|mouse_rel, projection| {
+            let (data_x, _) = projection.svg_to_data(mouse_rel.0, mouse_rel.1);
+            data_x
+        })
     });
 
     // Y-values
-    let y_body = Signal::derive(move || {
-        with!(|data, data_x| {
-            let ys = data.nearest_y(*data_x);
-            (series.lines.clone().into_iter())
-                .zip(ys)
-                .map(|(line, y)| {
-                    let name = line.name.clone();
-                    view! {
-                        <tr>
-                            <SnippetTd snippet=snippet.clone() line=line>{name} ":"</SnippetTd>
-                            <td
-                                style="text-align: left; white-space: pre; font-family: monospace;"
-                                style:padding-left=format!("{}px", snippet.font.get().width())>
-                                {with!(|y_ticks| y_ticks.state.long_format(y))}
-                            </td>
-                        </tr>
-                    }
-                })
-                .collect_view()
-        })
+    let y_body = create_memo(move |_| {
+        (series.lines.clone().into_iter())
+            .enumerate()
+            .map(|(line_id, line)| {
+                let name = line.name.clone();
+                let y_value = move || {
+                    with!(|data, data_x, y_ticks| {
+                        let y_value = data.nearest_y(*data_x, line_id);
+                        y_ticks.state.long_format(y_value)
+                    })
+                };
+                view! {
+                    <tr>
+                        <SnippetTd snippet=snippet.clone() line=line>{name} ":"</SnippetTd>
+                        <td
+                            style="text-align: left; white-space: pre; font-family: monospace;"
+                            style:padding-left=move || format!("{}px", font.get().width())>
+                            {y_value}
+                        </td>
+                    </tr>
+                }
+            })
+            .collect_view()
     });
 
     view! {
         <div
             style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
-            style:top=format!("calc({abs_y}px)")
-            style:right=move || format!("calc(100% - {abs_x}px + {}px)", table_spacing.get())
+            style:top=move || format!("calc({}px)", mouse_abs.get().1)
+            style:right=move || format!("calc(100% - {}px + {}px)", mouse_abs.get().0, table_spacing.get())
             style:padding=move || padding.get().to_style_px()>
             <table
                 style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; text-align: right;"

@@ -22,19 +22,20 @@ pub struct UseTicks<Tick: 'static> {
 impl<X> Ticks<X> {
     pub fn generate_x<Y>(self, data: Signal<Data<X, Y>>, avail_width: Signal<f64>) -> UseTicks<X> {
         let (font, padding) = (self.font, self.padding);
+        let ticks = Signal::derive(move || {
+            data.with(|data| {
+                let (first, last) = data.x_range();
+                let font_width = font.get().width();
+                let padding_width = padding.get().width();
+                let span = HorizontalSpan::new(font_width, padding_width, avail_width.get());
+                self.generator.generate(first, last, Box::new(span))
+            })
+        });
         UseTicks {
             font,
             padding,
             debug: self.debug,
-            ticks: Signal::derive(move || {
-                data.with(|data| {
-                    let (first, last) = data.x_range();
-                    let font_width = font.get().width();
-                    let padding_width = padding.get().width();
-                    let span = HorizontalSpan::new(font_width, padding_width, avail_width.get());
-                    self.generator.generate(first, last, Box::new(span))
-                })
-            }),
+            ticks,
         }
     }
 }
@@ -42,18 +43,19 @@ impl<X> Ticks<X> {
 impl<Y> Ticks<Y> {
     pub fn generate_y<X>(self, data: Signal<Data<X, Y>>, avail_height: Signal<f64>) -> UseTicks<Y> {
         let (font, padding) = (self.font, self.padding);
+        let ticks = Signal::derive(move || {
+            data.with(|data| {
+                let (first, last) = data.y_range();
+                let line_height = font.get().height() + padding.get().height();
+                let span = VerticalSpan::new(line_height, avail_height.get());
+                self.generator.generate(first, last, Box::new(span))
+            })
+        });
         UseTicks {
             font,
             padding,
             debug: self.debug,
-            ticks: Signal::derive(move || {
-                data.with(|data| {
-                    let (first, last) = data.y_range();
-                    let line_height = font.get().height() + padding.get().height();
-                    let span = VerticalSpan::new(line_height, avail_height.get());
-                    self.generator.generate(first, last, Box::new(span))
-                })
-            }),
+            ticks,
         }
     }
 }

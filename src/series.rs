@@ -149,13 +149,9 @@ impl<X, Y> Data<X, Y> {
         &self.x_points[x_index]
     }
 
-    pub fn nearest_y(&self, x_pos: f64) -> Vec<&Y> {
+    pub fn nearest_y(&self, x_pos: f64, line_id: usize) -> &Y {
         let x_index = self.nearest_x_index(x_pos);
-        // Fetch each y point
-        let points = self.x_points.len();
-        (0..(self.lines))
-            .map(|line_i| &self.y_points[line_i * points + x_index])
-            .collect::<Vec<_>>()
+        &self.y_points[line_id * self.x_points.len() + x_index]
     }
 }
 
