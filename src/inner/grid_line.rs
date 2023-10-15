@@ -1,6 +1,7 @@
 use super::{InnerLayout, InnerOption, UseInner};
 use crate::{
     chart::Attr,
+    colours::{Colour, LIGHTER_GREY},
     debug::DebugRect,
     projection::Projection,
     series::UseSeries,
@@ -14,6 +15,7 @@ use std::borrow::Borrow;
 #[derive(Clone)]
 pub struct GridLine<Tick: Clone> {
     width: MaybeSignal<f64>,
+    colour: MaybeSignal<Colour>,
     ticks: TickLabels<Tick>,
 }
 
@@ -25,6 +27,7 @@ pub struct VerticalGridLine<Y: Clone>(GridLine<Y>);
 #[derive(Clone)]
 struct GridLineAttr<Tick> {
     width: MaybeSignal<f64>,
+    colour: MaybeSignal<Colour>,
     ticks: Ticks<Tick>,
 }
 
@@ -36,6 +39,7 @@ struct VerticalGridLineAttr<Y>(GridLineAttr<Y>);
 #[derive(Clone, Debug)]
 struct UseGridLine<Tick: 'static> {
     width: MaybeSignal<f64>,
+    colour: MaybeSignal<Colour>,
     ticks: UseTicks<Tick>,
 }
 
@@ -48,6 +52,7 @@ impl<Tick: Clone> GridLine<Tick> {
     fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
         Self {
             width: 1.0.into(),
+            colour: Into::<Colour>::into(LIGHTER_GREY).into(),
             ticks: ticks.borrow().clone(),
         }
     }
@@ -64,6 +69,7 @@ impl<Tick: Clone> GridLine<Tick> {
     fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
         GridLineAttr {
             width: self.width,
+            colour: self.colour,
             ticks: self.ticks.apply_attr(attr),
         }
     }
@@ -90,6 +96,7 @@ impl<X: PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
         let avail_width = Projection::derive_width(proj);
         Box::new(UseHorizontalGridLine(UseGridLine {
             width: self.0.width,
+            colour: self.0.colour,
             ticks: self.0.ticks.generate_x(series.data, avail_width),
         }))
     }
@@ -104,6 +111,7 @@ impl<X, Y: PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
         let avail_height = Projection::derive_height(proj);
         Box::new(UseVerticalGridLine(UseGridLine {
             width: self.0.width,
+            colour: self.0.colour,
             ticks: self.0.ticks.generate_y(series.data, avail_height),
         }))
     }
@@ -144,7 +152,7 @@ fn ViewHorizontalGridLine<X: 'static>(
                             y1=move || bounds.top_y()
                             x2=x
                             y2=move || bounds.bottom_y()
-                            stroke="gainsboro"
+                            stroke=move || line.colour.get().to_string()
                             stroke-width=line.width />
                     }
                 })
@@ -178,7 +186,7 @@ fn ViewVerticalGridLine<Y: 'static>(
                             y1=y
                             x2=move || bounds.right_x()
                             y2=y
-                            stroke="gainsboro"
+                            stroke=move || line.colour.get().to_string()
                             stroke-width=line.width />
                     }
                 })
