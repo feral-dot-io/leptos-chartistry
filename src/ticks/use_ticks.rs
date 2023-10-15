@@ -19,10 +19,10 @@ pub struct UseTicks<Tick: 'static> {
     pub(crate) ticks: Signal<GeneratedTicks<Tick>>,
 }
 
-impl<X> Ticks<X> {
+impl<X: PartialEq> Ticks<X> {
     pub fn generate_x<Y>(self, data: Signal<Data<X, Y>>, avail_width: Signal<f64>) -> UseTicks<X> {
         let (font, padding) = (self.font, self.padding);
-        let ticks = Signal::derive(move || {
+        let ticks = create_memo(move |_| {
             data.with(|data| {
                 let (first, last) = data.x_range();
                 let font_width = font.get().width();
@@ -30,7 +30,8 @@ impl<X> Ticks<X> {
                 let span = HorizontalSpan::new(font_width, padding_width, avail_width.get());
                 self.generator.generate(first, last, Box::new(span))
             })
-        });
+        })
+        .into();
         UseTicks {
             font,
             padding,
@@ -40,17 +41,18 @@ impl<X> Ticks<X> {
     }
 }
 
-impl<Y> Ticks<Y> {
+impl<Y: PartialEq> Ticks<Y> {
     pub fn generate_y<X>(self, data: Signal<Data<X, Y>>, avail_height: Signal<f64>) -> UseTicks<Y> {
         let (font, padding) = (self.font, self.padding);
-        let ticks = Signal::derive(move || {
+        let ticks = create_memo(move |_| {
             data.with(|data| {
                 let (first, last) = data.y_range();
                 let line_height = font.get().height() + padding.get().height();
                 let span = VerticalSpan::new(line_height, avail_height.get());
                 self.generator.generate(first, last, Box::new(span))
             })
-        });
+        })
+        .into();
         UseTicks {
             font,
             padding,

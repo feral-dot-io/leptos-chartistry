@@ -88,19 +88,19 @@ impl<Tick: Clone> TickLabels<Tick> {
     }
 }
 
-impl<X: Clone + 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
+impl<X: Clone + PartialEq + 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
         Box::new(TickLabelsAttr(self.apply_attr(attr)))
     }
 }
 
-impl<X: 'static, Y: Clone + 'static> VerticalLayout<X, Y> for TickLabels<Y> {
+impl<X: 'static, Y: Clone + PartialEq + 'static> VerticalLayout<X, Y> for TickLabels<Y> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
         Box::new(TickLabelsAttr(self.apply_attr(attr)))
     }
 }
 
-impl<X, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
+impl<X: PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
     fn height(&self) -> Signal<f64> {
         let (font, padding) = (self.0.font, self.0.padding);
         Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
@@ -115,7 +115,7 @@ impl<X, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
     }
 }
 
-impl<X, Y> VerticalOption<X, Y> for TickLabelsAttr<Y> {
+impl<X, Y: PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
     fn to_use(
         self: Box<Self>,
         series: &UseSeries<X, Y>,

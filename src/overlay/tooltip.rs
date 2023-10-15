@@ -55,7 +55,9 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
     }
 }
 
-impl<X: Clone + 'static, Y: Clone + 'static> OverlayLayout<X, Y> for Tooltip<X, Y> {
+impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayout<X, Y>
+    for Tooltip<X, Y>
+{
     fn apply_attr(self, attr: &Attr) -> Box<dyn UseOverlay<X, Y>> {
         Box::new(UseTooltip {
             snippet: self.snippet.to_use(attr),
@@ -68,7 +70,7 @@ impl<X: Clone + 'static, Y: Clone + 'static> OverlayLayout<X, Y> for Tooltip<X, 
     }
 }
 
-impl<X: Clone, Y: Clone> UseOverlay<X, Y> for UseTooltip<X, Y> {
+impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for UseTooltip<X, Y> {
     fn render(
         self: Box<Self>,
         series: UseSeries<X, Y>,
@@ -98,7 +100,7 @@ impl<X: Clone, Y: Clone> UseOverlay<X, Y> for UseTooltip<X, Y> {
 }
 
 #[component]
-fn Tooltip<X: 'static, Y: 'static>(
+fn Tooltip<X: PartialEq + 'static, Y: PartialEq + 'static>(
     tooltip: UseTooltip<X, Y>,
     series: UseSeries<X, Y>,
     projection: Signal<Projection>,

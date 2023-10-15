@@ -69,19 +69,19 @@ impl<Tick: Clone> GridLine<Tick> {
     }
 }
 
-impl<X: Clone + 'static, Y: 'static> InnerLayout<X, Y> for HorizontalGridLine<X> {
+impl<X: Clone + PartialEq + 'static, Y: 'static> InnerLayout<X, Y> for HorizontalGridLine<X> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>> {
         Box::new(HorizontalGridLineAttr(self.0.apply_attr(attr)))
     }
 }
 
-impl<X: 'static, Y: Clone + 'static> InnerLayout<X, Y> for VerticalGridLine<Y> {
+impl<X: 'static, Y: Clone + PartialEq + 'static> InnerLayout<X, Y> for VerticalGridLine<Y> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>> {
         Box::new(VerticalGridLineAttr(self.0.apply_attr(attr)))
     }
 }
 
-impl<X, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
+impl<X: PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
     fn to_use(
         self: Box<Self>,
         series: &UseSeries<X, Y>,
@@ -95,7 +95,7 @@ impl<X, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
     }
 }
 
-impl<X, Y> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
+impl<X, Y: PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
     fn to_use(
         self: Box<Self>,
         series: &UseSeries<X, Y>,
