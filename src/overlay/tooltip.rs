@@ -167,7 +167,7 @@ fn Tooltip<X: 'static, Y: 'static>(
                 <thead>
                     <tr>
                         <th colspan=2 style="white-space: pre; font-family: monospace;">
-                            {with!(|x_ticks, data, data_x| x_ticks.state.long_format(data.nearest_x(*data_x)))}
+                            {move || with!(|x_ticks, data, data_x| x_ticks.state.long_format(data.nearest_x(*data_x)))}
                         </th>
                     </tr>
                 </thead>
