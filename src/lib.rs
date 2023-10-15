@@ -6,6 +6,7 @@ mod font;
 mod inner;
 mod layout;
 mod line;
+mod overlay;
 mod padding;
 mod projection;
 mod series;
@@ -23,6 +24,7 @@ pub use layout::{
     tick_labels::TickLabels,
 };
 pub use line::Line;
+pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;
 pub use series::Series;
 pub use ticks::Period;

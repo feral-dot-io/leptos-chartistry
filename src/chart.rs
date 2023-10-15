@@ -3,6 +3,7 @@ use crate::{
     debug::DebugRect,
     inner::{InnerLayout, InnerOption},
     layout::{HorizontalLayout, HorizontalOption, Layout, VerticalLayout, VerticalOption},
+    overlay::{OverlayLayout, UseOverlay},
     series::{Series, UseSeries},
     Font, Padding,
 };
@@ -24,6 +25,7 @@ pub struct Chart<X: 'static, Y: 'static> {
     bottom: Vec<Box<dyn HorizontalOption<X, Y>>>,
     left: Vec<Box<dyn VerticalOption<X, Y>>>,
     inner: Vec<Box<dyn InnerOption<X, Y>>>,
+    overlay: Vec<Box<dyn UseOverlay<X, Y>>>,
     series: UseSeries<X, Y>,
 }
 
@@ -57,6 +59,7 @@ impl<X, Y> Chart<X, Y> {
             bottom: vec![],
             left: vec![],
             inner: vec![],
+            overlay: vec![],
             series,
         }
     }
@@ -108,10 +111,15 @@ impl<X, Y> Chart<X, Y> {
         self.inner.push(opt.apply_attr(&self.attr));
         self
     }
+
+    pub fn overlay(mut self, opt: impl OverlayLayout<X, Y>) -> Self {
+        self.overlay.push(opt.apply_attr(&self.attr));
+        self
+    }
 }
 
 #[component]
-pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
+pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(chart: Chart<X, Y>) -> impl IntoView {
     let Chart {
         width,
         height,
@@ -124,6 +132,7 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
         bottom,
         left,
         inner,
+        overlay,
         series,
     } = chart;
 
@@ -136,14 +145,19 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
     let layout = Layout::compose(outer_bounds, top, right, bottom, left, &series);
 
     // SVG root
-    let (root, svg_bounds, mouse) = root_node();
+    let (root, mouse_abs, mouse_rel) = root_node();
 
     // Inner layout
     let inner = (inner.into_iter())
         .map(|opt| {
             opt.to_use(&series, layout.projection)
-                .render(layout.projection, mouse)
+                .render(layout.projection, mouse_rel)
         })
+        .collect_view();
+
+    // Outer layout
+    let overlay = (overlay.into_iter())
+        .map(|opt| opt.render(series.clone(), layout.projection, mouse_abs, mouse_rel))
         .collect_view();
 
     view! {
@@ -160,13 +174,14 @@ pub fn Chart<X: 'static, Y: 'static>(chart: Chart<X, Y>) -> impl IntoView {
                 {layout.view}
                 <Series series=series projection=layout.projection />
             </svg>
+            {overlay}
         </div>
     }
 }
 
 fn root_node() -> (
     NodeRef<Svg>,
-    Signal<Option<Bounds>>,
+    Signal<Option<(f64, f64)>>,
     Signal<Option<(f64, f64)>>,
 ) {
     let root = create_node_ref::<Svg>();
@@ -182,23 +197,35 @@ fn root_node() -> (
         UseIntersectionObserverOptions::default().immediate(true),
     );
 
-    // Mouse position relative to SVG
-    let page_mouse = use_mouse_with_options(
+    // Mouse position
+    let mouse = use_mouse_with_options(
         UseMouseOptions::default()
             .coord_type(UseMouseCoordType::<UseMouseEventExtractorDefault>::Page)
             .reset_on_touch_ends(true),
     );
-    let mouse = Signal::derive(move || {
-        if page_mouse.source_type.get() != UseMouseSourceType::Unset {
-            svg_bounds.get().map(|svg| {
-                let x = page_mouse.x.get() - svg.left_x();
-                let y = page_mouse.y.get() - svg.top_y();
-                (x, y)
-            })
+
+    // Page absolute coords
+    let mouse_abs = Signal::derive(move || {
+        if mouse.source_type.get() != UseMouseSourceType::Unset {
+            let x = mouse.x.get();
+            let y = mouse.y.get();
+            Some((x, y))
         } else {
             None
         }
     });
 
-    (root, svg_bounds.into(), mouse)
+    // Relative to SVG
+    let mouse_rel = Signal::derive(move || {
+        (mouse_abs.get())
+            .zip(svg_bounds.get())
+            .map(|((x, y), svg)| {
+                let x = x - svg.left_x();
+                let y = y - svg.top_y();
+                (x, y)
+            })
+    });
+
+    // svg_bounds.into(
+    (root, mouse_abs, mouse_rel)
 }

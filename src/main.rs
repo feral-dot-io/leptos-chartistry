@@ -73,7 +73,13 @@ pub fn App() -> impl IntoView {
         .add(GridLine::vertical(&bottom_ticks))
         // Guide lines
         .add(GuideLine::horizontal())
-        .add(GuideLine::vertical());
+        .add(GuideLine::vertical())
+        // Tooltip
+        .overlay(Tooltip::left_cursor(
+            Snippet::horizontal(),
+            &bottom_ticks,
+            &left_ticks,
+        ));
 
     view! {
         <form>

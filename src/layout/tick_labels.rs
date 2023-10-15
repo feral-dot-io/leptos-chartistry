@@ -78,25 +78,25 @@ impl<Tick: Clone> TickLabels<Tick> {
         self
     }
 
-    pub(crate) fn apply_attr(self, attr: &Attr) -> TickLabelsAttr<Tick> {
-        TickLabelsAttr(Ticks {
+    pub(crate) fn apply_attr(self, attr: &Attr) -> Ticks<Tick> {
+        Ticks {
             font: self.font.unwrap_or(attr.font),
             padding: self.padding.unwrap_or(attr.padding),
             debug: self.debug.unwrap_or(attr.debug),
             generator: self.generator,
-        })
+        }
     }
 }
 
 impl<X: Clone + 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
-        Box::new(self.apply_attr(attr))
+        Box::new(TickLabelsAttr(self.apply_attr(attr)))
     }
 }
 
 impl<X: 'static, Y: Clone + 'static> VerticalLayout<X, Y> for TickLabels<Y> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
-        Box::new(self.apply_attr(attr))
+        Box::new(TickLabelsAttr(self.apply_attr(attr)))
     }
 }
 

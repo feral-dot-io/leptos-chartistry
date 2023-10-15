@@ -63,7 +63,7 @@ impl<Tick: Clone> GridLine<Tick> {
     fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
         GridLineAttr {
             width: self.width,
-            ticks: self.ticks.apply_attr(attr).0,
+            ticks: self.ticks.apply_attr(attr),
         }
     }
 }
@@ -86,7 +86,7 @@ impl<X, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
         series: &UseSeries<X, Y>,
         proj: Signal<Projection>,
     ) -> Box<dyn UseInner> {
-        let avail_width = Signal::derive(move || with!(|proj| proj.bounds().width()));
+        let avail_width = Projection::derive_width(proj);
         Box::new(UseHorizontalGridLine(UseGridLine {
             width: self.0.width,
             ticks: self.0.ticks.generate_x(series.data, avail_width),
@@ -100,7 +100,7 @@ impl<X, Y> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
         series: &UseSeries<X, Y>,
         proj: Signal<Projection>,
     ) -> Box<dyn UseInner> {
-        let avail_height = Signal::derive(move || with!(|proj| proj.bounds().height()));
+        let avail_height = Projection::derive_height(proj);
         Box::new(UseVerticalGridLine(UseGridLine {
             width: self.0.width,
             ticks: self.0.ticks.generate_y(series.data, avail_height),

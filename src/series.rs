@@ -17,6 +17,7 @@ pub struct UseSeries<X: 'static, Y: 'static> {
 
 #[derive(Clone, Debug)]
 pub struct Data<X, Y> {
+    lines: usize,
     position_range: Bounds,
     x_points: Vec<X>,
     x_positions: Vec<f64>,
@@ -52,6 +53,7 @@ impl<T, X, Y> Series<T, X, Y> {
             get_ys,
             lines,
         } = self;
+        let lines_len = lines.len();
 
         let data = data.into();
         let data = Signal::derive(move || {
@@ -77,6 +79,7 @@ impl<T, X, Y> Series<T, X, Y> {
                 );
 
                 Data {
+                    lines: lines_len,
                     position_range: Bounds::from_points(
                         x_positions[x_range_i.0],
                         y_positions[y_range_i.0],
@@ -129,6 +132,30 @@ impl<X, Y> Data<X, Y> {
 
     pub fn y_range(&self) -> (&Y, &Y) {
         (&self.y_range.0, &self.y_range.1)
+    }
+
+    fn nearest_x_index(&self, pos: f64) -> usize {
+        // Find index of before x point
+        let index = self.x_positions.partition_point(|&v| v < pos);
+        // X value is beyond all points
+        if index == self.x_points.len() {
+            return index - 1;
+        }
+        index
+    }
+
+    pub fn nearest_x(&self, x_pos: f64) -> &X {
+        let x_index = self.nearest_x_index(x_pos);
+        &self.x_points[x_index]
+    }
+
+    pub fn nearest_y(&self, x_pos: f64) -> Vec<&Y> {
+        let x_index = self.nearest_x_index(x_pos);
+        // Fetch each y point
+        let points = self.x_points.len();
+        (0..(self.lines))
+            .map(|line_i| &self.y_points[line_i * points + x_index])
+            .collect::<Vec<_>>()
     }
 }
 
