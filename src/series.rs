@@ -15,7 +15,7 @@ pub struct UseSeries<X: 'static, Y: 'static> {
     pub(crate) data: Signal<Data<X, Y>>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Data<X, Y> {
     position_range: Bounds,
     x_points: Vec<X>,
@@ -26,7 +26,7 @@ pub struct Data<X, Y> {
     y_range: (Y, Y),
 }
 
-impl<T, X, Y> Series<T, X, Y> {
+impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
     pub fn new(get_x: &'static dyn Fn(&T) -> X) -> Self {
         Series {
             get_x,
@@ -54,7 +54,7 @@ impl<T, X, Y> Series<T, X, Y> {
         } = self;
 
         let data = data.into();
-        let data = Signal::derive(move || {
+        let data = create_memo(move |_| {
             let get_ys = get_ys.iter().as_slice();
             data.with(move |data| {
                 let data = data.borrow();
@@ -92,7 +92,8 @@ impl<T, X, Y> Series<T, X, Y> {
                     y_range,
                 }
             })
-        });
+        })
+        .into();
 
         UseSeries { lines, data }
     }
