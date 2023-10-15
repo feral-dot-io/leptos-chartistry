@@ -118,9 +118,10 @@ impl Layout {
             )
         });
         let data = series.data;
-        let projection = Signal::derive(move || {
+        let projection = create_memo(move |_| {
             Projection::new(inner_bounds.get(), data.with(|data| data.position_range()))
-        });
+        })
+        .into();
 
         // Top / bottom options to UseLayoutOption
         let view = Signal::derive(move || {

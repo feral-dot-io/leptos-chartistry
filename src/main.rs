@@ -75,11 +75,12 @@ pub fn App() -> impl IntoView {
         .add(GuideLine::horizontal())
         .add(GuideLine::vertical())
         // Tooltip
-        .overlay(Tooltip::left_cursor(
+        /*.overlay(Tooltip::left_cursor(
             Snippet::horizontal(),
             &bottom_ticks,
             &left_ticks,
-        ));
+        ))*/
+        ;
 
     view! {
         <form>

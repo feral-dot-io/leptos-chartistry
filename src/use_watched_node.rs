@@ -41,16 +41,17 @@ pub fn use_watched_node(node: NodeRef<Svg>, proj: Signal<Projection>) -> UseWatc
     });
 
     // Mouse inside SVG?
-    let over_svg = Signal::derive(move || {
+    let over_svg = create_memo(move |_| {
         let (x, y) = mouse_abs.get();
         mouse.source_type.get() != UseMouseSourceType::Unset
             && (bounds.get())
                 .map(|bounds| bounds.contains(x, y))
                 .unwrap_or(false)
-    });
+    })
+    .into();
 
     // Mouse relative to SVG
-    let mouse_rel = Signal::derive(move || {
+    let mouse_rel: Signal<_> = create_memo(move |_| {
         (bounds.get())
             .map(|svg| {
                 let (x, y) = mouse_abs.get();
@@ -59,13 +60,15 @@ pub fn use_watched_node(node: NodeRef<Svg>, proj: Signal<Projection>) -> UseWatc
                 (x, y)
             })
             .unwrap_or_default()
-    });
+    })
+    .into();
 
     // Mouse inside inner chart?
-    let over_inner = Signal::derive(move || {
+    let over_inner = create_memo(move |_| {
         let (x, y) = mouse_rel.get();
         mouse.source_type.get() != UseMouseSourceType::Unset && proj.get().bounds().contains(x, y)
-    });
+    })
+    .into();
 
     UseWatchedNode {
         bounds: bounds.into(),
