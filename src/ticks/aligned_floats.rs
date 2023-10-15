@@ -26,10 +26,7 @@ impl TickGen for AlignedFloatsGen {
         let (scale, count) = Self::find_precision(first, last, span);
         let (scale, ticks) = Self::generate_count(first, last, scale, count);
         let state = AlignedFloats::new(scale, &ticks);
-        GeneratedTicks {
-            ticks,
-            state: Box::new(state),
-        }
+        GeneratedTicks::new(ticks, state)
     }
 }
 

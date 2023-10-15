@@ -104,10 +104,9 @@ where
             }
         }
         // Finally, convert to ticks
-        GeneratedTicks {
-            ticks: ticks.into_iter().map(|tick| tick.at).collect(),
-            state: Box::new(TimestampFormatter::new(latest_period, &self.periods)),
-        }
+        let ticks = ticks.into_iter().map(|tick| tick.at).collect();
+        let state = TimestampFormatter::new(latest_period, &self.periods);
+        GeneratedTicks::new(ticks, state)
     }
 }
 
