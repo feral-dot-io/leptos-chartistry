@@ -56,7 +56,8 @@ impl<X, Y> InnerLayout<X, Y> for GuideLine {
 
 impl UseInner for UseGuideLine {
     fn render(self: Box<Self>, proj: Signal<Projection>, watch: &UseWatchedNode) -> View {
-        view!( <GuideLine line=*self projection=proj mouse_over=watch.over_inner mouse=watch.mouse_rel /> )
+        let mouse_hover = watch.mouse_hover_inner(proj);
+        view!( <GuideLine line=*self projection=proj mouse_hover=mouse_hover mouse=watch.mouse_rel /> )
     }
 }
 
@@ -64,11 +65,11 @@ impl UseInner for UseGuideLine {
 fn GuideLine(
     line: UseGuideLine,
     projection: Signal<Projection>,
-    mouse_over: Signal<bool>,
+    mouse_hover: Signal<bool>,
     mouse: Signal<(f64, f64)>,
 ) -> impl IntoView {
     let render = create_memo(move |_| {
-        if !mouse_over.get() {
+        if !mouse_hover.get() {
             return view!().into_view();
         }
 

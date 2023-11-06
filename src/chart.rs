@@ -137,13 +137,11 @@ pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(chart: Chart<X, Y>) -> impl
     let debug = debug.unwrap_or(attr.debug);
 
     // Layout
+    let root = create_node_ref::<Svg>();
+    let watch = use_watched_node(root);
     let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let outer_bounds = Signal::derive(move || padding.get().apply(chart_bounds.get()));
     let layout = Layout::compose(outer_bounds, top, right, bottom, left, &series);
-
-    // Root node
-    let root = create_node_ref::<Svg>();
-    let watch = use_watched_node(root, layout.projection);
 
     // Inner layout
     let inner = (inner.into_iter())

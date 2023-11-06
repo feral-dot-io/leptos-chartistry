@@ -110,10 +110,10 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAtt
         watch: &UseWatchedNode,
     ) -> View {
         let tooltip = self.to_use(series.data, proj);
-        let (mouse_abs, mouse_rel, over_inner) =
-            (watch.mouse_abs, watch.mouse_rel, watch.over_inner);
+        let (mouse_abs, mouse_rel) = (watch.mouse_abs, watch.mouse_rel);
+        let mouse_hover = watch.mouse_hover_inner(proj);
         create_memo(move |_| {
-            if !over_inner.get() {
+            if !mouse_hover.get() {
                 return view!().into_view();
             }
 

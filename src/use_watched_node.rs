@@ -8,13 +8,12 @@ use leptos_use::{
 #[derive(Clone, Debug)]
 pub struct UseWatchedNode {
     pub bounds: Signal<Option<Bounds>>,
-    pub over_svg: Signal<bool>,
-    pub over_inner: Signal<bool>,
-    pub mouse_rel: Signal<(f64, f64)>,
+    pub mouse_hover: Signal<bool>,
     pub mouse_abs: Signal<(f64, f64)>,
+    pub mouse_rel: Signal<(f64, f64)>,
 }
 
-pub fn use_watched_node(node: NodeRef<Svg>, proj: Signal<Projection>) -> UseWatchedNode {
+pub fn use_watched_node(node: NodeRef<Svg>) -> UseWatchedNode {
     // SVG bounds -- dimensions for our root <svg> element inside the document
     let (bounds, set_bounds) = create_signal::<Option<Bounds>>(None);
     use_intersection_observer_with_options(
@@ -41,7 +40,7 @@ pub fn use_watched_node(node: NodeRef<Svg>, proj: Signal<Projection>) -> UseWatc
     });
 
     // Mouse inside SVG?
-    let over_svg = create_memo(move |_| {
+    let mouse_hover = create_memo(move |_| {
         let (x, y) = mouse_abs.get();
         mouse.source_type.get() != UseMouseSourceType::Unset
             && (bounds.get())
@@ -63,18 +62,22 @@ pub fn use_watched_node(node: NodeRef<Svg>, proj: Signal<Projection>) -> UseWatc
     })
     .into();
 
-    // Mouse inside inner chart?
-    let over_inner = create_memo(move |_| {
-        let (x, y) = mouse_rel.get();
-        mouse.source_type.get() != UseMouseSourceType::Unset && proj.get().bounds().contains(x, y)
-    })
-    .into();
-
     UseWatchedNode {
         bounds: bounds.into(),
-        over_svg,
-        over_inner,
-        mouse_rel,
+        mouse_hover,
         mouse_abs,
+        mouse_rel,
+    }
+}
+
+impl UseWatchedNode {
+    // Mouse inside inner chart?
+    pub fn mouse_hover_inner(&self, proj: Signal<Projection>) -> Signal<bool> {
+        let (mouse_rel, hover) = (self.mouse_rel, self.mouse_hover);
+        create_memo(move |_| {
+            let (x, y) = mouse_rel.get();
+            hover.get() && proj.with(|proj| proj.bounds().contains(x, y))
+        })
+        .into()
     }
 }
