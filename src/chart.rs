@@ -8,7 +8,7 @@ use crate::{
     use_watched_node::use_watched_node,
     Font, Padding,
 };
-use leptos::{svg::Svg, *};
+use leptos::{html::Div, *};
 
 pub struct Chart<X: 'static, Y: 'static> {
     width: MaybeSignal<f64>,
@@ -137,7 +137,7 @@ pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(chart: Chart<X, Y>) -> impl
     let debug = debug.unwrap_or(attr.debug);
 
     // Layout
-    let root = create_node_ref::<Svg>();
+    let root = create_node_ref::<Div>();
     let watch = use_watched_node(root);
     let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
     let outer_bounds = Signal::derive(move || padding.get().apply(chart_bounds.get()));
@@ -158,11 +158,11 @@ pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(chart: Chart<X, Y>) -> impl
 
     view! {
         <div
+            node_ref=root
             style="margin: 0 auto;"
             style:width=move || format!("{}px", width.get())
             style:height=move || format!("{}px", height.get())>
             <svg
-                node_ref=root
                 style="overflow: visible;"
                 viewBox=move || format!("0 0 {} {}", width.get(), height.get())>
                 {inner}
