@@ -13,6 +13,8 @@ pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_ys: Vec<&'static dyn Fn(&T) -> Y>,
     lines: Vec<Line>,
     colours: ColourScheme,
+    x_range: Signal<(Option<X>, Option<X>)>,
+    y_range: Signal<(Option<Y>, Option<Y>)>,
 }
 
 #[derive(Clone, Debug)]
@@ -32,18 +34,50 @@ pub struct Data<X, Y> {
     y_range: (Y, Y),
 }
 
-impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
+impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T, X, Y> {
     pub fn new(get_x: &'static dyn Fn(&T) -> X) -> Self {
         Series {
             get_x,
             get_ys: Vec::new(),
             lines: Vec::new(),
             colours: colours::ARBITRARY.as_ref().into(),
+            x_range: Signal::default(),
+            y_range: Signal::default(),
         }
     }
 
     pub fn set_colours(mut self, colours: impl Into<ColourScheme>) -> Self {
         self.colours = colours.into();
+        self
+    }
+
+    pub fn set_x_range<LowerOpt, UpperOpt>(
+        mut self,
+        lower: impl Into<MaybeSignal<LowerOpt>>,
+        upper: impl Into<MaybeSignal<UpperOpt>>,
+    ) -> Self
+    where
+        LowerOpt: Clone + Into<Option<X>> + 'static,
+        UpperOpt: Clone + Into<Option<X>> + 'static,
+    {
+        let lower = lower.into();
+        let upper = upper.into();
+        self.x_range = Signal::derive(move || (lower.get().into(), upper.get().into()));
+        self
+    }
+
+    pub fn set_y_range<LowerOpt, UpperOpt>(
+        mut self,
+        lower: impl Into<MaybeSignal<LowerOpt>>,
+        upper: impl Into<MaybeSignal<UpperOpt>>,
+    ) -> Self
+    where
+        LowerOpt: Clone + Into<Option<Y>> + 'static,
+        UpperOpt: Clone + Into<Option<Y>> + 'static,
+    {
+        let lower = lower.into();
+        let upper = upper.into();
+        self.y_range = Signal::derive(move || (lower.get().into(), upper.get().into()));
         self
     }
 
@@ -56,14 +90,16 @@ impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
     pub fn use_data<Ts>(self, data: impl Into<MaybeSignal<Ts>> + 'static) -> UseSeries<X, Y>
     where
         Ts: Borrow<[T]> + 'static,
-        X: PartialOrd + Position,
-        Y: PartialOrd + Position,
+        X: Clone + PartialOrd + Position,
+        Y: Clone + PartialOrd + Position,
     {
         let Series {
             get_x,
             get_ys,
             lines,
             colours,
+            x_range: ext_x_range,
+            y_range: ext_y_range,
         } = self;
 
         // Apply colours to lines
@@ -75,6 +111,7 @@ impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
         // Convert data to a signal
         let data = data.into();
         let data = create_memo(move |_| {
+            let (ext_x_range, ext_y_range) = (ext_x_range.clone(), ext_y_range.clone());
             let get_ys = get_ys.iter().as_slice();
             data.with(move |data| {
                 let data = data.borrow();
@@ -96,12 +133,16 @@ impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
                     Self::reverse_get_y(get_ys, data, y_range_i.1),
                 );
 
+                // Apply min/max range overrides
+                let x_range = Self::apply_min_max_range(x_range, ext_x_range.get());
+                let y_range = Self::apply_min_max_range(y_range, ext_y_range.get());
+
                 Data {
                     position_range: Bounds::from_points(
-                        x_positions[x_range_i.0],
-                        y_positions[y_range_i.0],
-                        x_positions[x_range_i.1],
-                        y_positions[y_range_i.1],
+                        x_range.0.position(),
+                        y_range.0.position(),
+                        x_range.1.position(),
+                        y_range.1.position(),
                     ),
                     //position_range: Bounds::from_points(x_min, y_min, x_max, y_max),
                     x_points,
@@ -116,6 +157,22 @@ impl<T, X: PartialEq, Y: PartialEq> Series<T, X, Y> {
         .into();
 
         UseSeries { lines, data }
+    }
+
+    fn apply_min_max_range<V: PartialOrd>(
+        (min, max): (V, V),
+        (lower, upper): (Option<V>, Option<V>),
+    ) -> (V, V) {
+        (
+            match lower {
+                Some(l) if l < min => l,
+                _ => min,
+            },
+            match upper {
+                Some(u) if u > max => u,
+                _ => max,
+            },
+        )
     }
 
     fn find_min_max_index(positions: &[f64]) -> (usize, usize) {
