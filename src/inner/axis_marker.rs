@@ -91,7 +91,7 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
     let pos = Signal::derive(move || {
         let b = projection.get().bounds();
         let (top, right, bottom, left) = (b.top_y(), b.right_x(), b.bottom_y(), b.left_x());
-        match marker.placement.get() {
+        let coords @ (x1, y1, x2, y2) = match marker.placement.get() {
             Placement::Edge => match marker.edge.get() {
                 Edge::Top => (left, top, right, top),
                 Edge::Bottom => (left, bottom, right, bottom),
@@ -108,8 +108,15 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
                     Edge::Right => (zero_x, bottom, zero_x, top),
                 }
             }
+        };
+        // Check coords are within projection bounds
+        if b.contains(x1, y1) && b.contains(x2, y2) {
+            Some(coords)
+        } else {
+            None
         }
     });
+
     let arrow = move || {
         if marker.arrow.get() {
             "url(#marker_axis_arrow)"
@@ -118,30 +125,37 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
         }
     };
 
-    let colour = marker.colour;
-    view! {
-        <g class="_chartistry_axis_marker">
-            <defs>
-                <marker
-                    id="marker_axis_arrow"
-                    markerUnits="strokeWidth"
-                    markerWidth=7
-                    markerHeight=8
-                    refX=0
-                    refY=4
-                    orient="auto">
-                    <path d="M0,0 L0,8 L7,4 z" fill=move || colour.get().to_string() />
-                </marker>
-            </defs>
-            <line
-                x1=move || pos.get().0
-                y1=move || pos.get().1
-                x2=move || pos.get().2
-                y2=move || pos.get().3
-                stroke=move || colour.get().to_string()
-                stroke-width=marker.width
-                marker-end=arrow
-            />
-        </g>
+    let colour = marker.colour.get().to_string();
+    move || {
+        if let Some((x1, y1, x2, y2)) = pos.get() {
+            view! {
+                <g class="_chartistry_axis_marker">
+                    <defs>
+                        <marker
+                            id="marker_axis_arrow"
+                            markerUnits="strokeWidth"
+                            markerWidth=7
+                            markerHeight=8
+                            refX=0
+                            refY=4
+                            orient="auto">
+                            <path d="M0,0 L0,8 L7,4 z" fill=&colour />
+                        </marker>
+                    </defs>
+                    <line
+                        x1=x1
+                        y1=y1
+                        x2=x2
+                        y2=y2
+                        stroke=&colour
+                        stroke-width=marker.width
+                        marker-end=arrow
+                    />
+                </g>
+            }
+            .into_view()
+        } else {
+            ().into_view()
+        }
     }
 }

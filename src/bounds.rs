@@ -91,7 +91,7 @@ impl Bounds {
 
     /// Tests if the given point is within the bounds.
     pub fn contains(&self, x: f64, y: f64) -> bool {
-        x >= self.left && x < self.right && y >= self.top && y < self.bottom
+        x >= self.left && x <= self.right && y >= self.top && y <= self.bottom
     }
 }
 
@@ -119,7 +119,8 @@ mod tests {
         assert_eq!(b.is_zero(), false);
         assert_eq!(Bounds::from_points(0.0, 10.0, 1.0, 10.0).is_zero(), true);
         assert_eq!(b.contains(1.1, 2.2), true);
-        assert_eq!(b.contains(3.3, 4.4), false);
+        assert_eq!(b.contains(3.3, 4.4), true);
+        assert_eq!(b.contains(5.5, 6.6), false);
     }
 
     #[test]
