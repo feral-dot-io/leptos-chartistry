@@ -127,36 +127,39 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
     };
 
     let colour = move || marker.colour.get().to_string();
-    move || {
+    let render = move || {
         if let Some((x1, y1, x2, y2)) = pos.get() {
             view! {
-                <g class="_chartistry_axis_marker">
-                    <defs>
-                        <marker
-                            id="marker_axis_arrow"
-                            markerUnits="strokeWidth"
-                            markerWidth=7
-                            markerHeight=8
-                            refX=0
-                            refY=4
-                            orient="auto">
-                            <path d="M0,0 L0,8 L7,4 z" fill=colour />
-                        </marker>
-                    </defs>
-                    <line
-                        x1=x1
-                        y1=y1
-                        x2=x2
-                        y2=y2
-                        stroke=colour
-                        stroke-width=marker.width
-                        marker-end=arrow
-                    />
-                </g>
+                <line
+                    x1=x1
+                    y1=y1
+                    x2=x2
+                    y2=y2
+                    stroke=colour
+                    stroke-width=marker.width
+                    marker-end=arrow
+                />
             }
             .into_view()
         } else {
             ().into_view()
         }
+    };
+    view! {
+        <g class="_chartistry_axis_marker">
+            <defs>
+                <marker
+                    id="marker_axis_arrow"
+                    markerUnits="strokeWidth"
+                    markerWidth=7
+                    markerHeight=8
+                    refX=0
+                    refY=4
+                    orient="auto">
+                    <path d="M0,0 L0,8 L7,4 z" fill=colour />
+                </marker>
+            </defs>
+            {render}
+        </g>
     }
 }
