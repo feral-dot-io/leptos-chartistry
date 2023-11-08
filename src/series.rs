@@ -210,13 +210,24 @@ impl<X, Y> Data<X, Y> {
     }
 
     fn nearest_x_index(&self, pos: f64) -> usize {
-        // Find index of before x point
+        // Find index after pos
         let index = self.x_positions.partition_point(|&v| v < pos);
-        // X value is beyond all points
+        // No value before
+        if index == 0 {
+            return 0;
+        }
+        // No value ahead
         if index == self.x_points.len() {
             return index - 1;
         }
-        index
+        // Find closest index
+        let ahead = self.x_positions[index] - pos;
+        let before = pos - self.x_positions[index - 1];
+        if ahead < before {
+            index
+        } else {
+            index - 1
+        }
     }
 
     pub fn nearest_x(&self, x_pos: f64) -> &X {
