@@ -224,6 +224,11 @@ impl<X, Y> Data<X, Y> {
         &self.x_points[x_index]
     }
 
+    pub fn nearest_x_position(&self, x_pos: f64) -> f64 {
+        let x_index = self.nearest_x_index(x_pos);
+        self.x_positions[x_index]
+    }
+
     pub fn nearest_y(&self, x_pos: f64, line_id: usize) -> &Y {
         let x_index = self.nearest_x_index(x_pos);
         &self.y_points[line_id * self.x_points.len() + x_index]

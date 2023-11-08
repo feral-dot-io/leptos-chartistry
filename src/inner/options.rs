@@ -3,12 +3,6 @@ use crate::{
 };
 use leptos::*;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Axis {
-    Horizontal,
-    Vertical,
-}
-
 pub trait InnerLayout<X, Y> {
     fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>>;
 }
@@ -42,14 +36,5 @@ where
 {
     fn to_use(self: Box<Self>, _: &UseSeries<X, Y>, _: Signal<Projection>) -> Box<dyn UseInner> {
         self
-    }
-}
-
-impl std::fmt::Display for Axis {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Axis::Horizontal => write!(f, "horizontal"),
-            Axis::Vertical => write!(f, "vertical"),
-        }
     }
 }
