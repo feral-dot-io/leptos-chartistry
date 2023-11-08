@@ -10,7 +10,7 @@ use crate::{
     TickLabels,
 };
 use leptos::*;
-use std::borrow::Borrow;
+use std::{borrow::Borrow, rc::Rc};
 
 #[derive(Clone)]
 pub struct GridLine<Tick: Clone> {
@@ -76,20 +76,20 @@ impl<Tick: Clone> GridLine<Tick> {
 }
 
 impl<X: Clone + PartialEq + 'static, Y: 'static> InnerLayout<X, Y> for HorizontalGridLine<X> {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>> {
-        Box::new(HorizontalGridLineAttr(self.0.apply_attr(attr)))
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+        Rc::new(HorizontalGridLineAttr(self.0.apply_attr(attr)))
     }
 }
 
 impl<X: 'static, Y: Clone + PartialEq + 'static> InnerLayout<X, Y> for VerticalGridLine<Y> {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>> {
-        Box::new(VerticalGridLineAttr(self.0.apply_attr(attr)))
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+        Rc::new(VerticalGridLineAttr(self.0.apply_attr(attr)))
     }
 }
 
-impl<X: PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
+impl<X: Clone + PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
     fn to_use(
-        self: Box<Self>,
+        self: Rc<Self>,
         series: &UseSeries<X, Y>,
         proj: Signal<Projection>,
     ) -> Box<dyn UseInner> {
@@ -97,14 +97,14 @@ impl<X: PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
         Box::new(UseHorizontalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            ticks: self.0.ticks.generate_x(series.data, avail_width),
+            ticks: self.0.ticks.clone().generate_x(series.data, avail_width),
         }))
     }
 }
 
-impl<X, Y: PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
+impl<X, Y: Clone + PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
     fn to_use(
-        self: Box<Self>,
+        self: Rc<Self>,
         series: &UseSeries<X, Y>,
         proj: Signal<Projection>,
     ) -> Box<dyn UseInner> {
@@ -112,7 +112,7 @@ impl<X, Y: PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
         Box::new(UseVerticalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            ticks: self.0.ticks.generate_y(series.data, avail_height),
+            ticks: self.0.ticks.clone().generate_y(series.data, avail_height),
         }))
     }
 }

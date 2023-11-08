@@ -35,6 +35,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
                 rect.right() + scroll_x,
                 rect.bottom() + scroll_y,
             );
+            log::info!("bounds: {} x {}", bounds.width(), bounds.height());
             set_bounds.set(Some(bounds))
         },
         UseIntersectionObserverOptions::default()

@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use super::{InnerLayout, InnerOption, UseInner};
 use crate::{
     chart::Attr,
@@ -11,6 +9,7 @@ use crate::{
     Anchor, Legend, Snippet,
 };
 use leptos::*;
+use std::{borrow::Borrow, rc::Rc};
 
 #[derive(Clone, Debug)]
 pub struct InsetLegend {
@@ -65,8 +64,8 @@ impl InsetLegend {
 }
 
 impl<X, Y> InnerLayout<X, Y> for InsetLegend {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn InnerOption<X, Y>> {
-        Box::new(InsetLegendAttr {
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+        Rc::new(InsetLegendAttr {
             legend: self.legend.apply_attr(attr),
             edge: self.edge,
         })
@@ -75,12 +74,12 @@ impl<X, Y> InnerLayout<X, Y> for InsetLegend {
 
 impl<X, Y> InnerOption<X, Y> for InsetLegendAttr {
     fn to_use(
-        self: Box<Self>,
+        self: Rc<Self>,
         series: &UseSeries<X, Y>,
         _: Signal<Projection>,
     ) -> Box<dyn UseInner> {
         Box::new(UseInsetLegend {
-            legend: self.legend.to_use(series),
+            legend: self.legend.clone().to_use(series),
             edge: self.edge,
         })
     }

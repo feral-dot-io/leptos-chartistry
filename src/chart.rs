@@ -9,7 +9,9 @@ use crate::{
     Font, Padding,
 };
 use leptos::{html::Div, *};
+use std::rc::Rc;
 
+#[derive(Clone)]
 pub struct Chart<X: 'static, Y: 'static> {
     width: MaybeSignal<f64>,
     height: MaybeSignal<f64>,
@@ -17,12 +19,12 @@ pub struct Chart<X: 'static, Y: 'static> {
     debug: Option<MaybeSignal<bool>>,
     attr: Attr,
 
-    top: Vec<Box<dyn HorizontalOption<X, Y>>>,
-    right: Vec<Box<dyn VerticalOption<X, Y>>>,
-    bottom: Vec<Box<dyn HorizontalOption<X, Y>>>,
-    left: Vec<Box<dyn VerticalOption<X, Y>>>,
-    inner: Vec<Box<dyn InnerOption<X, Y>>>,
-    overlay: Vec<Box<dyn UseOverlay<X, Y>>>,
+    top: Vec<Rc<dyn HorizontalOption<X, Y>>>,
+    right: Vec<Rc<dyn VerticalOption<X, Y>>>,
+    bottom: Vec<Rc<dyn HorizontalOption<X, Y>>>,
+    left: Vec<Rc<dyn VerticalOption<X, Y>>>,
+    inner: Vec<Rc<dyn InnerOption<X, Y>>>,
+    overlay: Vec<Rc<dyn UseOverlay<X, Y>>>,
     series: UseSeries<X, Y>,
 }
 

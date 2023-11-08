@@ -7,6 +7,7 @@ use crate::{
     series::UseSeries, Font, Padding,
 };
 use leptos::*;
+use std::rc::Rc;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Anchor {
@@ -86,14 +87,14 @@ impl RotatedLabel {
 }
 
 impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for RotatedLabel {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
-        Box::new(self.apply_attr(attr))
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
+        Rc::new(self.apply_attr(attr))
     }
 }
 
 impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for RotatedLabel {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
-        Box::new(self.apply_attr(attr))
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
+        Rc::new(self.apply_attr(attr))
     }
 }
 
@@ -102,14 +103,14 @@ impl<X, Y> HorizontalOption<X, Y> for UseRotatedLabel {
         self.size()
     }
 
-    fn to_use(self: Box<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        self
+    fn to_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        Box::new((*self).clone())
     }
 }
 
 impl<X, Y> VerticalOption<X, Y> for UseRotatedLabel {
-    fn to_use(self: Box<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        self
+    fn to_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        Box::new((*self).clone())
     }
 }
 

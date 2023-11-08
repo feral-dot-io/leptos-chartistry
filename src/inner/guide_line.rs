@@ -7,6 +7,7 @@ use crate::{
     use_watched_node::UseWatchedNode,
 };
 use leptos::*;
+use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct GuideLine {
@@ -73,14 +74,14 @@ impl GuideLine {
 }
 
 impl<X, Y> InnerLayout<X, Y> for GuideLine {
-    fn apply_attr(self, _: &Attr) -> Box<dyn InnerOption<X, Y>> {
-        Box::new(self)
+    fn apply_attr(self, _: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+        Rc::new(self)
     }
 }
 
 impl<X, Y> InnerOption<X, Y> for GuideLine {
     fn to_use(
-        self: Box<Self>,
+        self: Rc<Self>,
         series: &UseSeries<X, Y>,
         _: Signal<Projection>,
     ) -> Box<dyn UseInner> {

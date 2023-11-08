@@ -6,19 +6,20 @@ use crate::{
     series::UseSeries,
 };
 use leptos::*;
+use std::rc::Rc;
 
 pub trait HorizontalLayout<X, Y> {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>>;
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>>;
 }
 
 pub trait VerticalLayout<X, Y> {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>>;
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>>;
 }
 
 pub trait HorizontalOption<X, Y> {
     fn height(&self) -> Signal<f64>;
     fn to_use(
-        self: Box<Self>,
+        self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
     ) -> Box<dyn UseLayout>;
@@ -26,7 +27,7 @@ pub trait HorizontalOption<X, Y> {
 
 pub trait VerticalOption<X, Y> {
     fn to_use(
-        self: Box<Self>,
+        self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
     ) -> Box<dyn UseLayout>;
@@ -46,10 +47,10 @@ pub struct Layout {
 impl Layout {
     pub fn compose<X, Y>(
         outer_bounds: Signal<Bounds>,
-        top: Vec<Box<dyn HorizontalOption<X, Y>>>,
-        right: Vec<Box<dyn VerticalOption<X, Y>>>,
-        bottom: Vec<Box<dyn HorizontalOption<X, Y>>>,
-        left: Vec<Box<dyn VerticalOption<X, Y>>>,
+        top: Vec<Rc<dyn HorizontalOption<X, Y>>>,
+        right: Vec<Rc<dyn VerticalOption<X, Y>>>,
+        bottom: Vec<Rc<dyn HorizontalOption<X, Y>>>,
+        left: Vec<Rc<dyn VerticalOption<X, Y>>>,
         series: &UseSeries<X, Y>,
     ) -> Layout {
         // Note:
@@ -73,7 +74,7 @@ impl Layout {
         });
 
         // Left / right options to UseLayoutOption
-        let to_vertical = |opts: Vec<Box<dyn VerticalOption<X, Y>>>, edge: Edge| {
+        let to_vertical = |opts: Vec<Rc<dyn VerticalOption<X, Y>>>, edge: Edge| {
             (opts.into_iter())
                 .map(|opt| {
                     let c = opt.to_use(series, avail_height);
@@ -141,7 +142,7 @@ impl<T, X, Y> HorizontalLayout<X, Y> for &T
 where
     T: Clone + HorizontalLayout<X, Y>,
 {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
         self.clone().apply_attr(attr)
     }
 }
@@ -150,7 +151,7 @@ impl<T, X, Y> VerticalLayout<X, Y> for &T
 where
     T: Clone + VerticalLayout<X, Y>,
 {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
         self.clone().apply_attr(attr)
     }
 }

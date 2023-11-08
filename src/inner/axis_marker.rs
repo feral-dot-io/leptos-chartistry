@@ -7,6 +7,7 @@ use crate::{
     use_watched_node::UseWatchedNode,
 };
 use leptos::*;
+use std::rc::Rc;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AxisMarker {
@@ -73,8 +74,8 @@ impl AxisMarker {
 }
 
 impl<X, Y> InnerLayout<X, Y> for AxisMarker {
-    fn apply_attr(self, _: &Attr) -> Box<dyn InnerOption<X, Y>> {
-        Box::new(self)
+    fn apply_attr(self, _: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+        Rc::new(self)
     }
 }
 
@@ -125,7 +126,7 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
         }
     };
 
-    let colour = marker.colour.get().to_string();
+    let colour = move || marker.colour.get().to_string();
     move || {
         if let Some((x1, y1, x2, y2)) = pos.get() {
             view! {
@@ -139,7 +140,7 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
                             refX=0
                             refY=4
                             orient="auto">
-                            <path d="M0,0 L0,8 L7,4 z" fill=&colour />
+                            <path d="M0,0 L0,8 L7,4 z" fill=colour />
                         </marker>
                     </defs>
                     <line
@@ -147,7 +148,7 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
                         y1=y1
                         x2=x2
                         y2=y2
-                        stroke=&colour
+                        stroke=colour
                         stroke-width=marker.width
                         marker-end=arrow
                     />

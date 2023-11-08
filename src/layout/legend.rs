@@ -5,10 +5,11 @@ use super::{
     HorizontalLayout, HorizontalOption, VerticalLayout, VerticalOption,
 };
 use crate::{
-    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
-    series::UseSeries, Padding, line::UseLine,
+    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, line::UseLine,
+    projection::Projection, series::UseSeries, Padding,
 };
 use leptos::*;
+use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct Legend {
@@ -73,14 +74,14 @@ impl Legend {
 }
 
 impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for Legend {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
-        Box::new(self.apply_attr(attr))
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
+        Rc::new(self.apply_attr(attr))
     }
 }
 
 impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for Legend {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
-        Box::new(self.apply_attr(attr))
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
+        Rc::new(self.apply_attr(attr))
     }
 }
 
@@ -106,14 +107,14 @@ impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
         self.height()
     }
 
-    fn to_use(self: Box<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new((*self).to_use(series))
+    fn to_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        Box::new((*self).clone().to_use(series))
     }
 }
 
 impl<X, Y> VerticalOption<X, Y> for LegendAttr {
-    fn to_use(self: Box<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new((*self).to_use(series))
+    fn to_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        Box::new((*self).clone().to_use(series))
     }
 }
 

@@ -13,14 +13,15 @@ use crate::{
 };
 use chrono::prelude::*;
 use leptos::*;
-use std::{borrow::Borrow, sync::Arc};
+use std::borrow::Borrow;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct TickLabels<Tick: Clone> {
     font: Option<MaybeSignal<Font>>,
     padding: Option<MaybeSignal<Padding>>,
     debug: Option<MaybeSignal<bool>>,
-    generator: Arc<dyn TickGen<Tick = Tick>>,
+    generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
 #[derive(Clone)]
@@ -59,7 +60,7 @@ impl<Tick: Clone> TickLabels<Tick> {
             font: None,
             padding: None,
             debug: None,
-            generator: Arc::new(gen),
+            generator: Rc::new(gen),
         }
     }
 
@@ -89,39 +90,43 @@ impl<Tick: Clone> TickLabels<Tick> {
 }
 
 impl<X: Clone + PartialEq + 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn HorizontalOption<X, Y>> {
-        Box::new(TickLabelsAttr(self.apply_attr(attr)))
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
+        Rc::new(TickLabelsAttr(self.apply_attr(attr)))
     }
 }
 
 impl<X: 'static, Y: Clone + PartialEq + 'static> VerticalLayout<X, Y> for TickLabels<Y> {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn VerticalOption<X, Y>> {
-        Box::new(TickLabelsAttr(self.apply_attr(attr)))
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
+        Rc::new(TickLabelsAttr(self.apply_attr(attr)))
     }
 }
 
-impl<X: PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
+impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
     fn height(&self) -> Signal<f64> {
         let (font, padding) = (self.0.font, self.0.padding);
         Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
     }
 
     fn to_use(
-        self: Box<Self>,
+        self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
     ) -> Box<dyn UseLayout> {
-        Box::new(UseTickLabels(self.0.generate_x(series.data, avail_width)))
+        Box::new(UseTickLabels(
+            self.0.clone().generate_x(series.data, avail_width),
+        ))
     }
 }
 
-impl<X, Y: PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
+impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
     fn to_use(
-        self: Box<Self>,
+        self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
     ) -> Box<dyn UseLayout> {
-        Box::new(UseTickLabels(self.0.generate_y(series.data, avail_height)))
+        Box::new(UseTickLabels(
+            self.0.clone().generate_y(series.data, avail_height),
+        ))
     }
 }
 

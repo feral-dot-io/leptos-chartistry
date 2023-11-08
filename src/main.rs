@@ -20,7 +20,7 @@ pub struct Wave {
 fn load_data() -> Vec<Wave> {
     const SCALE: f64 = 1.0;
     let mut data = Vec::new();
-    for i in 0..10 {
+    for i in 0..1000 {
         let x = i as f64 / 1000.0 * std::f64::consts::PI * 2.0 * 2.0;
         let sine = x.sin() * SCALE + 1.1;
         let cosine = x.cos() * SCALE + 1.1;
@@ -50,7 +50,7 @@ pub fn App() -> impl IntoView {
     // Data
     let (data, _) = create_signal(load_data());
     let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
-        //.set_x_range(None, f64_to_dt(15.0))
+        .set_x_range(None, f64_to_dt(15.0))
         .set_y_range(-1.0, None)
         .add(Line::new("Sphinx"), &|w: &Wave| w.sine)
         .add(Line::new("Cophine"), &|w: &Wave| w.cosine)

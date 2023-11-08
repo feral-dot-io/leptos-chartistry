@@ -9,7 +9,7 @@ use crate::{
     Padding, Snippet, TickLabels,
 };
 use leptos::*;
-use std::borrow::Borrow;
+use std::{borrow::Borrow, rc::Rc};
 
 #[derive(Clone)]
 pub struct Tooltip<X: Clone, Y: Clone> {
@@ -73,9 +73,9 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayout<X, Y>
     for Tooltip<X, Y>
 {
-    fn apply_attr(self, attr: &Attr) -> Box<dyn UseOverlay<X, Y>> {
+    fn apply_attr(self, attr: &Attr) -> Rc<dyn UseOverlay<X, Y>> {
         let font = attr.font;
-        Box::new(TooltipAttr {
+        Rc::new(TooltipAttr {
             snippet: self.snippet.to_use(attr),
             table_margin: self
                 .table_margin
@@ -104,12 +104,12 @@ impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
 
 impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAttr<X, Y> {
     fn render(
-        self: Box<Self>,
+        self: Rc<Self>,
         series: UseSeries<X, Y>,
         proj: Signal<Projection>,
         watch: &UseWatchedNode,
     ) -> View {
-        let tooltip = self.to_use(series.data, proj);
+        let tooltip = (*self).clone().to_use(series.data, proj);
         let (mouse_abs, mouse_rel) = (watch.mouse_abs, watch.mouse_rel);
         let mouse_hover = watch.mouse_hover_inner(proj);
         create_memo(move |_| {
