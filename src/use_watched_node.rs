@@ -20,7 +20,11 @@ fn scroll_position() -> (f64, f64) {
     (x, y)
 }
 
-pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
+pub fn use_watched_node(
+    node: NodeRef<Div>,
+    width: MaybeProp<f64>,
+    height: MaybeProp<f64>,
+) -> UseWatchedNode {
     // SVG bounds -- dimensions for our root <svg> element inside the document
     let (bounds, set_bounds) = create_signal::<Option<Bounds>>(None);
     use_intersection_observer_with_options(
@@ -35,13 +39,21 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
                 rect.right() + scroll_x,
                 rect.bottom() + scroll_y,
             );
-            log::info!("bounds: {} x {}", bounds.width(), bounds.height());
             set_bounds.set(Some(bounds))
         },
         UseIntersectionObserverOptions::default()
             .immediate(true)
             .thresholds(vec![1.0]),
     );
+    let bounds: Signal<Option<Bounds>> = create_memo(move |_| {
+        bounds.get().or_else(|| {
+            // Fallback to given dimensions if they exist
+            width
+                .get()
+                .and_then(|width| height.get().map(|height| Bounds::new(width, height)))
+        })
+    })
+    .into();
 
     // Mouse position
     let mouse = use_mouse_with_options(
@@ -81,7 +93,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     .into();
 
     UseWatchedNode {
-        bounds: bounds.into(),
+        bounds,
         mouse_hover,
         mouse_abs,
         mouse_rel,

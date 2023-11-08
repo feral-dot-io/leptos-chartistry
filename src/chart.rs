@@ -5,7 +5,7 @@ use crate::{
     layout::{HorizontalLayout, HorizontalOption, Layout, VerticalLayout, VerticalOption},
     overlay::{OverlayLayout, UseOverlay},
     series::{Series, UseSeries},
-    use_watched_node::use_watched_node,
+    use_watched_node::{use_watched_node, UseWatchedNode},
     Font, Padding,
 };
 use leptos::{html::Div, *};
@@ -13,8 +13,6 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Chart<X: 'static, Y: 'static> {
-    width: MaybeSignal<f64>,
-    height: MaybeSignal<f64>,
     padding: Option<MaybeSignal<Padding>>,
     debug: Option<MaybeSignal<bool>>,
     attr: Attr,
@@ -36,15 +34,8 @@ pub struct Attr {
 }
 
 impl<X, Y> Chart<X, Y> {
-    pub fn new(
-        width: impl Into<MaybeSignal<f64>>,
-        height: impl Into<MaybeSignal<f64>>,
-        font: impl Into<MaybeSignal<Font>>,
-        series: UseSeries<X, Y>,
-    ) -> Self {
+    pub fn new(font: impl Into<MaybeSignal<Font>>, series: UseSeries<X, Y>) -> Self {
         Self {
-            width: width.into(),
-            height: height.into(),
             padding: None,
             debug: None,
             attr: Attr {
@@ -118,10 +109,43 @@ impl<X, Y> Chart<X, Y> {
 }
 
 #[component]
-pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(chart: Chart<X, Y>) -> impl IntoView {
+pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(
+    chart: Chart<X, Y>,
+    #[prop(optional, into)] width: MaybeProp<f64>,
+    #[prop(optional, into)] height: MaybeProp<f64>,
+) -> impl IntoView {
+    let root = create_node_ref::<Div>();
+    let watch = use_watched_node(root, width, height);
+
+    let render = move || match watch.bounds.get() {
+        Some(root_bounds) => view! {
+            <RenderChart
+                chart=chart.clone()
+                watch=watch.clone()
+                chart_bounds=Bounds::new(root_bounds.width(), root_bounds.height()) />
+        }
+        .into_view(),
+        None => view!(<p>"Loading..."</p>).into_view(),
+    };
+
+    view! {
+        <div
+            node_ref=root
+            style:width=move || width.get().map(|width| format!("{width}px")).unwrap_or("100%".to_string())
+            style:height=move || height.get().map(|height| format!("{height}px")).unwrap_or("100%".to_string())
+        >
+            {render}
+        </div>
+    }
+}
+
+#[component]
+fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
+    chart: Chart<X, Y>,
+    watch: UseWatchedNode,
+    chart_bounds: Bounds,
+) -> impl IntoView {
     let Chart {
-        width,
-        height,
         padding,
         debug,
         attr,
@@ -139,10 +163,7 @@ pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(chart: Chart<X, Y>) -> impl
     let debug = debug.unwrap_or(attr.debug);
 
     // Layout
-    let root = create_node_ref::<Div>();
-    let watch = use_watched_node(root);
-    let chart_bounds = Signal::derive(move || Bounds::new(width.get(), height.get()));
-    let outer_bounds = Signal::derive(move || padding.get().apply(chart_bounds.get()));
+    let outer_bounds = Signal::derive(move || padding.get().apply(chart_bounds));
     let layout = Layout::compose(outer_bounds, top, right, bottom, left, &series);
 
     // Inner layout
@@ -153,26 +174,18 @@ pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(chart: Chart<X, Y>) -> impl
         })
         .collect_view();
 
-    // Outer layout
+    // Overlay
     let overlay = (overlay.into_iter())
         .map(|opt| opt.render(series.clone(), layout.projection, &watch))
         .collect_view();
 
     view! {
-        <div
-            node_ref=root
-            style="margin: 0 auto;"
-            style:width=move || format!("{}px", width.get())
-            style:height=move || format!("{}px", height.get())>
-            <svg
-                style="overflow: visible;"
-                viewBox=move || format!("0 0 {} {}", width.get(), height.get())>
-                {inner}
-                <DebugRect label="Chart" debug=debug bounds=move || vec![chart_bounds.get(), outer_bounds.get()] />
-                {layout.view}
-                <Series series=series projection=layout.projection />
-            </svg>
-            {overlay}
-        </div>
+        <svg viewBox=move || format!("0 0 {} {}", chart_bounds.width(), chart_bounds.height())>
+            {inner}
+            <DebugRect label="Chart" debug=debug bounds=move || vec![chart_bounds, outer_bounds.get()] />
+            {layout.view}
+            <Series series=series projection=layout.projection />
+        </svg>
+        {overlay}
     }
 }

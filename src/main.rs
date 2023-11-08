@@ -63,7 +63,7 @@ pub fn App() -> impl IntoView {
     let left_ticks = TickLabels::aligned_floats();
     let bottom_ticks = TickLabels::timestamps();
 
-    let chart = Chart::new(1100.0, 600.0, font, series)
+    let chart = Chart::new(font, series)
         .inherit_padding(padding)
         .inherit_debug(debug)
         // Labels
@@ -114,6 +114,6 @@ pub fn App() -> impl IntoView {
                 </label>
             </p>
         </form>
-        <Chart chart=chart />
+        <Chart chart=chart width=1100.0 height=600.0 />
     }
 }
