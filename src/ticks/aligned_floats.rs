@@ -10,7 +10,6 @@ pub struct AlignedFloatsGen;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AlignedFloats {
-    min_length: usize,
     scale: isize,
 }
 
@@ -25,7 +24,7 @@ impl TickGen for AlignedFloatsGen {
     ) -> GeneratedTicks<Self::Tick> {
         let (scale, count) = Self::find_precision(first, last, span);
         let (scale, ticks) = Self::generate_count(first, last, scale, count);
-        let state = AlignedFloats::new(scale, &ticks);
+        let state = AlignedFloats::new(scale);
         GeneratedTicks::new(ticks, state)
     }
 }
@@ -82,23 +81,12 @@ impl AlignedFloatsGen {
 }
 
 impl AlignedFloats {
-    pub fn new(scale: isize, ticks: &[f64]) -> AlignedFloats {
-        // Find longest tick
-        // Note: this is inefficient as we call format multiple times. We could do this in one pass if we didn't return Vec<f64> in TickGen
-        let min_length = ticks
-            .iter()
-            .map(|tick| format(scale, *tick).len())
-            .max()
-            .unwrap_or(0);
-        Self { min_length, scale }
+    pub fn new(scale: isize) -> AlignedFloats {
+        Self { scale }
     }
 
     fn format(&self, value: f64) -> String {
-        let mut label = format(self.scale, value);
-        // Left pad with spaces to maintain minimum size
-        let spaces = " ".repeat(self.min_length.saturating_sub(label.len()));
-        label.insert_str(0, &spaces);
-        label
+        format(self.scale, value)
     }
 }
 
@@ -167,7 +155,7 @@ mod tests {
         expected: Vec<&'static str>,
     ) {
         let (scale, ticks) = AlignedFloatsGen::generate_count(first, last, scale, count);
-        let state = AlignedFloats::new(scale, &ticks);
+        let state = AlignedFloats::new(scale);
         let ticks = (ticks.into_iter())
             .map(|tick| state.short_format(&tick))
             .collect::<Vec<_>>();
@@ -221,15 +209,9 @@ mod tests {
         assert_ticks(0.0, 1.0, -2, 21, exp);
 
         // Larger whole numbers
-        assert_ticks(0.0, 1000.0, 2, 3, vec!["   0", " 500", "1000"]);
+        assert_ticks(0.0, 1000.0, 2, 3, vec!["0", "500", "1000"]);
         // Larger spread with negative numbers
-        assert_ticks(
-            -100_000.0,
-            100_000.0,
-            4,
-            3,
-            vec!["-100000", "      0", " 100000"],
-        );
+        assert_ticks(-100_000.0, 100_000.0, 4, 3, vec!["-100000", "0", "100000"]);
 
         // Count of 1
         assert_ticks(0.0, 1.0, -1, 1, vec!["0.5"]);
@@ -246,14 +228,14 @@ mod tests {
             9,
             16,
             vec![
-                "           0",
-                " 14000000000",
-                " 28000000000",
-                " 42000000000",
-                " 56000000000",
-                " 70000000000",
-                " 85000000000",
-                " 99000000000",
+                "0",
+                "14000000000",
+                "28000000000",
+                "42000000000",
+                "56000000000",
+                "70000000000",
+                "85000000000",
+                "99000000000",
                 "113000000000",
                 "127000000000",
                 "141000000000",
