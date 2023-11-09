@@ -11,8 +11,6 @@ pub struct Bounds {
 
 impl Bounds {
     pub fn new(width: f64, height: f64) -> Self {
-        assert!(width > 0.0, "width must be positive");
-        assert!(height > 0.0, "height must be positive");
         Self {
             left: 0.0,
             top: 0.0,
