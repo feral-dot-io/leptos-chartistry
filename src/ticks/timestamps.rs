@@ -67,12 +67,12 @@ where
             return GeneratedTicks::none(TimestampFormatter::unknown());
         }
 
-        let upper_count = (span.length() / span.consumed(&["0".repeat(Period::MIN_CHARS).as_str()]))
-            .ceil() as usize
-            + 1;
+        let upper_count = (span.length()
+            / span
+                .consumed(&["0".repeat(Period::MIN_CHARS).as_str()])
+                .ceil()) as usize;
         let mut ticks = Vec::with_capacity(upper_count);
         let mut latest_period = self.periods[0];
-
         'outer: for &period in &self.periods {
             // Fetch all ticks for this period
             let mut candidate = Vec::with_capacity(upper_count);
@@ -83,12 +83,7 @@ where
             // Try to fit candidate ticks into previous ticks, sampling if necessary
             for sample in 1..(candidate.len() + 1) {
                 let sampled = Self::merge_ticks(&ticks, &candidate, sample);
-                let used_width = span.consumed(
-                    &sampled
-                        .iter()
-                        .map(|tick| tick.short.as_str())
-                        .collect::<Vec<_>>(),
-                );
+                let used_width = Self::width(&span, &sampled);
                 // Our sampled ticks fit
                 if used_width <= span.length() {
                     ticks = sampled;
@@ -103,9 +98,8 @@ where
                     }
                     break;
                 } else if sampled.len() == 1 {
-                    // Our ticks are small (a few chars). If we can't fit a single one then we can assume later periods won't either, so bail out now.
-                    // This is particularly important when our span is small and won't hold any ticks at all. If we don't bail we end up generating all ticks from all periods -- incl. the ns range -- which then gets thrown away.
-                    break 'outer;
+                    // Early bail, won't reduce any more
+                    break;
                 }
             }
         }
@@ -152,6 +146,15 @@ impl<Tz: TimeZone> TimestampGen<Tz> {
             .filter(|(i, _)| i % keep_every == mod_result)
             .map(|(_, t)| t)
             .collect()
+    }
+
+    fn width(span: &Box<dyn Span>, ticks: &[Timestamp<Tz>]) -> f64 {
+        span.consumed(
+            &ticks
+                .iter()
+                .map(|tick| tick.short.as_str())
+                .collect::<Vec<_>>(),
+        )
     }
 }
 
@@ -382,9 +385,6 @@ mod tests {
         let check = (ticks.into_iter())
             .map(|tick| state.short_format(&tick))
             .collect::<Vec<_>>();
-        for (i, (check, expected)) in check.iter().zip(expected.iter()).enumerate() {
-            //assert_eq!(check, expected, "i={}", i);
-        }
         assert_eq!(check, expected);
     }
 
@@ -453,14 +453,6 @@ mod tests {
                 "00:00:07", "00:00:08", "00:00:09", "00:00:10", "00:00:11", "00:00:12",
             ],
         );
-    }
-
-    #[test]
-    fn test_gen_small_space() {
-        let gen = TimestampGen::new(Period::all());
-        let first = DateTime::<Utc>::from_timestamp(0, 0).unwrap();
-        let last = DateTime::<Utc>::from_timestamp(0, 3_000_000).unwrap();
-        assert_ticks(gen.generate(&first, &last, mk_span(10.0)), vec![]);
     }
 
     #[test]
