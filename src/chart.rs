@@ -180,7 +180,9 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
         .collect_view();
 
     view! {
-        <svg viewBox=move || format!("0 0 {} {}", chart_bounds.width(), chart_bounds.height())>
+        <svg
+            viewBox=move || format!("0 0 {} {}", chart_bounds.width(), chart_bounds.height())
+            style="display: block;">
             {inner}
             <DebugRect label="Chart" debug=debug bounds=move || vec![chart_bounds, outer_bounds.get()] />
             {layout.view}

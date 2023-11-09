@@ -1,8 +1,8 @@
 use crate::{bounds::Bounds, projection::Projection};
 use leptos::{html::Div, *};
 use leptos_use::{
-    use_intersection_observer_with_options, use_mouse_with_options, UseIntersectionObserverOptions,
-    UseMouseCoordType, UseMouseEventExtractorDefault, UseMouseOptions, UseMouseSourceType,
+    use_mouse_with_options, use_resize_observer, UseMouseCoordType, UseMouseEventExtractorDefault,
+    UseMouseOptions, UseMouseSourceType,
 };
 
 #[derive(Clone, Debug)]
@@ -27,24 +27,18 @@ pub fn use_watched_node(
 ) -> UseWatchedNode {
     // SVG bounds -- dimensions for our root <svg> element inside the document
     let (bounds, set_bounds) = create_signal::<Option<Bounds>>(None);
-    use_intersection_observer_with_options(
-        node,
-        move |entries, _| {
-            let entry = &entries[0];
-            let (scroll_x, scroll_y) = scroll_position();
-            let rect = entry.bounding_client_rect();
-            let bounds = Bounds::from_points(
-                rect.left() + scroll_x,
-                rect.top() + scroll_y,
-                rect.right() + scroll_x,
-                rect.bottom() + scroll_y,
-            );
-            set_bounds.set(Some(bounds))
-        },
-        UseIntersectionObserverOptions::default()
-            .immediate(true)
-            .thresholds(vec![1.0]),
-    );
+    use_resize_observer(node, move |entries, _| {
+        let (scroll_x, scroll_y) = scroll_position();
+        let rect = &entries[0].target().get_bounding_client_rect();
+        let rect = Bounds::from_points(
+            rect.left() + scroll_x,
+            rect.top() + scroll_y,
+            rect.right() + scroll_x,
+            rect.bottom() + scroll_y,
+        );
+        set_bounds.set(Some(rect))
+    });
+
     let bounds: Signal<Option<Bounds>> = create_memo(move |_| {
         bounds.get().or_else(|| {
             // Fallback to given dimensions if they exist
