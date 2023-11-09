@@ -160,10 +160,37 @@ pub fn TickLabels<'a, Tick: 'static>(
         (ticks.0.font, ticks.0.padding, ticks.0.debug, ticks.0.ticks);
     let ticks = move || {
         ticks.with(move |GeneratedTicks { state, ticks }| {
-            (ticks.iter())
-                .map(|tick| {
-                    let label = state.short_format(tick);
-                    let position = state.position(tick);
+            // Generate tick labels
+            let labels = ticks
+                .iter()
+                .map(|tick| (state.position(tick), state.short_format(tick)))
+                .collect::<Vec<_>>();
+
+            // Align vertical labels
+            let labels = if edge.is_vertical() {
+                // Find longest label length
+                let min_label = labels
+                    .iter()
+                    .map(|(_, label)| label.len())
+                    .max()
+                    .unwrap_or_default();
+                // Pad labels to same length
+                labels
+                    .into_iter()
+                    .map(|(pos, mut label)| {
+                        let spaces = " ".repeat(min_label.saturating_sub(label.len()));
+                        label.insert_str(0, &spaces);
+                        (pos, label)
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                labels
+            };
+
+            // Render tick labels
+            labels
+                .into_iter()
+                .map(|(position, label)| {
                     view! {
                         <TickLabel
                             edge=edge
