@@ -2,7 +2,6 @@ use super::{OverlayLayout, UseOverlay};
 use crate::{
     chart::Attr,
     layout::{
-        legend::UseLegend,
         snippet::{SnippetTd, UseSnippet},
         tick_labels::align_tick_labels,
     },
