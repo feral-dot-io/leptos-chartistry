@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 
 pub trait TickGen {
     type Tick;
@@ -14,14 +14,14 @@ pub trait TickGen {
 #[derive(Clone)]
 pub struct GeneratedTicks<Tick> {
     pub ticks: Vec<Tick>,
-    pub state: Arc<dyn TickState<Tick = Tick>>,
+    pub state: Rc<dyn TickState<Tick = Tick>>,
 }
 
 impl<Tick> GeneratedTicks<Tick> {
     pub fn new(ticks: Vec<Tick>, state: impl TickState<Tick = Tick> + 'static) -> Self {
         GeneratedTicks {
             ticks: ticks,
-            state: Arc::new(state),
+            state: Rc::new(state),
         }
     }
 
