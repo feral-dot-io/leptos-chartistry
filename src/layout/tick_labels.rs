@@ -149,6 +149,24 @@ impl<Tick> UseLayout for UseTickLabels<Tick> {
     }
 }
 
+pub fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
+    // Find longest label length
+    let min_label = labels
+        .iter()
+        .map(|label| label.len())
+        .max()
+        .unwrap_or_default();
+    // Pad labels to same length
+    labels
+        .into_iter()
+        .map(|mut label| {
+            let spaces = " ".repeat(min_label.saturating_sub(label.len()));
+            label.insert_str(0, &spaces);
+            label
+        })
+        .collect::<Vec<_>>()
+}
+
 #[component]
 pub fn TickLabels<'a, Tick: 'static>(
     ticks: &'a UseTickLabels<Tick>,
@@ -168,21 +186,9 @@ pub fn TickLabels<'a, Tick: 'static>(
 
             // Align vertical labels
             let labels = if edge.is_vertical() {
-                // Find longest label length
-                let min_label = labels
-                    .iter()
-                    .map(|(_, label)| label.len())
-                    .max()
-                    .unwrap_or_default();
-                // Pad labels to same length
-                labels
-                    .into_iter()
-                    .map(|(pos, mut label)| {
-                        let spaces = " ".repeat(min_label.saturating_sub(label.len()));
-                        label.insert_str(0, &spaces);
-                        (pos, label)
-                    })
-                    .collect::<Vec<_>>()
+                let (pos, labels): (Vec<f64>, Vec<String>) = labels.into_iter().unzip();
+                let labels = align_tick_labels(labels);
+                pos.into_iter().zip(labels).collect::<Vec<_>>()
             } else {
                 labels
             };

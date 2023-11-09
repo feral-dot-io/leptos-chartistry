@@ -1,7 +1,12 @@
 use super::{OverlayLayout, UseOverlay};
 use crate::{
     chart::Attr,
-    layout::snippet::{SnippetTd, UseSnippet},
+    layout::{
+        legend::UseLegend,
+        snippet::{SnippetTd, UseSnippet},
+        tick_labels::align_tick_labels,
+    },
+    line::UseLine,
     projection::Projection,
     series::{Data, UseSeries},
     ticks::{GeneratedTicks, Ticks},
@@ -158,25 +163,35 @@ fn Tooltip<X: 'static, Y: 'static>(
         })
     });
 
-    // Y-values
+    let x_body =
+        move || with!(|x_ticks, data, data_x| x_ticks.state.long_format(data.nearest_x(*data_x)));
     let y_body = create_memo(move |_| {
-        (series.lines.clone().into_iter())
+        let (lines, labels): (Vec<UseLine>, Vec<String>) = series
+            .lines
+            .clone()
+            .into_iter()
             .enumerate()
             .map(|(line_id, line)| {
+                let y_value = with!(|data, data_x, y_ticks| {
+                    let y_value = data.nearest_y(*data_x, line_id);
+                    y_ticks.state.long_format(y_value)
+                });
+                (line, y_value)
+            })
+            .unzip();
+        let labels = align_tick_labels(labels);
+        lines
+            .into_iter()
+            .zip(labels)
+            .map(|(line, label)| {
                 let name = line.name.clone();
-                let y_value = move || {
-                    with!(|data, data_x, y_ticks| {
-                        let y_value = data.nearest_y(*data_x, line_id);
-                        y_ticks.state.long_format(y_value)
-                    })
-                };
                 view! {
                     <tr>
                         <SnippetTd snippet=snippet.clone() line=line>{name} ":"</SnippetTd>
                         <td
                             style="text-align: left; white-space: pre; font-family: monospace;"
                             style:padding-left=move || format!("{}px", font.get().width())>
-                            {y_value}
+                            {label}
                         </td>
                     </tr>
                 }
@@ -196,7 +211,7 @@ fn Tooltip<X: 'static, Y: 'static>(
                 <thead>
                     <tr>
                         <th colspan=2 style="white-space: pre; font-family: monospace;">
-                            {move || with!(|x_ticks, data, data_x| x_ticks.state.long_format(data.nearest_x(*data_x)))}
+                            {x_body}
                         </th>
                     </tr>
                 </thead>
