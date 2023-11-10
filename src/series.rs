@@ -13,8 +13,10 @@ pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_ys: Vec<&'static dyn Fn(&T) -> Y>,
     lines: Vec<Line>,
     colours: ColourScheme,
-    x_range: Signal<(Option<X>, Option<X>)>,
-    y_range: Signal<(Option<Y>, Option<Y>)>,
+    x_lower: Signal<Option<X>>,
+    x_upper: Signal<Option<X>>,
+    y_lower: Signal<Option<Y>>,
+    y_upper: Signal<Option<Y>>,
 }
 
 #[derive(Clone, Debug)]
@@ -41,8 +43,10 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
             get_ys: Vec::new(),
             lines: Vec::new(),
             colours: colours::ARBITRARY.as_ref().into(),
-            x_range: Signal::default(),
-            y_range: Signal::default(),
+            x_lower: Signal::default(),
+            x_upper: Signal::default(),
+            y_lower: Signal::default(),
+            y_upper: Signal::default(),
         }
     }
 
@@ -51,23 +55,56 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
         self
     }
 
-    pub fn set_x_range<LowerOpt, UpperOpt>(
-        mut self,
-        lower: impl Into<MaybeSignal<LowerOpt>>,
-        upper: impl Into<MaybeSignal<UpperOpt>>,
-    ) -> Self
+    pub fn set_x_min<Opt>(mut self, lower: impl Into<MaybeSignal<Opt>>) -> Self
     where
-        LowerOpt: Clone + Into<Option<X>> + 'static,
-        UpperOpt: Clone + Into<Option<X>> + 'static,
+        Opt: Clone + Into<Option<X>> + 'static,
     {
         let lower = lower.into();
+        self.x_lower = Signal::derive(move || lower.get().into());
+        self
+    }
+
+    pub fn set_x_max<Opt>(mut self, upper: impl Into<MaybeSignal<Opt>>) -> Self
+    where
+        Opt: Clone + Into<Option<X>> + 'static,
+    {
         let upper = upper.into();
-        self.x_range = Signal::derive(move || (lower.get().into(), upper.get().into()));
+        self.x_upper = Signal::derive(move || upper.get().into());
+        self
+    }
+
+    pub fn set_x_range<Lower, Upper>(
+        self,
+        lower: impl Into<MaybeSignal<Lower>>,
+        upper: impl Into<MaybeSignal<Upper>>,
+    ) -> Self
+    where
+        Lower: Clone + Into<Option<X>> + 'static,
+        Upper: Clone + Into<Option<X>> + 'static,
+    {
+        self.set_x_min(lower).set_x_max(upper)
+    }
+
+    pub fn set_y_min<Opt>(mut self, lower: impl Into<MaybeSignal<Opt>>) -> Self
+    where
+        Opt: Clone + Into<Option<Y>> + 'static,
+    {
+        let lower = lower.into();
+        self.y_lower = Signal::derive(move || lower.get().into());
+        self
+    }
+
+    pub fn set_y_max<Opt>(mut self, upper: impl Into<MaybeSignal<Opt>>) -> Self
+    where
+        Opt: Clone + Into<Option<Y>> + 'static,
+    {
+        let upper = upper.into();
+        self.y_upper = Signal::derive(move || upper.get().into());
         self
     }
 
     pub fn set_y_range<LowerOpt, UpperOpt>(
-        mut self,
+        self,
         lower: impl Into<MaybeSignal<LowerOpt>>,
         upper: impl Into<MaybeSignal<UpperOpt>>,
     ) -> Self
@@ -75,10 +112,7 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
         LowerOpt: Clone + Into<Option<Y>> + 'static,
         UpperOpt: Clone + Into<Option<Y>> + 'static,
     {
-        let lower = lower.into();
-        let upper = upper.into();
-        self.y_range = Signal::derive(move || (lower.get().into(), upper.get().into()));
-        self
+        self.set_y_min(lower).set_y_max(upper)
     }
 
     pub fn add(mut self, line: Line, get_y: &'static dyn Fn(&T) -> Y) -> Self {
@@ -93,25 +127,23 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
         X: Clone + PartialOrd + Position,
         Y: Clone + PartialOrd + Position,
     {
-        let Series {
-            get_x,
-            get_ys,
-            lines,
-            colours,
-            x_range: ext_x_range,
-            y_range: ext_y_range,
-        } = self;
+        let Series { get_x, get_ys, .. } = self;
 
         // Apply colours to lines
-        let lines = (lines.into_iter())
-            .zip(colours.iter())
+        let lines = self
+            .lines
+            .into_iter()
+            .zip(self.colours.iter())
             .map(|(line, colour)| line.use_line(colour))
             .collect::<Vec<_>>();
 
         // Convert data to a signal
         let data = data.into();
         let data = create_memo(move |_| {
-            let (ext_x_range, ext_y_range) = (ext_x_range.clone(), ext_y_range.clone());
+            let x_lower = self.x_lower.get();
+            let x_upper = self.x_upper.get();
+            let y_lower = self.y_lower.get();
+            let y_upper = self.y_upper.get();
             let get_ys = get_ys.iter().as_slice();
             data.with(move |data| {
                 let data = data.borrow();
@@ -134,8 +166,8 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
                 );
 
                 // Apply min/max range overrides
-                let x_range = Self::apply_min_max_range(x_range, ext_x_range.get());
-                let y_range = Self::apply_min_max_range(y_range, ext_y_range.get());
+                let x_range = Self::apply_min_max_range(x_range, x_lower, x_upper);
+                let y_range = Self::apply_min_max_range(y_range, y_lower, y_upper);
 
                 Data {
                     position_range: Bounds::from_points(
@@ -144,7 +176,6 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
                         x_range.1.position(),
                         y_range.1.position(),
                     ),
-                    //position_range: Bounds::from_points(x_min, y_min, x_max, y_max),
                     x_points,
                     x_positions,
                     x_range,
@@ -161,7 +192,8 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
 
     fn apply_min_max_range<V: PartialOrd>(
         (min, max): (V, V),
-        (lower, upper): (Option<V>, Option<V>),
+        lower: Option<V>,
+        upper: Option<V>,
     ) -> (V, V) {
         (
             match lower {
