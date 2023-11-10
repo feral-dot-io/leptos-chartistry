@@ -54,7 +54,6 @@ impl AlignedFloatsGen {
         let first_consumed = span.consumed(&state, &[first]);
         let last_consumed = span.consumed(&state, &[last]);
         let consumed = first_consumed.max(last_consumed);
-        // TODO: check whether we should do .ceil here
         (span.length() / consumed) as usize
     }
 
