@@ -30,7 +30,7 @@ impl<Tick> GeneratedTicks<Tick> {
     }
 }
 
-/// Note: PartialEq only compares the `ticks`. Meaning TickGen implementations must result in the same TickState when the Ticks are equal.
+/// Note: PartialEq only compares the `ticks`. Meaning TickGen implementations must result in the same TickState when Ticks are equal.
 impl<Tick: PartialEq> PartialEq for GeneratedTicks<Tick> {
     fn eq(&self, other: &Self) -> bool {
         self.ticks == other.ticks

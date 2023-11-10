@@ -324,10 +324,7 @@ mod tests {
     use super::super::use_ticks::{short_format_fn, HorizontalSpan};
     use super::*;
 
-    fn assert_ticks<Tz: TimeZone>(
-        ticks: GeneratedTicks<DateTime<Tz>>,
-        expected: Vec<&'static str>,
-    ) {
+    fn assert_ticks<Tick>(ticks: GeneratedTicks<Tick>, expected: Vec<&'static str>) {
         let GeneratedTicks { ticks, state } = ticks;
         let check = (ticks.into_iter())
             .map(|tick| state.short_format(&tick))
