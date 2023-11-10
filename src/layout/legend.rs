@@ -9,7 +9,7 @@ use crate::{
     projection::Projection, series::UseSeries, Padding,
 };
 use leptos::*;
-use std::rc::Rc;
+use std::{borrow::Borrow, rc::Rc};
 
 #[derive(Clone, Debug)]
 pub struct Legend {
@@ -34,22 +34,22 @@ pub struct UseLegend {
 }
 
 impl Legend {
-    pub fn new(anchor: impl Into<MaybeSignal<Anchor>>, snippet: Snippet) -> Self {
+    pub fn new(anchor: impl Into<MaybeSignal<Anchor>>, snippet: impl Borrow<Snippet>) -> Self {
         Self {
-            snippet: snippet.into(),
+            snippet: snippet.borrow().clone(),
             anchor: anchor.into(),
             padding: None,
             debug: None,
         }
     }
 
-    pub fn start(snippet: Snippet) -> Self {
+    pub fn start(snippet: impl Borrow<Snippet>) -> Self {
         Self::new(Anchor::Start, snippet)
     }
-    pub fn middle(snippet: Snippet) -> Self {
+    pub fn middle(snippet: impl Borrow<Snippet>) -> Self {
         Self::new(Anchor::Middle, snippet)
     }
-    pub fn end(snippet: Snippet) -> Self {
+    pub fn end(snippet: impl Borrow<Snippet>) -> Self {
         Self::new(Anchor::End, snippet)
     }
 
