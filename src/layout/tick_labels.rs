@@ -7,10 +7,10 @@ use crate::{
     debug::DebugRect,
     edge::Edge,
     projection::Projection,
-    series::UseSeries,
+    series::{Data, UseSeries},
     ticks::{
-        short_format_fn, AlignedFloatsGen, GeneratedTicks, TickFormatFn, TickGen, TickState, Ticks,
-        TimestampGen,
+        short_format_fn, AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen,
+        TickState, TimestampGen, VerticalSpan,
     },
     Font, Padding, Period,
 };
@@ -29,7 +29,13 @@ pub struct TickLabels<Tick: Clone> {
 }
 
 #[derive(Clone)]
-pub struct TickLabelsAttr<Tick>(pub(crate) Ticks<Tick>);
+pub struct TickLabelsAttr<Tick> {
+    font: MaybeSignal<Font>,
+    padding: MaybeSignal<Padding>,
+    debug: MaybeSignal<bool>,
+    generator: Rc<dyn TickGen<Tick = Tick>>,
+    format: TickFormatFn<Tick>,
+}
 
 #[derive(Clone)]
 pub struct UseTickLabels<Tick: 'static> {
@@ -97,8 +103,12 @@ impl<Tick: Clone> TickLabels<Tick> {
         self
     }
 
-    pub(crate) fn apply_attr(self, attr: &Attr, def_format: TickFormatFn<Tick>) -> Ticks<Tick> {
-        Ticks {
+    pub(crate) fn apply_attr(
+        self,
+        attr: &Attr,
+        def_format: TickFormatFn<Tick>,
+    ) -> TickLabelsAttr<Tick> {
+        TickLabelsAttr {
             font: self.font.unwrap_or(attr.font),
             padding: self.padding.unwrap_or(attr.padding),
             debug: self.debug.unwrap_or(attr.debug),
@@ -108,21 +118,62 @@ impl<Tick: Clone> TickLabels<Tick> {
     }
 }
 
+impl<X: PartialEq> TickLabelsAttr<X> {
+    pub fn generate_x<Y>(
+        self,
+        data: Signal<Data<X, Y>>,
+        avail_width: Signal<f64>,
+    ) -> Signal<GeneratedTicks<X>> {
+        let (font, padding) = (self.font, self.padding);
+        create_memo(move |_| {
+            let format = self.format.clone();
+            data.with(|data| {
+                let (first, last) = data.x_range();
+                let font_width = font.get().width();
+                let padding_width = padding.get().width();
+                let span =
+                    HorizontalSpan::new(format, font_width, padding_width, avail_width.get());
+                self.generator.generate(first, last, Box::new(span))
+            })
+        })
+        .into()
+    }
+}
+
+impl<Y: PartialEq> TickLabelsAttr<Y> {
+    pub fn generate_y<X>(
+        self,
+        data: Signal<Data<X, Y>>,
+        avail_height: Signal<f64>,
+    ) -> Signal<GeneratedTicks<Y>> {
+        let (font, padding) = (self.font, self.padding);
+        create_memo(move |_| {
+            data.with(|data| {
+                let (first, last) = data.y_range();
+                let line_height = font.get().height() + padding.get().height();
+                let span = VerticalSpan::new(line_height, avail_height.get());
+                self.generator.generate(first, last, Box::new(span))
+            })
+        })
+        .into()
+    }
+}
+
 impl<X: Clone + PartialEq + 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
     fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
-        Rc::new(TickLabelsAttr(self.apply_attr(attr, short_format_fn())))
+        Rc::new(self.apply_attr(attr, short_format_fn()))
     }
 }
 
 impl<X: 'static, Y: Clone + PartialEq + 'static> VerticalLayout<X, Y> for TickLabels<Y> {
     fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
-        Rc::new(TickLabelsAttr(self.apply_attr(attr, short_format_fn())))
+        Rc::new(self.apply_attr(attr, short_format_fn()))
     }
 }
 
 impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
     fn height(&self) -> Signal<f64> {
-        let (font, padding) = (self.0.font, self.0.padding);
+        let (font, padding) = (self.font, self.padding);
         Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
     }
 
@@ -132,10 +183,10 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
         avail_width: Signal<f64>,
     ) -> Box<dyn UseLayout> {
         Box::new(UseTickLabels {
-            font: self.0.font,
-            padding: self.0.padding,
-            debug: self.0.debug,
-            ticks: self.0.clone().generate_x(series.data, avail_width),
+            font: self.font,
+            padding: self.padding,
+            debug: self.debug,
+            ticks: (*self).clone().generate_x(series.data, avail_width),
         })
     }
 }
@@ -147,10 +198,10 @@ impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
         avail_height: Signal<f64>,
     ) -> Box<dyn UseLayout> {
         Box::new(UseTickLabels {
-            font: self.0.font,
-            padding: self.0.padding,
-            debug: self.0.debug,
-            ticks: self.0.clone().generate_y(series.data, avail_height),
+            font: self.font,
+            padding: self.padding,
+            debug: self.debug,
+            ticks: (*self).clone().generate_y(series.data, avail_height),
         })
     }
 }

@@ -3,12 +3,12 @@ use crate::{
     chart::Attr,
     layout::{
         snippet::{SnippetTd, UseSnippet},
-        tick_labels::align_tick_labels,
+        tick_labels::{align_tick_labels, TickLabelsAttr},
     },
     line::UseLine,
     projection::Projection,
     series::{Data, UseSeries},
-    ticks::{long_format_fn, GeneratedTicks, Ticks},
+    ticks::{long_format_fn, GeneratedTicks},
     use_watched_node::UseWatchedNode,
     Padding, Snippet, TickLabels,
 };
@@ -31,8 +31,8 @@ pub struct TooltipAttr<X: 'static, Y: 'static> {
     table_margin: MaybeSignal<f64>,
     padding: MaybeSignal<Padding>,
 
-    x_ticks: Ticks<X>,
-    y_ticks: Ticks<Y>,
+    x_ticks: TickLabelsAttr<X>,
+    y_ticks: TickLabelsAttr<Y>,
 }
 
 #[derive(Clone)]

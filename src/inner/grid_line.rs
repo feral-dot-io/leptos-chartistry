@@ -3,9 +3,10 @@ use crate::{
     chart::Attr,
     colours::{Colour, LIGHTER_GREY},
     debug::DebugRect,
+    layout::tick_labels::TickLabelsAttr,
     projection::Projection,
     series::UseSeries,
-    ticks::{short_format_fn, GeneratedTicks, Ticks},
+    ticks::{short_format_fn, GeneratedTicks},
     use_watched_node::UseWatchedNode,
     TickLabels,
 };
@@ -30,7 +31,7 @@ struct GridLineAttr<Tick> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
     debug: MaybeSignal<bool>,
-    ticks: Ticks<Tick>,
+    ticks: TickLabelsAttr<Tick>,
 }
 
 #[derive(Clone)]

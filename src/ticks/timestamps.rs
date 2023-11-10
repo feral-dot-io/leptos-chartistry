@@ -321,7 +321,7 @@ impl<Tz: TimeZone> Add<Period> for DateTime<Tz> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::use_ticks::{short_format_fn, HorizontalSpan};
+    use super::super::{short_format_fn, HorizontalSpan};
     use super::*;
 
     fn assert_ticks<Tick>(ticks: GeneratedTicks<Tick>, expected: Vec<&'static str>) {
