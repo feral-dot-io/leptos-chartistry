@@ -10,7 +10,7 @@ use crate::{
     series::UseSeries,
     ticks::{
         short_format_fn, AlignedFloatsGen, GeneratedTicks, TickFormatFn, TickGen, TickState, Ticks,
-        TimestampGen, UseTicks,
+        TimestampGen,
     },
     Font, Padding, Period,
 };
@@ -120,17 +120,6 @@ impl<X: 'static, Y: Clone + PartialEq + 'static> VerticalLayout<X, Y> for TickLa
     }
 }
 
-impl<Tick> From<UseTicks<Tick>> for UseTickLabels<Tick> {
-    fn from(ticks: UseTicks<Tick>) -> Self {
-        Self {
-            font: ticks.font,
-            padding: ticks.padding,
-            debug: ticks.debug,
-            ticks: ticks.ticks,
-        }
-    }
-}
-
 impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
     fn height(&self) -> Signal<f64> {
         let (font, padding) = (self.0.font, self.0.padding);
@@ -142,7 +131,12 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
     ) -> Box<dyn UseLayout> {
-        Box::<UseTickLabels<X>>::new(self.0.clone().generate_x(series.data, avail_width).into())
+        Box::new(UseTickLabels {
+            font: self.0.font,
+            padding: self.0.padding,
+            debug: self.0.debug,
+            ticks: self.0.clone().generate_x(series.data, avail_width),
+        })
     }
 }
 
@@ -152,7 +146,12 @@ impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
     ) -> Box<dyn UseLayout> {
-        Box::<UseTickLabels<Y>>::new(self.0.clone().generate_y(series.data, avail_height).into())
+        Box::new(UseTickLabels {
+            font: self.0.font,
+            padding: self.0.padding,
+            debug: self.0.debug,
+            ticks: self.0.clone().generate_y(series.data, avail_height),
+        })
     }
 }
 

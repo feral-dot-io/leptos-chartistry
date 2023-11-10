@@ -100,8 +100,8 @@ impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
             snippet: self.snippet,
             table_margin: self.table_margin,
             padding: self.padding,
-            x_ticks: self.x_ticks.generate_x(data, avail_width).ticks,
-            y_ticks: self.y_ticks.generate_y(data, avail_height).ticks,
+            x_ticks: self.x_ticks.generate_x(data, avail_width),
+            y_ticks: self.y_ticks.generate_y(data, avail_height),
         }
     }
 }

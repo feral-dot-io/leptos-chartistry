@@ -14,18 +14,14 @@ pub struct Ticks<Tick> {
     pub(crate) format: TickFormatFn<Tick>,
 }
 
-#[derive(Clone)]
-pub struct UseTicks<Tick: 'static> {
-    pub(crate) font: MaybeSignal<Font>,
-    pub(crate) padding: MaybeSignal<Padding>,
-    pub(crate) debug: MaybeSignal<bool>,
-    pub(crate) ticks: Signal<GeneratedTicks<Tick>>,
-}
-
 impl<X: PartialEq> Ticks<X> {
-    pub fn generate_x<Y>(self, data: Signal<Data<X, Y>>, avail_width: Signal<f64>) -> UseTicks<X> {
+    pub fn generate_x<Y>(
+        self,
+        data: Signal<Data<X, Y>>,
+        avail_width: Signal<f64>,
+    ) -> Signal<GeneratedTicks<X>> {
         let (font, padding) = (self.font, self.padding);
-        let ticks = create_memo(move |_| {
+        create_memo(move |_| {
             let format = self.format.clone();
             data.with(|data| {
                 let (first, last) = data.x_range();
@@ -36,20 +32,18 @@ impl<X: PartialEq> Ticks<X> {
                 self.generator.generate(first, last, Box::new(span))
             })
         })
-        .into();
-        UseTicks {
-            font,
-            padding,
-            debug: self.debug,
-            ticks,
-        }
+        .into()
     }
 }
 
 impl<Y: PartialEq> Ticks<Y> {
-    pub fn generate_y<X>(self, data: Signal<Data<X, Y>>, avail_height: Signal<f64>) -> UseTicks<Y> {
+    pub fn generate_y<X>(
+        self,
+        data: Signal<Data<X, Y>>,
+        avail_height: Signal<f64>,
+    ) -> Signal<GeneratedTicks<Y>> {
         let (font, padding) = (self.font, self.padding);
-        let ticks = create_memo(move |_| {
+        create_memo(move |_| {
             data.with(|data| {
                 let (first, last) = data.y_range();
                 let line_height = font.get().height() + padding.get().height();
@@ -57,13 +51,7 @@ impl<Y: PartialEq> Ticks<Y> {
                 self.generator.generate(first, last, Box::new(span))
             })
         })
-        .into();
-        UseTicks {
-            font,
-            padding,
-            debug: self.debug,
-            ticks,
-        }
+        .into()
     }
 }
 

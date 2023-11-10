@@ -16,6 +16,7 @@ use std::{borrow::Borrow, rc::Rc};
 pub struct GridLine<Tick: Clone> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
+    debug: Option<MaybeSignal<bool>>,
     ticks: TickLabels<Tick>,
 }
 
@@ -28,6 +29,7 @@ pub struct VerticalGridLine<Y: Clone>(GridLine<Y>);
 struct GridLineAttr<Tick> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
+    debug: MaybeSignal<bool>,
     ticks: Ticks<Tick>,
 }
 
@@ -54,6 +56,7 @@ impl<Tick: Clone> GridLine<Tick> {
         Self {
             width: 1.0.into(),
             colour: Into::<Colour>::into(LIGHTER_GREY).into(),
+            debug: None,
             ticks: ticks.borrow().clone(),
         }
     }
@@ -67,10 +70,16 @@ impl<Tick: Clone> GridLine<Tick> {
         VerticalGridLine(Self::new(ticks))
     }
 
+    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
+        self.debug = Some(debug.into());
+        self
+    }
+
     fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
         GridLineAttr {
             width: self.width,
             colour: self.colour,
+            debug: self.debug.unwrap_or(attr.debug),
             ticks: self.ticks.apply_attr(attr, short_format_fn()),
         }
     }
@@ -95,12 +104,11 @@ impl<X: Clone + PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
         proj: Signal<Projection>,
     ) -> Box<dyn UseInner> {
         let avail_width = Projection::derive_width(proj);
-        let ticks = self.0.ticks.clone().generate_x(series.data, avail_width);
         Box::new(UseHorizontalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            debug: ticks.debug,
-            ticks: ticks.ticks,
+            debug: self.0.debug,
+            ticks: self.0.ticks.clone().generate_x(series.data, avail_width),
         }))
     }
 }
@@ -112,12 +120,11 @@ impl<X, Y: Clone + PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
         proj: Signal<Projection>,
     ) -> Box<dyn UseInner> {
         let avail_height = Projection::derive_height(proj);
-        let ticks = self.0.ticks.clone().generate_y(series.data, avail_height);
         Box::new(UseVerticalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            debug: ticks.debug,
-            ticks: ticks.ticks,
+            debug: self.0.debug,
+            ticks: self.0.ticks.clone().generate_y(series.data, avail_height),
         }))
     }
 }
