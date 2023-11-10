@@ -57,7 +57,7 @@ impl Layout {
         // Vertical (left, right, y-axis) options are generated at layout time (constrains the layout)
         // Horizontal (top, bottom, x-axis) options are generated at render time (constrained by layout)
 
-        // Layout is stack from outside in. Switch to top to bottom and left to right regardless of edge
+        // Layout stack is from the outside in -- switch to top to bottom, left to right regardless of edge
         right.reverse();
         bottom.reverse();
 
