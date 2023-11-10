@@ -66,11 +66,9 @@ where
 
         'outer: for &period in &self.periods {
             // Fetch all ticks for this period
-            let mut candidate = Vec::new();
-            for at in period.iter_aligned_range(first.clone(), last.clone()) {
-                // TODO
-                candidate.push(at);
-            }
+            let candidate = period
+                .iter_aligned_range(first.clone(), last.clone())
+                .collect::<Vec<_>>();
             // Try to fit candidate ticks into previous ticks, sampling if necessary
             for sample in 1..(candidate.len() + 1) {
                 let sampled = Self::merge_ticks(&ticks, &candidate, sample);
