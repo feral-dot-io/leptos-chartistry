@@ -48,8 +48,8 @@ impl Layout {
     pub fn compose<X, Y>(
         outer_bounds: Signal<Bounds>,
         top: Vec<Rc<dyn HorizontalOption<X, Y>>>,
-        right: Vec<Rc<dyn VerticalOption<X, Y>>>,
-        bottom: Vec<Rc<dyn HorizontalOption<X, Y>>>,
+        mut right: Vec<Rc<dyn VerticalOption<X, Y>>>,
+        mut bottom: Vec<Rc<dyn HorizontalOption<X, Y>>>,
         left: Vec<Rc<dyn VerticalOption<X, Y>>>,
         series: &UseSeries<X, Y>,
     ) -> Layout {
@@ -57,9 +57,17 @@ impl Layout {
         // Vertical (left, right, y-axis) options are generated at layout time (constrains the layout)
         // Horizontal (top, bottom, x-axis) options are generated at render time (constrained by layout)
 
+        // Layout is stack from outside in. Switch to top to bottom and left to right regardless of edge
+        right.reverse();
+        bottom.reverse();
+
         // Top / bottom heights
-        let top_heights = (top.iter()).map(|opt| opt.height()).collect::<Vec<_>>();
-        let bottom_heights = (bottom.iter()).map(|opt| opt.height()).collect::<Vec<_>>();
+        let top_heights = top.iter().map(|opt| opt.height()).collect::<Vec<_>>();
+        let bottom_heights = bottom
+            .iter()
+            .rev()
+            .map(|opt| opt.height())
+            .collect::<Vec<_>>();
         let horiz_height = |heights: Vec<Signal<f64>>| {
             Signal::derive(move || (heights.iter()).map(|h| h.get()).sum::<f64>())
         };
@@ -75,6 +83,7 @@ impl Layout {
 
         // Left / right options to UseLayoutOption
         let to_vertical = |opts: Vec<Rc<dyn VerticalOption<X, Y>>>, edge: Edge| {
+            //let to_vertical = |opts, edge| {
             (opts.into_iter())
                 .map(|opt| {
                     let c = opt.to_use(series, avail_height);
