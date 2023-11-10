@@ -5,7 +5,7 @@ use crate::{
     debug::DebugRect,
     projection::Projection,
     series::UseSeries,
-    ticks::{short_format_fn, Ticks, UseTicks},
+    ticks::{short_format_fn, GeneratedTicks, Ticks},
     use_watched_node::UseWatchedNode,
     TickLabels,
 };
@@ -40,7 +40,8 @@ struct VerticalGridLineAttr<Y>(GridLineAttr<Y>);
 struct UseGridLine<Tick: 'static> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
-    ticks: UseTicks<Tick>,
+    debug: MaybeSignal<bool>,
+    ticks: Signal<GeneratedTicks<Tick>>,
 }
 
 #[derive(Clone)]
@@ -94,10 +95,12 @@ impl<X: Clone + PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
         proj: Signal<Projection>,
     ) -> Box<dyn UseInner> {
         let avail_width = Projection::derive_width(proj);
+        let ticks = self.0.ticks.clone().generate_x(series.data, avail_width);
         Box::new(UseHorizontalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            ticks: self.0.ticks.clone().generate_x(series.data, avail_width),
+            debug: ticks.debug,
+            ticks: ticks.ticks,
         }))
     }
 }
@@ -109,10 +112,12 @@ impl<X, Y: Clone + PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
         proj: Signal<Projection>,
     ) -> Box<dyn UseInner> {
         let avail_height = Projection::derive_height(proj);
+        let ticks = self.0.ticks.clone().generate_y(series.data, avail_height);
         Box::new(UseVerticalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            ticks: self.0.ticks.clone().generate_y(series.data, avail_height),
+            debug: ticks.debug,
+            ticks: ticks.ticks,
         }))
     }
 }
@@ -139,7 +144,7 @@ fn ViewHorizontalGridLine<X: 'static>(
     projection: Signal<Projection>,
 ) -> impl IntoView {
     let ticks = Signal::derive(move || {
-        let ticks = line.ticks.ticks; // Ticky ticky tick tick
+        let ticks = line.ticks; // Ticky ticky tick tick
         with!(|ticks, projection| {
             (ticks.ticks.iter())
                 .map(|tick| {
@@ -161,7 +166,7 @@ fn ViewHorizontalGridLine<X: 'static>(
     });
     view! {
         <g class="_chartistry_grid_line_x">
-            <DebugRect label="XGridLine" debug=line.ticks.debug />
+            <DebugRect label="XGridLine" debug=line.debug />
             {ticks}
         </g>
     }
@@ -173,7 +178,7 @@ fn ViewVerticalGridLine<Y: 'static>(
     projection: Signal<Projection>,
 ) -> impl IntoView {
     let ticks = Signal::derive(move || {
-        let ticks = line.ticks.ticks;
+        let ticks = line.ticks;
         with!(|ticks, projection| {
             (ticks.ticks.iter())
                 .map(|tick| {
@@ -195,7 +200,7 @@ fn ViewVerticalGridLine<Y: 'static>(
     });
     view! {
         <g class="_chartistry_grid_line_y">
-            <DebugRect label="YGridLine" debug=line.ticks.debug />
+            <DebugRect label="YGridLine" debug=line.debug />
             {ticks}
         </g>
     }
