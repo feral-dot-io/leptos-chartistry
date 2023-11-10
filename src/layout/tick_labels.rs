@@ -8,7 +8,10 @@ use crate::{
     edge::Edge,
     projection::Projection,
     series::UseSeries,
-    ticks::{AlignedFloatsGen, GeneratedTicks, TickGen, Ticks, TimestampGen, UseTicks},
+    ticks::{
+        short_format_fn, AlignedFloatsGen, GeneratedTicks, TickFormatFn, TickGen, TickState, Ticks,
+        TimestampGen, UseTicks,
+    },
     Font, Padding, Period,
 };
 use chrono::prelude::*;
@@ -22,12 +25,13 @@ pub struct TickLabels<Tick: Clone> {
     padding: Option<MaybeSignal<Padding>>,
     debug: Option<MaybeSignal<bool>>,
     generator: Rc<dyn TickGen<Tick = Tick>>,
+    format: Option<TickFormatFn<Tick>>,
 }
 
 #[derive(Clone)]
 pub struct TickLabelsAttr<Tick>(pub(crate) Ticks<Tick>);
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct UseTickLabels<Tick: 'static>(UseTicks<Tick>);
 
 impl TickLabels<f64> {
@@ -61,6 +65,7 @@ impl<Tick: Clone> TickLabels<Tick> {
             padding: None,
             debug: None,
             generator: Rc::new(gen),
+            format: None,
         }
     }
 
@@ -79,25 +84,34 @@ impl<Tick: Clone> TickLabels<Tick> {
         self
     }
 
-    pub(crate) fn apply_attr(self, attr: &Attr) -> Ticks<Tick> {
+    pub fn set_formatter(
+        mut self,
+        format: impl Fn(&dyn TickState<Tick = Tick>, &Tick) -> String + 'static,
+    ) -> Self {
+        self.format = Some(Rc::new(format));
+        self
+    }
+
+    pub(crate) fn apply_attr(self, attr: &Attr, def_format: TickFormatFn<Tick>) -> Ticks<Tick> {
         Ticks {
             font: self.font.unwrap_or(attr.font),
             padding: self.padding.unwrap_or(attr.padding),
             debug: self.debug.unwrap_or(attr.debug),
             generator: self.generator,
+            format: self.format.unwrap_or(def_format),
         }
     }
 }
 
 impl<X: Clone + PartialEq + 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
     fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
-        Rc::new(TickLabelsAttr(self.apply_attr(attr)))
+        Rc::new(TickLabelsAttr(self.apply_attr(attr, short_format_fn())))
     }
 }
 
 impl<X: 'static, Y: Clone + PartialEq + 'static> VerticalLayout<X, Y> for TickLabels<Y> {
     fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
-        Rc::new(TickLabelsAttr(self.apply_attr(attr)))
+        Rc::new(TickLabelsAttr(self.apply_attr(attr, short_format_fn())))
     }
 }
 

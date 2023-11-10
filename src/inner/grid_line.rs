@@ -5,7 +5,7 @@ use crate::{
     debug::DebugRect,
     projection::Projection,
     series::UseSeries,
-    ticks::{Ticks, UseTicks},
+    ticks::{short_format_fn, Ticks, UseTicks},
     use_watched_node::UseWatchedNode,
     TickLabels,
 };
@@ -36,16 +36,16 @@ struct HorizontalGridLineAttr<X>(GridLineAttr<X>);
 #[derive(Clone)]
 struct VerticalGridLineAttr<Y>(GridLineAttr<Y>);
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct UseGridLine<Tick: 'static> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
     ticks: UseTicks<Tick>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct UseHorizontalGridLine<X: 'static>(UseGridLine<X>);
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct UseVerticalGridLine<Y: 'static>(UseGridLine<Y>);
 
 impl<Tick: Clone> GridLine<Tick> {
@@ -70,7 +70,7 @@ impl<Tick: Clone> GridLine<Tick> {
         GridLineAttr {
             width: self.width,
             colour: self.colour,
-            ticks: self.ticks.apply_attr(attr),
+            ticks: self.ticks.apply_attr(attr, short_format_fn()),
         }
     }
 }

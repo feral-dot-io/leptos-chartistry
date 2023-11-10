@@ -49,7 +49,7 @@ pub fn App() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-    let series = Series::new(&|w: &Wave| w.x)
+    let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
         //.set_x_range(None, f64_to_dt(15.0))
         .set_y_range(-1.0, None)
         .add(Line::new("Sphinx"), &|w: &Wave| w.sine)
@@ -61,7 +61,7 @@ pub fn App() -> impl IntoView {
     let top_label = RotatedLabel::new(anchor, text);
     let snippet = Snippet::horizontal().set_padding(Padding::zero());
     let left_ticks = TickLabels::aligned_floats();
-    let bottom_ticks = TickLabels::aligned_floats();
+    let bottom_ticks = TickLabels::timestamps();
 
     let chart = Chart::new(font, series)
         .inherit_padding(padding)

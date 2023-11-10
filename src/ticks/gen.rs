@@ -7,7 +7,7 @@ pub trait TickGen {
         &self,
         first: &Self::Tick,
         last: &Self::Tick,
-        span: Box<dyn Span>,
+        span: Box<dyn Span<Self::Tick>>,
     ) -> GeneratedTicks<Self::Tick>;
 }
 
@@ -45,7 +45,7 @@ pub trait TickState {
     fn long_format(&self, value: &Self::Tick) -> String;
 }
 
-pub trait Span {
+pub trait Span<Tick> {
     fn length(&self) -> f64;
-    fn consumed(&self, ticks: &[&str]) -> f64;
+    fn consumed(&self, state: &dyn TickState<Tick = Tick>, ticks: &[Tick]) -> f64;
 }

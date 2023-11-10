@@ -9,7 +9,7 @@ use super::gen::{GeneratedTicks, Span, TickGen, TickState};
 pub struct AlignedFloatsGen;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct AlignedFloats {
+struct State {
     scale: isize,
 }
 
@@ -20,11 +20,11 @@ impl TickGen for AlignedFloatsGen {
         &self,
         &first: &Self::Tick,
         &last: &Self::Tick,
-        span: Box<dyn Span>,
+        span: Box<dyn Span<Self::Tick>>,
     ) -> GeneratedTicks<Self::Tick> {
-        let (scale, count) = Self::find_precision(first, last, span);
+        let (scale, count) = Self::find_precision(first, last, span.as_ref());
         let (scale, ticks) = Self::generate_count(first, last, scale, count);
-        let state = AlignedFloats::new(scale);
+        let state = State::new(scale);
         GeneratedTicks::new(ticks, state)
     }
 }
@@ -35,30 +35,27 @@ impl AlignedFloatsGen {
     }
 
     /// Returns the scale and count to use for the given range and span
-    fn find_precision(first: f64, last: f64, span: Box<dyn Span>) -> (isize, usize) {
+    fn find_precision(first: f64, last: f64, span: &dyn Span<f64>) -> (isize, usize) {
         // Determine scale e.g., are we in the 100s, 10s, 0.1s, etc. Then display one more (-1)
         let mut scale = scale10(last - first) - 1;
         // Naively calculate our count i.e., how many ticks can we fit in the span. This is the lower bound for count
-        let mock = Self::mock_value(first, last, scale);
-        let lower_count = (span.length() / span.consumed(&[mock.as_str()])) as usize;
+        let lower_count = Self::mock_value_count(first, last, scale, span);
         // Lower the scale (increase precision) so that we can always distinguish between ticks e.g., a range of 0-10 with a count of 30 would result in runs of 0.1. Subtract 2 to account for first and last before the jump to a higher precision
         scale -= scale10(lower_count as f64 - 2.0);
         // Calculate the upper count bound. The max number of ticks we can fit in the span with the higher precision
-        let mock = Self::mock_value(first, last, scale);
-        let upper_count = (span.length() / span.consumed(&[mock.as_str()])) as usize;
+        let upper_count = Self::mock_value_count(first, last, scale, span);
 
         (scale, upper_count)
     }
 
     /// Finds the longest string that could be displayed between first and last inclusive
-    fn mock_value(first: f64, last: f64, scale: isize) -> String {
-        let first = format(scale, first);
-        let last = format(scale, last);
-        if first.len() > last.len() {
-            first
-        } else {
-            last
-        }
+    fn mock_value_count(first: f64, last: f64, scale: isize, span: &dyn Span<f64>) -> usize {
+        let state = State::new(scale);
+        let first_consumed = span.consumed(&state, &[first]);
+        let last_consumed = span.consumed(&state, &[last]);
+        let consumed = first_consumed.max(last_consumed);
+        // TODO: check whether we should do .ceil here
+        (span.length() / consumed) as usize
     }
 
     fn generate_count(first: f64, last: f64, scale: isize, count: usize) -> (isize, Vec<f64>) {
@@ -80,46 +77,40 @@ impl AlignedFloatsGen {
     }
 }
 
-impl AlignedFloats {
-    pub fn new(scale: isize) -> AlignedFloats {
+impl State {
+    pub fn new(scale: isize) -> State {
         Self { scale }
-    }
-
-    fn format(&self, value: f64) -> String {
-        format(self.scale, value)
     }
 }
 
-impl TickState for AlignedFloats {
+impl TickState for State {
     type Tick = f64;
 
     fn position(&self, value: &Self::Tick) -> f64 {
         *value
     }
 
-    fn short_format(&self, &value: &Self::Tick) -> String {
-        self.format(value)
+    fn short_format(&self, value: &Self::Tick) -> String {
+        self.long_format(value)
     }
 
     fn long_format(&self, &value: &Self::Tick) -> String {
-        self.format(value)
+        let scale = self.scale;
+        let precision = if scale < 0 { -scale as usize } else { 0 };
+        let mut value = format!("{value:.precision$}");
+        // The format! macro doesn't handle negative precision. For us, this means zero pad to the left of the decimal point
+        if scale > 0 {
+            // Clamp scale to leave leftmost digit if it's too large
+            let neg_offset = if value.starts_with("-") { 1 } else { 0 };
+            let scale = (scale as usize).min(value.len() - 1 - neg_offset);
+            // Truncate from offset to the end with zeros
+            value
+                .len()
+                .checked_sub(scale as usize)
+                .map(|offset| value.replace_range(offset.., &"0".repeat(scale as usize)));
+        }
+        value
     }
-}
-
-fn format(scale: isize, value: f64) -> String {
-    let precision = if scale < 0 { -scale as usize } else { 0 };
-    let mut val = format!("{value:.precision$}");
-    // The format! macro doesn't handle negative precision. For us, this means zero pad to the left of the decimal point
-    if scale > 0 {
-        // Clamp scale to leave leftmost digit if it's too large
-        let neg_offset = if val.starts_with("-") { 1 } else { 0 };
-        let scale = (scale as usize).min(val.len() - 1 - neg_offset);
-        // Truncate from offset to the end with zeros
-        val.len()
-            .checked_sub(scale as usize)
-            .map(|offset| val.replace_range(offset.., &"0".repeat(scale as usize)));
-    }
-    val
 }
 
 /// Determines the scale e.g. are we in the 10s, 100s, 0.1s, etc.
@@ -134,16 +125,21 @@ fn scale10(range: f64) -> isize {
 
 #[cfg(test)]
 mod tests {
-    use super::super::use_ticks::HorizontalSpan;
+    use super::super::use_ticks::{short_format_fn, HorizontalSpan};
     use super::*;
 
-    fn mk_span(width: f64) -> Box<dyn Span> {
-        Box::new(HorizontalSpan::new(1.0, 0.0, width + 0.1))
+    fn mk_span(width: f64) -> Box<dyn Span<f64>> {
+        Box::new(HorizontalSpan::new(
+            short_format_fn(),
+            1.0,
+            0.0,
+            width + 0.1,
+        ))
     }
 
     fn assert_precision(first: f64, last: f64, width: f64, scale: isize, count: usize) {
         let span = mk_span(width + 1.0);
-        let precision = AlignedFloatsGen::find_precision(first, last, span);
+        let precision = AlignedFloatsGen::find_precision(first, last, span.as_ref());
         assert_eq!(precision, (scale, count));
     }
 
@@ -155,7 +151,7 @@ mod tests {
         expected: Vec<&'static str>,
     ) {
         let (scale, ticks) = AlignedFloatsGen::generate_count(first, last, scale, count);
-        let state = AlignedFloats::new(scale);
+        let state = State::new(scale);
         let ticks = (ticks.into_iter())
             .map(|tick| state.short_format(&tick))
             .collect::<Vec<_>>();
@@ -250,6 +246,8 @@ mod tests {
 
     #[test]
     fn test_format() {
+        let format = |scale: isize, value: f64| State::new(scale).long_format(&value);
+
         // Significant digits
         assert_eq!(format(0, 1.0), "1");
         assert_eq!(format(0, 1.23456789), "1");

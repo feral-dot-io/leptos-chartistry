@@ -8,7 +8,7 @@ use crate::{
     line::UseLine,
     projection::Projection,
     series::{Data, UseSeries},
-    ticks::{GeneratedTicks, Ticks},
+    ticks::{long_format_fn, GeneratedTicks, Ticks},
     use_watched_node::UseWatchedNode,
     Padding, Snippet, TickLabels,
 };
@@ -86,8 +86,8 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayo
                 .unwrap_or_else(|| Signal::derive(move || font.get().height()).into()),
             padding: self.padding.unwrap_or(attr.padding),
 
-            x_ticks: self.x_ticks.apply_attr(attr),
-            y_ticks: self.y_ticks.apply_attr(attr),
+            x_ticks: self.x_ticks.apply_attr(attr, long_format_fn()),
+            y_ticks: self.y_ticks.apply_attr(attr, long_format_fn()),
         })
     }
 }

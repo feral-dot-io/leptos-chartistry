@@ -29,4 +29,4 @@ pub use line::Line;
 pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;
 pub use series::Series;
-pub use ticks::Period;
+pub use ticks::{Period, TickState};

@@ -1,6 +1,6 @@
 use super::gen::{GeneratedTicks, Span, TickGen, TickState};
 use chrono::{prelude::*, Duration, DurationRound, Months};
-use std::{borrow::Borrow, cmp::Ordering, fmt::Display, ops::Add};
+use std::{borrow::Borrow, fmt::Display, ops::Add};
 
 // Note: Quarter and Week would be useful but would need more formatting options e.g., strftime doesn't offer quarter formatting and we would need to specify when weeks start which would probably want to coincide with years using %G or %Y
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -22,16 +22,10 @@ pub struct TimestampGen<Tz> {
     tz: std::marker::PhantomData<Tz>,
 }
 
-#[derive(Clone, Debug)]
-pub struct Timestamp<Tz: TimeZone> {
-    at: DateTime<Tz>,
-    short: String,
-}
-
 #[derive(Clone, Debug, PartialEq)]
-pub struct TimestampFormatter<Tz> {
-    periods: Vec<Period>,
-    latest_period: Period,
+struct State<Tz> {
+    period: Period,
+    all_periods: Vec<Period>,
     tz: std::marker::PhantomData<Tz>,
 }
 
@@ -60,39 +54,31 @@ where
         &self,
         first: &Self::Tick,
         last: &Self::Tick,
-        span: Box<dyn Span>,
+        span: Box<dyn Span<Self::Tick>>,
     ) -> GeneratedTicks<Self::Tick> {
         // No periods?
         if self.periods.is_empty() {
-            return GeneratedTicks::none(TimestampFormatter::unknown());
+            return GeneratedTicks::none(State::unknown());
         }
 
-        let upper_count = (span.length() / span.consumed(&["0".repeat(Period::MIN_CHARS).as_str()]))
-            .ceil() as usize
-            + 1;
-        let mut ticks = Vec::with_capacity(upper_count);
-        let mut latest_period = self.periods[0];
+        let mut ticks = Vec::new();
+        let mut state = State::<Tz>::new(self.periods[0], &self.periods);
 
         'outer: for &period in &self.periods {
             // Fetch all ticks for this period
-            let mut candidate = Vec::with_capacity(upper_count);
+            let mut candidate = Vec::new();
             for at in period.iter_aligned_range(first.clone(), last.clone()) {
-                let tick = Timestamp::new(period, at);
-                candidate.push(tick);
+                // TODO
+                candidate.push(at);
             }
             // Try to fit candidate ticks into previous ticks, sampling if necessary
             for sample in 1..(candidate.len() + 1) {
                 let sampled = Self::merge_ticks(&ticks, &candidate, sample);
-                let used_width = span.consumed(
-                    &sampled
-                        .iter()
-                        .map(|tick| tick.short.as_str())
-                        .collect::<Vec<_>>(),
-                );
+                state = State::new(period, &self.periods);
+                let used_width = span.consumed(&state, &sampled);
                 // Our sampled ticks fit
                 if used_width <= span.length() {
                     ticks = sampled;
-                    latest_period = period;
                     // Stop entirely if we've had to use sampling at all
                     if sample != 1 {
                         break 'outer;
@@ -109,9 +95,7 @@ where
                 }
             }
         }
-        // Finally, convert to ticks
-        let ticks = ticks.into_iter().map(|tick| tick.at).collect();
-        let state = TimestampFormatter::new(latest_period, &self.periods);
+
         GeneratedTicks::new(ticks, state)
     }
 }
@@ -155,22 +139,11 @@ impl<Tz: TimeZone> TimestampGen<Tz> {
     }
 }
 
-impl<Tz: TimeZone> Timestamp<Tz>
-where
-    Tz::Offset: Display,
-{
-    fn new(period: Period, at: DateTime<Tz>) -> Self {
-        // TODO: make label repr configurable
-        let label = at.format(period.short_format()).to_string();
-        Self { at, short: label }
-    }
-}
-
-impl<Tz> TimestampFormatter<Tz> {
-    fn new(latest_period: Period, periods: &[Period]) -> Self {
-        TimestampFormatter {
-            latest_period,
-            periods: periods.to_vec(),
+impl<Tz> State<Tz> {
+    fn new(period: Period, periods: &[Period]) -> Self {
+        State {
+            period,
+            all_periods: periods.to_vec(),
             tz: std::marker::PhantomData,
         }
     }
@@ -180,7 +153,7 @@ impl<Tz> TimestampFormatter<Tz> {
     }
 }
 
-impl<Tz: TimeZone> TickState for TimestampFormatter<Tz>
+impl<Tz: TimeZone> TickState for State<Tz>
 where
     Tz::Offset: Display,
 {
@@ -191,27 +164,24 @@ where
     }
 
     fn short_format(&self, at: &Self::Tick) -> String {
-        // Pick largest period that this tick is aligned to
-        // Note: we could wrap DateTime with our own but we prefer to expose Tick=DateTime on our public API
-        let mut found = self.latest_period;
-        for period in &self.periods {
-            if period.truncate_at(at.clone()) == Some(at.clone()) {
-                found = *period;
+        let mut period = self.period;
+        // If tick falls exactly on an earlier period, use that representation instead
+        for earlier in &self.all_periods {
+            if earlier.truncate_at(at.clone()) == Some(at.clone()) {
+                period = *earlier;
                 break;
             }
         }
-        // Format on
-        at.format(found.short_format()).to_string()
+        // Format tick according to period
+        at.format(period.short_format()).to_string()
     }
 
     fn long_format(&self, at: &Self::Tick) -> String {
-        at.format(self.latest_period.long_format()).to_string()
+        at.format(self.period.long_format()).to_string()
     }
 }
 
 impl Period {
-    const MIN_CHARS: usize = 3;
-
     fn short_format(self) -> &'static str {
         match self {
             Period::Nanosecond => "%H:%M:%S.%f",
@@ -349,29 +319,9 @@ impl<Tz: TimeZone> Add<Period> for DateTime<Tz> {
     }
 }
 
-impl<Tz: TimeZone> Eq for Timestamp<Tz> {}
-
-impl<Tz: TimeZone> Ord for Timestamp<Tz> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.at.cmp(&other.at)
-    }
-}
-
-impl<Tz: TimeZone> PartialOrd for Timestamp<Tz> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.at.cmp(&other.at))
-    }
-}
-
-impl<Tz: TimeZone> PartialEq for Timestamp<Tz> {
-    fn eq(&self, other: &Self) -> bool {
-        self.at.eq(&other.at)
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::super::use_ticks::HorizontalSpan;
+    use super::super::use_ticks::{short_format_fn, HorizontalSpan};
     use super::*;
 
     fn assert_ticks<Tz: TimeZone>(
@@ -385,8 +335,8 @@ mod tests {
         assert_eq!(check, expected);
     }
 
-    fn mk_span(width: f64) -> Box<dyn Span> {
-        Box::new(HorizontalSpan::new(6.0, 2.0, width))
+    fn mk_span<Tick: 'static>(width: f64) -> Box<dyn Span<Tick>> {
+        Box::new(HorizontalSpan::new(short_format_fn(), 6.0, 2.0, width))
     }
 
     #[test]
