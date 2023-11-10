@@ -24,8 +24,8 @@ pub struct TickLabels<Tick: Clone> {
     font: Option<MaybeSignal<Font>>,
     padding: Option<MaybeSignal<Padding>>,
     debug: Option<MaybeSignal<bool>>,
-    generator: Rc<dyn TickGen<Tick = Tick>>,
     format: Option<TickFormatFn<Tick>>,
+    generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
 #[derive(Clone)]
@@ -33,8 +33,8 @@ pub struct TickLabelsAttr<Tick> {
     font: MaybeSignal<Font>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
-    generator: Rc<dyn TickGen<Tick = Tick>>,
     format: TickFormatFn<Tick>,
+    generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
 #[derive(Clone)]
@@ -42,6 +42,7 @@ pub struct UseTickLabels<Tick: 'static> {
     font: MaybeSignal<Font>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
+    format: TickFormatFn<Tick>,
     ticks: Signal<GeneratedTicks<Tick>>,
 }
 
@@ -75,8 +76,8 @@ impl<Tick: Clone> TickLabels<Tick> {
             font: None,
             padding: None,
             debug: None,
-            generator: Rc::new(gen),
             format: None,
+            generator: Rc::new(gen),
         }
     }
 
@@ -112,8 +113,8 @@ impl<Tick: Clone> TickLabels<Tick> {
             font: self.font.unwrap_or(attr.font),
             padding: self.padding.unwrap_or(attr.padding),
             debug: self.debug.unwrap_or(attr.debug),
-            generator: self.generator,
             format: self.format.unwrap_or(def_format),
+            generator: self.generator,
         }
     }
 }
@@ -186,6 +187,7 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
             font: self.font,
             padding: self.padding,
             debug: self.debug,
+            format: self.format.clone(),
             ticks: (*self).clone().generate_x(series.data, avail_width),
         })
     }
@@ -201,6 +203,7 @@ impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
             font: self.font,
             padding: self.padding,
             debug: self.debug,
+            format: self.format.clone(),
             ticks: (*self).clone().generate_y(series.data, avail_height),
         })
     }
@@ -250,13 +253,15 @@ pub fn TickLabels<'a, Tick: 'static>(
     bounds: Bounds,
     projection: Signal<Projection>,
 ) -> impl IntoView {
+    let format = ticks.format.clone();
     let (font, padding, debug, ticks) = (ticks.font, ticks.padding, ticks.debug, ticks.ticks);
     let ticks = move || {
+        let format = format.clone();
         ticks.with(move |GeneratedTicks { state, ticks }| {
             // Generate tick labels
             let labels = ticks
                 .iter()
-                .map(|tick| (state.position(tick), state.short_format(tick)))
+                .map(|tick| (state.position(tick), (format)(&**state, tick)))
                 .collect::<Vec<_>>();
 
             // Align vertical labels
