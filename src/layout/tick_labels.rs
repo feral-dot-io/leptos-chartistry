@@ -32,7 +32,12 @@ pub struct TickLabels<Tick: Clone> {
 pub struct TickLabelsAttr<Tick>(pub(crate) Ticks<Tick>);
 
 #[derive(Clone)]
-pub struct UseTickLabels<Tick: 'static>(UseTicks<Tick>);
+pub struct UseTickLabels<Tick: 'static> {
+    font: MaybeSignal<Font>,
+    padding: MaybeSignal<Padding>,
+    debug: MaybeSignal<bool>,
+    ticks: Signal<GeneratedTicks<Tick>>,
+}
 
 impl TickLabels<f64> {
     pub fn aligned_floats() -> Self {
@@ -115,6 +120,17 @@ impl<X: 'static, Y: Clone + PartialEq + 'static> VerticalLayout<X, Y> for TickLa
     }
 }
 
+impl<Tick> From<UseTicks<Tick>> for UseTickLabels<Tick> {
+    fn from(ticks: UseTicks<Tick>) -> Self {
+        Self {
+            font: ticks.font,
+            padding: ticks.padding,
+            debug: ticks.debug,
+            ticks: ticks.ticks,
+        }
+    }
+}
+
 impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
     fn height(&self) -> Signal<f64> {
         let (font, padding) = (self.0.font, self.0.padding);
@@ -126,9 +142,7 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
     ) -> Box<dyn UseLayout> {
-        Box::new(UseTickLabels(
-            self.0.clone().generate_x(series.data, avail_width),
-        ))
+        Box::<UseTickLabels<X>>::new(self.0.clone().generate_x(series.data, avail_width).into())
     }
 }
 
@@ -138,15 +152,13 @@ impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
     ) -> Box<dyn UseLayout> {
-        Box::new(UseTickLabels(
-            self.0.clone().generate_y(series.data, avail_height),
-        ))
+        Box::<UseTickLabels<Y>>::new(self.0.clone().generate_y(series.data, avail_height).into())
     }
 }
 
 impl<Tick> UseLayout for UseTickLabels<Tick> {
     fn width(&self) -> Signal<f64> {
-        let (font, padding, ticks) = (self.0.font, self.0.padding, self.0.ticks);
+        let (font, padding, ticks) = (self.font, self.padding, self.ticks);
         Signal::derive(move || {
             let chars = ticks.with(|ticks| {
                 (ticks.ticks.iter())
@@ -188,8 +200,7 @@ pub fn TickLabels<'a, Tick: 'static>(
     bounds: Bounds,
     projection: Signal<Projection>,
 ) -> impl IntoView {
-    let (font, padding, debug, ticks) =
-        (ticks.0.font, ticks.0.padding, ticks.0.debug, ticks.0.ticks);
+    let (font, padding, debug, ticks) = (ticks.font, ticks.padding, ticks.debug, ticks.ticks);
     let ticks = move || {
         ticks.with(move |GeneratedTicks { state, ticks }| {
             // Generate tick labels
