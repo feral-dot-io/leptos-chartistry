@@ -33,7 +33,7 @@ pub struct TickLabelsAttr<Tick> {
     font: MaybeSignal<Font>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
-    format: TickFormatFn<Tick>,
+    pub format: TickFormatFn<Tick>,
     generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
@@ -42,7 +42,7 @@ pub struct UseTickLabels<Tick: 'static> {
     font: MaybeSignal<Font>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
-    format: TickFormatFn<Tick>,
+    pub format: TickFormatFn<Tick>,
     ticks: Signal<GeneratedTicks<Tick>>,
 }
 

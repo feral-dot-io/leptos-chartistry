@@ -60,8 +60,9 @@ pub fn App() -> impl IntoView {
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
     let top_label = RotatedLabel::new(anchor, text);
     let snippet = Snippet::horizontal().set_padding(Padding::zero());
-    let left_ticks = TickLabels::aligned_floats();
-    let bottom_ticks = TickLabels::timestamps();
+    let left_ticks = TickLabels::aligned_floats().set_formatter(|state, tick| format!("{tick}!"));
+    let bottom_ticks =
+        TickLabels::timestamps().set_formatter(|state, tick| state.short_format(tick));
 
     let chart = Chart::new(font, series)
         .inherit_padding(padding)

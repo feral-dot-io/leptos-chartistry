@@ -8,7 +8,7 @@ use crate::{
     line::UseLine,
     projection::Projection,
     series::{Data, UseSeries},
-    ticks::{long_format_fn, GeneratedTicks},
+    ticks::{long_format_fn, GeneratedTicks, TickFormatFn},
     use_watched_node::UseWatchedNode,
     Padding, Snippet, TickLabels,
 };
@@ -41,7 +41,9 @@ pub struct UseTooltip<X: 'static, Y: 'static> {
     table_margin: MaybeSignal<f64>,
     padding: MaybeSignal<Padding>,
 
+    x_format: TickFormatFn<X>,
     x_ticks: Signal<GeneratedTicks<X>>,
+    y_format: TickFormatFn<Y>,
     y_ticks: Signal<GeneratedTicks<Y>>,
 }
 
@@ -100,7 +102,9 @@ impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
             snippet: self.snippet,
             table_margin: self.table_margin,
             padding: self.padding,
+            x_format: self.x_ticks.format.clone(),
             x_ticks: self.x_ticks.generate_x(data, avail_width),
+            y_format: self.y_ticks.format.clone(),
             y_ticks: self.y_ticks.generate_y(data, avail_height),
         }
     }
@@ -148,7 +152,9 @@ fn Tooltip<X: 'static, Y: 'static>(
         snippet,
         table_margin,
         padding,
+        x_format,
         x_ticks,
+        y_format,
         y_ticks,
     } = tooltip;
     let data = series.data;
@@ -162,8 +168,12 @@ fn Tooltip<X: 'static, Y: 'static>(
         })
     });
 
-    let x_body =
-        move || with!(|x_ticks, data, data_x| x_ticks.state.long_format(data.nearest_x(*data_x)));
+    let x_body = move || {
+        with!(|x_ticks, data, data_x| {
+            let x_value = data.nearest_x(*data_x);
+            (x_format)(&*x_ticks.state, x_value)
+        })
+    };
     let y_body = create_memo(move |_| {
         let (lines, labels): (Vec<UseLine>, Vec<String>) = series
             .lines
@@ -173,7 +183,7 @@ fn Tooltip<X: 'static, Y: 'static>(
             .map(|(line_id, line)| {
                 let y_value = with!(|data, data_x, y_ticks| {
                     let y_value = data.nearest_y(*data_x, line_id);
-                    y_ticks.state.long_format(y_value)
+                    (y_format)(&*y_ticks.state, y_value)
                 });
                 (line, y_value)
             })
