@@ -38,12 +38,11 @@ pub struct TickLabelsAttr<Tick> {
 }
 
 #[derive(Clone)]
-pub struct UseTickLabels<Tick: 'static> {
+pub struct UseTickLabels {
     font: MaybeSignal<Font>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
-    pub format: TickFormatFn<Tick>,
-    ticks: Signal<GeneratedTicks<Tick>>,
+    ticks: Signal<Vec<(f64, String)>>,
 }
 
 impl TickLabels<f64> {
@@ -187,8 +186,7 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
             font: self.font,
             padding: self.padding,
             debug: self.debug,
-            format: self.format.clone(),
-            ticks: (*self).clone().generate_x(series.data, avail_width),
+            ticks: self.map_ticks((*self).clone().generate_x(series.data, avail_width)),
         })
     }
 }
@@ -203,23 +201,39 @@ impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
             font: self.font,
             padding: self.padding,
             debug: self.debug,
-            format: self.format.clone(),
-            ticks: (*self).clone().generate_y(series.data, avail_height),
+            ticks: self.map_ticks((*self).clone().generate_y(series.data, avail_height)),
         })
     }
 }
 
-impl<Tick> UseLayout for UseTickLabels<Tick> {
-    fn width(&self) -> Signal<f64> {
-        let (font, padding, ticks) = (self.font, self.padding, self.ticks);
+impl<Tick> TickLabelsAttr<Tick> {
+    fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
+        let format = self.format.clone();
         Signal::derive(move || {
-            let chars = ticks.with(|ticks| {
-                (ticks.ticks.iter())
-                    .map(|tick| ticks.state.short_format(tick).len())
+            gen.with(|GeneratedTicks { ticks, state }| {
+                ticks
+                    .into_iter()
+                    .map(|tick| (state.position(tick), (format)(&**state, tick)))
+                    .collect()
+            })
+        })
+    }
+}
+
+impl UseLayout for UseTickLabels {
+    fn width(&self) -> Signal<f64> {
+        let font = self.font;
+        let padding = self.padding;
+        let labels = self.ticks;
+        Signal::derive(move || {
+            let longest_chars = labels.with(|labels| {
+                labels
+                    .iter()
+                    .map(|(_, label)| label.len())
                     .max()
                     .unwrap_or_default()
-            });
-            font.get().width() * chars as f64 + padding.get().width()
+            }) as f64;
+            font.get().width() * longest_chars + padding.get().width()
         })
     }
 
@@ -247,51 +261,45 @@ pub fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
 }
 
 #[component]
-pub fn TickLabels<'a, Tick: 'static>(
-    ticks: &'a UseTickLabels<Tick>,
+pub fn TickLabels<'a>(
+    ticks: &'a UseTickLabels,
     edge: Edge,
     bounds: Bounds,
     projection: Signal<Projection>,
 ) -> impl IntoView {
-    let format = ticks.format.clone();
-    let (font, padding, debug, ticks) = (ticks.font, ticks.padding, ticks.debug, ticks.ticks);
+    let font = ticks.font;
+    let padding = ticks.padding;
+    let debug = ticks.debug;
+    let ticks = ticks.ticks;
     let ticks = move || {
-        let format = format.clone();
-        ticks.with(move |GeneratedTicks { state, ticks }| {
-            // Generate tick labels
-            let labels = ticks
-                .iter()
-                .map(|tick| (state.position(tick), (format)(&**state, tick)))
-                .collect::<Vec<_>>();
+        // Align vertical labels
+        let ticks = ticks.get();
+        let ticks = if edge.is_vertical() {
+            let (pos, labels): (Vec<f64>, Vec<String>) = ticks.into_iter().unzip();
+            let labels = align_tick_labels(labels);
+            pos.into_iter().zip(labels).collect::<Vec<_>>()
+        } else {
+            ticks
+        };
 
-            // Align vertical labels
-            let labels = if edge.is_vertical() {
-                let (pos, labels): (Vec<f64>, Vec<String>) = labels.into_iter().unzip();
-                let labels = align_tick_labels(labels);
-                pos.into_iter().zip(labels).collect::<Vec<_>>()
-            } else {
-                labels
-            };
-
-            // Render tick labels
-            labels
-                .into_iter()
-                .map(|(position, label)| {
-                    view! {
-                        <TickLabel
-                            edge=edge
-                            bounds=bounds
-                            projection=projection
-                            label=label
-                            position=position
-                            font=font
-                            padding=padding
-                            debug=debug
-                        />
-                    }
-                })
-                .collect_view()
-        })
+        // Render tick labels
+        ticks
+            .into_iter()
+            .map(|(position, label)| {
+                view! {
+                    <TickLabel
+                        edge=edge
+                        bounds=bounds
+                        projection=projection
+                        label=label
+                        position=position
+                        font=font
+                        padding=padding
+                        debug=debug
+                    />
+                }
+            })
+            .collect_view()
     };
 
     view! {
