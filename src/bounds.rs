@@ -114,11 +114,11 @@ mod tests {
         assert_eq!(b.height(), (4.4 - 2.2));
         assert_eq!(b.centre_x(), (3.3 - 1.1) / 2.0 + 1.1);
         assert_eq!(b.centre_y(), (4.4 - 2.2) / 2.0 + 2.2);
-        assert_eq!(b.is_zero(), false);
-        assert_eq!(Bounds::from_points(0.0, 10.0, 1.0, 10.0).is_zero(), true);
-        assert_eq!(b.contains(1.1, 2.2), true);
-        assert_eq!(b.contains(3.3, 4.4), true);
-        assert_eq!(b.contains(5.5, 6.6), false);
+        assert!(!b.is_zero(),);
+        assert!(Bounds::from_points(0.0, 10.0, 1.0, 10.0).is_zero(),);
+        assert!(b.contains(1.1, 2.2),);
+        assert!(b.contains(3.3, 4.4),);
+        assert!(!b.contains(5.5, 6.6),);
     }
 
     #[test]

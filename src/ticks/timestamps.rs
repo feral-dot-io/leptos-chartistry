@@ -101,7 +101,7 @@ where
 impl<Tz: TimeZone> TimestampGen<Tz> {
     fn merge_ticks<T: Clone + Ord>(existing: &[T], candidate: &[T], sample: usize) -> Vec<T> {
         assert!(sample > 0);
-        let candidate = candidate.into_iter().map(Clone::clone).collect::<Vec<_>>();
+        let candidate = candidate.to_owned();
         // Find a common index between existing and candidate to align samples
         let common_index = existing
             .iter()
@@ -112,8 +112,8 @@ impl<Tz: TimeZone> TimestampGen<Tz> {
         // Sample candidate ticks
         let candidate = Self::sample_ticks(candidate, common_index, sample);
         let mut ticks = existing
-            .into_iter()
-            .map(Clone::clone)
+            .iter()
+            .cloned()
             .chain(candidate)
             .collect::<Vec<_>>();
         // Stable sort by time
@@ -158,7 +158,7 @@ where
     type Tick = DateTime<Tz>;
 
     fn position(&self, at: &Self::Tick) -> f64 {
-        at.timestamp() as f64 + (at.timestamp_subsec_nanos() as f64 / 1e9 as f64)
+        at.timestamp() as f64 + (at.timestamp_subsec_nanos() as f64 / 1e9_f64)
     }
 
     fn short_format(&self, at: &Self::Tick) -> String {
@@ -229,7 +229,7 @@ struct AlignedPeriodRange<Tz: TimeZone> {
     not_after: DateTime<Tz>,
 }
 
-impl<'a, Tz: TimeZone> Iterator for AlignedPeriodRange<Tz> {
+impl<Tz: TimeZone> Iterator for AlignedPeriodRange<Tz> {
     type Item = DateTime<Tz>;
 
     fn next(&mut self) -> Option<Self::Item> {

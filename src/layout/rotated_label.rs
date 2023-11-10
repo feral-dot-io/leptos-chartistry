@@ -103,13 +103,13 @@ impl<X, Y> HorizontalOption<X, Y> for UseRotatedLabel {
         self.size()
     }
 
-    fn to_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
         Box::new((*self).clone())
     }
 }
 
 impl<X, Y> VerticalOption<X, Y> for UseRotatedLabel {
-    fn to_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
         Box::new((*self).clone())
     }
 }

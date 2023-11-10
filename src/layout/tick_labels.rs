@@ -177,7 +177,7 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
         Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
     }
 
-    fn to_use(
+    fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
@@ -192,7 +192,7 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
 }
 
 impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
-    fn to_use(
+    fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
@@ -212,7 +212,7 @@ impl<Tick> TickLabelsAttr<Tick> {
         Signal::derive(move || {
             gen.with(|GeneratedTicks { ticks, state }| {
                 ticks
-                    .into_iter()
+                    .iter()
                     .map(|tick| (state.position(tick), (format)(&**state, tick)))
                     .collect()
             })

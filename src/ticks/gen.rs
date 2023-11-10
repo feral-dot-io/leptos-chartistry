@@ -35,7 +35,7 @@ pub struct GeneratedTicks<Tick> {
 impl<Tick> GeneratedTicks<Tick> {
     pub fn new(ticks: Vec<Tick>, state: impl TickState<Tick = Tick> + 'static) -> Self {
         GeneratedTicks {
-            ticks: ticks,
+            ticks,
             state: Rc::new(state),
         }
     }
@@ -113,7 +113,8 @@ impl<Tick> Span<Tick> for HorizontalSpan<Tick> {
     }
 
     fn consumed(&self, state: &dyn TickState<Tick = Tick>, ticks: &[Tick]) -> f64 {
-        let max_chars = (ticks.into_iter())
+        let max_chars = ticks
+            .iter()
             .map(|tick| (self.format)(state, tick).len())
             .max()
             .unwrap_or_default();

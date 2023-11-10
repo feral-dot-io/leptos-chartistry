@@ -80,7 +80,7 @@ impl<X, Y> InnerLayout<X, Y> for GuideLine {
 }
 
 impl<X, Y> InnerOption<X, Y> for GuideLine {
-    fn to_use(
+    fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         _: Signal<Projection>,

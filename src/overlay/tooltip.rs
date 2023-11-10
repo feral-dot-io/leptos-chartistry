@@ -82,7 +82,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayo
     fn apply_attr(self, attr: &Attr) -> Rc<dyn UseOverlay<X, Y>> {
         let font = attr.font;
         Rc::new(TooltipAttr {
-            snippet: self.snippet.to_use(attr),
+            snippet: self.snippet.into_use(attr),
             table_margin: self
                 .table_margin
                 .unwrap_or_else(|| Signal::derive(move || font.get().height()).into()),
@@ -95,7 +95,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayo
 }
 
 impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
-    fn to_use(self, data: Signal<Data<X, Y>>, proj: Signal<Projection>) -> UseTooltip<X, Y> {
+    fn into_use(self, data: Signal<Data<X, Y>>, proj: Signal<Projection>) -> UseTooltip<X, Y> {
         let avail_width = Projection::derive_width(proj);
         let avail_height = Projection::derive_height(proj);
         UseTooltip {
@@ -117,7 +117,7 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAtt
         proj: Signal<Projection>,
         watch: &UseWatchedNode,
     ) -> View {
-        let tooltip = (*self).clone().to_use(series.data, proj);
+        let tooltip = (*self).clone().into_use(series.data, proj);
         let (mouse_abs, mouse_rel) = (watch.mouse_abs, watch.mouse_rel);
         let mouse_hover = watch.mouse_hover_inner(proj);
         create_memo(move |_| {

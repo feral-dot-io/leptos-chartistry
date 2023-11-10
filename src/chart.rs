@@ -77,27 +77,27 @@ impl<X, Y> Chart<X, Y> {
         self
     }
 
-    pub fn add_top(mut self, opt: impl HorizontalLayout<X, Y>) -> Self {
+    pub fn top(mut self, opt: impl HorizontalLayout<X, Y>) -> Self {
         self.top.push(opt.apply_attr(&self.attr));
         self
     }
 
-    pub fn add_right(mut self, opt: impl VerticalLayout<X, Y>) -> Self {
+    pub fn right(mut self, opt: impl VerticalLayout<X, Y>) -> Self {
         self.right.push(opt.apply_attr(&self.attr));
         self
     }
 
-    pub fn add_bottom(mut self, opt: impl HorizontalLayout<X, Y>) -> Self {
+    pub fn bottom(mut self, opt: impl HorizontalLayout<X, Y>) -> Self {
         self.bottom.push(opt.apply_attr(&self.attr));
         self
     }
 
-    pub fn add_left(mut self, opt: impl VerticalLayout<X, Y>) -> Self {
+    pub fn left(mut self, opt: impl VerticalLayout<X, Y>) -> Self {
         self.left.push(opt.apply_attr(&self.attr));
         self
     }
 
-    pub fn add(mut self, opt: impl InnerLayout<X, Y>) -> Self {
+    pub fn inner(mut self, opt: impl InnerLayout<X, Y>) -> Self {
         self.inner.push(opt.apply_attr(&self.attr));
         self
     }
@@ -169,7 +169,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     // Inner layout
     let inner = (inner.into_iter())
         .map(|opt| {
-            opt.to_use(&series, layout.projection)
+            opt.into_use(&series, layout.projection)
                 .render(layout.projection, &watch)
         })
         .collect_view();

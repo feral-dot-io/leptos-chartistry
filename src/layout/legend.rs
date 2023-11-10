@@ -65,7 +65,7 @@ impl Legend {
 
     pub(crate) fn apply_attr(self, attr: &Attr) -> LegendAttr {
         LegendAttr {
-            snippet: self.snippet.to_use(attr),
+            snippet: self.snippet.into_use(attr),
             anchor: self.anchor,
             padding: self.padding.unwrap_or(attr.padding),
             debug: self.debug.unwrap_or(attr.debug),
@@ -94,7 +94,7 @@ impl LegendAttr {
         })
     }
 
-    pub fn to_use<X, Y>(self, series: &UseSeries<X, Y>) -> UseLegend {
+    pub fn into_use<X, Y>(self, series: &UseSeries<X, Y>) -> UseLegend {
         UseLegend {
             attr: self,
             lines: series.lines.clone(),
@@ -107,14 +107,14 @@ impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
         self.height()
     }
 
-    fn to_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new((*self).clone().to_use(series))
+    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        Box::new((*self).clone().into_use(series))
     }
 }
 
 impl<X, Y> VerticalOption<X, Y> for LegendAttr {
-    fn to_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new((*self).clone().to_use(series))
+    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
+        Box::new((*self).clone().into_use(series))
     }
 }
 

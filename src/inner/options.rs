@@ -9,7 +9,7 @@ pub trait InnerLayout<X, Y> {
 }
 
 pub trait InnerOption<X, Y> {
-    fn to_use(
+    fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         proj: Signal<Projection>,
@@ -35,7 +35,7 @@ impl<T, X, Y> InnerOption<X, Y> for T
 where
     T: Clone + UseInner + 'static,
 {
-    fn to_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<Projection>) -> Box<dyn UseInner> {
+    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<Projection>) -> Box<dyn UseInner> {
         Box::new((*self).clone())
     }
 }

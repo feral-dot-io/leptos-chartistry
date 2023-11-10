@@ -66,7 +66,6 @@ impl AlignedFloatsGen {
         // Determine step size: use one count fewer so that we include from and to
         let step = range / (count - 1) as f64;
         let ticks = (0..count)
-            .into_iter()
             .map(|i| {
                 // Avoid f64 accumulation errors
                 first + i as f64 * step
@@ -100,13 +99,12 @@ impl TickState for State {
         // The format! macro doesn't handle negative precision. For us, this means zero pad to the left of the decimal point
         if scale > 0 {
             // Clamp scale to leave leftmost digit if it's too large
-            let neg_offset = if value.starts_with("-") { 1 } else { 0 };
+            let neg_offset = if value.starts_with('-') { 1 } else { 0 };
             let scale = (scale as usize).min(value.len() - 1 - neg_offset);
             // Truncate from offset to the end with zeros
-            value
-                .len()
-                .checked_sub(scale as usize)
-                .map(|offset| value.replace_range(offset.., &"0".repeat(scale as usize)));
+            if let Some(offset) = value.len().checked_sub(scale as usize) {
+                value.replace_range(offset.., &"0".repeat(scale as usize));
+            }
         }
         value
     }

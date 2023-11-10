@@ -73,13 +73,13 @@ impl<X, Y> InnerLayout<X, Y> for InsetLegend {
 }
 
 impl<X, Y> InnerOption<X, Y> for InsetLegendAttr {
-    fn to_use(
+    fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         _: Signal<Projection>,
     ) -> Box<dyn UseInner> {
         Box::new(UseInsetLegend {
-            legend: self.legend.clone().to_use(series),
+            legend: self.legend.clone().into_use(series),
             edge: self.edge,
         })
     }

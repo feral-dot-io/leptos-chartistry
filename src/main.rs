@@ -60,7 +60,7 @@ pub fn App() -> impl IntoView {
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
     let top_label = RotatedLabel::new(anchor, text);
     let snippet = Snippet::horizontal().set_padding(Padding::zero());
-    let left_ticks = TickLabels::aligned_floats().set_formatter(|state, tick| format!("{tick}!"));
+    let left_ticks = TickLabels::aligned_floats().set_formatter(|_, tick| format!("{tick}!"));
     let bottom_ticks =
         TickLabels::timestamps().set_formatter(|state, tick| state.short_format(tick));
 
@@ -68,22 +68,22 @@ pub fn App() -> impl IntoView {
         .inherit_padding(padding)
         .inherit_debug(debug)
         // Labels
-        .add_top(&top_label)
-        .add_top(Legend::end(Snippet::horizontal()))
+        .top(top_label)
+        .top(Legend::end(Snippet::horizontal()))
         // Ticks
-        .add_left(&left_ticks)
-        .add_bottom(&bottom_ticks)
+        .left(&left_ticks)
+        .bottom(&bottom_ticks)
         // Axis lines
-        .add(AxisMarker::left_edge())
-        .add(AxisMarker::horizontal_zero())
+        .inner(AxisMarker::left_edge())
+        .inner(AxisMarker::horizontal_zero())
         // Grid lines
-        .add(GridLine::horizontal(&left_ticks))
-        .add(GridLine::vertical(&bottom_ticks))
+        .inner(GridLine::horizontal(&left_ticks))
+        .inner(GridLine::vertical(&bottom_ticks))
         // Guide lines
-        .add(GuideLine::x_axis())
-        .add(GuideLine::y_axis())
+        .inner(GuideLine::x_axis())
+        .inner(GuideLine::y_axis())
         // Legend
-        .add(InsetLegend::right(&snippet))
+        .inner(InsetLegend::right(&snippet))
         // Tooltip
         .overlay(Tooltip::left_cursor(&snippet, &bottom_ticks, &left_ticks));
 

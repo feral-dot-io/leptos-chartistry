@@ -99,7 +99,7 @@ impl<X: 'static, Y: Clone + PartialEq + 'static> InnerLayout<X, Y> for VerticalG
 }
 
 impl<X: Clone + PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
-    fn to_use(
+    fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         proj: Signal<Projection>,
@@ -115,7 +115,7 @@ impl<X: Clone + PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
 }
 
 impl<X, Y: Clone + PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
-    fn to_use(
+    fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         proj: Signal<Projection>,

@@ -151,7 +151,8 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
                 // Collect data points
                 let x_points = data.iter().map(get_x).collect::<Vec<_>>();
                 let x_positions = x_points.iter().map(|x| x.position()).collect::<Vec<_>>();
-                let y_points = (get_ys.into_iter())
+                let y_points = get_ys
+                    .iter()
                     .flat_map(|get_y| data.iter().map(get_y))
                     .collect::<Vec<_>>();
                 let y_positions = y_points.iter().map(|y| y.position()).collect::<Vec<_>>();

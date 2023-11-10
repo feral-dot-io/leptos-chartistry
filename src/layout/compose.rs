@@ -18,7 +18,7 @@ pub trait VerticalLayout<X, Y> {
 
 pub trait HorizontalOption<X, Y> {
     fn height(&self) -> Signal<f64>;
-    fn to_use(
+    fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
@@ -26,7 +26,7 @@ pub trait HorizontalOption<X, Y> {
 }
 
 pub trait VerticalOption<X, Y> {
-    fn to_use(
+    fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
@@ -35,7 +35,7 @@ pub trait VerticalOption<X, Y> {
 
 pub trait UseLayout {
     fn width(&self) -> Signal<f64>;
-    fn render<'a>(&self, edge: Edge, bounds: Bounds, proj: Signal<Projection>) -> View;
+    fn render(&self, edge: Edge, bounds: Bounds, proj: Signal<Projection>) -> View;
 }
 
 #[derive(Clone, Debug)]
@@ -86,7 +86,7 @@ impl Layout {
             //let to_vertical = |opts, edge| {
             (opts.into_iter())
                 .map(|opt| {
-                    let c = opt.to_use(series, avail_height);
+                    let c = opt.into_use(series, avail_height);
                     let width = c.width();
                     (c, edge, width)
                 })
@@ -108,14 +108,14 @@ impl Layout {
 
         // Convert top / bottom to UseLayout
         let horizontal = (top.into_iter())
-            .zip(top_heights.into_iter())
+            .zip(top_heights)
             .map(|(opt, height)| (opt, Edge::Top, height))
             .chain(
                 (bottom.into_iter())
-                    .zip(bottom_heights.into_iter())
+                    .zip(bottom_heights)
                     .map(|(opt, height)| (opt, Edge::Bottom, height)),
             )
-            .map(|(opt, edge, height)| (opt.to_use(series, avail_width), edge, height))
+            .map(|(opt, edge, height)| (opt.into_use(series, avail_width), edge, height))
             .collect::<Vec<_>>();
 
         // Inner chart
