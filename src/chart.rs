@@ -151,8 +151,6 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     watch: UseWatchedNode,
     aspect_ratio: AspectRatioCalc,
 ) -> impl IntoView {
-    log::info!("render {:?}", aspect_ratio);
-
     let Chart {
         debug,
         attr,
