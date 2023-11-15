@@ -8,9 +8,12 @@ use chrono::prelude::*;
 use leptos::*;
 use std::borrow::Borrow;
 
+type GetX<T, X> = Box<dyn Fn(&T) -> X>;
+type GetY<T, Y> = Box<dyn Fn(&T) -> Y>;
+
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
-    get_x: &'static dyn Fn(&T) -> X,
-    get_ys: Vec<&'static dyn Fn(&T) -> Y>,
+    get_x: GetX<T, X>,
+    get_ys: Vec<GetY<T, Y>>,
     lines: Vec<Line>,
     colours: ColourScheme,
     x_lower: Signal<Option<X>>,
@@ -37,9 +40,9 @@ pub struct Data<X, Y> {
 }
 
 impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T, X, Y> {
-    pub fn new(get_x: &'static dyn Fn(&T) -> X) -> Self {
+    pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
         Series {
-            get_x,
+            get_x: Box::new(get_x),
             get_ys: Vec::new(),
             lines: Vec::new(),
             colours: colours::ARBITRARY.as_ref().into(),
@@ -115,8 +118,8 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
         self.set_y_min(lower).set_y_max(upper)
     }
 
-    pub fn add(mut self, line: Line, get_y: &'static dyn Fn(&T) -> Y) -> Self {
-        self.get_ys.push(get_y);
+    pub fn add(mut self, line: Line, get_y: impl Fn(&T) -> Y + 'static) -> Self {
+        self.get_ys.push(Box::new(get_y));
         self.lines.push(line);
         self
     }
@@ -140,6 +143,7 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
         // Convert data to a signal
         let data = data.into();
         let data = create_memo(move |_| {
+            let get_x = &get_x;
             let x_lower = self.x_lower.get();
             let x_upper = self.x_upper.get();
             let y_lower = self.y_lower.get();
@@ -222,7 +226,7 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
     }
 
     /// Given an Data::y_points index, return the corresponding y value. Note that y_points is a flat map of all the y values for each series.
-    fn reverse_get_y(get_ys: &[&dyn Fn(&T) -> Y], data: &[T], index: usize) -> Y {
+    fn reverse_get_y(get_ys: &[GetY<T, Y>], data: &[T], index: usize) -> Y {
         let series_i = index / data.len();
         let data_i = index % data.len();
         (get_ys[series_i])(&data[data_i])
