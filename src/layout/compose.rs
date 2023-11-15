@@ -8,6 +8,10 @@ use crate::{
 use leptos::*;
 use std::rc::Rc;
 
+// Note:
+// Vertical (left, right, y-axis) options are generated at layout time (constrains the layout)
+// Horizontal (top, bottom, x-axis) options are generated at render time (constrained by layout)
+
 pub trait HorizontalLayout<X, Y> {
     fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>>;
 }
@@ -21,7 +25,7 @@ pub trait HorizontalOption<X, Y> {
     fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
-        avail_width: Signal<f64>,
+        inner_width: Signal<f64>,
     ) -> Box<dyn UseLayout>;
 }
 
@@ -29,7 +33,7 @@ pub trait VerticalOption<X, Y> {
     fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
-        avail_height: Signal<f64>,
+        inner_height: Signal<f64>,
     ) -> Box<dyn UseLayout>;
 }
 
@@ -38,93 +42,120 @@ pub trait UseLayout {
     fn render(&self, edge: Edge, bounds: Bounds, proj: Signal<Projection>) -> View;
 }
 
-#[derive(Clone, Debug)]
-pub struct Layout {
+type Horizontal<X, Y> = (Rc<dyn HorizontalOption<X, Y>>, Edge, Signal<f64>);
+
+pub struct UnconstrainedLayout<X, Y> {
+    horizontal: Vec<Horizontal<X, Y>>,
+    pub top_height: Signal<f64>,
+    pub bottom_height: Signal<f64>,
+}
+
+pub struct ConstrainedLayout<X, Y> {
+    horizontal: Vec<Horizontal<X, Y>>,
+    pub top_height: Signal<f64>,
+    pub bottom_height: Signal<f64>,
+
+    vertical: Vec<(Box<dyn UseLayout>, Edge, Signal<f64>)>,
+    pub left_width: Signal<f64>,
+    pub right_width: Signal<f64>,
+}
+
+#[derive(Clone)]
+pub struct ComposedLayout {
     pub projection: Signal<Projection>,
     pub view: Signal<View>,
 }
 
-impl Layout {
-    pub fn compose<X, Y>(
-        outer_bounds: Signal<Bounds>,
+impl<X, Y> UnconstrainedLayout<X, Y> {
+    pub fn horizontal_options(
         top: Vec<Rc<dyn HorizontalOption<X, Y>>>,
-        mut right: Vec<Rc<dyn VerticalOption<X, Y>>>,
         mut bottom: Vec<Rc<dyn HorizontalOption<X, Y>>>,
-        left: Vec<Rc<dyn VerticalOption<X, Y>>>,
-        series: &UseSeries<X, Y>,
-    ) -> Layout {
-        // Note:
-        // Vertical (left, right, y-axis) options are generated at layout time (constrains the layout)
-        // Horizontal (top, bottom, x-axis) options are generated at render time (constrained by layout)
-
-        // Layout stack is from the outside in -- switch to top to bottom, left to right regardless of edge
-        right.reverse();
+    ) -> Self {
+        // Think of layout as top to bottom rather than a stack that goes inwards
         bottom.reverse();
 
-        // Top / bottom heights
-        let top_heights = top.iter().map(|opt| opt.height()).collect::<Vec<_>>();
-        let bottom_heights = bottom
-            .iter()
-            .rev()
-            .map(|opt| opt.height())
+        let mk_horizontal = |edge| {
+            move |opt: Rc<dyn HorizontalOption<X, Y>>| {
+                let height = opt.height();
+                (opt, edge, height)
+            }
+        };
+        let horizontal = top
+            .into_iter()
+            .map(mk_horizontal(Edge::Top))
+            .chain(bottom.into_iter().map(mk_horizontal(Edge::Bottom)))
             .collect::<Vec<_>>();
-        let horiz_height = |heights: Vec<Signal<f64>>| {
-            Signal::derive(move || (heights.iter()).map(|h| h.get()).sum::<f64>())
-        };
-        let top_height = horiz_height(top_heights.clone());
-        let bottom_height = horiz_height(bottom_heights.clone());
-        let avail_height = Signal::derive(move || {
-            with!(
-                |outer_bounds, top_height, bottom_height| outer_bounds.height()
-                    - top_height
-                    - bottom_height
-            )
-        });
 
-        // Left / right options to UseLayoutOption
-        let to_vertical = |opts: Vec<Rc<dyn VerticalOption<X, Y>>>, edge: Edge| {
-            //let to_vertical = |opts, edge| {
-            (opts.into_iter())
-                .map(|opt| {
-                    let c = opt.into_use(series, avail_height);
-                    let width = c.width();
-                    (c, edge, width)
-                })
-                .collect::<Vec<_>>()
-        };
-        let left = to_vertical(left, Edge::Left);
-        let right = to_vertical(right, Edge::Right);
+        // Sizes
+        let top_height = option_size_sum(Edge::Top, &horizontal);
+        let bottom_height = option_size_sum(Edge::Bottom, &horizontal);
 
-        // Left / right widths
-        let vert_width = |widths: &[(_, _, Signal<f64>)]| {
-            let widths = widths.iter().map(|(_, _, w)| *w).collect::<Vec<_>>();
-            Signal::derive(move || (widths.iter()).map(|w| w.get()).sum::<f64>())
-        };
-        let left_width = vert_width(&left);
-        let right_width = vert_width(&right);
-        let avail_width = Signal::derive(move || {
-            outer_bounds.get().width() - left_width.get() - right_width.get()
-        });
+        Self {
+            horizontal,
+            top_height,
+            bottom_height,
+        }
+    }
 
-        // Convert top / bottom to UseLayout
-        let horizontal = (top.into_iter())
-            .zip(top_heights)
-            .map(|(opt, height)| (opt, Edge::Top, height))
-            .chain(
-                (bottom.into_iter())
-                    .zip(bottom_heights)
-                    .map(|(opt, height)| (opt, Edge::Bottom, height)),
-            )
-            .map(|(opt, edge, height)| (opt.into_use(series, avail_width), edge, height))
+    pub fn vertical_options(
+        self,
+        left: Vec<Rc<dyn VerticalOption<X, Y>>>,
+        mut right: Vec<Rc<dyn VerticalOption<X, Y>>>,
+        series: &UseSeries<X, Y>,
+        inner_height: Signal<f64>,
+    ) -> ConstrainedLayout<X, Y> {
+        // Compoose left to right
+        right.reverse();
+
+        let mk_vertical = |edge| {
+            move |opt: Rc<dyn VerticalOption<X, Y>>| {
+                let c = opt.into_use(series, inner_height);
+                let width = c.width();
+                (c, edge, width)
+            }
+        };
+        let vertical = left
+            .into_iter()
+            .map(mk_vertical(Edge::Left))
+            .chain(right.into_iter().map(mk_vertical(Edge::Right)))
+            .collect::<Vec<_>>();
+
+        let left_width = option_size_sum(Edge::Left, &vertical);
+        let right_width = option_size_sum(Edge::Right, &vertical);
+
+        ConstrainedLayout {
+            horizontal: self.horizontal,
+            top_height: self.top_height,
+            bottom_height: self.bottom_height,
+
+            vertical,
+            left_width,
+            right_width,
+        }
+    }
+}
+
+impl<X, Y> ConstrainedLayout<X, Y> {
+    pub fn compose(
+        self,
+        outer_bounds: Signal<Bounds>,
+        inner_width: Signal<f64>,
+        series: &UseSeries<X, Y>,
+    ) -> ComposedLayout {
+        let options = self
+            .horizontal
+            .into_iter()
+            .map(|(opt, edge, height)| (opt.into_use(series, inner_width), edge, height))
+            .chain(self.vertical)
             .collect::<Vec<_>>();
 
         // Inner chart
         let inner_bounds = Signal::derive(move || {
             outer_bounds.get().shrink(
-                top_height.get(),
-                right_width.get(),
-                bottom_height.get(),
-                left_width.get(),
+                self.top_height.get(),
+                self.right_width.get(),
+                self.bottom_height.get(),
+                self.left_width.get(),
             )
         });
         let data = series.data;
@@ -135,16 +166,25 @@ impl Layout {
 
         // Top / bottom options to UseLayoutOption
         let view = Signal::derive(move || {
-            (horizontal.iter())
-                .chain(left.iter().chain(right.iter()))
+            options
+                .iter()
                 .map(|(opt, edge, size)| (opt, *edge, size.get()))
                 .into_edge_bounds(outer_bounds.get(), inner_bounds.get())
                 .map(|(c, edge, bounds)| c.render(edge, bounds, projection))
                 .collect_view()
         });
 
-        Self { projection, view }
+        ComposedLayout { projection, view }
     }
+}
+
+fn option_size_sum<Opt>(edge: Edge, options: &[(Opt, Edge, Signal<f64>)]) -> Signal<f64> {
+    let sizes = options
+        .iter()
+        .filter(|(_, e, _)| *e == edge)
+        .map(|&(_, _, size)| size)
+        .collect::<Vec<_>>();
+    Signal::derive(move || sizes.iter().map(|size| size.get()).sum::<f64>())
 }
 
 impl<T, X, Y> HorizontalLayout<X, Y> for &T

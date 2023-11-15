@@ -1,3 +1,4 @@
+mod aspect_ratio;
 mod bounds;
 mod chart;
 pub mod colours;
@@ -14,6 +15,7 @@ mod series;
 mod ticks;
 mod use_watched_node;
 
+pub use aspect_ratio::AspectRatio;
 pub use chart::Chart;
 pub use font::Font;
 pub use inner::{

@@ -20,11 +20,7 @@ fn scroll_position() -> (f64, f64) {
     (x, y)
 }
 
-pub fn use_watched_node(
-    node: NodeRef<Div>,
-    width: MaybeProp<f64>,
-    height: MaybeProp<f64>,
-) -> UseWatchedNode {
+pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     // SVG bounds -- dimensions for our root <svg> element inside the document
     let (bounds, set_bounds) = create_signal::<Option<Bounds>>(None);
     use_resize_observer(node, move |entries, _| {
@@ -38,16 +34,7 @@ pub fn use_watched_node(
         );
         set_bounds.set(Some(rect))
     });
-
-    let bounds: Signal<Option<Bounds>> = create_memo(move |_| {
-        bounds.get().or_else(|| {
-            // Fallback to given dimensions if they exist
-            width
-                .get()
-                .and_then(|width| height.get().map(|height| Bounds::new(width, height)))
-        })
-    })
-    .into();
+    let bounds: Signal<Option<Bounds>> = bounds.into();
 
     // Mouse position
     let mouse = use_mouse_with_options(

@@ -1,19 +1,21 @@
 use crate::{
+    aspect_ratio::{AspectRatioCalc, CalcUsing},
     bounds::Bounds,
     debug::DebugRect,
     inner::{InnerLayout, InnerOption},
-    layout::{HorizontalLayout, HorizontalOption, Layout, VerticalLayout, VerticalOption},
+    layout::{
+        HorizontalLayout, HorizontalOption, UnconstrainedLayout, VerticalLayout, VerticalOption,
+    },
     overlay::{OverlayLayout, UseOverlay},
     series::{Series, UseSeries},
     use_watched_node::{use_watched_node, UseWatchedNode},
-    Font, Padding,
+    AspectRatio, Font, Padding,
 };
 use leptos::{html::Div, *};
 use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Chart<X: 'static, Y: 'static> {
-    padding: Option<MaybeSignal<Padding>>,
     debug: Option<MaybeSignal<bool>>,
     attr: Attr,
 
@@ -36,7 +38,6 @@ pub struct Attr {
 impl<X, Y> Chart<X, Y> {
     pub fn new(font: impl Into<MaybeSignal<Font>>, series: UseSeries<X, Y>) -> Self {
         Self {
-            padding: None,
             debug: None,
             attr: Attr {
                 font: font.into(),
@@ -59,10 +60,6 @@ impl<X, Y> Chart<X, Y> {
         self
     }
 
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
-        self.padding = Some(padding.into());
-        self
-    }
     pub fn inherit_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
         self.attr.padding = padding.into();
         self
@@ -111,29 +108,38 @@ impl<X, Y> Chart<X, Y> {
 #[component]
 pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(
     chart: Chart<X, Y>,
-    #[prop(optional, into)] width: MaybeProp<f64>,
-    #[prop(optional, into)] height: MaybeProp<f64>,
+    #[prop(into)] aspect_ratio: MaybeSignal<AspectRatio>,
 ) -> impl IntoView {
     let root = create_node_ref::<Div>();
-    let watch = use_watched_node(root, width, height);
+    let watch = use_watched_node(root);
 
-    let render = move || match watch.bounds.get() {
-        Some(root_bounds) => view! {
-            <RenderChart
-                chart=chart.clone()
-                watch=watch.clone()
-                chart_bounds=Bounds::new(root_bounds.width(), root_bounds.height()) />
+    // Note: unravel option here and put the test in the render function
+    let width = create_memo(move |_| watch.bounds.get().unwrap_or_default().width());
+    let height = create_memo(move |_| watch.bounds.get().unwrap_or_default().height());
+    let calc = Signal::derive(move || match aspect_ratio.get().0 {
+        CalcUsing::Env(calc) => watch
+            .bounds
+            .get()
+            .map(move |_| calc.mk_signal(width, height)),
+        CalcUsing::Known(calc) => Some(calc),
+    });
+
+    let render = move || {
+        if let Some(calc) = calc.get() {
+            view! {
+                <RenderChart
+                    chart=chart.clone()
+                    watch=watch.clone()
+                    aspect_ratio=calc />
+            }
+            .into_view()
+        } else {
+            view!(<p>"Loading..."</p>).into_view()
         }
-        .into_view(),
-        None => view!(<p>"Loading..."</p>).into_view(),
     };
 
     view! {
-        <div
-            node_ref=root
-            style:width=move || width.get().map(|width| format!("{width}px")).unwrap_or("100%".to_string())
-            style:height=move || height.get().map(|height| format!("{height}px")).unwrap_or("100%".to_string())
-        >
+        <div node_ref=root>
             {render}
         </div>
     }
@@ -143,10 +149,11 @@ pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(
 fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     chart: Chart<X, Y>,
     watch: UseWatchedNode,
-    chart_bounds: Bounds,
+    aspect_ratio: AspectRatioCalc,
 ) -> impl IntoView {
+    log::info!("render {:?}", aspect_ratio);
+
     let Chart {
-        padding,
         debug,
         attr,
 
@@ -158,16 +165,30 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
         overlay,
         series,
     } = chart;
-
-    let padding = padding.unwrap_or(attr.padding);
     let debug = debug.unwrap_or(attr.debug);
 
-    // Layout
-    let outer_bounds = Signal::derive(move || padding.get().apply(chart_bounds));
-    let layout = Layout::compose(outer_bounds, top, right, bottom, left, &series);
+    // Add top / bottom options
+    let layout = UnconstrainedLayout::horizontal_options(top, bottom);
+
+    // Add left / right options
+    let inner_height = aspect_ratio
+        .clone()
+        .height_signal(layout.top_height, layout.bottom_height);
+    let layout = layout.vertical_options(left, right, &series, inner_height);
+
+    // Compose chart
+    let inner_width = aspect_ratio.width_signal(layout.left_width, layout.right_width);
+    let outer_bounds = Signal::derive(move || {
+        Bounds::new(
+            layout.left_width.get() + inner_width.get() + layout.right_width.get(),
+            layout.top_height.get() + inner_height.get() + layout.bottom_height.get(),
+        )
+    });
+    let layout = layout.compose(outer_bounds, inner_width, &series);
 
     // Inner layout
-    let inner = (inner.into_iter())
+    let inner = inner
+        .into_iter()
         .map(|opt| {
             opt.into_use(&series, layout.projection)
                 .render(layout.projection, &watch)
@@ -175,16 +196,19 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
         .collect_view();
 
     // Overlay
-    let overlay = (overlay.into_iter())
+    let overlay = overlay
+        .into_iter()
         .map(|opt| opt.render(series.clone(), layout.projection, &watch))
         .collect_view();
 
     view! {
         <svg
-            viewBox=move || format!("0 0 {} {}", chart_bounds.width(), chart_bounds.height())
+            width=move || format!("{}px", outer_bounds.get().width())
+            height=move || format!("{}px", outer_bounds.get().height())
+            viewBox=move || with!(|outer_bounds| format!("0 0 {} {}", outer_bounds.width(), outer_bounds.height()))
             style="display: block;">
             {inner}
-            <DebugRect label="Chart" debug=debug bounds=move || vec![chart_bounds, outer_bounds.get()] />
+            <DebugRect label="Chart" debug=debug bounds=move || vec![outer_bounds.get(), outer_bounds.get()] />
             {layout.view}
             <Series series=series projection=layout.projection />
         </svg>

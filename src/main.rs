@@ -50,8 +50,6 @@ pub fn App() -> impl IntoView {
     // Data
     let (data, _) = create_signal(load_data());
     let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
-        //.set_x_range(None, f64_to_dt(15.0))
-        .set_y_range(-1.0, None)
         .add(Line::new("Sphinx"), &|w: &Wave| w.sine)
         .add(Line::new("Cophine"), &|w: &Wave| w.cosine)
         .use_data::<Vec<_>>(data);
@@ -60,9 +58,8 @@ pub fn App() -> impl IntoView {
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
     let top_label = RotatedLabel::new(anchor, text);
     let snippet = Snippet::horizontal().set_padding(Padding::zero());
-    let left_ticks = TickLabels::aligned_floats().set_formatter(|_, tick| format!("{tick}!"));
-    let bottom_ticks =
-        TickLabels::timestamps().set_formatter(|state, tick| state.short_format(tick));
+    let left_ticks = TickLabels::aligned_floats();
+    let bottom_ticks = TickLabels::timestamps();
 
     let chart = Chart::new(font, series)
         .inherit_padding(padding)
@@ -82,10 +79,8 @@ pub fn App() -> impl IntoView {
         // Guide lines
         .inner(GuideLine::x_axis())
         .inner(GuideLine::y_axis())
-        // Legend
-        .inner(InsetLegend::right(&snippet))
         // Tooltip
-        .overlay(Tooltip::left_cursor(&snippet, &bottom_ticks, &left_ticks));
+        .overlay(Tooltip::left_cursor(snippet, &bottom_ticks, &left_ticks));
 
     view! {
         <h1>"Chartistry"</h1>
@@ -115,8 +110,7 @@ pub fn App() -> impl IntoView {
                 </label>
             </p>
         </form>
-        <div style="width: 100%; height: 600px;">
-            <Chart chart=chart />
-        </div>
+
+        <Chart chart=chart aspect_ratio=AspectRatio::outer_width(1100.0, 0.6) />
     }
 }
