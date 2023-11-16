@@ -89,6 +89,7 @@ pub(crate) fn SnippetTd(snippet: UseSnippet, line: UseLine, children: Children) 
     view! {
         <td
             class="_chartistry_snippet"
+            style="white-space: nowrap;"
             style:padding=move || padding.get().to_style_px()>
             {move || match snippet.style.get() {
                 Style::VerticalTaster => view!(<SnippetVerticalTaster snippet=&snippet line=&line />),
