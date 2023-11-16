@@ -58,7 +58,8 @@ impl Snippet {
 
 impl UseSnippet {
     fn taster_width(&self) -> Signal<f64> {
-        let (style, font) = (self.style, self.font);
+        let style = self.style;
+        let font = self.font;
         Signal::derive(move || match style.get() {
             Style::HorizontalTaster => font.get().width() * 2.0,
             Style::VerticalTaster => font.get().width() / 3.5,
@@ -102,8 +103,10 @@ pub(crate) fn SnippetTd(snippet: UseSnippet, line: UseLine, children: Children) 
 
 #[component]
 fn SnippetHorizontalTaster<'a>(snippet: &'a UseSnippet, line: &'a UseLine) -> impl IntoView {
-    let (font, colour) = (snippet.font, line.colour);
-    let (taster_width, taster_height) = (snippet.taster_width(), snippet.taster_height());
+    let font = snippet.font;
+    let colour = line.colour;
+    let taster_width = snippet.taster_width();
+    let taster_height = snippet.taster_height();
     view! {
         <svg
             class="_chartistry_snippet_horizontal"
@@ -125,8 +128,10 @@ fn SnippetHorizontalTaster<'a>(snippet: &'a UseSnippet, line: &'a UseLine) -> im
 
 #[component]
 fn SnippetVerticalTaster<'a>(snippet: &'a UseSnippet, line: &'a UseLine) -> impl IntoView {
-    let (font, colour) = (snippet.font, line.colour);
-    let (taster_width, taster_height) = (snippet.taster_width(), snippet.taster_height());
+    let font = snippet.font;
+    let colour = line.colour;
+    let taster_width = snippet.taster_width();
+    let taster_height = snippet.taster_height();
     let x = Signal::derive(move || taster_width.get() / 2.0);
     view! {
         <div
