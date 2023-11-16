@@ -13,13 +13,6 @@ pub struct UseWatchedNode {
     pub mouse_rel: Signal<(f64, f64)>,
 }
 
-fn scroll_position() -> (f64, f64) {
-    let window = window();
-    let x = window.scroll_x().unwrap_or_default();
-    let y = window.scroll_y().unwrap_or_default();
-    (x, y)
-}
-
 pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     // SVG bounds -- dimensions for our root <svg> element inside the document
     let (bounds, set_bounds) = create_signal::<Option<Bounds>>(None);
