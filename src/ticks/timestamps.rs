@@ -199,9 +199,7 @@ impl Period {
             Period::Microsecond => "%Y-%m-%d %H:%M:%S.%6f %Z",
             Period::Millisecond => "%Y-%m-%d %H:%M:%S.%3f %Z",
             Period::Second => "%Y-%m-%d %H:%M:%S %Z",
-            Period::Minute => "%Y-%m-%d %H:%M %Z",
-            Period::Hour => "%Y-%m-%d %H:%M %Z",
-            Period::Day => "%Y-%m-%d %Z",
+            Period::Day | Period::Hour | Period::Minute => "%Y-%m-%d %H:%M %Z",
             Period::Month => "%B %Y %Z",
             Period::Year => "%Y %Z",
         }
