@@ -24,14 +24,9 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     // SVG bounds -- dimensions for our root <svg> element inside the document
     let (bounds, set_bounds) = create_signal::<Option<Bounds>>(None);
     use_resize_observer(node, move |entries, _| {
-        let (scroll_x, scroll_y) = scroll_position();
         let rect = &entries[0].target().get_bounding_client_rect();
-        let rect = Bounds::from_points(
-            rect.left() + scroll_x,
-            rect.top() + scroll_y,
-            rect.right() + scroll_x,
-            rect.bottom() + scroll_y,
-        );
+        let rect = Bounds::new(rect.width(), rect.height());
+        log::info!("set_bounds: {:?}", rect);
         set_bounds.set(Some(rect))
     });
     let bounds: Signal<Option<Bounds>> = bounds.into();
@@ -39,6 +34,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     // Mouse position
     let mouse = use_mouse_with_options(
         UseMouseOptions::default()
+            .target(node)
             .coord_type(UseMouseCoordType::<UseMouseEventExtractorDefault>::Page)
             .reset_on_touch_ends(true),
     );
@@ -50,26 +46,31 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
         (x, y)
     });
 
-    // Mouse inside SVG?
-    let mouse_hover = create_memo(move |_| {
+    // Mouse relative to SVG
+    let mouse_rel: Signal<_> = create_memo(move |_| {
         let (x, y) = mouse_abs.get();
-        mouse.source_type.get() != UseMouseSourceType::Unset
-            && (bounds.get())
-                .map(|bounds| bounds.contains(x, y))
-                .unwrap_or(false)
+        let (left, top) = node
+            .get()
+            .map(|target| {
+                let rect = target.get_bounding_client_rect();
+                (rect.left(), rect.top())
+            })
+            .unwrap_or_default();
+        let x = x - left;
+        let y = y - top;
+        (x, y)
     })
     .into();
 
-    // Mouse relative to SVG
-    let mouse_rel: Signal<_> = create_memo(move |_| {
-        (bounds.get())
-            .map(|svg| {
-                let (x, y) = mouse_abs.get();
-                let x = x - svg.left_x();
-                let y = y - svg.top_y();
-                (x, y)
-            })
-            .unwrap_or_default()
+    // Mouse inside SVG?
+    let mouse_hover = create_memo(move |_| {
+        let (x, y) = mouse_rel.get();
+        log::info!("mouse_hover: {:?} -> {:?}", (x, y), bounds.get());
+        mouse.source_type.get() != UseMouseSourceType::Unset
+            && bounds
+                .get()
+                .map(|bounds| bounds.contains(x, y))
+                .unwrap_or(false)
     })
     .into();
 

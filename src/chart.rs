@@ -139,7 +139,7 @@ pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(
     };
 
     view! {
-        <div node_ref=root>
+        <div node_ref=root style="width: fit-content; height: fit-content;">
             {render}
         </div>
     }
