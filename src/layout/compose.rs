@@ -111,6 +111,7 @@ impl<X, Y> UnconstrainedLayout<X, Y> {
             move |opt: Rc<dyn VerticalOption<X, Y>>| {
                 let c = opt.into_use(series, inner_height);
                 let width = c.width();
+                log::info!("vert: {:?}: {}", edge, width.get_untracked());
                 (c, edge, width)
             }
         };
