@@ -1,8 +1,8 @@
 use crate::{bounds::Bounds, projection::Projection};
 use leptos::{html::Div, *};
 use leptos_use::{
-    use_mouse_with_options, use_resize_observer, UseMouseCoordType, UseMouseEventExtractorDefault,
-    UseMouseOptions, UseMouseSourceType,
+    use_element_hover, use_mouse_with_options, use_resize_observer, UseMouseCoordType,
+    UseMouseEventExtractorDefault, UseMouseOptions, UseMouseSourceType,
 };
 
 #[derive(Clone, Debug)]
@@ -19,7 +19,6 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     use_resize_observer(node, move |entries, _| {
         let rect = &entries[0].target().get_bounding_client_rect();
         let rect = Bounds::new(rect.width(), rect.height());
-        log::info!("set_bounds: {:?}", rect);
         set_bounds.set(Some(rect))
     });
     let bounds: Signal<Option<Bounds>> = bounds.into();
@@ -56,10 +55,11 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     .into();
 
     // Mouse inside SVG?
+    let el_hover = use_element_hover(node);
     let mouse_hover = create_memo(move |_| {
         let (x, y) = mouse_rel.get();
-        log::info!("mouse_hover: {:?} -> {:?}", (x, y), bounds.get());
         mouse.source_type.get() != UseMouseSourceType::Unset
+            && el_hover.get()
             && bounds
                 .get()
                 .map(|bounds| bounds.contains(x, y))
