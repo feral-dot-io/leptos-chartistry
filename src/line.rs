@@ -51,12 +51,15 @@ impl From<&str> for Line {
 
 #[component]
 pub fn Line<'a>(line: &'a UseLine, positions: Vec<(f64, f64)>) -> impl IntoView {
-    let mut first = true;
+    let mut need_move = true;
     let path = positions
         .into_iter()
         .map(|(x, y)| {
-            if first {
-                first = false;
+            if x.is_nan() || y.is_nan() {
+                need_move = true;
+                "".to_string()
+            } else if need_move {
+                need_move = false;
                 format!("M {} {} ", x, y)
             } else {
                 format!("L {} {} ", x, y)

@@ -22,7 +22,11 @@ fn load_data() -> Vec<Wave> {
     let mut data = Vec::new();
     for i in 0..1000 {
         let x = i as f64 / 1000.0 * std::f64::consts::PI * 2.0 * 2.0;
-        let sine = x.sin() * SCALE + 1.1;
+        let mut sine = x.sin() * SCALE + 1.1;
+        if (300..=700).contains(&i) {
+            sine = f64::NAN;
+        }
+
         let cosine = x.cos() * SCALE + 1.1;
         data.push(Wave { x, sine, cosine });
     }
