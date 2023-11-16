@@ -22,6 +22,7 @@ use std::rc::Rc;
 #[derive(Clone)]
 pub struct TickLabels<Tick: Clone> {
     font: Option<MaybeSignal<Font>>,
+    min_chars: MaybeSignal<usize>,
     padding: Option<MaybeSignal<Padding>>,
     debug: Option<MaybeSignal<bool>>,
     format: Option<TickFormatFn<Tick>>,
@@ -31,6 +32,7 @@ pub struct TickLabels<Tick: Clone> {
 #[derive(Clone)]
 pub struct TickLabelsAttr<Tick> {
     font: MaybeSignal<Font>,
+    min_chars: MaybeSignal<usize>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
     pub format: TickFormatFn<Tick>,
@@ -40,6 +42,7 @@ pub struct TickLabelsAttr<Tick> {
 #[derive(Clone)]
 pub struct UseTickLabels {
     font: MaybeSignal<Font>,
+    min_chars: MaybeSignal<usize>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
     ticks: Signal<Vec<(f64, String)>>,
@@ -74,6 +77,7 @@ impl<Tick: Clone> TickLabels<Tick> {
         Self {
             font: None,
             padding: None,
+            min_chars: 0.into(),
             debug: None,
             format: None,
             generator: Rc::new(gen),
@@ -87,6 +91,11 @@ impl<Tick: Clone> TickLabels<Tick> {
 
     pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
         self.padding = Some(padding.into());
+        self
+    }
+
+    pub fn set_min_chars(mut self, min_chars: impl Into<MaybeSignal<usize>>) -> Self {
+        self.min_chars = min_chars.into();
         self
     }
 
@@ -111,6 +120,7 @@ impl<Tick: Clone> TickLabels<Tick> {
         TickLabelsAttr {
             font: self.font.unwrap_or(attr.font),
             padding: self.padding.unwrap_or(attr.padding),
+            min_chars: self.min_chars,
             debug: self.debug.unwrap_or(attr.debug),
             format: self.format.unwrap_or(def_format),
             generator: self.generator,
@@ -185,6 +195,7 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
         Box::new(UseTickLabels {
             font: self.font,
             padding: self.padding,
+            min_chars: self.min_chars,
             debug: self.debug,
             ticks: self.map_ticks((*self).clone().generate_x(series.data, avail_width)),
         })
@@ -200,6 +211,7 @@ impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
         Box::new(UseTickLabels {
             font: self.font,
             padding: self.padding,
+            min_chars: self.min_chars,
             debug: self.debug,
             ticks: self.map_ticks((*self).clone().generate_y(series.data, avail_height)),
         })
@@ -224,6 +236,7 @@ impl UseLayout for UseTickLabels {
     fn width(&self) -> Signal<f64> {
         let font = self.font;
         let padding = self.padding;
+        let min_chars = self.min_chars;
         let labels = self.ticks;
         Signal::derive(move || {
             let longest_chars = labels.with(|labels| {
@@ -232,6 +245,7 @@ impl UseLayout for UseTickLabels {
                     .map(|(_, label)| label.len())
                     .max()
                     .unwrap_or_default()
+                    .max(min_chars.get())
             }) as f64;
             font.get().width() * longest_chars + padding.get().width()
         })

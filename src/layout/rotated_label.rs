@@ -116,12 +116,14 @@ impl<X, Y> VerticalOption<X, Y> for UseRotatedLabel {
 
 impl UseRotatedLabel {
     pub fn size(&self) -> Signal<f64> {
-        let (text, font, padding) = (self.text.clone(), self.font, self.padding);
+        let text = self.text.clone();
+        let font = self.font;
+        let padding = self.padding;
         Signal::derive(move || {
             if text.with(|t| t.is_empty()) {
                 0.0
             } else {
-                with!(|font, padding| font.height() + padding.height())
+                font.get().height() + padding.get().height()
             }
         })
     }
@@ -155,6 +157,7 @@ impl Anchor {
 
 impl UseLayout for UseRotatedLabel {
     fn width(&self) -> Signal<f64> {
+        // Note: width is height because it's rotated
         self.size()
     }
 
@@ -171,6 +174,7 @@ pub(super) fn RotatedLabel(label: UseRotatedLabel, edge: Edge, bounds: Bounds) -
         font,
         padding,
         debug,
+        ..
     } = label;
 
     let content = Signal::derive(move || padding.get().apply(bounds));
