@@ -50,8 +50,8 @@ pub fn App() -> impl IntoView {
     // Data
     let (data, _) = create_signal(load_data());
     let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
-        .add(Line::new("Sphinx"), &|w: &Wave| w.sine)
-        .add(Line::new("Cophine"), &|w: &Wave| w.cosine)
+        .add_line("Sphinx", &|w: &Wave| w.sine)
+        .add_line("Cophine", &|w: &Wave| w.cosine)
         .use_data::<Vec<_>>(data);
 
     let (anchor, _) = create_signal(Anchor::Middle);

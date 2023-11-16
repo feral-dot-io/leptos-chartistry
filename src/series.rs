@@ -118,9 +118,9 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
         self.set_y_min(lower).set_y_max(upper)
     }
 
-    pub fn add(mut self, line: Line, get_y: impl Fn(&T) -> Y + 'static) -> Self {
+    pub fn add_line(mut self, line: impl Into<Line>, get_y: impl Fn(&T) -> Y + 'static) -> Self {
         self.get_ys.push(Box::new(get_y));
-        self.lines.push(line);
+        self.lines.push(line.into());
         self
     }
 

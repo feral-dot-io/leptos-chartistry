@@ -43,6 +43,12 @@ impl Line {
     }
 }
 
+impl From<&str> for Line {
+    fn from(name: &str) -> Self {
+        Self::new(name)
+    }
+}
+
 #[component]
 pub fn Line<'a>(line: &'a UseLine, positions: Vec<(f64, f64)>) -> impl IntoView {
     let mut first = true;
