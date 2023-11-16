@@ -6,11 +6,12 @@ use crate::{
 };
 use chrono::prelude::*;
 use leptos::*;
-use std::borrow::Borrow;
+use std::{borrow::Borrow, rc::Rc};
 
-type GetX<T, X> = Box<dyn Fn(&T) -> X>;
-type GetY<T, Y> = Box<dyn Fn(&T) -> Y>;
+type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
+type GetY<T, Y> = Rc<dyn Fn(&T) -> Y>;
 
+#[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
     get_ys: Vec<GetY<T, Y>>,
@@ -42,7 +43,7 @@ pub struct Data<X, Y> {
 impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T, X, Y> {
     pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
         Series {
-            get_x: Box::new(get_x),
+            get_x: Rc::new(get_x),
             get_ys: Vec::new(),
             lines: Vec::new(),
             colours: colours::ARBITRARY.as_ref().into(),
@@ -119,7 +120,7 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
     }
 
     pub fn add_line(mut self, line: impl Into<Line>, get_y: impl Fn(&T) -> Y + 'static) -> Self {
-        self.get_ys.push(Box::new(get_y));
+        self.get_ys.push(Rc::new(get_y));
         self.lines.push(line.into());
         self
     }
@@ -153,11 +154,11 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
                 let data = data.borrow();
 
                 // Collect data points
-                let x_points = data.iter().map(get_x).collect::<Vec<_>>();
+                let x_points = data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>();
                 let x_positions = x_points.iter().map(|x| x.position()).collect::<Vec<_>>();
                 let y_points = get_ys
                     .iter()
-                    .flat_map(|get_y| data.iter().map(get_y))
+                    .flat_map(|get_y| data.iter().map(|datum| (get_y)(datum)))
                     .collect::<Vec<_>>();
                 let y_positions = y_points.iter().map(|y| y.position()).collect::<Vec<_>>();
 
