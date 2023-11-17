@@ -392,6 +392,13 @@ mod tests {
     }
 
     #[test]
+    fn test_timestamp_generator_no_range() {
+        let gen = TimestampGen::new(Period::all());
+        let dt = Utc.with_ymd_and_hms(2015, 1, 1, 0, 0, 0).unwrap();
+        assert_ticks(gen.generate(&dt, &dt, mk_span(1000.0)), vec![])
+    }
+
+    #[test]
     fn test_gen_small_space() {
         let gen = TimestampGen::new(Period::all());
         let first = DateTime::<Utc>::from_timestamp(0, 0).unwrap();

@@ -52,15 +52,15 @@ impl<Tick> TickState for NilState<Tick> {
     type Tick = Tick;
 
     fn position(&self, _: &Self::Tick) -> f64 {
-        unreachable!("NilState::position")
+        0.0
     }
 
     fn short_format(&self, _: &Self::Tick) -> String {
-        unreachable!("NilState::short_format")
+        "-".to_string()
     }
 
     fn long_format(&self, _: &Self::Tick) -> String {
-        unreachable!("NilState::long_format")
+        "-".to_string()
     }
 }
 

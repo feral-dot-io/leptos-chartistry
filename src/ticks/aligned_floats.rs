@@ -89,10 +89,18 @@ impl TickState for State {
     }
 
     fn short_format(&self, value: &Self::Tick) -> String {
-        self.long_format(value)
+        if value.is_nan() {
+            "-".to_string()
+        } else {
+            self.long_format(value)
+        }
     }
 
     fn long_format(&self, &value: &Self::Tick) -> String {
+        if value.is_nan() {
+            return "-".to_string();
+        }
+
         let scale = self.scale;
         let precision = if scale < 0 { -scale as usize } else { 0 };
         let mut value = format!("{value:.precision$}");
@@ -211,6 +219,11 @@ mod tests {
         assert_ticks(123.0, 133.0, 0, 1, vec!["128"]);
         assert_ticks(0.0, 100_000.0, 4, 1, vec!["50000"]);
         assert_ticks(1.234_567, 2.987_654, -1, 1, vec!["2.1"]);
+    }
+
+    #[test]
+    fn test_nil() {
+        assert_ticks(f64::NAN, f64::NAN, 1, 3, vec!["-", "-", "-"])
     }
 
     #[test]
