@@ -194,11 +194,11 @@ pub fn Legend(
                 height=move || inner.get().height()
                 style="overflow: auto;">
                 <div
-                    style="display: flex; height: 100%;"
+                    style="display: flex; height: 100%; overflow: auto;"
                     style:flex-direction=anchor_dir
                     style:justify-content=move || anchor.get().css_justify_content()>
                     <table
-                        style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; overflow: auto;"
+                        style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;"
                         style:font-size=move || format!("{}px", font.get().height())>
                         <tbody>
                             {body}
