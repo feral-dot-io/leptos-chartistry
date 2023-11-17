@@ -12,6 +12,7 @@ pub struct Projection {
 
 impl Projection {
     pub fn new(bounds: Bounds, range: Bounds) -> Self {
+        log::info!("range: {:?}: {} x {}", range, range.width(), range.height());
         Projection {
             bounds,
             range,
@@ -38,10 +39,6 @@ impl Projection {
         self.bounds
     }
 
-    pub fn range(&self) -> Bounds {
-        self.range
-    }
-
     pub fn derive_width(proj: Signal<Projection>) -> Signal<f64> {
         Signal::derive(move || with!(|proj| proj.bounds().width()))
     }
@@ -66,7 +63,6 @@ mod tests {
         let p = Projection::new(bounds, range);
 
         assert_eq!(p.bounds(), bounds);
-        assert_eq!(p.range(), range);
 
         // Data range -> view bounds
         assert_coords(&p, (0.0, 0.0), (10.0, 90.0)); // Bottom left
@@ -82,7 +78,6 @@ mod tests {
         let range = Bounds::from_points(0.0, 0.0, 200.0, 200.0);
         let p = Projection::new(bounds, range);
         assert_eq!(p.bounds(), bounds);
-        assert_eq!(p.range(), range);
 
         // Data range (0, 0) to (200, 200) -> view bounds
         assert_coords(&p, (0.0, 0.0), (10.0, 90.0)); // Bottom left

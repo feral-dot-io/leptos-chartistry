@@ -32,7 +32,7 @@ pub struct GeneratedTicks<Tick> {
     pub state: Rc<dyn TickState<Tick = Tick>>,
 }
 
-impl<Tick> GeneratedTicks<Tick> {
+impl<Tick: 'static> GeneratedTicks<Tick> {
     pub fn new(ticks: Vec<Tick>, state: impl TickState<Tick = Tick> + 'static) -> Self {
         GeneratedTicks {
             ticks,
@@ -40,8 +40,27 @@ impl<Tick> GeneratedTicks<Tick> {
         }
     }
 
-    pub fn none(state: impl TickState<Tick = Tick> + 'static) -> GeneratedTicks<Tick> {
-        Self::new(vec![], state)
+    pub fn none() -> GeneratedTicks<Tick> {
+        Self::new(vec![], NilState(std::marker::PhantomData))
+    }
+}
+
+// Dummy TickState that should never be called. Used with no ticks.
+struct NilState<Tick>(std::marker::PhantomData<Tick>);
+
+impl<Tick> TickState for NilState<Tick> {
+    type Tick = Tick;
+
+    fn position(&self, _: &Self::Tick) -> f64 {
+        unreachable!("NilState::position")
+    }
+
+    fn short_format(&self, _: &Self::Tick) -> String {
+        unreachable!("NilState::short_format")
+    }
+
+    fn long_format(&self, _: &Self::Tick) -> String {
+        unreachable!("NilState::long_format")
     }
 }
 

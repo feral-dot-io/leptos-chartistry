@@ -58,7 +58,7 @@ where
     ) -> GeneratedTicks<Self::Tick> {
         // No periods?
         if self.periods.is_empty() {
-            return GeneratedTicks::none(State::unknown());
+            return GeneratedTicks::none();
         }
 
         let mut ticks = Vec::new();
@@ -144,10 +144,6 @@ impl<Tz> State<Tz> {
             all_periods: periods.to_vec(),
             tz: std::marker::PhantomData,
         }
-    }
-
-    fn unknown() -> Self {
-        Self::new(Period::Nanosecond, &[])
     }
 }
 

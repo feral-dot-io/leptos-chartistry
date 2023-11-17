@@ -138,12 +138,19 @@ impl<X: PartialEq> TickLabelsAttr<X> {
         create_memo(move |_| {
             let format = self.format.clone();
             data.with(|data| {
-                let (first, last) = data.x_range();
-                let font_width = font.get().width();
-                let padding_width = padding.get().width();
-                let span =
-                    HorizontalSpan::new(format, font_width, padding_width, avail_width.get());
-                self.generator.generate(first, last, Box::new(span))
+                data.x_range()
+                    .map(|(first, last)| {
+                        let font_width = font.get().width();
+                        let padding_width = padding.get().width();
+                        let span = HorizontalSpan::new(
+                            format,
+                            font_width,
+                            padding_width,
+                            avail_width.get(),
+                        );
+                        self.generator.generate(first, last, Box::new(span))
+                    })
+                    .unwrap_or_else(GeneratedTicks::none)
             })
         })
         .into()
@@ -159,10 +166,13 @@ impl<Y: PartialEq> TickLabelsAttr<Y> {
         let (font, padding) = (self.font, self.padding);
         create_memo(move |_| {
             data.with(|data| {
-                let (first, last) = data.y_range();
-                let line_height = font.get().height() + padding.get().height();
-                let span = VerticalSpan::new(line_height, avail_height.get());
-                self.generator.generate(first, last, Box::new(span))
+                data.y_range()
+                    .map(|(first, last)| {
+                        let line_height = font.get().height() + padding.get().height();
+                        let span = VerticalSpan::new(line_height, avail_height.get());
+                        self.generator.generate(first, last, Box::new(span))
+                    })
+                    .unwrap_or_else(GeneratedTicks::none)
             })
         })
         .into()

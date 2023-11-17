@@ -22,11 +22,7 @@ fn load_data() -> Vec<Wave> {
     let mut data = Vec::new();
     for i in 0..1000 {
         let x = i as f64 / 1000.0 * std::f64::consts::PI * 2.0 * 2.0;
-        let mut sine = x.sin() * SCALE + 1.1;
-        if (300..=700).contains(&i) {
-            sine = f64::NAN;
-        }
-
+        let sine = x.sin() * SCALE + 1.1;
         let cosine = x.cos() * SCALE + 1.1;
         data.push(Wave { x, sine, cosine });
     }
@@ -54,6 +50,7 @@ pub fn App() -> impl IntoView {
     // Data
     let (data, _) = create_signal(load_data());
     let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
+        .add_line("Sphinx", &|_: &Wave| f64::NAN)
         .add_line("Sphinx", &|w: &Wave| w.sine)
         .add_line("Cophine", &|w: &Wave| w.cosine)
         .use_data::<Vec<_>>(data);

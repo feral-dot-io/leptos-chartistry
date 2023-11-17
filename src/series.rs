@@ -34,10 +34,10 @@ pub struct Data<X, Y> {
     position_range: Bounds,
     x_points: Vec<X>,
     x_positions: Vec<f64>,
-    x_range: (X, X),
+    x_range: Option<(X, X)>,
     y_points: Vec<Y>,
     y_positions: Vec<f64>,
-    y_range: (Y, Y),
+    y_range: Option<(Y, Y)>,
 }
 
 impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T, X, Y> {
@@ -163,25 +163,37 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
                 let y_positions = y_points.iter().map(|y| y.position()).collect::<Vec<_>>();
 
                 // Find min/max
-                let x_range_i = Self::find_min_max_index(&x_positions);
-                let y_range_i = Self::find_min_max_index(&y_positions);
-                let x_range = (get_x(&data[x_range_i.0]), get_x(&data[x_range_i.1]));
-                let y_range = (
-                    Self::reverse_get_y(get_ys, data, y_range_i.0),
-                    Self::reverse_get_y(get_ys, data, y_range_i.1),
-                );
+                let x_range = Self::find_min_max_index(&x_positions)
+                    .map(|(min_i, max_i)| (get_x(&data[min_i]), get_x(&data[max_i])))
+                    .map(Self::map_min_max_range(x_lower, x_upper));
+                let y_range = Self::find_min_max_index(&y_positions)
+                    .map(|(min_i, max_i)| {
+                        (
+                            Self::reverse_get_y(get_ys, data, min_i),
+                            Self::reverse_get_y(get_ys, data, max_i),
+                        )
+                    })
+                    .map(Self::map_min_max_range(y_lower, y_upper));
 
-                // Apply min/max range overrides
-                let x_range = Self::apply_min_max_range(x_range, x_lower, x_upper);
-                let y_range = Self::apply_min_max_range(y_range, y_lower, y_upper);
+                let position_range = {
+                    let (x_min, x_max) = x_range
+                        .as_ref()
+                        .map(|(min, max)| (min.position(), max.position()))
+                        .unwrap_or_default();
+                    let (y_min, y_max) = y_range
+                        .as_ref()
+                        .map(|(min, max)| (min.position(), max.position()))
+                        .unwrap_or_default();
+                    Bounds::from_points(
+                        x_min.position(),
+                        y_min.position(),
+                        x_max.position(),
+                        y_max.position(),
+                    )
+                };
 
                 Data {
-                    position_range: Bounds::from_points(
-                        x_range.0.position(),
-                        y_range.0.position(),
-                        x_range.1.position(),
-                        y_range.1.position(),
-                    ),
+                    position_range,
                     x_points,
                     x_positions,
                     x_range,
@@ -196,34 +208,39 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
         UseSeries { lines, data }
     }
 
-    fn apply_min_max_range<V: PartialOrd>(
-        (min, max): (V, V),
+    fn map_min_max_range<V: PartialOrd>(
         lower: Option<V>,
         upper: Option<V>,
-    ) -> (V, V) {
-        (
-            match lower {
-                Some(l) if l < min => l,
-                _ => min,
-            },
-            match upper {
-                Some(u) if u > max => u,
-                _ => max,
-            },
-        )
+    ) -> impl FnOnce((V, V)) -> (V, V) {
+        |(min, max)| {
+            (
+                lower
+                    .and_then(|v| if v < min { Some(v) } else { None })
+                    .unwrap_or(min),
+                upper
+                    .and_then(|v| if v > max { Some(v) } else { None })
+                    .unwrap_or(max),
+            )
+        }
     }
 
-    fn find_min_max_index(positions: &[f64]) -> (usize, usize) {
-        positions
-            .iter()
-            .enumerate()
-            // TODO handle empty data
-            .fold((0, 0), |(min_i, max_i), (i, &pos)| {
-                (
-                    if pos < positions[min_i] { i } else { min_i },
-                    if pos > positions[max_i] { i } else { max_i },
-                )
-            })
+    fn find_min_max_index(positions: &[f64]) -> Option<(usize, usize)> {
+        positions.iter().enumerate().fold(None, |range, (i, &pos)| {
+            // Skip NaN values
+            if pos.is_nan() {
+                return range;
+            };
+            range.map_or_else(
+                || Some((i, i)), // First seen
+                |(min_i, max_i)| {
+                    // Find index of min/max
+                    Some((
+                        if pos < positions[min_i] { i } else { min_i },
+                        if pos > positions[max_i] { i } else { max_i },
+                    ))
+                },
+            )
+        })
     }
 
     /// Given an Data::y_points index, return the corresponding y value. Note that y_points is a flat map of all the y values for each series.
@@ -239,12 +256,12 @@ impl<X, Y> Data<X, Y> {
         self.position_range
     }
 
-    pub fn x_range(&self) -> (&X, &X) {
-        (&self.x_range.0, &self.x_range.1)
+    pub fn x_range(&self) -> Option<&(X, X)> {
+        self.x_range.as_ref()
     }
 
-    pub fn y_range(&self) -> (&Y, &Y) {
-        (&self.y_range.0, &self.y_range.1)
+    pub fn y_range(&self) -> Option<&(Y, Y)> {
+        self.y_range.as_ref()
     }
 
     fn nearest_x_index(&self, pos: f64) -> usize {
