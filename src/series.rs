@@ -6,7 +6,7 @@ use crate::{
 };
 use chrono::prelude::*;
 use leptos::*;
-use std::{borrow::Borrow, rc::Rc};
+use std::rc::Rc;
 
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
 type GetY<T, Y> = Rc<dyn Fn(&T) -> Y>;
@@ -40,7 +40,7 @@ pub struct Data<X, Y> {
     y_range: Option<(Y, Y)>,
 }
 
-impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T, X, Y> {
+impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T, X, Y> {
     pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
         Series {
             get_x: Rc::new(get_x),
@@ -127,9 +127,9 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
 
     pub fn use_data<Ts>(self, data: impl Into<MaybeSignal<Ts>> + 'static) -> UseSeries<X, Y>
     where
-        Ts: Borrow<[T]> + 'static,
-        X: Clone + PartialOrd + Position,
-        Y: Clone + PartialOrd + Position,
+        Ts: AsRef<[T]> + 'static,
+        X: PartialOrd + Position,
+        Y: PartialOrd + Position,
     {
         let Series { get_x, get_ys, .. } = self;
 
@@ -151,8 +151,7 @@ impl<T, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T
             let y_upper = self.y_upper.get();
             let get_ys = get_ys.iter().as_slice();
             data.with(move |data| {
-                let data = data.borrow();
-
+                let data = data.as_ref();
                 // Collect data points
                 let x_points = data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>();
                 let x_positions = x_points.iter().map(|x| x.position()).collect::<Vec<_>>();
