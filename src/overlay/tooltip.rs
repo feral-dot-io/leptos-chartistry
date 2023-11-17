@@ -170,8 +170,10 @@ fn Tooltip<X: 'static, Y: 'static>(
 
     let x_body = move || {
         with!(|x_ticks, data, data_x| {
-            let x_value = data.nearest_x(*data_x);
-            (x_format)(&*x_ticks.state, x_value)
+            data.nearest_x(*data_x).map_or_else(
+                || "no data".to_string(),
+                |x_value| (x_format)(&*x_ticks.state, x_value),
+            )
         })
     };
     let y_body = create_memo(move |_| {
@@ -182,8 +184,10 @@ fn Tooltip<X: 'static, Y: 'static>(
             .enumerate()
             .map(|(line_id, line)| {
                 let y_value = with!(|data, data_x, y_ticks| {
-                    let y_value = data.nearest_y(*data_x, line_id);
-                    (y_format)(&*y_ticks.state, y_value)
+                    data.nearest_y(*data_x, line_id).map_or_else(
+                        || "-".to_string(),
+                        |y_value| (y_format)(&*y_ticks.state, y_value),
+                    )
                 });
                 (line, y_value)
             })

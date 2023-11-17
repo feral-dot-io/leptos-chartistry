@@ -263,40 +263,46 @@ impl<X, Y> Data<X, Y> {
         self.y_range.as_ref()
     }
 
-    fn nearest_x_index(&self, pos: f64) -> usize {
+    fn nearest_x_index(&self, pos: f64) -> Option<usize> {
+        // No values
+        if self.x_positions.is_empty() {
+            return None;
+        }
         // Find index after pos
         let index = self.x_positions.partition_point(|&v| v < pos);
         // No value before
         if index == 0 {
-            return 0;
+            return Some(0);
         }
         // No value ahead
         if index == self.x_points.len() {
-            return index - 1;
+            return Some(index - 1);
         }
         // Find closest index
         let ahead = self.x_positions[index] - pos;
         let before = pos - self.x_positions[index - 1];
         if ahead < before {
-            index
+            Some(index)
         } else {
-            index - 1
+            Some(index - 1)
         }
     }
 
-    pub fn nearest_x(&self, x_pos: f64) -> &X {
-        let x_index = self.nearest_x_index(x_pos);
-        &self.x_points[x_index]
+    pub fn nearest_x(&self, x_pos: f64) -> Option<&X> {
+        self.nearest_x_index(x_pos)
+            .map(|x_index| &self.x_points[x_index])
     }
 
+    /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
     pub fn nearest_x_position(&self, x_pos: f64) -> f64 {
-        let x_index = self.nearest_x_index(x_pos);
-        self.x_positions[x_index]
+        self.nearest_x_index(x_pos)
+            .map(|x_index| self.x_positions[x_index])
+            .unwrap_or(f64::NAN)
     }
 
-    pub fn nearest_y(&self, x_pos: f64, line_id: usize) -> &Y {
-        let x_index = self.nearest_x_index(x_pos);
-        &self.y_points[line_id * self.x_points.len() + x_index]
+    pub fn nearest_y(&self, x_pos: f64, line_id: usize) -> Option<&Y> {
+        self.nearest_x_index(x_pos)
+            .map(|x_index| &self.y_points[line_id * self.x_points.len() + x_index])
     }
 }
 

@@ -53,7 +53,7 @@ pub fn App() -> impl IntoView {
         .add_line("Sphinx", &|_: &Wave| f64::NAN)
         .add_line("Sphinx", &|w: &Wave| w.sine)
         .add_line("Cophine", &|w: &Wave| w.cosine)
-        .use_data::<Vec<_>>(data);
+        .use_data::<Vec<_>>(vec![]);
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
