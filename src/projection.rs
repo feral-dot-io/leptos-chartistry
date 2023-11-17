@@ -12,7 +12,6 @@ pub struct Projection {
 
 impl Projection {
     pub fn new(bounds: Bounds, range: Bounds) -> Self {
-        log::info!("range: {:?}: {} x {}", range, range.width(), range.height());
         Projection {
             bounds,
             range,
