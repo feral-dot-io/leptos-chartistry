@@ -139,7 +139,7 @@ pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(
     };
 
     view! {
-        <div node_ref=root style="width: fit-content; height: fit-content;">
+        <div node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
             {render}
         </div>
     }
@@ -204,7 +204,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
             width=move || format!("{}px", outer_bounds.get().width())
             height=move || format!("{}px", outer_bounds.get().height())
             viewBox=move || with!(|outer_bounds| format!("0 0 {} {}", outer_bounds.width(), outer_bounds.height()))
-            style="display: block;">
+            style="display: block; overflow: visible;">
             {inner}
             <DebugRect label="Chart" debug=debug bounds=move || vec![outer_bounds.get(), outer_bounds.get()] />
             {layout.view}
