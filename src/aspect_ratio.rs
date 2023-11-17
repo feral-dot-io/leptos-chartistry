@@ -31,7 +31,7 @@ pub enum Dimension {
 
 impl AspectRatio {
     /// Sets the outer width of the chart and applies a ratio.
-    pub fn outer_width(width: f64, ratio: f64) -> Self {
+    pub const fn outer_width(width: f64, ratio: f64) -> Self {
         Self(CalcUsing::Known(AspectRatioCalc::WidthAndRatio(
             Dimension::Outer(width),
             ratio,
@@ -39,7 +39,7 @@ impl AspectRatio {
     }
 
     /// Sets the outer height of the chart and applies a ratio.
-    pub fn outer_height(height: f64, ratio: f64) -> Self {
+    pub const fn outer_height(height: f64, ratio: f64) -> Self {
         Self(CalcUsing::Known(AspectRatioCalc::HeightAndRatio(
             Dimension::Outer(height),
             ratio,
@@ -47,7 +47,7 @@ impl AspectRatio {
     }
 
     /// Sets the outer width and height of the chart.
-    pub fn outer(width: f64, height: f64) -> Self {
+    pub const fn outer(width: f64, height: f64) -> Self {
         Self(CalcUsing::Known(AspectRatioCalc::WidthAndHeight(
             Dimension::Outer(width),
             Dimension::Outer(height),
@@ -55,7 +55,7 @@ impl AspectRatio {
     }
 
     /// Sets the inner width of the chart and applies a ratio.
-    pub fn inner_width(width: f64, ratio: f64) -> Self {
+    pub const fn inner_width(width: f64, ratio: f64) -> Self {
         Self(CalcUsing::Known(AspectRatioCalc::WidthAndRatio(
             Dimension::Inner(width),
             ratio,
@@ -63,7 +63,7 @@ impl AspectRatio {
     }
 
     /// Sets the inner height of the chart and applies a ratio.
-    pub fn inner_height(height: f64, ratio: f64) -> Self {
+    pub const fn inner_height(height: f64, ratio: f64) -> Self {
         Self(CalcUsing::Known(AspectRatioCalc::HeightAndRatio(
             Dimension::Inner(height),
             ratio,
@@ -71,7 +71,7 @@ impl AspectRatio {
     }
 
     /// Sets the inner width and height of the chart.
-    pub fn inner(width: f64, height: f64) -> Self {
+    pub const fn inner(width: f64, height: f64) -> Self {
         Self(CalcUsing::Known(AspectRatioCalc::WidthAndHeight(
             Dimension::Inner(width),
             Dimension::Inner(height),
@@ -79,17 +79,17 @@ impl AspectRatio {
     }
 
     /// Gets the width from the parent container and applies a ratio.
-    pub fn environment_width(ratio: f64) -> Self {
+    pub const fn environment_width(ratio: f64) -> Self {
         Self(CalcUsing::Env(EnvCalc::WidthAndRatio(ratio)))
     }
 
     /// Gets the height from the parent container and applies a ratio.
-    pub fn environment_height(ratio: f64) -> Self {
+    pub const fn environment_height(ratio: f64) -> Self {
         Self(CalcUsing::Env(EnvCalc::HeightAndRatio(ratio)))
     }
 
     /// Gets the width and height from the parent container.
-    pub fn environment() -> Self {
+    pub const fn environment() -> Self {
         Self(CalcUsing::Env(EnvCalc::WidthAndHeight))
     }
 }
