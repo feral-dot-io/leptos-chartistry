@@ -131,6 +131,11 @@ fn GuideLine<X: 'static, Y: 'static>(
             Axis::Y => (b.left_x(), mouse_y, b.right_x(), mouse_y),
         };
 
+        // Don't render if any of the coordinates are NaN i.e., no data
+        if x1.is_nan() || y1.is_nan() || x2.is_nan() || y2.is_nan() {
+            return view!().into_view();
+        }
+
         view! {
             <line
                 x1=x1
