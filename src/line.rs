@@ -49,6 +49,12 @@ impl From<&str> for Line {
     }
 }
 
+impl From<String> for Line {
+    fn from(name: String) -> Self {
+        Self::new(name)
+    }
+}
+
 #[component]
 pub fn Line<'a>(line: &'a UseLine, positions: Vec<(f64, f64)>) -> impl IntoView {
     let mut need_move = true;
