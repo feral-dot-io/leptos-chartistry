@@ -172,7 +172,11 @@ pub fn Legend(
     };
 
     let body = move || {
-        let tds = legend.lines.iter().map(|line| {
+        // Sort lines by name
+        let mut lines = legend.lines.clone();
+        lines.sort_by_key(|line| line.name.get());
+
+        let tds = lines.iter().map(|line| {
             let name = line.name.clone();
             view!(<SnippetTd snippet=snippet.clone() line=line.clone()>{name}</SnippetTd>)
         });

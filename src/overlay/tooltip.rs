@@ -177,11 +177,17 @@ fn Tooltip<X: 'static, Y: 'static>(
         })
     };
     let y_body = create_memo(move |_| {
-        let (lines, labels): (Vec<UseLine>, Vec<String>) = series
+        // Sort lines by name
+        let mut lines = series
             .lines
             .clone()
             .into_iter()
             .enumerate()
+            .collect::<Vec<_>>();
+        lines.sort_by_key(|(_, line)| line.name.get());
+
+        let (lines, labels): (Vec<UseLine>, Vec<String>) = lines
+            .into_iter()
             .map(|(line_id, line)| {
                 let y_value = with!(|data, data_x, y_ticks| {
                     data.nearest_y(*data_x, line_id).map_or_else(
