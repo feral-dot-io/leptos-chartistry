@@ -189,10 +189,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     // Inner layout
     let inner = inner
         .into_iter()
-        .map(|opt| {
-            opt.into_use(&series, layout.projection)
-                .render(layout.projection, &watch)
-        })
+        .map(|opt| opt.into_use(&series, layout.projection).render(&state))
         .collect_view();
 
     // Overlay

@@ -4,7 +4,7 @@ use crate::{
     colours::{Colour, LIGHT_GREY},
     projection::Projection,
     series::{Data, UseSeries},
-    use_watched_node::UseWatchedNode,
+    state::State,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -95,9 +95,15 @@ impl<X, Y> InnerOption<X, Y> for GuideLine {
 }
 
 impl<X, Y> UseInner for UseGuideLine<X, Y> {
-    fn render(self: Box<Self>, proj: Signal<Projection>, watch: &UseWatchedNode) -> View {
-        let mouse_hover = watch.mouse_hover_inner(proj);
-        view!( <GuideLine line=*self projection=proj mouse_hover=mouse_hover mouse=watch.mouse_chart /> )
+    fn render(self: Box<Self>, state: &State) -> View {
+        view! {
+            <GuideLine
+                line=*self
+                projection=state.projection
+                mouse_hover=state.mouse_hover_inner
+                mouse=state.mouse_chart
+            />
+        }
     }
 }
 

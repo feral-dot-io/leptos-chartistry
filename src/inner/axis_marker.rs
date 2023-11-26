@@ -4,7 +4,7 @@ use crate::{
     colours::{Colour, LIGHTISH_GREY},
     edge::Edge,
     projection::Projection,
-    use_watched_node::UseWatchedNode,
+    state::State,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -80,9 +80,9 @@ impl<X, Y> InnerLayout<X, Y> for AxisMarker {
 }
 
 impl UseInner for AxisMarker {
-    fn render(self: Box<Self>, proj: Signal<Projection>, _: &UseWatchedNode) -> View {
+    fn render(self: Box<Self>, state: &State) -> View {
         view! {
-            <AxisMarker marker=*self projection=proj />
+            <AxisMarker marker=*self projection=state.projection />
         }
     }
 }
