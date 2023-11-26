@@ -8,9 +8,9 @@ use leptos_use::{
 #[derive(Clone, Debug)]
 pub struct UseWatchedNode {
     pub bounds: Signal<Option<Bounds>>,
-    pub mouse_hover: Signal<bool>,
-    pub mouse_abs: Signal<(f64, f64)>,
-    pub mouse_rel: Signal<(f64, f64)>,
+    pub mouse_page: Signal<(f64, f64)>,
+    pub mouse_chart: Signal<(f64, f64)>,
+    pub mouse_chart_hover: Signal<bool>,
 }
 
 pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
@@ -32,15 +32,15 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     );
 
     // Mouse absolute coords on page
-    let mouse_abs = Signal::derive(move || {
+    let mouse_page = Signal::derive(move || {
         let x = mouse.x.get();
         let y = mouse.y.get();
         (x, y)
     });
 
     // Mouse relative to SVG
-    let mouse_rel: Signal<_> = create_memo(move |_| {
-        let (x, y) = mouse_abs.get();
+    let mouse_chart: Signal<_> = create_memo(move |_| {
+        let (x, y) = mouse_page.get();
         let (left, top) = node
             .get()
             .map(|target| {
@@ -56,8 +56,8 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
 
     // Mouse inside SVG?
     let el_hover = use_element_hover(node);
-    let mouse_hover = create_memo(move |_| {
-        let (x, y) = mouse_rel.get();
+    let mouse_chart_hover = create_memo(move |_| {
+        let (x, y) = mouse_chart.get();
         mouse.source_type.get() != UseMouseSourceType::Unset
             && el_hover.get()
             && bounds
@@ -69,16 +69,16 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
 
     UseWatchedNode {
         bounds,
-        mouse_hover,
-        mouse_abs,
-        mouse_rel,
+        mouse_page,
+        mouse_chart,
+        mouse_chart_hover,
     }
 }
 
 impl UseWatchedNode {
     // Mouse inside inner chart?
     pub fn mouse_hover_inner(&self, proj: Signal<Projection>) -> Signal<bool> {
-        let (mouse_rel, hover) = (self.mouse_rel, self.mouse_hover);
+        let (mouse_rel, hover) = (self.mouse_chart, self.mouse_chart_hover);
         create_memo(move |_| {
             let (x, y) = mouse_rel.get();
             hover.get() && proj.with(|proj| proj.bounds().contains(x, y))

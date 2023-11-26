@@ -97,7 +97,7 @@ impl<X, Y> InnerOption<X, Y> for GuideLine {
 impl<X, Y> UseInner for UseGuideLine<X, Y> {
     fn render(self: Box<Self>, proj: Signal<Projection>, watch: &UseWatchedNode) -> View {
         let mouse_hover = watch.mouse_hover_inner(proj);
-        view!( <GuideLine line=*self projection=proj mouse_hover=mouse_hover mouse=watch.mouse_rel /> )
+        view!( <GuideLine line=*self projection=proj mouse_hover=mouse_hover mouse=watch.mouse_chart /> )
     }
 }
 

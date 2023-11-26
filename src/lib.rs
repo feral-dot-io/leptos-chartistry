@@ -12,6 +12,7 @@ mod overlay;
 mod padding;
 mod projection;
 mod series;
+mod state;
 mod ticks;
 mod use_watched_node;
 

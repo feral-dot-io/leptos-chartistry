@@ -8,6 +8,7 @@ use crate::{
     },
     overlay::{OverlayLayout, UseOverlay},
     series::{Series, UseSeries},
+    state::State,
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Font, Padding,
 };
@@ -183,6 +184,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
         )
     });
     let layout = layout.compose(outer_bounds, inner_width, &series);
+    let state = State::new(layout.projection, &watch);
 
     // Inner layout
     let inner = inner
@@ -196,7 +198,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     // Overlay
     let overlay = overlay
         .into_iter()
-        .map(|opt| opt.render(series.clone(), layout.projection, &watch))
+        .map(|opt| opt.render(series.clone(), &state))
         .collect_view();
 
     view! {

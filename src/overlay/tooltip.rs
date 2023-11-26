@@ -8,8 +8,8 @@ use crate::{
     line::UseLine,
     projection::Projection,
     series::{Data, UseSeries},
+    state::State,
     ticks::{long_format_fn, GeneratedTicks, TickFormatFn},
-    use_watched_node::UseWatchedNode,
     Padding, Snippet, TickLabels,
 };
 use leptos::*;
@@ -111,17 +111,18 @@ impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
 }
 
 impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAttr<X, Y> {
-    fn render(
-        self: Rc<Self>,
-        series: UseSeries<X, Y>,
-        proj: Signal<Projection>,
-        watch: &UseWatchedNode,
-    ) -> View {
-        let tooltip = (*self).clone().into_use(series.data, proj);
-        let (mouse_abs, mouse_rel) = (watch.mouse_abs, watch.mouse_rel);
-        let mouse_hover = watch.mouse_hover_inner(proj);
+    fn render(self: Rc<Self>, series: UseSeries<X, Y>, state: &State) -> View {
+        let State {
+            projection,
+            mouse_page,
+            mouse_chart,
+            mouse_hover_inner,
+            ..
+        } = *state;
+
+        let tooltip = (*self).clone().into_use(series.data, projection);
         create_memo(move |_| {
-            if !mouse_hover.get() {
+            if !mouse_hover_inner.get() {
                 return view!().into_view();
             }
 
@@ -129,9 +130,9 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAtt
                 <Tooltip
                     tooltip=tooltip.clone()
                     series=series.clone()
-                    projection=proj
-                    mouse_abs=mouse_abs
-                    mouse_rel=mouse_rel
+                    projection=projection
+                    mouse_page=mouse_page
+                    mouse_chart=mouse_chart
                 />
             }
             .into_view()
@@ -145,8 +146,8 @@ fn Tooltip<X: 'static, Y: 'static>(
     tooltip: UseTooltip<X, Y>,
     series: UseSeries<X, Y>,
     projection: Signal<Projection>,
-    mouse_abs: Signal<(f64, f64)>,
-    mouse_rel: Signal<(f64, f64)>,
+    mouse_page: Signal<(f64, f64)>,
+    mouse_chart: Signal<(f64, f64)>,
 ) -> impl IntoView {
     let UseTooltip {
         snippet,
@@ -162,10 +163,9 @@ fn Tooltip<X: 'static, Y: 'static>(
 
     // Get nearest values
     let data_x = Signal::derive(move || {
-        with!(|mouse_rel, projection| {
-            let (data_x, _) = projection.svg_to_data(mouse_rel.0, mouse_rel.1);
-            data_x
-        })
+        let (chart_x, chart_y) = mouse_chart.get();
+        let (data_x, _) = projection.get().svg_to_data(chart_x, chart_y);
+        data_x
     });
 
     let x_body = move || {
@@ -221,8 +221,8 @@ fn Tooltip<X: 'static, Y: 'static>(
     view! {
         <div
             style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
-            style:top=move || format!("calc({}px)", mouse_abs.get().1)
-            style:right=move || format!("calc(100% - {}px + {}px)", mouse_abs.get().0, table_margin.get())
+            style:top=move || format!("calc({}px)", mouse_page.get().1)
+            style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, table_margin.get())
             style:padding=move || padding.get().to_style_px()>
             <table
                 style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; text-align: right;"

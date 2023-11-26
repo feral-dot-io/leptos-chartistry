@@ -1,6 +1,4 @@
-use crate::{
-    chart::Attr, projection::Projection, series::UseSeries, use_watched_node::UseWatchedNode,
-};
+use crate::{chart::Attr, series::UseSeries, state::State};
 use leptos::*;
 use std::rc::Rc;
 
@@ -9,12 +7,7 @@ pub trait OverlayLayout<X, Y> {
 }
 
 pub trait UseOverlay<X, Y> {
-    fn render(
-        self: Rc<Self>,
-        series: UseSeries<X, Y>,
-        proj: Signal<Projection>,
-        watch: &UseWatchedNode,
-    ) -> View;
+    fn render(self: Rc<Self>, series: UseSeries<X, Y>, state: &State) -> View;
 }
 
 /// Clone references
