@@ -145,17 +145,13 @@ impl UseLayout for UseLegend {
         self.width()
     }
 
-    fn render<'a>(&self, edge: Edge, bounds: Bounds, _: Signal<Projection>) -> View {
-        view! { <Legend legend=self.clone() edge=edge bounds=move || bounds /> }
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: Signal<Projection>) -> View {
+        view! { <Legend legend=self.clone() edge=edge bounds=bounds /> }
     }
 }
 
 #[component]
-pub fn Legend(
-    legend: UseLegend,
-    edge: Edge,
-    #[prop(into)] bounds: Signal<Bounds>,
-) -> impl IntoView {
+pub fn Legend(legend: UseLegend, edge: Edge, bounds: Signal<Bounds>) -> impl IntoView {
     let LegendAttr {
         snippet,
         anchor,

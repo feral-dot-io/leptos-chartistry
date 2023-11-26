@@ -161,24 +161,23 @@ impl UseLayout for UseRotatedLabel {
         self.size()
     }
 
-    fn render<'a>(&self, edge: Edge, bounds: Bounds, _: Signal<Projection>) -> View {
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: Signal<Projection>) -> View {
         view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds /> }
     }
 }
 
 #[component]
-pub(super) fn RotatedLabel(label: UseRotatedLabel, edge: Edge, bounds: Bounds) -> impl IntoView {
+fn RotatedLabel(label: UseRotatedLabel, edge: Edge, bounds: Signal<Bounds>) -> impl IntoView {
     let UseRotatedLabel {
         text,
         anchor,
         font,
         padding,
         debug,
-        ..
     } = label;
 
-    let content = Signal::derive(move || padding.get().apply(bounds));
-    let position = Signal::derive(move || {
+    let content = Signal::derive(move || padding.get().apply(bounds.get()));
+    let position = create_memo(move |_| {
         let c = content.get();
         let (top, right, bottom, left) = (c.top_y(), c.right_x(), c.bottom_y(), c.left_x());
         let (centre_x, centre_y) = (c.centre_x(), c.centre_y());
@@ -194,7 +193,7 @@ pub(super) fn RotatedLabel(label: UseRotatedLabel, edge: Edge, bounds: Bounds) -
 
     view! {
         <g class="_chartistry_rotated_label">
-            <DebugRect label="RotatedLabel" debug=debug bounds=move || vec![bounds, content.get()] />
+            <DebugRect label="RotatedLabel" debug=debug bounds=move || vec![bounds.get(), content.get()] />
             <text
                 x=move || position.with(|(_, x, _)| x.to_string())
                 y=move || position.with(|(_, _, y)| y.to_string())

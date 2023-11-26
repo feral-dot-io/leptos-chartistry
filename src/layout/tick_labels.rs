@@ -261,8 +261,8 @@ impl UseLayout for UseTickLabels {
         })
     }
 
-    fn render<'a>(&self, edge: Edge, bounds: Bounds, proj: Signal<Projection>) -> View {
-        view! { <TickLabels ticks=self edge=edge bounds=bounds projection=proj /> }
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, proj: Signal<Projection>) -> View {
+        view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds projection=proj /> }
     }
 }
 
@@ -285,50 +285,49 @@ pub fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
 }
 
 #[component]
-pub fn TickLabels<'a>(
-    ticks: &'a UseTickLabels,
+pub fn TickLabels(
+    ticks: UseTickLabels,
     edge: Edge,
-    bounds: Bounds,
+    bounds: Signal<Bounds>,
     projection: Signal<Projection>,
 ) -> impl IntoView {
-    let font = ticks.font;
-    let padding = ticks.padding;
-    let debug = ticks.debug;
-    let ticks = ticks.ticks;
+    let UseTickLabels {
+        font,
+        padding,
+        debug,
+        ticks,
+        ..
+    } = ticks;
+
     let ticks = move || {
         // Align vertical labels
         let ticks = ticks.get();
-        let ticks = if edge.is_vertical() {
+        if edge.is_vertical() {
             let (pos, labels): (Vec<f64>, Vec<String>) = ticks.into_iter().unzip();
             let labels = align_tick_labels(labels);
             pos.into_iter().zip(labels).collect::<Vec<_>>()
         } else {
             ticks
-        };
-
-        // Render tick labels
-        ticks
-            .into_iter()
-            .map(|(position, label)| {
-                view! {
-                    <TickLabel
-                        edge=edge
-                        bounds=bounds
-                        projection=projection
-                        label=label
-                        position=position
-                        font=font
-                        padding=padding
-                        debug=debug
-                    />
-                }
-            })
-            .collect_view()
+        }
     };
 
     view! {
         <g class="_chartistry_tick_labels">
-            {ticks}
+            <For
+                each=ticks
+                key=|(_, label)| label.to_owned()
+                let:tick
+            >
+                <TickLabel
+                    edge=edge
+                    outer=bounds
+                    projection=projection
+                    tick=tick
+                    font=font
+                    padding=padding
+                    debug=debug
+                />
+            </For>
         </g>
     }
 }
@@ -336,39 +335,44 @@ pub fn TickLabels<'a>(
 #[component]
 fn TickLabel(
     edge: Edge,
-    bounds: Bounds,
+    outer: Signal<Bounds>,
     projection: Signal<Projection>,
-    label: String,
-    position: f64,
+    tick: (f64, String),
     font: MaybeSignal<Font>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
 ) -> impl IntoView {
-    move || {
-        let proj = projection.get();
+    let (position, label) = tick;
+    let label_len = label.len();
+    // Calculate positioning Bounds. Note: tick w / h includes padding
+    let bounds = Signal::derive(move || {
         let font = font.get();
         let padding = padding.get();
-
-        // Calculate positioning Bounds. Note: tick w / h includes padding
-        let width = font.width() * label.len() as f64 + padding.width();
+        let width = font.width() * label_len as f64 + padding.width();
         let height = font.height() + padding.height();
-        let bounds = match edge {
+
+        let proj = projection.get();
+        let outer = outer.get();
+        match edge {
             Edge::Top | Edge::Bottom => {
                 let (x, _) = proj.data_to_svg(position, 0.0);
                 let x = x - width / 2.0;
-                Bounds::from_points(x, bounds.top_y(), x + width, bounds.bottom_y())
+                Bounds::from_points(x, outer.top_y(), x + width, outer.bottom_y())
             }
 
             Edge::Left | Edge::Right => {
                 let (_, y) = proj.data_to_svg(0.0, position);
                 let y = y - height / 2.0;
-                Bounds::from_points(bounds.left_x(), y, bounds.right_x(), y + height)
+                Bounds::from_points(outer.left_x(), y, outer.right_x(), y + height)
             }
-        };
-        let content = padding.apply(bounds);
+        }
+    });
+    let content = create_memo(move |_| padding.get().apply(bounds.get()));
 
-        // Determine text position
-        let (anchor, x) = match edge {
+    // Determine text position
+    let text_position = create_memo(move |_| {
+        let content = content.get();
+        match edge {
             Edge::Top | Edge::Bottom => ("middle", content.centre_x()),
 
             Edge::Left | Edge::Right => {
@@ -379,22 +383,22 @@ fn TickLabel(
                 };
                 (anchor, x)
             }
-        };
-
-        view! {
-            <g class="_chartistry_tick_label">
-                <DebugRect label="tick" debug=debug bounds=move || vec![bounds, content] />
-                <text
-                    x=x
-                    y=content.centre_y()
-                    style="white-space: pre;"
-                    font-family="monospace"
-                    font-size=font.height()
-                    dominant-baseline="middle"
-                    text-anchor=anchor>
-                    {label.clone()}
-                </text>
-            </g>
         }
+    });
+
+    view! {
+        <g class="_chartistry_tick_label">
+            <DebugRect label="tick" debug=debug bounds=move || vec![bounds.get(), content.get()] />
+            <text
+                x=move || text_position.get().1
+                y=move || content.get().centre_y()
+                style="white-space: pre;"
+                font-family="monospace"
+                font-size=move || font.get().height()
+                dominant-baseline="middle"
+                text-anchor=move || text_position.get().0>
+                {label.clone()}
+            </text>
+        </g>
     }
 }

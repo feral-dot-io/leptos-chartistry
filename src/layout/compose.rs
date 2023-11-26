@@ -39,7 +39,7 @@ pub trait VerticalOption<X, Y> {
 
 pub trait UseLayout {
     fn width(&self) -> Signal<f64>;
-    fn render(&self, edge: Edge, bounds: Bounds, proj: Signal<Projection>) -> View;
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, proj: Signal<Projection>) -> View;
 }
 
 type Horizontal<X, Y> = (Rc<dyn HorizontalOption<X, Y>>, Edge, Signal<f64>);
@@ -170,7 +170,7 @@ impl<X, Y> ConstrainedLayout<X, Y> {
                 .iter()
                 .map(|(opt, edge, size)| (opt, *edge, size.get()))
                 .into_edge_bounds(outer_bounds.get(), inner_bounds.get())
-                .map(|(c, edge, bounds)| c.render(edge, bounds, projection))
+                .map(|(c, edge, bounds)| c.render(edge, (move || bounds).into_signal(), projection))
                 .collect_view()
         });
 
