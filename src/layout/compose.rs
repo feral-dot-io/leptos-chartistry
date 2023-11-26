@@ -4,6 +4,7 @@ use crate::{
     edge::{Edge, IntoEdgeBounds},
     projection::Projection,
     series::UseSeries,
+    state::State,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -26,7 +27,7 @@ pub trait HorizontalOption<X, Y> {
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         inner_width: Signal<f64>,
-    ) -> Box<dyn UseLayout>;
+    ) -> Rc<dyn UseLayout>;
 }
 
 pub trait VerticalOption<X, Y> {
@@ -34,12 +35,12 @@ pub trait VerticalOption<X, Y> {
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         inner_height: Signal<f64>,
-    ) -> Box<dyn UseLayout>;
+    ) -> Rc<dyn UseLayout>;
 }
 
 pub trait UseLayout {
     fn width(&self) -> Signal<f64>;
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, proj: Signal<Projection>) -> View;
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View;
 }
 
 type Horizontal<X, Y> = (Rc<dyn HorizontalOption<X, Y>>, Edge, Signal<f64>);
@@ -55,7 +56,7 @@ pub struct ConstrainedLayout<X, Y> {
     pub top_height: Signal<f64>,
     pub bottom_height: Signal<f64>,
 
-    vertical: Vec<(Box<dyn UseLayout>, Edge, Signal<f64>)>,
+    vertical: Vec<(Rc<dyn UseLayout>, Edge, Signal<f64>)>,
     pub left_width: Signal<f64>,
     pub right_width: Signal<f64>,
 }
@@ -63,7 +64,7 @@ pub struct ConstrainedLayout<X, Y> {
 #[derive(Clone)]
 pub struct ComposedLayout {
     pub projection: Signal<Projection>,
-    pub view: Signal<View>,
+    edges: Signal<Vec<(Rc<dyn UseLayout>, Edge, Bounds)>>,
 }
 
 impl<X, Y> UnconstrainedLayout<X, Y> {
@@ -142,7 +143,7 @@ impl<X, Y> ConstrainedLayout<X, Y> {
         inner_width: Signal<f64>,
         series: &UseSeries<X, Y>,
     ) -> ComposedLayout {
-        let options = self
+        let edges = self
             .horizontal
             .into_iter()
             .map(|(opt, edge, height)| (opt.into_use(series, inner_width), edge, height))
@@ -165,16 +166,33 @@ impl<X, Y> ConstrainedLayout<X, Y> {
         .into();
 
         // Top / bottom options to UseLayoutOption
-        let view = Signal::derive(move || {
-            options
+        let edges = Signal::derive(move || {
+            edges
                 .iter()
-                .map(|(opt, edge, size)| (opt, *edge, size.get()))
+                .map(|(opt, edge, size)| (opt.clone(), *edge, size.get()))
                 .into_edge_bounds(outer_bounds.get(), inner_bounds.get())
-                .map(|(c, edge, bounds)| c.render(edge, (move || bounds).into_signal(), projection))
-                .collect_view()
+                .collect::<Vec<_>>()
         });
 
-        ComposedLayout { projection, view }
+        ComposedLayout { projection, edges }
+    }
+}
+
+impl ComposedLayout {
+    pub fn render_edges(self, state: State) -> Signal<View> {
+        (move || {
+            self.edges.with(|options| {
+                options
+                    .iter()
+                    .map(|(c, edge, bounds)| {
+                        let bounds = *bounds;
+                        let bounds = move || bounds;
+                        (*c).render(*edge, bounds.into_signal(), &state)
+                    })
+                    .collect_view()
+            })
+        })
+        .into_signal()
     }
 }
 

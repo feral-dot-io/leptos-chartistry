@@ -5,8 +5,8 @@ use super::{
     HorizontalLayout, HorizontalOption, VerticalLayout, VerticalOption,
 };
 use crate::{
-    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, line::UseLine,
-    projection::Projection, series::UseSeries, Padding,
+    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, line::UseLine, series::UseSeries,
+    state::State, Padding,
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
@@ -107,14 +107,14 @@ impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
         self.height()
     }
 
-    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new((*self).clone().into_use(series))
+    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
+        Rc::new((*self).clone().into_use(series))
     }
 }
 
 impl<X, Y> VerticalOption<X, Y> for LegendAttr {
-    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new((*self).clone().into_use(series))
+    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
+        Rc::new((*self).clone().into_use(series))
     }
 }
 
@@ -145,7 +145,7 @@ impl UseLayout for UseLegend {
         self.width()
     }
 
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: Signal<Projection>) -> View {
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: &State) -> View {
         view! { <Legend legend=self.clone() edge=edge bounds=bounds /> }
     }
 }

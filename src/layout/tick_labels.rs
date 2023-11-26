@@ -8,6 +8,7 @@ use crate::{
     edge::Edge,
     projection::Projection,
     series::{Data, UseSeries},
+    state::State,
     ticks::{
         short_format_fn, AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen,
         TickState, TimestampGen, VerticalSpan,
@@ -201,8 +202,8 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
-    ) -> Box<dyn UseLayout> {
-        Box::new(UseTickLabels {
+    ) -> Rc<dyn UseLayout> {
+        Rc::new(UseTickLabels {
             font: self.font,
             padding: self.padding,
             min_chars: self.min_chars,
@@ -217,8 +218,8 @@ impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
-    ) -> Box<dyn UseLayout> {
-        Box::new(UseTickLabels {
+    ) -> Rc<dyn UseLayout> {
+        Rc::new(UseTickLabels {
             font: self.font,
             padding: self.padding,
             min_chars: self.min_chars,
@@ -261,8 +262,8 @@ impl UseLayout for UseTickLabels {
         })
     }
 
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, proj: Signal<Projection>) -> View {
-        view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds projection=proj /> }
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View {
+        view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds projection=state.projection /> }
     }
 }
 

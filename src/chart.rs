@@ -186,10 +186,13 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     let layout = layout.compose(outer_bounds, inner_width, &series);
     let state = State::new(layout.projection, &watch);
 
+    // Edge layout
+    let edges = layout.render_edges(state.clone());
+
     // Inner layout
     let inner = inner
         .into_iter()
-        .map(|opt| opt.into_use(&series, layout.projection).render(&state))
+        .map(|opt| opt.into_use(&series, state.projection).render(&state))
         .collect_view();
 
     // Overlay
@@ -206,8 +209,8 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
             style="display: block; overflow: visible;">
             {inner}
             <DebugRect label="Chart" debug=debug bounds=move || vec![outer_bounds.get(), outer_bounds.get()] />
-            {layout.view}
-            <Series series=series projection=layout.projection />
+            {edges}
+            <Series series=series projection=state.projection />
         </svg>
         {overlay}
     }

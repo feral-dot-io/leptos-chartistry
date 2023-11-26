@@ -3,8 +3,8 @@ use super::{
     HorizontalLayout, HorizontalOption, VerticalOption,
 };
 use crate::{
-    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, projection::Projection,
-    series::UseSeries, Font, Padding,
+    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, series::UseSeries, state::State,
+    Font, Padding,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -103,14 +103,14 @@ impl<X, Y> HorizontalOption<X, Y> for UseRotatedLabel {
         self.size()
     }
 
-    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new((*self).clone())
+    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
+        self
     }
 }
 
 impl<X, Y> VerticalOption<X, Y> for UseRotatedLabel {
-    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Box<dyn UseLayout> {
-        Box::new((*self).clone())
+    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
+        self
     }
 }
 
@@ -161,7 +161,7 @@ impl UseLayout for UseRotatedLabel {
         self.size()
     }
 
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: Signal<Projection>) -> View {
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: &State) -> View {
         view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds /> }
     }
 }
