@@ -208,7 +208,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
             viewBox=move || with!(|outer_bounds| format!("0 0 {} {}", outer_bounds.width(), outer_bounds.height()))
             style="display: block; overflow: visible;">
             {inner}
-            <DebugRect label="Chart" debug=debug bounds=move || vec![outer_bounds.get(), outer_bounds.get()] />
+            <DebugRect label="Chart" debug=debug bounds=vec![outer_bounds, outer_bounds] />
             {edges}
             <Series series=series projection=state.projection />
         </svg>

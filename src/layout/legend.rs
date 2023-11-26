@@ -186,7 +186,7 @@ pub fn Legend(legend: UseLegend, edge: Edge, bounds: Signal<Bounds>) -> impl Int
 
     view! {
         <g class="_chartistry_legend">
-            <DebugRect label="Legend" debug=debug bounds=move || vec![bounds.get(), inner.get()] />
+            <DebugRect label="Legend" debug=debug bounds=vec![bounds, inner] />
             <foreignObject
                 x=move || bounds.get().left_x()
                 y=move || bounds.get().top_y()

@@ -6,22 +6,24 @@ use crate::bounds::Bounds;
 pub fn DebugRect(
     #[prop(into)] label: String,
     debug: MaybeSignal<bool>,
-    #[prop(optional, into)] bounds: Signal<Vec<Bounds>>,
+    #[prop(optional)] bounds: Vec<Signal<Bounds>>,
 ) -> impl IntoView {
-    move || {
+    (move || {
         if !debug.get() {
             return view!().into_view();
         };
 
         log::debug!("rendering {}", label);
-        (bounds.get().iter())
+        bounds
+            .clone()
+            .into_iter()
             .map(|bounds| {
                 view! {
                     <rect
-                        x=bounds.left_x()
-                        y=bounds.top_y()
-                        width=bounds.width()
-                        height=bounds.height()
+                        x=move || bounds.get().left_x()
+                        y=move || bounds.get().top_y()
+                        width=move || bounds.get().width()
+                        height=move || bounds.get().height()
                         fill="none"
                         stroke="red"
                         stroke-width=1
@@ -29,5 +31,6 @@ pub fn DebugRect(
                 }
             })
             .collect_view()
-    }
+    })
+    .into_view()
 }

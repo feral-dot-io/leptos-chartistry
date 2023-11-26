@@ -193,7 +193,7 @@ fn RotatedLabel(label: UseRotatedLabel, edge: Edge, bounds: Signal<Bounds>) -> i
 
     view! {
         <g class="_chartistry_rotated_label">
-            <DebugRect label="RotatedLabel" debug=debug bounds=move || vec![bounds.get(), content.get()] />
+            <DebugRect label="RotatedLabel" debug=debug bounds=vec![bounds, content] />
             <text
                 x=move || position.with(|(_, x, _)| x.to_string())
                 y=move || position.with(|(_, _, y)| y.to_string())

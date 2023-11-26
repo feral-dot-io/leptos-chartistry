@@ -389,7 +389,7 @@ fn TickLabel(
 
     view! {
         <g class="_chartistry_tick_label">
-            <DebugRect label="tick" debug=debug bounds=move || vec![bounds.get(), content.get()] />
+            <DebugRect label="tick" debug=debug bounds=vec![bounds, content.into()] />
             <text
                 x=move || text_position.get().1
                 y=move || content.get().centre_y()
