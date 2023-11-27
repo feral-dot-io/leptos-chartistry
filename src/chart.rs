@@ -172,11 +172,11 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     // Add left / right options
     let inner_height = aspect_ratio
         .clone()
-        .height_signal(layout.top_height, layout.bottom_height);
+        .inner_height_signal(layout.top_height, layout.bottom_height);
     let layout = layout.vertical_options(left, right, &series, inner_height);
 
     // Compose chart
-    let inner_width = aspect_ratio.width_signal(layout.left_width, layout.right_width);
+    let inner_width = aspect_ratio.inner_width_signal(layout.left_width, layout.right_width);
     let outer_bounds = Signal::derive(move || {
         Bounds::new(
             layout.left_width.get() + inner_width.get() + layout.right_width.get(),

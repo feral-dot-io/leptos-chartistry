@@ -1,5 +1,4 @@
 mod compose;
-//mod layout;
 pub mod legend;
 pub mod rotated_label;
 pub mod snippet;

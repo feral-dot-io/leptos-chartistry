@@ -25,8 +25,6 @@ pub struct RotatedLabel {
     debug: Option<MaybeSignal<bool>>,
 }
 
-pub type RotatedLabelAttr = UseRotatedLabel;
-
 #[derive(Clone, Debug)]
 pub struct UseRotatedLabel {
     text: MaybeSignal<String>,
@@ -75,7 +73,7 @@ impl RotatedLabel {
         self
     }
 
-    fn apply_attr(self, attr: &Attr) -> RotatedLabelAttr {
+    fn apply_attr(self, attr: &Attr) -> UseRotatedLabel {
         UseRotatedLabel {
             text: self.text,
             anchor: self.anchor,
@@ -99,7 +97,7 @@ impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for RotatedLabel {
 }
 
 impl<X, Y> HorizontalOption<X, Y> for UseRotatedLabel {
-    fn height(&self) -> Signal<f64> {
+    fn fixed_height(&self) -> Signal<f64> {
         self.size()
     }
 
@@ -109,8 +107,13 @@ impl<X, Y> HorizontalOption<X, Y> for UseRotatedLabel {
 }
 
 impl<X, Y> VerticalOption<X, Y> for UseRotatedLabel {
-    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
-        self
+    fn into_use(
+        self: Rc<Self>,
+        _: &UseSeries<X, Y>,
+        _: Signal<f64>,
+    ) -> (Signal<f64>, Rc<dyn UseLayout>) {
+        // Note: width is height because it's rotated
+        (self.size(), self)
     }
 }
 
@@ -156,11 +159,6 @@ impl Anchor {
 }
 
 impl UseLayout for UseRotatedLabel {
-    fn width(&self) -> Signal<f64> {
-        // Note: width is height because it's rotated
-        self.size()
-    }
-
     fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: &State) -> View {
         view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds /> }
     }

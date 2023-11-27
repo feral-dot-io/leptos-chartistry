@@ -29,6 +29,7 @@ pub struct LegendAttr {
 
 #[derive(Clone, Debug)]
 pub struct UseLegend {
+    width: Signal<f64>,
     attr: LegendAttr,
     lines: Vec<UseLine>,
 }
@@ -87,46 +88,22 @@ impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for Legend {
 
 impl LegendAttr {
     fn height(&self) -> Signal<f64> {
-        let (snip_height, font, padding) = (self.snippet.height(), self.snippet.font, self.padding);
+        let snip_height = self.snippet.height();
+        let font = self.snippet.font;
+        let padding = self.padding;
         Signal::derive(move || {
             let text_height = font.get().height() + padding.get().height();
             text_height.max(snip_height.get())
         })
     }
 
-    pub fn into_use<X, Y>(self, series: &UseSeries<X, Y>) -> UseLegend {
-        UseLegend {
-            attr: self,
-            lines: series.lines.clone(),
-        }
-    }
-}
-
-impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
-    fn height(&self) -> Signal<f64> {
-        self.height()
-    }
-
-    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
-        Rc::new((*self).clone().into_use(series))
-    }
-}
-
-impl<X, Y> VerticalOption<X, Y> for LegendAttr {
-    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
-        Rc::new((*self).clone().into_use(series))
-    }
-}
-
-impl UseLegend {
-    pub fn height(&self) -> Signal<f64> {
-        self.attr.height()
-    }
-
-    pub fn width(&self) -> Signal<f64> {
-        let snip_width = self.attr.snippet.width();
-        let (font, padding) = (self.attr.snippet.font, self.attr.padding);
-        let lines = (self.lines.iter())
+    fn width<X, Y>(&self, series: &UseSeries<X, Y>) -> Signal<f64> {
+        let snip_width = self.snippet.width();
+        let font = self.snippet.font;
+        let padding = self.padding;
+        let lines = series
+            .lines
+            .iter()
             .map(|line| line.name.clone())
             .collect::<Vec<_>>();
         Signal::derive(move || {
@@ -138,13 +115,49 @@ impl UseLegend {
             snip_width.get() + font_width + max_chars + padding.get().width()
         })
     }
+
+    pub fn into_use<X, Y>(self, series: &UseSeries<X, Y>) -> UseLegend {
+        let width = self.width(series);
+        UseLegend {
+            attr: self,
+            width,
+            lines: series.lines.clone(),
+        }
+    }
+}
+
+impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
+    fn fixed_height(&self) -> Signal<f64> {
+        self.height()
+    }
+
+    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
+        Rc::new((*self).clone().into_use(series))
+    }
+}
+
+impl<X, Y> VerticalOption<X, Y> for LegendAttr {
+    fn into_use(
+        self: Rc<Self>,
+        series: &UseSeries<X, Y>,
+        _: Signal<f64>,
+    ) -> (Signal<f64>, Rc<dyn UseLayout>) {
+        let legend = Rc::new((*self).clone().into_use(series));
+        (legend.width(), legend)
+    }
+}
+
+impl UseLegend {
+    pub fn height(&self) -> Signal<f64> {
+        self.attr.height()
+    }
+
+    pub fn width(&self) -> Signal<f64> {
+        self.width
+    }
 }
 
 impl UseLayout for UseLegend {
-    fn width(&self) -> Signal<f64> {
-        self.width()
-    }
-
     fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: &State) -> View {
         view! { <Legend legend=self.clone() edge=edge bounds=bounds /> }
     }

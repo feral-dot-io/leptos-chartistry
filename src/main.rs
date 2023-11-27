@@ -80,6 +80,8 @@ pub fn App() -> impl IntoView {
         // Guide lines
         .inner(GuideLine::x_axis())
         .inner(GuideLine::y_axis())
+        // Inset legend
+        .inner(InsetLegend::right(&snippet))
         // Tooltip
         .overlay(Tooltip::left_cursor(snippet, &bottom_ticks, &left_ticks));
 

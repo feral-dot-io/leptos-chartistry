@@ -22,7 +22,7 @@ pub trait VerticalLayout<X, Y> {
 }
 
 pub trait HorizontalOption<X, Y> {
-    fn height(&self) -> Signal<f64>;
+    fn fixed_height(&self) -> Signal<f64>;
     fn into_use(
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
@@ -35,11 +35,10 @@ pub trait VerticalOption<X, Y> {
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         inner_height: Signal<f64>,
-    ) -> Rc<dyn UseLayout>;
+    ) -> (Signal<f64>, Rc<dyn UseLayout>);
 }
 
 pub trait UseLayout {
-    fn width(&self) -> Signal<f64>;
     fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View;
 }
 
@@ -77,7 +76,7 @@ impl<X, Y> UnconstrainedLayout<X, Y> {
 
         let mk_horizontal = |edge| {
             move |opt: Rc<dyn HorizontalOption<X, Y>>| {
-                let height = opt.height();
+                let height = opt.fixed_height();
                 (opt, edge, height)
             }
         };
@@ -110,8 +109,7 @@ impl<X, Y> UnconstrainedLayout<X, Y> {
 
         let mk_vertical = |edge| {
             move |opt: Rc<dyn VerticalOption<X, Y>>| {
-                let c = opt.into_use(series, inner_height);
-                let width = c.width();
+                let (width, c) = opt.into_use(series, inner_height);
                 (c, edge, width)
             }
         };

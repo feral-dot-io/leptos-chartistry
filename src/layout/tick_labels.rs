@@ -43,7 +43,6 @@ pub struct TickLabelsAttr<Tick> {
 #[derive(Clone)]
 pub struct UseTickLabels {
     font: MaybeSignal<Font>,
-    min_chars: MaybeSignal<usize>,
     padding: MaybeSignal<Padding>,
     debug: MaybeSignal<bool>,
     ticks: Signal<Vec<(f64, String)>>,
@@ -193,7 +192,7 @@ impl<X: 'static, Y: Clone + PartialEq + 'static> VerticalLayout<X, Y> for TickLa
 }
 
 impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
-    fn height(&self) -> Signal<f64> {
+    fn fixed_height(&self) -> Signal<f64> {
         let (font, padding) = (self.font, self.padding);
         Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
     }
@@ -206,7 +205,6 @@ impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
         Rc::new(UseTickLabels {
             font: self.font,
             padding: self.padding,
-            min_chars: self.min_chars,
             debug: self.debug,
             ticks: self.map_ticks((*self).clone().generate_x(series.data, avail_width)),
         })
@@ -218,14 +216,18 @@ impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
         self: Rc<Self>,
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
-    ) -> Rc<dyn UseLayout> {
-        Rc::new(UseTickLabels {
-            font: self.font,
-            padding: self.padding,
-            min_chars: self.min_chars,
-            debug: self.debug,
-            ticks: self.map_ticks((*self).clone().generate_y(series.data, avail_height)),
-        })
+    ) -> (Signal<f64>, Rc<dyn UseLayout>) {
+        let ticks = self.map_ticks((*self).clone().generate_y(series.data, avail_height));
+        let width = self.width(ticks);
+        (
+            width,
+            Rc::new(UseTickLabels {
+                font: self.font,
+                padding: self.padding,
+                debug: self.debug,
+                ticks,
+            }),
+        )
     }
 }
 
@@ -241,17 +243,14 @@ impl<Tick> TickLabelsAttr<Tick> {
             })
         })
     }
-}
 
-impl UseLayout for UseTickLabels {
-    fn width(&self) -> Signal<f64> {
+    fn width(&self, ticks: Signal<Vec<(f64, String)>>) -> Signal<f64> {
         let font = self.font;
         let padding = self.padding;
         let min_chars = self.min_chars;
-        let labels = self.ticks;
         Signal::derive(move || {
-            let longest_chars = labels.with(|labels| {
-                labels
+            let longest_chars = ticks.with(|ticks| {
+                ticks
                     .iter()
                     .map(|(_, label)| label.len())
                     .max()
@@ -261,7 +260,9 @@ impl UseLayout for UseTickLabels {
             font.get().width() * longest_chars + padding.get().width()
         })
     }
+}
 
+impl UseLayout for UseTickLabels {
     fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View {
         view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds projection=state.projection /> }
     }
