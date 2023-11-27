@@ -3,7 +3,11 @@ use super::{
     HorizontalLayout, HorizontalOption, VerticalOption,
 };
 use crate::{
-    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, series::UseSeries, state::State,
+    bounds::Bounds,
+    debug::DebugRect,
+    edge::Edge,
+    series::UseSeries,
+    state::{AttrState, State},
     Font, Padding,
 };
 use leptos::*;
@@ -20,18 +24,15 @@ pub enum Anchor {
 pub struct RotatedLabel {
     text: MaybeSignal<String>,
     anchor: MaybeSignal<Anchor>,
-    font: Option<MaybeSignal<Font>>,
-    padding: Option<MaybeSignal<Padding>>,
-    debug: Option<MaybeSignal<bool>>,
 }
 
 #[derive(Clone, Debug)]
 pub struct UseRotatedLabel {
     text: MaybeSignal<String>,
     anchor: MaybeSignal<Anchor>,
-    font: MaybeSignal<Font>,
-    padding: MaybeSignal<Padding>,
-    debug: MaybeSignal<bool>,
+    font: Signal<Font>,
+    padding: Signal<Padding>,
+    debug: Signal<bool>,
 }
 
 impl RotatedLabel {
@@ -42,9 +43,6 @@ impl RotatedLabel {
         Self {
             text: text.into(),
             anchor: anchor.into(),
-            font: None,
-            padding: None,
-            debug: None,
         }
     }
 
@@ -58,40 +56,25 @@ impl RotatedLabel {
         Self::new(Anchor::End, text)
     }
 
-    pub fn set_font(mut self, font: impl Into<MaybeSignal<Font>>) -> Self {
-        self.font = Some(font.into());
-        self
-    }
-
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
-        self.padding = Some(padding.into());
-        self
-    }
-
-    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
-        self.debug = Some(debug.into());
-        self
-    }
-
-    fn apply_attr(self, attr: &Attr) -> UseRotatedLabel {
+    fn apply_attr(self, attr: &AttrState) -> UseRotatedLabel {
         UseRotatedLabel {
             text: self.text,
             anchor: self.anchor,
-            font: self.font.unwrap_or(attr.font),
-            padding: self.padding.unwrap_or(attr.padding),
-            debug: self.debug.unwrap_or(attr.debug),
+            font: attr.font,
+            padding: attr.padding,
+            debug: attr.debug,
         }
     }
 }
 
 impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for RotatedLabel {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn HorizontalOption<X, Y>> {
         Rc::new(self.apply_attr(attr))
     }
 }
 
 impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for RotatedLabel {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn VerticalOption<X, Y>> {
         Rc::new(self.apply_attr(attr))
     }
 }
@@ -159,20 +142,25 @@ impl Anchor {
 }
 
 impl UseLayout for UseRotatedLabel {
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: &State) -> View {
-        view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds /> }
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View {
+        view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
 
 #[component]
-fn RotatedLabel(label: UseRotatedLabel, edge: Edge, bounds: Signal<Bounds>) -> impl IntoView {
-    let UseRotatedLabel {
-        text,
-        anchor,
+fn RotatedLabel<'a>(
+    label: UseRotatedLabel,
+    edge: Edge,
+    bounds: Signal<Bounds>,
+    state: &'a State,
+) -> impl IntoView {
+    let UseRotatedLabel { text, anchor, .. } = label;
+    let AttrState {
         font,
         padding,
         debug,
-    } = label;
+        ..
+    } = state.attr;
 
     let content = Signal::derive(move || padding.get().apply(bounds.get()));
     let position = create_memo(move |_| {

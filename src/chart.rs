@@ -8,7 +8,7 @@ use crate::{
     },
     overlay::{OverlayLayout, UseOverlay},
     series::{Series, UseSeries},
-    state::State,
+    state::{AttrState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Font, Padding,
 };
@@ -17,8 +17,7 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Chart<X: 'static, Y: 'static> {
-    debug: Option<MaybeSignal<bool>>,
-    attr: Attr,
+    attr: AttrState,
 
     top: Vec<Rc<dyn HorizontalOption<X, Y>>>,
     right: Vec<Rc<dyn VerticalOption<X, Y>>>,
@@ -29,21 +28,18 @@ pub struct Chart<X: 'static, Y: 'static> {
     series: UseSeries<X, Y>,
 }
 
-#[derive(Clone, Debug)]
-pub struct Attr {
-    pub font: MaybeSignal<Font>,
-    pub padding: MaybeSignal<Padding>,
-    pub debug: MaybeSignal<bool>,
-}
-
 impl<X, Y> Chart<X, Y> {
-    pub fn new(font: impl Into<MaybeSignal<Font>>, series: UseSeries<X, Y>) -> Self {
+    pub fn new(
+        debug: impl Into<Signal<bool>>,
+        padding: impl Into<Signal<Padding>>,
+        font: impl Into<Signal<Font>>,
+        series: UseSeries<X, Y>,
+    ) -> Self {
         Self {
-            debug: None,
-            attr: Attr {
+            attr: AttrState {
+                debug: debug.into(),
                 font: font.into(),
-                padding: MaybeSignal::default(),
-                debug: MaybeSignal::default(),
+                padding: padding.into(),
             },
 
             top: vec![],
@@ -54,25 +50,6 @@ impl<X, Y> Chart<X, Y> {
             overlay: vec![],
             series,
         }
-    }
-
-    pub fn inherit_font(mut self, font: impl Into<MaybeSignal<Font>>) -> Self {
-        self.attr.font = font.into();
-        self
-    }
-
-    pub fn inherit_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
-        self.attr.padding = padding.into();
-        self
-    }
-
-    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
-        self.debug = Some(debug.into());
-        self
-    }
-    pub fn inherit_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
-        self.attr.debug = debug.into();
-        self
     }
 
     pub fn top(mut self, opt: impl HorizontalLayout<X, Y>) -> Self {
@@ -153,7 +130,6 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     aspect_ratio: AspectRatioCalc,
 ) -> impl IntoView {
     let Chart {
-        debug,
         attr,
 
         top,
@@ -164,7 +140,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
         overlay,
         series,
     } = chart;
-    let debug = debug.unwrap_or(attr.debug);
+    let debug = attr.debug;
 
     // Add top / bottom options
     let layout = UnconstrainedLayout::horizontal_options(top, bottom);
@@ -184,7 +160,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
         )
     });
     let layout = layout.compose(outer_bounds, inner_width, &series);
-    let state = State::new(layout.projection, &watch);
+    let state = State::new(attr, layout.projection, &watch);
 
     // Edge layout
     let edges = layout.render_edges(state.clone());

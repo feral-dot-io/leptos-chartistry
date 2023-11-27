@@ -1,4 +1,4 @@
-use crate::{chart::Attr, line::UseLine, Font, Padding};
+use crate::{line::UseLine, state::AttrState, Font, Padding};
 use leptos::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -10,23 +10,19 @@ pub enum Style {
 #[derive(Clone, Debug)]
 pub struct Snippet {
     style: MaybeSignal<Style>,
-    font: Option<MaybeSignal<Font>>,
-    padding: Option<MaybeSignal<Padding>>,
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct UseSnippet {
     pub style: MaybeSignal<Style>,
-    pub font: MaybeSignal<Font>,
-    pub padding: MaybeSignal<Padding>,
+    pub font: Signal<Font>,
+    pub padding: Signal<Padding>,
 }
 
 impl Snippet {
     pub fn new(style: impl Into<MaybeSignal<Style>>) -> Self {
         Self {
             style: style.into(),
-            font: None,
-            padding: None,
         }
     }
 
@@ -37,21 +33,11 @@ impl Snippet {
         Self::new(Style::VerticalTaster)
     }
 
-    pub fn set_font(mut self, font: impl Into<MaybeSignal<Font>>) -> Self {
-        self.font = Some(font.into());
-        self
-    }
-
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
-        self.padding = Some(padding.into());
-        self
-    }
-
-    pub(crate) fn into_use(self, attr: &Attr) -> UseSnippet {
+    pub(crate) fn into_use(self, attr: &AttrState) -> UseSnippet {
         UseSnippet {
             style: self.style,
-            font: self.font.unwrap_or(attr.font),
-            padding: self.padding.unwrap_or(attr.padding),
+            font: attr.font,
+            padding: attr.padding,
         }
     }
 }

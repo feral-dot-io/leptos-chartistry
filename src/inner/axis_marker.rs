@@ -1,10 +1,9 @@
 use super::{InnerLayout, InnerOption, UseInner};
 use crate::{
-    chart::Attr,
     colours::{Colour, LIGHTISH_GREY},
     edge::Edge,
     projection::Projection,
-    state::State,
+    state::{AttrState, State},
 };
 use leptos::*;
 use std::rc::Rc;
@@ -74,7 +73,7 @@ impl AxisMarker {
 }
 
 impl<X, Y> InnerLayout<X, Y> for AxisMarker {
-    fn apply_attr(self, _: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+    fn apply_attr(self, _: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
         Rc::new(self)
     }
 }

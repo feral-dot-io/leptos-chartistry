@@ -58,13 +58,11 @@ pub fn App() -> impl IntoView {
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
     let top_label = RotatedLabel::new(anchor, text);
-    let snippet = Snippet::horizontal().set_padding(Padding::zero());
+    let snippet = Snippet::horizontal();
     let left_ticks = TickLabels::aligned_floats().set_min_chars(20);
     let bottom_ticks = TickLabels::timestamps();
 
-    let chart = Chart::new(font, series)
-        .inherit_padding(padding)
-        .inherit_debug(debug)
+    let chart = Chart::new(debug, padding, font, series)
         // Labels
         .top(top_label)
         .top(Legend::end(Snippet::horizontal()))

@@ -1,8 +1,19 @@
-use crate::{bounds::Bounds, projection::Projection, use_watched_node::UseWatchedNode};
+use crate::{
+    bounds::Bounds, projection::Projection, use_watched_node::UseWatchedNode, Font, Padding,
+};
 use leptos::signal_prelude::*;
 
 #[derive(Clone, Debug)]
+pub struct AttrState {
+    pub debug: Signal<bool>,
+    pub font: Signal<Font>,
+    pub padding: Signal<Padding>,
+}
+
+#[derive(Clone, Debug)]
 pub struct State {
+    pub attr: AttrState,
+
     pub projection: Signal<Projection>,
     /// Size of chart (left and top are 0)
     pub bounds: Signal<Option<Bounds>>,
@@ -17,8 +28,13 @@ pub struct State {
 }
 
 impl State {
-    pub fn new(projection: Signal<Projection>, watched_node: &UseWatchedNode) -> Self {
+    pub fn new(
+        attr: AttrState,
+        projection: Signal<Projection>,
+        watched_node: &UseWatchedNode,
+    ) -> Self {
         Self {
+            attr,
             projection,
             bounds: watched_node.bounds,
             mouse_page: watched_node.mouse_page,

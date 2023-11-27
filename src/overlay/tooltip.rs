@@ -1,6 +1,5 @@
 use super::{OverlayLayout, UseOverlay};
 use crate::{
-    chart::Attr,
     layout::{
         snippet::{SnippetTd, UseSnippet},
         tick_labels::{align_tick_labels, TickLabelsAttr},
@@ -8,9 +7,9 @@ use crate::{
     line::UseLine,
     projection::Projection,
     series::{Data, UseSeries},
-    state::State,
+    state::{AttrState, State},
     ticks::{long_format_fn, GeneratedTicks, TickFormatFn},
-    Padding, Snippet, TickLabels,
+    Snippet, TickLabels,
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
@@ -19,7 +18,6 @@ use std::{borrow::Borrow, rc::Rc};
 pub struct Tooltip<X: Clone, Y: Clone> {
     snippet: Snippet,
     table_margin: Option<MaybeSignal<f64>>,
-    padding: Option<MaybeSignal<Padding>>,
 
     x_ticks: TickLabels<X>,
     y_ticks: TickLabels<Y>,
@@ -29,7 +27,6 @@ pub struct Tooltip<X: Clone, Y: Clone> {
 pub struct TooltipAttr<X: 'static, Y: 'static> {
     snippet: UseSnippet,
     table_margin: MaybeSignal<f64>,
-    padding: MaybeSignal<Padding>,
 
     x_ticks: TickLabelsAttr<X>,
     y_ticks: TickLabelsAttr<Y>,
@@ -39,7 +36,6 @@ pub struct TooltipAttr<X: 'static, Y: 'static> {
 pub struct UseTooltip<X: 'static, Y: 'static> {
     snippet: UseSnippet,
     table_margin: MaybeSignal<f64>,
-    padding: MaybeSignal<Padding>,
 
     x_format: TickFormatFn<X>,
     x_ticks: Signal<GeneratedTicks<X>>,
@@ -56,7 +52,6 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
         Self {
             snippet: snippet.borrow().clone(),
             table_margin: None,
-            padding: None,
             x_ticks: x_ticks.borrow().clone(),
             y_ticks: y_ticks.borrow().clone(),
         }
@@ -79,14 +74,13 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayout<X, Y>
     for Tooltip<X, Y>
 {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn UseOverlay<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn UseOverlay<X, Y>> {
         let font = attr.font;
         Rc::new(TooltipAttr {
             snippet: self.snippet.into_use(attr),
             table_margin: self
                 .table_margin
                 .unwrap_or_else(|| Signal::derive(move || font.get().height()).into()),
-            padding: self.padding.unwrap_or(attr.padding),
 
             x_ticks: self.x_ticks.apply_attr(attr, long_format_fn()),
             y_ticks: self.y_ticks.apply_attr(attr, long_format_fn()),
@@ -101,7 +95,6 @@ impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
         UseTooltip {
             snippet: self.snippet,
             table_margin: self.table_margin,
-            padding: self.padding,
             x_format: self.x_ticks.format.clone(),
             x_ticks: self.x_ticks.generate_x(data, avail_width),
             y_format: self.y_ticks.format.clone(),
@@ -121,6 +114,7 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAtt
         } = *state;
 
         let tooltip = (*self).clone().into_use(series.data, projection);
+        let state = state.clone();
         create_memo(move |_| {
             if !mouse_hover_inner.get() {
                 return view!().into_view();
@@ -130,7 +124,7 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAtt
                 <Tooltip
                     tooltip=tooltip.clone()
                     series=series.clone()
-                    projection=projection
+                    state=&state
                     mouse_page=mouse_page
                     mouse_chart=mouse_chart
                 />
@@ -142,17 +136,18 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAtt
 }
 
 #[component]
-fn Tooltip<X: 'static, Y: 'static>(
+fn Tooltip<'a, X: 'static, Y: 'static>(
     tooltip: UseTooltip<X, Y>,
     series: UseSeries<X, Y>,
-    projection: Signal<Projection>,
+    state: &'a State,
     mouse_page: Signal<(f64, f64)>,
     mouse_chart: Signal<(f64, f64)>,
 ) -> impl IntoView {
+    let proj = state.projection;
+    let padding = state.attr.padding;
     let UseTooltip {
         snippet,
         table_margin,
-        padding,
         x_format,
         x_ticks,
         y_format,
@@ -164,7 +159,7 @@ fn Tooltip<X: 'static, Y: 'static>(
     // Get nearest values
     let data_x = Signal::derive(move || {
         let (chart_x, chart_y) = mouse_chart.get();
-        let (data_x, _) = projection.get().svg_to_data(chart_x, chart_y);
+        let (data_x, _) = proj.get().svg_to_data(chart_x, chart_y);
         data_x
     });
 

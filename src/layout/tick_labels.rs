@@ -3,12 +3,10 @@ use super::{
 };
 use crate::{
     bounds::Bounds,
-    chart::Attr,
     debug::DebugRect,
     edge::Edge,
-    projection::Projection,
     series::{Data, UseSeries},
-    state::State,
+    state::{AttrState, State},
     ticks::{
         short_format_fn, AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen,
         TickState, TimestampGen, VerticalSpan,
@@ -22,29 +20,26 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct TickLabels<Tick: Clone> {
-    font: Option<MaybeSignal<Font>>,
     min_chars: MaybeSignal<usize>,
-    padding: Option<MaybeSignal<Padding>>,
-    debug: Option<MaybeSignal<bool>>,
     format: Option<TickFormatFn<Tick>>,
     generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
 #[derive(Clone)]
 pub struct TickLabelsAttr<Tick> {
-    font: MaybeSignal<Font>,
+    font: Signal<Font>,
+    padding: Signal<Padding>,
+    debug: Signal<bool>,
     min_chars: MaybeSignal<usize>,
-    padding: MaybeSignal<Padding>,
-    debug: MaybeSignal<bool>,
     pub format: TickFormatFn<Tick>,
     generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
 #[derive(Clone)]
 pub struct UseTickLabels {
-    font: MaybeSignal<Font>,
-    padding: MaybeSignal<Padding>,
-    debug: MaybeSignal<bool>,
+    font: Signal<Font>,
+    padding: Signal<Padding>,
+    debug: Signal<bool>,
     ticks: Signal<Vec<(f64, String)>>,
 }
 
@@ -75,32 +70,14 @@ where
 impl<Tick: Clone> TickLabels<Tick> {
     fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
-            font: None,
-            padding: None,
             min_chars: 0.into(),
-            debug: None,
             format: None,
             generator: Rc::new(gen),
         }
     }
 
-    pub fn set_font(mut self, font: impl Into<MaybeSignal<Font>>) -> Self {
-        self.font = Some(font.into());
-        self
-    }
-
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
-        self.padding = Some(padding.into());
-        self
-    }
-
     pub fn set_min_chars(mut self, min_chars: impl Into<MaybeSignal<usize>>) -> Self {
         self.min_chars = min_chars.into();
-        self
-    }
-
-    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
-        self.debug = Some(debug.into());
         self
     }
 
@@ -114,14 +91,14 @@ impl<Tick: Clone> TickLabels<Tick> {
 
     pub(crate) fn apply_attr(
         self,
-        attr: &Attr,
+        attr: &AttrState,
         def_format: TickFormatFn<Tick>,
     ) -> TickLabelsAttr<Tick> {
         TickLabelsAttr {
-            font: self.font.unwrap_or(attr.font),
-            padding: self.padding.unwrap_or(attr.padding),
+            font: attr.font,
+            padding: attr.padding,
+            debug: attr.debug,
             min_chars: self.min_chars,
-            debug: self.debug.unwrap_or(attr.debug),
             format: self.format.unwrap_or(def_format),
             generator: self.generator,
         }
@@ -180,13 +157,13 @@ impl<Y: PartialEq> TickLabelsAttr<Y> {
 }
 
 impl<X: Clone + PartialEq + 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn HorizontalOption<X, Y>> {
         Rc::new(self.apply_attr(attr, short_format_fn()))
     }
 }
 
 impl<X: 'static, Y: Clone + PartialEq + 'static> VerticalLayout<X, Y> for TickLabels<Y> {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn VerticalOption<X, Y>> {
         Rc::new(self.apply_attr(attr, short_format_fn()))
     }
 }
@@ -264,7 +241,7 @@ impl<Tick> TickLabelsAttr<Tick> {
 
 impl UseLayout for UseTickLabels {
     fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View {
-        view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds projection=state.projection /> }
+        view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
 
@@ -287,19 +264,14 @@ pub fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
 }
 
 #[component]
-pub fn TickLabels(
+pub fn TickLabels<'a>(
     ticks: UseTickLabels,
     edge: Edge,
     bounds: Signal<Bounds>,
-    projection: Signal<Projection>,
+    state: &'a State,
 ) -> impl IntoView {
-    let UseTickLabels {
-        font,
-        padding,
-        debug,
-        ticks,
-        ..
-    } = ticks;
+    let state = state.clone();
+    let UseTickLabels { ticks, .. } = ticks;
 
     let ticks = move || {
         // Align vertical labels
@@ -323,11 +295,8 @@ pub fn TickLabels(
                 <TickLabel
                     edge=edge
                     outer=bounds
-                    projection=projection
+                    state=&state
                     tick=tick
-                    font=font
-                    padding=padding
-                    debug=debug
                 />
             </For>
         </g>
@@ -335,15 +304,24 @@ pub fn TickLabels(
 }
 
 #[component]
-fn TickLabel(
+fn TickLabel<'a>(
     edge: Edge,
     outer: Signal<Bounds>,
-    projection: Signal<Projection>,
+    state: &'a State,
     tick: (f64, String),
-    font: MaybeSignal<Font>,
-    padding: MaybeSignal<Padding>,
-    debug: MaybeSignal<bool>,
 ) -> impl IntoView {
+    let State {
+        projection,
+        attr:
+            AttrState {
+                debug,
+                font,
+                padding,
+                ..
+            },
+        ..
+    } = *state;
+
     let (position, label) = tick;
     let label_len = label.len();
     // Calculate positioning Bounds. Note: tick w / h includes padding

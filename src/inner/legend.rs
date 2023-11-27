@@ -1,11 +1,10 @@
 use super::{InnerLayout, InnerOption, UseInner};
 use crate::{
-    chart::Attr,
     edge::Edge,
     layout::legend::{LegendAttr, UseLegend},
     projection::Projection,
     series::UseSeries,
-    state::State,
+    state::{AttrState, State},
     Anchor, Legend, Snippet,
 };
 use leptos::*;
@@ -64,7 +63,7 @@ impl InsetLegend {
 }
 
 impl<X, Y> InnerLayout<X, Y> for InsetLegend {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
         Rc::new(InsetLegendAttr {
             legend: self.legend.apply_attr(attr),
             edge: self.edge,
@@ -87,15 +86,16 @@ impl<X, Y> InnerOption<X, Y> for InsetLegendAttr {
 
 impl UseInner for UseInsetLegend {
     fn render(self: Box<Self>, state: &State) -> View {
-        view!( <InsetLegend legend=self.legend edge=self.edge projection=state.projection /> )
+        view!( <InsetLegend legend=self.legend edge=self.edge state=state /> )
     }
 }
 
 #[component]
-fn InsetLegend(legend: UseLegend, edge: Edge, projection: Signal<Projection>) -> impl IntoView {
+fn InsetLegend<'a>(legend: UseLegend, edge: Edge, state: &'a State) -> impl IntoView {
+    let proj = state.projection;
     let (height, width) = (legend.height(), legend.width());
     let bounds = Signal::derive(move || {
-        let bounds = projection.get().bounds();
+        let bounds = proj.get().bounds();
         let height = height.get();
         let width = width.get();
         // Build legend bounds as an inset of the chart bounds
@@ -110,7 +110,7 @@ fn InsetLegend(legend: UseLegend, edge: Edge, projection: Signal<Projection>) ->
 
     view! {
         <g class="_chartistry_legend_inset">
-            <Legend legend=legend edge=edge bounds=bounds />
+            <Legend legend=legend edge=edge bounds=bounds state=state />
         </g>
     }
 }

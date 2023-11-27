@@ -1,9 +1,13 @@
-use crate::{chart::Attr, projection::Projection, series::UseSeries, state::State};
+use crate::{
+    projection::Projection,
+    series::UseSeries,
+    state::{AttrState, State},
+};
 use leptos::*;
 use std::rc::Rc;
 
 pub trait InnerLayout<X, Y> {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn InnerOption<X, Y>>;
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn InnerOption<X, Y>>;
 }
 
 pub trait InnerOption<X, Y> {
@@ -23,7 +27,7 @@ impl<T, X, Y> InnerLayout<X, Y> for &T
 where
     T: Clone + InnerLayout<X, Y>,
 {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
         self.clone().apply_attr(attr)
     }
 }

@@ -1,12 +1,11 @@
 use super::{InnerLayout, InnerOption, UseInner};
 use crate::{
-    chart::Attr,
     colours::{Colour, LIGHTER_GREY},
     debug::DebugRect,
     layout::tick_labels::TickLabelsAttr,
     projection::Projection,
     series::UseSeries,
-    state::State,
+    state::{AttrState, State},
     ticks::{short_format_fn, GeneratedTicks},
     TickLabels,
 };
@@ -17,7 +16,6 @@ use std::{borrow::Borrow, rc::Rc};
 pub struct GridLine<Tick: Clone> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
-    debug: Option<MaybeSignal<bool>>,
     ticks: TickLabels<Tick>,
 }
 
@@ -30,7 +28,6 @@ pub struct VerticalGridLine<Y: Clone>(GridLine<Y>);
 struct GridLineAttr<Tick> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
-    debug: MaybeSignal<bool>,
     ticks: TickLabelsAttr<Tick>,
 }
 
@@ -43,7 +40,6 @@ struct VerticalGridLineAttr<Y>(GridLineAttr<Y>);
 struct UseGridLine<Tick: 'static> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
-    debug: MaybeSignal<bool>,
     ticks: Signal<GeneratedTicks<Tick>>,
 }
 
@@ -57,7 +53,6 @@ impl<Tick: Clone> GridLine<Tick> {
         Self {
             width: 1.0.into(),
             colour: Into::<Colour>::into(LIGHTER_GREY).into(),
-            debug: None,
             ticks: ticks.borrow().clone(),
         }
     }
@@ -71,29 +66,23 @@ impl<Tick: Clone> GridLine<Tick> {
         VerticalGridLine(Self::new(ticks))
     }
 
-    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
-        self.debug = Some(debug.into());
-        self
-    }
-
-    fn apply_attr(self, attr: &Attr) -> GridLineAttr<Tick> {
+    fn apply_attr(self, attr: &AttrState) -> GridLineAttr<Tick> {
         GridLineAttr {
             width: self.width,
             colour: self.colour,
-            debug: self.debug.unwrap_or(attr.debug),
             ticks: self.ticks.apply_attr(attr, short_format_fn()),
         }
     }
 }
 
 impl<X: Clone + PartialEq + 'static, Y: 'static> InnerLayout<X, Y> for HorizontalGridLine<X> {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
         Rc::new(HorizontalGridLineAttr(self.0.apply_attr(attr)))
     }
 }
 
 impl<X: 'static, Y: Clone + PartialEq + 'static> InnerLayout<X, Y> for VerticalGridLine<Y> {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn InnerOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
         Rc::new(VerticalGridLineAttr(self.0.apply_attr(attr)))
     }
 }
@@ -108,7 +97,6 @@ impl<X: Clone + PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
         Box::new(UseHorizontalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            debug: self.0.debug,
             ticks: self.0.ticks.clone().generate_x(series.data, avail_width),
         }))
     }
@@ -124,7 +112,6 @@ impl<X, Y: Clone + PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
         Box::new(UseVerticalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            debug: self.0.debug,
             ticks: self.0.ticks.clone().generate_y(series.data, avail_height),
         }))
     }
@@ -133,7 +120,7 @@ impl<X, Y: Clone + PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
 impl<X> UseInner for UseHorizontalGridLine<X> {
     fn render(self: Box<Self>, state: &State) -> View {
         view! {
-            <ViewHorizontalGridLine line=self.0 projection=state.projection />
+            <ViewHorizontalGridLine line=self.0 state=state />
         }
     }
 }
@@ -141,24 +128,24 @@ impl<X> UseInner for UseHorizontalGridLine<X> {
 impl<X> UseInner for UseVerticalGridLine<X> {
     fn render(self: Box<Self>, state: &State) -> View {
         view! {
-            <ViewVerticalGridLine line=self.0 projection=state.projection />
+            <ViewVerticalGridLine line=self.0 state=state />
         }
     }
 }
 
 #[component]
-fn ViewHorizontalGridLine<X: 'static>(
-    line: UseGridLine<X>,
-    projection: Signal<Projection>,
-) -> impl IntoView {
+fn ViewHorizontalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State) -> impl IntoView {
+    let debug = state.attr.debug;
+    let proj = state.projection;
+
     let ticks = Signal::derive(move || {
         let ticks = line.ticks; // Ticky ticky tick tick
-        with!(|ticks, projection| {
+        with!(|ticks, proj| {
             (ticks.ticks.iter())
                 .map(|tick| {
                     let x = ticks.state.position(tick);
-                    let x = projection.data_to_svg(x, 0.0).0;
-                    let bounds = projection.bounds();
+                    let x = proj.data_to_svg(x, 0.0).0;
+                    let bounds = proj.bounds();
                     view! {
                         <line
                             x1=x
@@ -174,25 +161,25 @@ fn ViewHorizontalGridLine<X: 'static>(
     });
     view! {
         <g class="_chartistry_grid_line_x">
-            <DebugRect label="XGridLine" debug=line.debug />
+            <DebugRect label="XGridLine" debug=debug />
             {ticks}
         </g>
     }
 }
 
 #[component]
-fn ViewVerticalGridLine<Y: 'static>(
-    line: UseGridLine<Y>,
-    projection: Signal<Projection>,
-) -> impl IntoView {
+fn ViewVerticalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State) -> impl IntoView {
+    let debug = state.attr.debug;
+    let proj = state.projection;
+
     let ticks = Signal::derive(move || {
         let ticks = line.ticks;
-        with!(|ticks, projection| {
+        with!(|ticks, proj| {
             (ticks.ticks.iter())
                 .map(|tick| {
                     let y = ticks.state.position(tick);
-                    let y = projection.data_to_svg(0.0, y).1;
-                    let bounds = projection.bounds();
+                    let y = proj.data_to_svg(0.0, y).1;
+                    let bounds = proj.bounds();
                     view! {
                         <line
                             x1=move || bounds.left_x()
@@ -208,7 +195,7 @@ fn ViewVerticalGridLine<Y: 'static>(
     });
     view! {
         <g class="_chartistry_grid_line_y">
-            <DebugRect label="YGridLine" debug=line.debug />
+            <DebugRect label="YGridLine" debug=debug />
             {ticks}
         </g>
     }

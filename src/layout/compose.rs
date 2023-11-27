@@ -1,10 +1,9 @@
 use crate::{
     bounds::Bounds,
-    chart::Attr,
     edge::{Edge, IntoEdgeBounds},
     projection::Projection,
     series::UseSeries,
-    state::State,
+    state::{AttrState, State},
 };
 use leptos::*;
 use std::rc::Rc;
@@ -14,11 +13,11 @@ use std::rc::Rc;
 // Horizontal (top, bottom, x-axis) options are generated at render time (constrained by layout)
 
 pub trait HorizontalLayout<X, Y> {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>>;
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn HorizontalOption<X, Y>>;
 }
 
 pub trait VerticalLayout<X, Y> {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>>;
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn VerticalOption<X, Y>>;
 }
 
 pub trait HorizontalOption<X, Y> {
@@ -207,7 +206,7 @@ impl<T, X, Y> HorizontalLayout<X, Y> for &T
 where
     T: Clone + HorizontalLayout<X, Y>,
 {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn HorizontalOption<X, Y>> {
         self.clone().apply_attr(attr)
     }
 }
@@ -216,7 +215,7 @@ impl<T, X, Y> VerticalLayout<X, Y> for &T
 where
     T: Clone + VerticalLayout<X, Y>,
 {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn VerticalOption<X, Y>> {
         self.clone().apply_attr(attr)
     }
 }

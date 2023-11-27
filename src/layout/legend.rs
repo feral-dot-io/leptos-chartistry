@@ -5,8 +5,13 @@ use super::{
     HorizontalLayout, HorizontalOption, VerticalLayout, VerticalOption,
 };
 use crate::{
-    bounds::Bounds, chart::Attr, debug::DebugRect, edge::Edge, line::UseLine, series::UseSeries,
-    state::State, Padding,
+    bounds::Bounds,
+    debug::DebugRect,
+    edge::Edge,
+    line::UseLine,
+    series::UseSeries,
+    state::{AttrState, State},
+    Padding,
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
@@ -15,16 +20,15 @@ use std::{borrow::Borrow, rc::Rc};
 pub struct Legend {
     snippet: Snippet,
     anchor: MaybeSignal<Anchor>,
-    padding: Option<MaybeSignal<Padding>>,
-    debug: Option<MaybeSignal<bool>>,
 }
 
 #[derive(Clone, Debug)]
 pub struct LegendAttr {
     snippet: UseSnippet,
     anchor: MaybeSignal<Anchor>,
-    padding: MaybeSignal<Padding>,
-    debug: MaybeSignal<bool>,
+    // TODO get rid of these
+    padding: Signal<Padding>,
+    debug: Signal<bool>,
 }
 
 #[derive(Clone, Debug)]
@@ -39,8 +43,6 @@ impl Legend {
         Self {
             snippet: snippet.borrow().clone(),
             anchor: anchor.into(),
-            padding: None,
-            debug: None,
         }
     }
 
@@ -54,34 +56,24 @@ impl Legend {
         Self::new(Anchor::End, snippet)
     }
 
-    pub fn set_padding(mut self, padding: impl Into<MaybeSignal<Padding>>) -> Self {
-        self.padding = Some(padding.into());
-        self
-    }
-
-    pub fn set_debug(mut self, debug: impl Into<MaybeSignal<bool>>) -> Self {
-        self.debug = Some(debug.into());
-        self
-    }
-
-    pub(crate) fn apply_attr(self, attr: &Attr) -> LegendAttr {
+    pub(crate) fn apply_attr(self, attr: &AttrState) -> LegendAttr {
         LegendAttr {
             snippet: self.snippet.into_use(attr),
             anchor: self.anchor,
-            padding: self.padding.unwrap_or(attr.padding),
-            debug: self.debug.unwrap_or(attr.debug),
+            padding: attr.padding,
+            debug: attr.debug,
         }
     }
 }
 
 impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for Legend {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn HorizontalOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn HorizontalOption<X, Y>> {
         Rc::new(self.apply_attr(attr))
     }
 }
 
 impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for Legend {
-    fn apply_attr(self, attr: &Attr) -> Rc<dyn VerticalOption<X, Y>> {
+    fn apply_attr(self, attr: &AttrState) -> Rc<dyn VerticalOption<X, Y>> {
         Rc::new(self.apply_attr(attr))
     }
 }
@@ -158,20 +150,27 @@ impl UseLegend {
 }
 
 impl UseLayout for UseLegend {
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, _: &State) -> View {
-        view! { <Legend legend=self.clone() edge=edge bounds=bounds /> }
+    fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View {
+        view! { <Legend legend=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
 
 #[component]
-pub fn Legend(legend: UseLegend, edge: Edge, bounds: Signal<Bounds>) -> impl IntoView {
+pub fn Legend<'a>(
+    legend: UseLegend,
+    edge: Edge,
+    bounds: Signal<Bounds>,
+    state: &'a State,
+) -> impl IntoView {
     let LegendAttr {
-        snippet,
-        anchor,
-        padding,
-        debug,
+        snippet, anchor, ..
     } = legend.attr;
-    let font = snippet.font;
+    let AttrState {
+        debug,
+        padding,
+        font,
+        ..
+    } = state.attr;
 
     let inner = Signal::derive(move || padding.get().apply(bounds.get()));
     let anchor_dir = if edge.is_horizontal() {
