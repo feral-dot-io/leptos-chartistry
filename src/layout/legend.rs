@@ -48,20 +48,27 @@ impl Legend {
         Self::new(Anchor::End, snippet)
     }
 
+    fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
+        let font = attr.font;
+        let padding = attr.padding;
+        Signal::derive(move || font.get().height() + padding.get().height())
+    }
+
     pub(crate) fn into_use<X, Y>(self, attr: &AttrState, series: &UseSeries<X, Y>) -> UseLegend {
+        let height = self.fixed_height(attr);
         let width = mk_width(&self.snippet, attr, series);
         UseLegend {
             snippet: self.snippet,
             anchor: self.anchor,
             lines: series.lines.clone(),
             width,
-            height: Snippet::fixed_height(attr),
+            height,
         }
     }
 }
 
 fn mk_width<X, Y>(snippet: &Snippet, attr: &AttrState, series: &UseSeries<X, Y>) -> Signal<f64> {
-    let snip_width = snippet.width(attr);
+    let snippet_width = snippet.taster_width(attr);
     let font = attr.font;
     let padding = attr.padding;
     let lines = series
@@ -75,13 +82,13 @@ fn mk_width<X, Y>(snippet: &Snippet, attr: &AttrState, series: &UseSeries<X, Y>)
             .map(|line| line.get().len() as f64 * font_width)
             .reduce(f64::max)
             .unwrap_or_default();
-        snip_width.get() + font_width + max_chars + padding.get().width()
+        snippet_width.get() + font_width + max_chars + padding.get().width()
     })
 }
 
 impl<X, Y> HorizontalLayout<X, Y> for Legend {
     fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
-        Snippet::fixed_height(attr)
+        self.fixed_height(attr)
     }
 
     fn into_use(
@@ -142,9 +149,18 @@ pub fn Legend<'a>(
         let mut lines = legend.lines.clone();
         lines.sort_by_key(|line| line.name.get());
 
-        let tds = lines.iter().map(|line| {
+        let tds = lines.into_iter().enumerate().map(|(i, line)| {
             let name = line.name.clone();
-            view!(<SnippetTd snippet=snippet.clone() line=line.clone() attr=&state.attr>{name}</SnippetTd>)
+            view! {
+                <SnippetTd
+                    snippet=snippet.clone()
+                    line=line
+                    attr=&state.attr
+                    left_padding=edge.is_horizontal() && i != 0
+                >
+                    {name}
+                </SnippetTd>
+            }
         });
 
         if edge.is_horizontal() {
@@ -158,13 +174,13 @@ pub fn Legend<'a>(
         <g class="_chartistry_legend">
             <DebugRect label="Legend" debug=debug bounds=vec![bounds.into(), inner] />
             <foreignObject
-                x=move || bounds.get().left_x()
-                y=move || bounds.get().top_y()
+                x=move || inner.get().left_x()
+                y=move || inner.get().top_y()
                 width=move || inner.get().width()
                 height=move || inner.get().height()
-                style="overflow: auto;">
+                style="overflow: visible;">
                 <div
-                    style="display: flex; height: 100%; overflow: auto;"
+                    style="display: flex; height: 100%; overflow: visible;"
                     style:flex-direction=anchor_dir
                     style:justify-content=move || anchor.get().css_justify_content()>
                     <table

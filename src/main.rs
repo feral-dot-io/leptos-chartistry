@@ -66,6 +66,7 @@ pub fn App() -> impl IntoView {
         // Labels
         .top(top_label)
         .top(Legend::end(Snippet::horizontal()))
+        .right(Legend::middle(Snippet::vertical()))
         // Ticks
         .left(left_ticks.clone())
         .bottom(bottom_ticks.clone())
