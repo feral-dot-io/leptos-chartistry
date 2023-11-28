@@ -1,10 +1,10 @@
 use crate::{
     aspect_ratio::{AspectRatioCalc, CalcUsing},
-    bounds::Bounds,
     debug::DebugRect,
     inner::InnerLayout,
-    layout::{HorizontalLayout, UnconstrainedLayout, VerticalLayout},
+    layout::{HorizontalLayout, Layout, VerticalLayout},
     overlay::{OverlayLayout, UseOverlay},
+    projection::Projection,
     series::{Series, UseSeries},
     state::{AttrState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
@@ -130,38 +130,31 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     let Chart {
         attr,
 
-        top,
+        mut top,
         right,
         bottom,
-        left,
+        mut left,
         inner,
         overlay,
         series,
     } = chart;
     let debug = attr.debug;
 
-    // Add top / bottom options
-    let layout = UnconstrainedLayout::horizontal_options(top, bottom, &attr);
+    // Edges are added top to bottom, left to right. Layout compoeses inside out:
+    top.reverse();
+    left.reverse();
 
-    // Add left / right options
-    let inner_height = aspect_ratio
-        .clone()
-        .inner_height_signal(layout.top_height, layout.bottom_height);
-    let layout = layout.vertical_options(left, right, &attr, &series, inner_height);
+    // Compose edges
+    let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &attr, &series);
 
-    // Compose chart
-    let inner_width = aspect_ratio.inner_width_signal(layout.left_width, layout.right_width);
-    let outer_bounds = Signal::derive(move || {
-        Bounds::new(
-            layout.left_width.get() + inner_width.get() + layout.right_width.get(),
-            layout.top_height.get() + inner_height.get() + layout.bottom_height.get(),
-        )
-    });
-    let layout = layout.compose(outer_bounds, inner_width, &attr, &series);
-    let state = State::new(attr, layout.projection, &watch);
-
-    // Edge layout
-    let edges = layout.render_edges(state.clone());
+    // Finalise state
+    let projection = {
+        let inner = layout.inner;
+        let data = series.data;
+        create_memo(move |_| Projection::new(inner.get(), data.with(|data| data.position_range())))
+            .into()
+    };
+    let state = State::new(attr, layout, projection, &watch);
 
     // Inner layout
     let inner = inner
@@ -175,15 +168,17 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
         .map(|opt| opt.render(series.clone(), &state))
         .collect_view();
 
+    let outer = state.layout.outer;
     view! {
         <svg
-            width=move || format!("{}px", outer_bounds.get().width())
-            height=move || format!("{}px", outer_bounds.get().height())
-            viewBox=move || with!(|outer_bounds| format!("0 0 {} {}", outer_bounds.width(), outer_bounds.height()))
-            style="display: block; overflow: visible;">
+            width=move || format!("{}px", outer.get().width())
+            height=move || format!("{}px", outer.get().height())
+            viewBox=move || with!(|outer| format!("0 0 {} {}", outer.width(), outer.height()))
+            style="display: block; overflow: visible;"
+        >
+            <DebugRect label="Chart" debug=debug bounds=vec![outer.into()] />
+            {edges.render(&state)}
             {inner}
-            <DebugRect label="Chart" debug=debug bounds=vec![outer_bounds, outer_bounds] />
-            {edges}
             <Series series=series projection=state.projection />
         </svg>
         {overlay}

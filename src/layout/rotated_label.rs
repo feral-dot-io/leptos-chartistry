@@ -1,4 +1,4 @@
-use super::{compose::UseLayout, HorizontalLayout, VerticalLayout};
+use super::{layout::UseLayout, HorizontalLayout, VerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
@@ -66,9 +66,9 @@ impl<X, Y> HorizontalLayout<X, Y> for RotatedLabel {
         self: Rc<Self>,
         _: &AttrState,
         _: &UseSeries<X, Y>,
-        _: Signal<f64>,
-    ) -> Rc<dyn UseLayout> {
-        self
+        _: Memo<f64>,
+    ) -> Box<dyn UseLayout> {
+        Box::new((*self).clone())
     }
 }
 
@@ -77,10 +77,10 @@ impl<X, Y> VerticalLayout<X, Y> for RotatedLabel {
         self: Rc<Self>,
         attr: &AttrState,
         _: &UseSeries<X, Y>,
-        _: Signal<f64>,
-    ) -> (Signal<f64>, Rc<dyn UseLayout>) {
+        _: Memo<f64>,
+    ) -> (Signal<f64>, Box<dyn UseLayout>) {
         // Note: width is height because it's rotated
-        (self.size(attr), self)
+        (self.size(attr), Box::new((*self).clone()))
     }
 }
 
@@ -111,7 +111,7 @@ impl Anchor {
 }
 
 impl UseLayout for RotatedLabel {
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State) -> View {
         view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
@@ -120,7 +120,7 @@ impl UseLayout for RotatedLabel {
 fn RotatedLabel<'a>(
     label: RotatedLabel,
     edge: Edge,
-    bounds: Signal<Bounds>,
+    bounds: Memo<Bounds>,
     state: &'a State,
 ) -> impl IntoView {
     let RotatedLabel { text, anchor } = label;
@@ -148,7 +148,7 @@ fn RotatedLabel<'a>(
 
     view! {
         <g class="_chartistry_rotated_label">
-            <DebugRect label="RotatedLabel" debug=debug bounds=vec![bounds, content] />
+            <DebugRect label="RotatedLabel" debug=debug bounds=vec![bounds.into(), content] />
             <text
                 x=move || position.with(|(_, x, _)| x.to_string())
                 y=move || position.with(|(_, _, y)| y.to_string())

@@ -1,5 +1,5 @@
 use super::{
-    compose::UseLayout,
+    layout::UseLayout,
     rotated_label::Anchor,
     snippet::{Snippet, SnippetTd},
     HorizontalLayout, VerticalLayout,
@@ -88,9 +88,9 @@ impl<X, Y> HorizontalLayout<X, Y> for Legend {
         self: Rc<Self>,
         attr: &AttrState,
         series: &UseSeries<X, Y>,
-        _: Signal<f64>,
-    ) -> Rc<dyn UseLayout> {
-        Rc::new((*self).clone().into_use(attr, series))
+        _: Memo<f64>,
+    ) -> Box<dyn UseLayout> {
+        Box::new((*self).clone().into_use(attr, series))
     }
 }
 
@@ -99,15 +99,15 @@ impl<X, Y> VerticalLayout<X, Y> for Legend {
         self: Rc<Self>,
         attr: &AttrState,
         series: &UseSeries<X, Y>,
-        _: Signal<f64>,
-    ) -> (Signal<f64>, Rc<dyn UseLayout>) {
-        let legend = Rc::new((*self).clone().into_use(attr, series));
+        _: Memo<f64>,
+    ) -> (Signal<f64>, Box<dyn UseLayout>) {
+        let legend = Box::new((*self).clone().into_use(attr, series));
         (legend.width, legend)
     }
 }
 
 impl UseLayout for UseLegend {
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State) -> View {
         view! { <Legend legend=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
@@ -116,7 +116,7 @@ impl UseLayout for UseLegend {
 pub fn Legend<'a>(
     legend: UseLegend,
     edge: Edge,
-    bounds: Signal<Bounds>,
+    bounds: Memo<Bounds>,
     state: &'a State,
 ) -> impl IntoView {
     let UseLegend {
@@ -156,7 +156,7 @@ pub fn Legend<'a>(
 
     view! {
         <g class="_chartistry_legend">
-            <DebugRect label="Legend" debug=debug bounds=vec![bounds, inner] />
+            <DebugRect label="Legend" debug=debug bounds=vec![bounds.into(), inner] />
             <foreignObject
                 x=move || bounds.get().left_x()
                 y=move || bounds.get().top_y()

@@ -109,8 +109,8 @@ impl EnvCalc {
 }
 
 impl AspectRatioCalc {
-    pub fn inner_width_signal(self, left: Signal<f64>, right: Signal<f64>) -> Signal<f64> {
-        Signal::derive(move || {
+    pub fn inner_width_signal(self, left: Memo<f64>, right: Memo<f64>) -> Memo<f64> {
+        create_memo(move |_| {
             let options = left.get() + right.get();
             match self {
                 AspectRatioCalc::WidthAndRatio(width, _) => width.size(options),
@@ -120,8 +120,8 @@ impl AspectRatioCalc {
         })
     }
 
-    pub fn inner_height_signal(self, top: Signal<f64>, bottom: Signal<f64>) -> Signal<f64> {
-        Signal::derive(move || {
+    pub fn inner_height_signal(self, top: Memo<f64>, bottom: Memo<f64>) -> Memo<f64> {
+        create_memo(move |_| {
             let options = top.get() + bottom.get();
             match self {
                 AspectRatioCalc::WidthAndRatio(width, ratio) => width.size(options) * ratio,

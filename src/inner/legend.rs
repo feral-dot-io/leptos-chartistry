@@ -71,7 +71,7 @@ fn InsetLegend<'a>(legend: UseLegend, edge: Edge, state: &'a State) -> impl Into
     let proj = state.projection;
     let width = legend.width;
     let height = legend.height;
-    let bounds = Signal::derive(move || {
+    let bounds = create_memo(move |_| {
         let bounds = proj.get().bounds();
         let height = height.get();
         let width = width.get();

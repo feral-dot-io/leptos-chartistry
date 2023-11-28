@@ -1,4 +1,4 @@
-use super::{compose::UseLayout, HorizontalLayout, VerticalLayout};
+use super::{layout::UseLayout, HorizontalLayout, VerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
@@ -141,10 +141,14 @@ impl<X: Clone + PartialEq, Y> HorizontalLayout<X, Y> for TickLabels<X> {
         self: Rc<Self>,
         attr: &AttrState,
         series: &UseSeries<X, Y>,
-        avail_width: Signal<f64>,
-    ) -> Rc<dyn UseLayout> {
-        Rc::new(UseTickLabels {
-            ticks: self.map_ticks((*self).clone().generate_x(attr, series.data, avail_width)),
+        avail_width: Memo<f64>,
+    ) -> Box<dyn UseLayout> {
+        Box::new(UseTickLabels {
+            ticks: self.map_ticks((*self).clone().generate_x(
+                attr,
+                series.data,
+                avail_width.into(),
+            )),
         })
     }
 }
@@ -154,11 +158,15 @@ impl<X, Y: Clone + PartialEq> VerticalLayout<X, Y> for TickLabels<Y> {
         self: Rc<Self>,
         attr: &AttrState,
         series: &UseSeries<X, Y>,
-        avail_height: Signal<f64>,
-    ) -> (Signal<f64>, Rc<dyn UseLayout>) {
-        let ticks = self.map_ticks((*self).clone().generate_y(attr, series.data, avail_height));
+        avail_height: Memo<f64>,
+    ) -> (Signal<f64>, Box<dyn UseLayout>) {
+        let ticks = self.map_ticks((*self).clone().generate_y(
+            attr,
+            series.data,
+            avail_height.into(),
+        ));
         let width = self.width(attr, ticks);
-        (width, Rc::new(UseTickLabels { ticks }))
+        (width, Box::new(UseTickLabels { ticks }))
     }
 }
 
@@ -194,7 +202,7 @@ impl<Tick: Clone> TickLabels<Tick> {
 }
 
 impl UseLayout for UseTickLabels {
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State) -> View {
         view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
@@ -221,7 +229,7 @@ pub fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
 pub fn TickLabels<'a>(
     ticks: UseTickLabels,
     edge: Edge,
-    bounds: Signal<Bounds>,
+    bounds: Memo<Bounds>,
     state: &'a State,
 ) -> impl IntoView {
     let state = state.clone();
@@ -246,12 +254,7 @@ pub fn TickLabels<'a>(
                 key=|(_, label)| label.to_owned()
                 let:tick
             >
-                <TickLabel
-                    edge=edge
-                    outer=bounds
-                    state=&state
-                    tick=tick
-                />
+                <TickLabel edge=edge outer=bounds state=&state tick=tick />
             </For>
         </g>
     }
@@ -260,7 +263,7 @@ pub fn TickLabels<'a>(
 #[component]
 fn TickLabel<'a>(
     edge: Edge,
-    outer: Signal<Bounds>,
+    outer: Memo<Bounds>,
     state: &'a State,
     tick: (f64, String),
 ) -> impl IntoView {

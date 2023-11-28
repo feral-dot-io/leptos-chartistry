@@ -1,125 +1,102 @@
-use crate::{bounds::Bounds, edge::Edge, state::State, UseSeries};
+use crate::{
+    aspect_ratio::AspectRatioCalc,
+    bounds::Bounds,
+    edge::Edge,
+    state::{AttrState, State},
+    UseSeries,
+};
 use leptos::*;
 use std::rc::Rc;
 
-/*
-Compose:
-    - Start with some form of bounds (either inner or outer)
-    - List of top / bottom sizes.
-    - Constrains the layout.
-    - Calculate the left / right sizes using contraints.
-    - Return a composed layout.
-*/
-
 #[derive(Clone, Debug)]
 pub struct Layout {
-    pub options: LayoutOptions,
-    pub top_bounds: Signal<Bounds>,
-    pub right_bounds: Signal<Bounds>,
-    pub bottom_bounds: Signal<Bounds>,
-    pub left_bounds: Signal<Bounds>,
+    pub outer: Memo<Bounds>,
+    pub top: Vec<Memo<Bounds>>,
+    pub top_bounds: Memo<Bounds>,
+    pub right: Vec<Memo<Bounds>>,
+    pub right_bounds: Memo<Bounds>,
+    pub bottom: Vec<Memo<Bounds>>,
+    pub bottom_bounds: Memo<Bounds>,
+    pub left: Vec<Memo<Bounds>>,
+    pub left_bounds: Memo<Bounds>,
     pub inner: Memo<Bounds>,
 }
 
-#[derive(Clone, Debug)]
-pub struct LayoutOptions {
-    pub top: Memo<Vec<Bounds>>,
-    pub right: Memo<Vec<Bounds>>,
-    pub bottom: Memo<Vec<Bounds>>,
-    pub left: Memo<Vec<Bounds>>,
-}
-
-pub trait HorizontalOption<X, Y> {
-    fn fixed_height(&self) -> Signal<f64>;
+pub trait HorizontalLayout<X, Y> {
+    fn fixed_height(&self, attr: &AttrState) -> Signal<f64>;
     fn into_use(
         self: Rc<Self>,
+        attr: &AttrState,
         series: &UseSeries<X, Y>,
-        bounds: Signal<Bounds>,
-    ) -> Rc<dyn UseLayout>;
+        inner_width: Memo<f64>,
+    ) -> Box<dyn UseLayout>;
 }
 
-pub trait VerticalOption<X, Y> {
+pub trait VerticalLayout<X, Y> {
     fn into_use(
         self: Rc<Self>,
+        attr: &AttrState,
         series: &UseSeries<X, Y>,
         inner_height: Memo<f64>,
-    ) -> (Signal<f64>, Rc<dyn UseLayout>);
+    ) -> (Signal<f64>, Box<dyn UseLayout>);
 }
 
 pub trait UseLayout {
-    fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View;
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State) -> View;
 }
 
-pub struct ConstrainedLayout {
-    pub top: Vec<Signal<f64>>,
-    pub top_height: Signal<f64>,
-    pub bottom: Vec<Signal<f64>>,
-    pub bottom_height: Signal<f64>,
+pub struct ComposedLayout {
+    edges: Vec<(Edge, Memo<Bounds>, Box<dyn UseLayout>)>,
 }
 
-impl ConstrainedLayout {
-    // TODO: pass vec of signals?
-    // TODO: ensure bottom is reversed prior to this point.
-    pub fn new<X, Y>(
-        top: Vec<&dyn HorizontalOption<X, Y>>,
-        bottom: Vec<&dyn HorizontalOption<X, Y>>,
-    ) -> Self {
-        let (top, top_height) = Self::collect_heights(&top);
-        let (bottom, bottom_height) = Self::collect_heights(&bottom);
-        Self {
-            top,
-            top_height,
-            bottom,
-            bottom_height,
-        }
-    }
-
-    fn collect_heights<X, Y>(
-        items: &[&dyn HorizontalOption<X, Y>],
-    ) -> (Vec<Signal<f64>>, Signal<f64>) {
-        let heights = items
-            .into_iter()
-            .map(|c| c.fixed_height())
-            .collect::<Vec<_>>();
-        let total = Signal::derive(move || heights.iter().map(|opt| opt.get()).sum::<f64>());
-        (heights, total)
-    }
-
+impl Layout {
+    /// Composes a layout giving bounds to edges and invididual components.
+    ///
+    /// Note:
+    /// Horizontal (top, bottom, x-axis) options have a fixed height (not dependent on the bounds of other elements) that constrains the layout.
+    /// Vertical (left, right, y-axis) options have a variable width and are generated at layout time having been constrained by the horizontal options.
+    ///
+    /// This function is long but procedural. General process:
+    ///  - Constrain the layout using fixed height from top / bottom edges.
+    ///  - Calculate the inner height.
+    ///  - Process the left / right components using inner height.
+    ///  - Calculate the inner width.
+    ///  - Process top / bottom components using inner width.
+    ///  - Calculate the bounds: outer, inner, edges, edge components. Adhere to aspect ratio.
+    ///  - Return state (Layout) and a deferred renderer (ComposedLayout).
+    ///
     pub fn compose<X, Y>(
-        self,
-        outer: Signal<Bounds>,
+        top: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
+        right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
+        bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
+        left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
+        aspect_ratio: AspectRatioCalc,
+        attr: &AttrState,
         series: &UseSeries<X, Y>,
-        left: Vec<&dyn VerticalOption<X, Y>>,
-        right: Vec<&dyn VerticalOption<X, Y>>,
-    ) -> Layout {
-        let ConstrainedLayout {
-            top,
-            top_height,
-            bottom,
-            bottom_height,
-        } = self;
-        let inner_height =
-            create_memo(move |_| outer.get().height() - top_height.get() - bottom_height.get());
+    ) -> (Layout, ComposedLayout) {
+        // Horizontal options
+        let top_heights = collect_heights(&top, attr);
+        let top_height = sum_sizes(top_heights.clone());
+        let bottom_heights = collect_heights(&bottom, attr);
+        let bottom_height = sum_sizes(bottom_heights.clone());
+        let inner_height = aspect_ratio
+            .clone()
+            .inner_height_signal(top_height, bottom_height);
 
         // Vertical options
-        let left = left
-            .into_iter()
-            .map(|c| c.width(series, inner_height))
-            .collect::<Vec<_>>();
-        let right = right
-            .into_iter()
-            .map(|c| c.width(series, inner_height))
-            .collect::<Vec<_>>();
-        let left_width = {
-            let left = left.to_owned();
-            Signal::derive(move || left.iter().map(|opt| opt.get()).sum::<f64>())
-        };
-        let right_width = {
-            let right = right.to_owned();
-            Signal::derive(move || right.iter().map(|opt| opt.get()).sum::<f64>())
-        };
+        let (left_widths, left) = use_vertical(&left, attr, series, inner_height);
+        let left_width = sum_sizes(left_widths.clone());
+        let (right_widths, right) = use_vertical(&right, attr, series, inner_height);
+        let right_width = sum_sizes(right_widths.clone());
+        let inner_width = aspect_ratio.inner_width_signal(left_width, right_width);
 
-        // Inner chart
+        // Bounds
+        let outer = create_memo(move |_| {
+            Bounds::new(
+                left_width.get() + inner_width.get() + right_width.get(),
+                top_height.get() + inner_height.get() + bottom_height.get(),
+            )
+        });
         let inner = create_memo(move |_| {
             outer.get().shrink(
                 top_height.get(),
@@ -130,72 +107,127 @@ impl ConstrainedLayout {
         });
 
         // Edge bounds
-        let top_bounds = Signal::derive(move || {
+        let top_bounds = create_memo(move |_| {
             let i = inner.get();
             Bounds::from_points(i.left_x(), outer.get().top_y(), i.right_x(), i.top_y())
         });
-        let right_bounds = Signal::derive(move || {
+        let right_bounds = create_memo(move |_| {
             let i = inner.get();
             Bounds::from_points(i.right_x(), i.top_y(), outer.get().right_x(), i.bottom_y())
         });
-        let bottom_bounds = Signal::derive(move || {
+        let bottom_bounds = create_memo(move |_| {
             let i = inner.get();
             let bottom_y = outer.get().bottom_y();
             Bounds::from_points(i.left_x(), i.bottom_y(), i.right_x(), bottom_y)
         });
-        let left_bounds = Signal::derive(move || {
+        let left_bounds = create_memo(move |_| {
             let i = inner.get();
             Bounds::from_points(outer.get().left_x(), i.top_y(), i.left_x(), i.bottom_y())
         });
 
-        // Option edge bounds
-        // TODO: If we run out of space, prioritise options closest to inner
-        let options = LayoutOptions {
-            top: inner_bounds(Edge::Top, outer, top),
-            right: inner_bounds(Edge::Right, outer, right),
-            bottom: inner_bounds(Edge::Bottom, outer, bottom),
-            left: inner_bounds(Edge::Left, outer, left),
-        };
-
-        Layout {
-            options,
+        // State signals
+        let layout = Layout {
+            outer,
+            top: option_bounds(Edge::Top, top_bounds, top_heights),
             top_bounds,
+            right: option_bounds(Edge::Right, right_bounds, right_widths),
             right_bounds,
+            bottom: option_bounds(Edge::Bottom, bottom_bounds, bottom_heights),
             bottom_bounds,
+            left: option_bounds(Edge::Left, left_bounds, left_widths),
             left_bounds,
             inner,
-        }
+        };
+
+        let vertical = |edge, bounds: &[Memo<Bounds>], items: Vec<_>| {
+            items
+                .into_iter()
+                .enumerate()
+                .map(move |(index, opt)| (edge, bounds[index], opt))
+                .collect::<Vec<_>>()
+        };
+        let horizontal = |edge: Edge,
+                          bounds: &[Memo<Bounds>],
+                          items: Vec<Rc<dyn HorizontalLayout<X, Y>>>| {
+            items
+                .into_iter()
+                .enumerate()
+                .map(|(index, opt)| (edge, bounds[index], opt.into_use(attr, series, inner_width)))
+                .collect::<Vec<_>>()
+        };
+
+        // Chain edges together for a deferred render
+        let composed = ComposedLayout {
+            edges: vertical(Edge::Left, &layout.left, left)
+                .into_iter()
+                .chain(vertical(Edge::Right, &layout.right, right))
+                .chain(horizontal(Edge::Top, &layout.top, top))
+                .chain(horizontal(Edge::Bottom, &layout.bottom, bottom))
+                .collect::<Vec<_>>(),
+        };
+        (layout, composed)
     }
 }
 
-fn inner_bounds(edge: Edge, outer: Signal<Bounds>, sizes: Vec<Signal<f64>>) -> Memo<Vec<Bounds>> {
-    create_memo(move |_| {
-        let outer = outer.get();
-        let width = outer.width();
-        let height = outer.height();
-        let mut acc = 0.0;
-        sizes
-            .iter()
-            .rev()
-            .map(|size| {
-                let prev_acc = acc;
-                acc += size.get(); // Shrink handles overflow
+fn collect_heights<X, Y>(
+    items: &[Rc<dyn HorizontalLayout<X, Y>>],
+    attr: &AttrState,
+) -> Vec<Signal<f64>> {
+    items
+        .iter()
+        .map(|c| c.fixed_height(attr))
+        .collect::<Vec<_>>()
+}
 
+fn use_vertical<X, Y>(
+    items: &[Rc<dyn VerticalLayout<X, Y>>],
+    attr: &AttrState,
+    series: &UseSeries<X, Y>,
+    inner_height: Memo<f64>,
+) -> (Vec<Signal<f64>>, Vec<Box<dyn UseLayout>>) {
+    items
+        .iter()
+        .map(|c| c.clone().into_use(attr, series, inner_height))
+        .unzip()
+}
+
+fn sum_sizes(sizes: Vec<Signal<f64>>) -> Memo<f64> {
+    create_memo(move |_| sizes.iter().map(|opt| opt.get()).sum::<f64>())
+}
+
+fn option_bounds(edge: Edge, outer: Memo<Bounds>, sizes: Vec<Signal<f64>>) -> Vec<Memo<Bounds>> {
+    let mut seen = Vec::<Signal<f64>>::with_capacity(sizes.len());
+    sizes
+        .into_iter()
+        .rev() // Inside out
+        .map(|size| {
+            let prev = seen.clone();
+            seen.push(size);
+            create_memo(move |_| {
+                // Proximal "nearest" and distal "furthest" are distances from the inner edge
+                let proximal = prev.iter().map(|s| s.get()).sum::<f64>();
+                let distal = proximal + size.get();
+                let outer = outer.get();
+                let width = outer.width();
+                let height = outer.height();
                 match edge {
-                    Edge::Top => {
-                        outer.shrink(height - acc, outer.right_x(), prev_acc, outer.left_x())
-                    }
-                    Edge::Bottom => {
-                        outer.shrink(prev_acc, outer.right_x(), height - acc, outer.left_x())
-                    }
-                    Edge::Left => {
-                        outer.shrink(outer.top_y(), prev_acc, outer.bottom_y(), width - acc)
-                    }
-                    Edge::Right => {
-                        outer.shrink(outer.top_y(), width - acc, outer.bottom_y(), prev_acc)
-                    }
+                    Edge::Top => outer.shrink(height - distal, 0.0, proximal, 0.0),
+                    Edge::Bottom => outer.shrink(proximal, 0.0, height - distal, 0.0),
+                    Edge::Left => outer.shrink(0.0, proximal, 0.0, width - distal),
+                    Edge::Right => outer.shrink(0.0, width - distal, 0.0, proximal),
                 }
             })
-            .collect::<Vec<_>>()
-    })
+        })
+        .collect::<Vec<_>>()
+}
+
+impl ComposedLayout {
+    pub fn render(self, state: &State) -> View {
+        let state = state.clone();
+        self.edges
+            .iter()
+            .enumerate()
+            .map(move |(_, &(edge, bounds, ref layout))| layout.render(edge, bounds, &state))
+            .collect_view()
+    }
 }

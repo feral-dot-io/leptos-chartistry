@@ -36,7 +36,7 @@ pub fn f64_to_dt(at: f64) -> DateTime<Utc> {
 
 #[component]
 pub fn App() -> impl IntoView {
-    let (debug, set_debug) = create_signal(false);
+    let (debug, set_debug) = create_signal(true);
 
     // Font
     let (font_height, set_font_height) = create_signal(DEFAULT_FONT_HEIGHT);
