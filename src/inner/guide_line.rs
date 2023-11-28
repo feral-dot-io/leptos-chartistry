@@ -133,7 +133,7 @@ fn GuideLine<'a, X: 'static, Y: 'static>(
     view! {
         <g class=format!("_chartistry_guide_line_{}", line.axis)>
             <Show when=move || mouse_hover_inner.get() && have_data.get() >
-                <DebugRect label="GuideLine" debug=debug />
+                <DebugRect label=format!("guide_line_{}", line.axis) debug=debug />
                 <line
                     x1=x1
                     y1=y1

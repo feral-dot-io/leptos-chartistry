@@ -1,8 +1,8 @@
 use super::{InnerLayout, UseInner};
 use crate::{
     colours::{Colour, LIGHTISH_GREY},
+    debug::DebugRect,
     edge::Edge,
-    projection::Projection,
     state::State,
     UseSeries,
 };
@@ -81,16 +81,18 @@ impl<X, Y> InnerLayout<X, Y> for AxisMarker {
 
 impl UseInner for AxisMarker {
     fn render(self: Box<Self>, state: &State) -> View {
-        view! {
-            <AxisMarker marker=*self projection=state.projection />
-        }
+        view!( <AxisMarker marker=*self state=state /> )
     }
 }
 
 #[component]
-pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl IntoView {
-    let pos = Signal::derive(move || {
-        let b = projection.get().bounds();
+pub fn AxisMarker<'a>(marker: AxisMarker, state: &'a State) -> impl IntoView {
+    let debug = state.attr.debug;
+    let proj = state.projection;
+
+    let pos = create_memo(move |_| {
+        let proj = proj.get();
+        let b = proj.bounds();
         let (top, right, bottom, left) = (b.top_y(), b.right_x(), b.bottom_y(), b.left_x());
         let coords @ (x1, y1, x2, y2) = match marker.placement.get() {
             Placement::Edge => match marker.edge.get() {
@@ -101,7 +103,7 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
             },
 
             Placement::Zero => {
-                let (zero_x, zero_y) = projection.with(|proj| proj.data_to_svg(0.0, 0.0));
+                let (zero_x, zero_y) = proj.data_to_svg(0.0, 0.0);
                 match marker.edge.get() {
                     Edge::Top => (left, zero_y, right, zero_y),
                     Edge::Bottom => (left, zero_y, right, zero_y),
@@ -110,13 +112,15 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
                 }
             }
         };
-        // Check coords are within projection bounds
-        if b.contains(x1, y1) && b.contains(x2, y2) {
-            Some(coords)
-        } else {
-            None
-        }
+        let in_bounds = b.contains(x1, y1) && b.contains(x2, y2);
+        (in_bounds, coords)
     });
+    // Check coords are within projection bounds
+    let in_bounds = create_memo(move |_| pos.get().0);
+    let x1 = create_memo(move |_| pos.get().1 .0);
+    let y1 = create_memo(move |_| pos.get().1 .1);
+    let x2 = create_memo(move |_| pos.get().1 .2);
+    let y2 = create_memo(move |_| pos.get().1 .3);
 
     let arrow = move || {
         if marker.arrow.get() {
@@ -127,24 +131,6 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
     };
 
     let colour = move || marker.colour.get().to_string();
-    let render = move || {
-        if let Some((x1, y1, x2, y2)) = pos.get() {
-            view! {
-                <line
-                    x1=x1
-                    y1=y1
-                    x2=x2
-                    y2=y2
-                    stroke=colour
-                    stroke-width=marker.width
-                    marker-end=arrow
-                />
-            }
-            .into_view()
-        } else {
-            ().into_view()
-        }
-    };
     view! {
         <g class="_chartistry_axis_marker">
             <defs>
@@ -159,7 +145,18 @@ pub fn AxisMarker(marker: AxisMarker, projection: Signal<Projection>) -> impl In
                     <path d="M0,0 L0,8 L7,4 z" fill=colour />
                 </marker>
             </defs>
-            {render}
+            <Show when=move || in_bounds.get() >
+                <DebugRect label="axis_marker" debug=debug />
+                <line
+                    x1=x1
+                    y1=y1
+                    x2=x2
+                    y2=y2
+                    stroke=colour
+                    stroke-width=marker.width
+                    marker-end=arrow
+                />
+            </Show>
         </g>
     }
 }
