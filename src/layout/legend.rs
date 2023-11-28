@@ -1,7 +1,7 @@
 use super::{
     compose::UseLayout,
     rotated_label::Anchor,
-    snippet::{Snippet, SnippetTd, UseSnippet},
+    snippet::{Snippet, SnippetTd},
     HorizontalLayout, VerticalLayout,
 };
 use crate::{
@@ -23,7 +23,7 @@ pub struct Legend {
 
 #[derive(Clone, Debug)]
 pub struct UseLegend {
-    pub(crate) snippet: UseSnippet,
+    pub(crate) snippet: Snippet,
     anchor: MaybeSignal<Anchor>,
     lines: Vec<UseLine>,
     pub(crate) width: Signal<f64>,
@@ -49,10 +49,9 @@ impl Legend {
     }
 
     pub(crate) fn into_use<X, Y>(self, attr: &AttrState, series: &UseSeries<X, Y>) -> UseLegend {
-        let snippet = self.snippet.into_use(attr);
-        let width = mk_width(&snippet, attr, series);
+        let width = mk_width(&self.snippet, attr, series);
         UseLegend {
-            snippet,
+            snippet: self.snippet,
             anchor: self.anchor,
             lines: series.lines.clone(),
             width,
@@ -61,8 +60,8 @@ impl Legend {
     }
 }
 
-fn mk_width<X, Y>(snippet: &UseSnippet, attr: &AttrState, series: &UseSeries<X, Y>) -> Signal<f64> {
-    let snip_width = snippet.width();
+fn mk_width<X, Y>(snippet: &Snippet, attr: &AttrState, series: &UseSeries<X, Y>) -> Signal<f64> {
+    let snip_width = snippet.width(attr);
     let font = attr.font;
     let padding = attr.padding;
     let lines = series
@@ -137,6 +136,7 @@ pub fn Legend<'a>(
         "column"
     };
 
+    let state = state.clone();
     let body = move || {
         // Sort lines by name
         let mut lines = legend.lines.clone();
@@ -144,7 +144,7 @@ pub fn Legend<'a>(
 
         let tds = lines.iter().map(|line| {
             let name = line.name.clone();
-            view!(<SnippetTd snippet=snippet.clone() line=line.clone()>{name}</SnippetTd>)
+            view!(<SnippetTd snippet=snippet.clone() line=line.clone() attr=&state.attr>{name}</SnippetTd>)
         });
 
         if edge.is_horizontal() {

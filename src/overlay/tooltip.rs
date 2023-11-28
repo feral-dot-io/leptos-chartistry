@@ -1,9 +1,6 @@
 use super::{OverlayLayout, UseOverlay};
 use crate::{
-    layout::{
-        snippet::{SnippetTd, UseSnippet},
-        tick_labels::align_tick_labels,
-    },
+    layout::{snippet::SnippetTd, tick_labels::align_tick_labels},
     line::UseLine,
     projection::Projection,
     series::{Data, UseSeries},
@@ -25,7 +22,7 @@ pub struct Tooltip<X: Clone, Y: Clone> {
 
 #[derive(Clone)]
 pub struct TooltipAttr<X: 'static, Y: 'static> {
-    snippet: UseSnippet,
+    snippet: Snippet,
     table_margin: MaybeSignal<f64>,
 
     x_ticks: TickLabels<X>,
@@ -34,7 +31,7 @@ pub struct TooltipAttr<X: 'static, Y: 'static> {
 
 #[derive(Clone)]
 pub struct UseTooltip<X: 'static, Y: 'static> {
-    snippet: UseSnippet,
+    snippet: Snippet,
     table_margin: MaybeSignal<f64>,
 
     x_format: TickFormatFn<X>,
@@ -83,7 +80,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayo
     fn apply_attr(self, attr: &AttrState) -> Rc<dyn UseOverlay<X, Y>> {
         let font = attr.font;
         Rc::new(TooltipAttr {
-            snippet: self.snippet.into_use(attr),
+            snippet: self.snippet,
             table_margin: self
                 .table_margin
                 .unwrap_or_else(|| Signal::derive(move || font.get().height()).into()),
@@ -160,7 +157,7 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
         y_ticks,
     } = tooltip;
     let data = series.data;
-    let font = snippet.font;
+    let font = state.attr.font;
 
     // Get nearest values
     let data_x = Signal::derive(move || {
@@ -177,6 +174,7 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
             )
         })
     };
+    let state = state.clone();
     let y_body = create_memo(move |_| {
         // Sort lines by name
         let mut lines = series
@@ -207,7 +205,7 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
                 let name = line.name.clone();
                 view! {
                     <tr>
-                        <SnippetTd snippet=snippet.clone() line=line>{name} ":"</SnippetTd>
+                        <SnippetTd snippet=snippet.clone() line=line attr=&state.attr>{name} ":"</SnippetTd>
                         <td
                             style="text-align: left; white-space: pre; font-family: monospace;"
                             style:padding-left=move || format!("{}px", font.get().width())>
