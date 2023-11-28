@@ -1,4 +1,4 @@
-use super::{OverlayLayout, UseOverlay};
+use super::OverlayLayout;
 use crate::{
     layout::{snippet::SnippetTd, tick_labels::align_tick_labels},
     line::UseLine,
@@ -12,23 +12,12 @@ use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
 
 #[derive(Clone)]
-pub struct Tooltip<X: Clone, Y: Clone> {
+pub struct Tooltip<X, Y> {
     snippet: Snippet,
     table_margin: Option<MaybeSignal<f64>>,
-
     x_format: TickFormatFn<X>,
     y_format: TickFormatFn<Y>,
-    x_ticks: TickLabels<X>,
-    y_ticks: TickLabels<Y>,
-}
 
-#[derive(Clone)]
-pub struct TooltipAttr<X: 'static, Y: 'static> {
-    snippet: Snippet,
-    table_margin: MaybeSignal<f64>,
-
-    x_format: TickFormatFn<X>,
-    y_format: TickFormatFn<Y>,
     x_ticks: TickLabels<X>,
     y_ticks: TickLabels<Y>,
 }
@@ -36,10 +25,10 @@ pub struct TooltipAttr<X: 'static, Y: 'static> {
 #[derive(Clone)]
 pub struct UseTooltip<X: 'static, Y: 'static> {
     snippet: Snippet,
-    table_margin: MaybeSignal<f64>,
-
+    table_margin: Option<MaybeSignal<f64>>,
     x_format: TickFormatFn<X>,
     y_format: TickFormatFn<Y>,
+
     x_ticks: Signal<GeneratedTicks<X>>,
     y_ticks: Signal<GeneratedTicks<Y>>,
 }
@@ -90,48 +79,30 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
     }
 }
 
-impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayout<X, Y>
-    for Tooltip<X, Y>
-{
-    fn into_use(self, attr: &AttrState) -> Rc<dyn UseOverlay<X, Y>> {
-        let font = attr.font;
-        Rc::new(TooltipAttr {
-            snippet: self.snippet,
-            table_margin: self
-                .table_margin
-                .unwrap_or_else(|| Signal::derive(move || font.get().height()).into()),
-            x_format: self.x_format,
-            y_format: self.y_format,
-            x_ticks: self.x_ticks,
-            y_ticks: self.y_ticks,
-        })
-    }
-}
-
-impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
-    fn into_use(self, data: Signal<Data<X, Y>>, state: &State) -> UseTooltip<X, Y> {
+impl<X: PartialEq, Y: PartialEq> Tooltip<X, Y> {
+    fn to_use(&self, data: Signal<Data<X, Y>>, state: &State) -> UseTooltip<X, Y> {
         let proj = state.projection;
         let avail_width = Projection::derive_width(proj);
         let avail_height = Projection::derive_height(proj);
 
         UseTooltip {
-            snippet: self.snippet,
+            snippet: self.snippet.clone(),
             table_margin: self.table_margin,
-            x_format: self.x_format,
-            y_format: self.y_format,
+            x_format: self.x_format.clone(),
+            y_format: self.y_format.clone(),
             x_ticks: self.x_ticks.generate_x(&state.attr, data, avail_width),
             y_ticks: self.y_ticks.generate_y(&state.attr, data, avail_height),
         }
     }
 }
 
-impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAttr<X, Y> {
+impl<X: PartialEq, Y: PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
     fn render(self: Rc<Self>, series: UseSeries<X, Y>, state: &State) -> View {
-        let tooltip = (*self).clone().into_use(series.data, state);
+        let tooltip = self.to_use(series.data, state);
         view! {
             <Tooltip
-                tooltip=tooltip.clone()
-                series=series.clone()
+                tooltip=tooltip
+                series=&series
                 state=&state
             />
         }
@@ -141,7 +112,7 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAtt
 #[component]
 fn Tooltip<'a, X: 'static, Y: 'static>(
     tooltip: UseTooltip<X, Y>,
-    series: UseSeries<X, Y>,
+    series: &'a UseSeries<X, Y>,
     state: &'a State,
 ) -> impl IntoView {
     let UseTooltip {
@@ -178,30 +149,27 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
         })
     };
     let state = state.clone();
-    let y_body = create_memo(move |_| {
-        // Sort lines by name
-        let mut lines = series
-            .lines
-            .clone()
-            .into_iter()
-            .enumerate()
-            .collect::<Vec<_>>();
-        lines.sort_by_key(|(_, line)| line.name.get());
+    let y_body = {
+        let lines = series.lines.clone();
+        create_memo(move |_| {
+            // Sort lines by name
+            let mut lines = lines.clone().into_iter().enumerate().collect::<Vec<_>>();
+            lines.sort_by_key(|(_, line)| line.name.get());
 
-        let (lines, labels): (Vec<UseLine>, Vec<String>) = lines
-            .into_iter()
-            .map(|(line_id, line)| {
-                let y_value = with!(|data, data_x, y_ticks| {
-                    data.nearest_y(*data_x, line_id).map_or_else(
-                        || "-".to_string(),
-                        |y_value| (y_format)(&*y_ticks.state, y_value),
-                    )
-                });
-                (line, y_value)
-            })
-            .unzip();
-        let labels = align_tick_labels(labels);
-        lines
+            let (lines, labels): (Vec<UseLine>, Vec<String>) = lines
+                .into_iter()
+                .map(|(line_id, line)| {
+                    let y_value = with!(|data, data_x, y_ticks| {
+                        data.nearest_y(*data_x, line_id).map_or_else(
+                            || "-".to_string(),
+                            |y_value| (y_format)(&*y_ticks.state, y_value),
+                        )
+                    });
+                    (line, y_value)
+                })
+                .unzip();
+            let labels = align_tick_labels(labels);
+            lines
             .into_iter()
             .zip(labels)
             .map(|(line, label)| {
@@ -218,8 +186,11 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
                 }
             })
             .collect_view()
-    });
+        })
+    };
 
+    let table_margin =
+        table_margin.unwrap_or_else(|| Signal::derive(move || font.get().height()).into());
     view! {
         <Show when=move || mouse_hover_inner.get()>
             <div

@@ -3,7 +3,7 @@ use crate::{
     debug::DebugRect,
     inner::InnerLayout,
     layout::{HorizontalLayout, Layout, VerticalLayout},
-    overlay::{OverlayLayout, UseOverlay},
+    overlay::OverlayLayout,
     projection::Projection,
     series::{Series, UseSeries},
     state::{AttrState, State},
@@ -22,7 +22,7 @@ pub struct Chart<X: 'static, Y: 'static> {
     bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
     left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
     inner: Vec<Rc<dyn InnerLayout<X, Y>>>,
-    overlay: Vec<Rc<dyn UseOverlay<X, Y>>>,
+    overlay: Vec<Rc<dyn OverlayLayout<X, Y>>>,
     series: UseSeries<X, Y>,
 }
 
@@ -75,8 +75,8 @@ impl<X, Y> Chart<X, Y> {
         self
     }
 
-    pub fn overlay(mut self, opt: impl OverlayLayout<X, Y>) -> Self {
-        self.overlay.push(opt.into_use(&self.attr));
+    pub fn overlay(mut self, opt: impl OverlayLayout<X, Y> + 'static) -> Self {
+        self.overlay.push(Rc::new(opt));
         self
     }
 }

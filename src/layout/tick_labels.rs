@@ -77,27 +77,28 @@ impl<Tick> TickLabels<Tick> {
 
 impl<X: PartialEq> TickLabels<X> {
     pub fn generate_x<Y>(
-        self,
+        &self,
         attr: &AttrState,
         data: Signal<Data<X, Y>>,
         avail_width: Signal<f64>,
     ) -> Signal<GeneratedTicks<X>> {
         let font = attr.font;
         let padding = attr.padding;
+        let format = self.format.clone();
+        let gen = self.generator.clone();
         create_memo(move |_| {
-            let format = self.format.clone();
             data.with(|data| {
                 data.x_range()
                     .map(|(first, last)| {
                         let font_width = font.get().width();
                         let padding_width = padding.get().width();
                         let span = HorizontalSpan::new(
-                            format,
+                            format.clone(),
                             font_width,
                             padding_width,
                             avail_width.get(),
                         );
-                        self.generator.generate(first, last, Box::new(span))
+                        gen.generate(first, last, Box::new(span))
                     })
                     .unwrap_or_else(GeneratedTicks::none)
             })
@@ -108,20 +109,21 @@ impl<X: PartialEq> TickLabels<X> {
 
 impl<Y: PartialEq> TickLabels<Y> {
     pub fn generate_y<X>(
-        self,
+        &self,
         attr: &AttrState,
         data: Signal<Data<X, Y>>,
         avail_height: Signal<f64>,
     ) -> Signal<GeneratedTicks<Y>> {
         let font = attr.font;
         let padding = attr.padding;
+        let gen = self.generator.clone();
         create_memo(move |_| {
             data.with(|data| {
                 data.y_range()
                     .map(|(first, last)| {
                         let line_height = font.get().height() + padding.get().height();
                         let span = VerticalSpan::new(line_height, avail_height.get());
-                        self.generator.generate(first, last, Box::new(span))
+                        gen.generate(first, last, Box::new(span))
                     })
                     .unwrap_or_else(GeneratedTicks::none)
             })

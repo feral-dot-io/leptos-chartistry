@@ -1,4 +1,4 @@
 mod layout;
 pub mod tooltip;
 
-pub use layout::{OverlayLayout, UseOverlay};
+pub use layout::OverlayLayout;
