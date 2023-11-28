@@ -1,4 +1,4 @@
-use super::{layout::UseLayout, HorizontalLayout, VerticalLayout};
+use super::{compose::UseLayout, HorizontalLayout, VerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,

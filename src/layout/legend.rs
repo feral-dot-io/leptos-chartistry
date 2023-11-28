@@ -1,5 +1,5 @@
 use super::{
-    layout::UseLayout,
+    compose::UseLayout,
     rotated_label::Anchor,
     snippet::{Snippet, SnippetTd},
     HorizontalLayout, VerticalLayout,
