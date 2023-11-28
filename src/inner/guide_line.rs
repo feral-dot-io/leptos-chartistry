@@ -1,6 +1,7 @@
 use super::{InnerLayout, UseInner};
 use crate::{
     colours::{Colour, LIGHT_GREY},
+    debug::DebugRect,
     series::{Data, UseSeries},
     state::State,
 };
@@ -99,49 +100,49 @@ fn GuideLine<'a, X: 'static, Y: 'static>(
         mouse_chart,
         ..
     } = *state;
+    let debug = state.attr.debug;
 
-    let render = create_memo(move |_| {
-        // Mouse over chart?
-        if !mouse_hover_inner.get() {
-            return view!().into_view();
-        }
-
+    let pos = Signal::derive(move || {
         let (mouse_x, mouse_y) = mouse_chart.get();
-        let projection = projection.get();
-        let b = projection.bounds();
-        let (x1, y1, x2, y2) = match line.axis {
+        let proj = projection.get();
+        let b = proj.bounds();
+        match line.axis {
             Axis::X(AlignOver::Data) => {
                 // Map mouse (SVG coord) to data
-                let (data_x, _) = projection.svg_to_data(mouse_x, mouse_y);
+                let (data_x, _) = proj.svg_to_data(mouse_x, mouse_y);
                 // Map data to nearest position
                 let position_x = line.data.with(|data| data.nearest_x_position(data_x));
                 // Map back to SVG
-                let (svg_x, _) = projection.data_to_svg(position_x, 0.0);
+                let (svg_x, _) = proj.data_to_svg(position_x, 0.0);
                 (svg_x, b.top_y(), svg_x, b.bottom_y())
             }
             Axis::X(AlignOver::Mouse) => (mouse_x, b.top_y(), mouse_x, b.bottom_y()),
             Axis::Y => (b.left_x(), mouse_y, b.right_x(), mouse_y),
-        };
-
-        // Don't render if any of the coordinates are NaN i.e., no data
-        if x1.is_nan() || y1.is_nan() || x2.is_nan() || y2.is_nan() {
-            return view!().into_view();
         }
-
-        view! {
-            <line
-                x1=x1
-                y1=y1
-                x2=x2
-                y2=y2
-                stroke=line.colour.get().to_string()
-                stroke-width=line.width />
-        }
-        .into_view()
     });
+    let x1 = create_memo(move |_| pos.get().0);
+    let y1 = create_memo(move |_| pos.get().1);
+    let x2 = create_memo(move |_| pos.get().2);
+    let y2 = create_memo(move |_| pos.get().3);
+
+    // Don't render if any of the coordinates are NaN i.e., no data
+    let have_data = Signal::derive(move || {
+        !(x1.get().is_nan() || y1.get().is_nan() || x2.get().is_nan() || y2.get().is_nan())
+    });
+
     view! {
         <g class=format!("_chartistry_guide_line_{}", line.axis)>
-            {render}
+            <Show when=move || mouse_hover_inner.get() && have_data.get() >
+                <DebugRect label="GuideLine" debug=debug />
+                <line
+                    x1=x1
+                    y1=y1
+                    x2=x2
+                    y2=y2
+                    stroke=move || line.colour.get().to_string()
+                    stroke-width=line.width
+                />
+            </Show>
         </g>
     }
 }
