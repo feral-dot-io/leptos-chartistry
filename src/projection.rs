@@ -1,5 +1,4 @@
 use crate::bounds::Bounds;
-use leptos::*;
 
 /// A projection converts between data and SVG coordinates. SVG has zero in the top left corner. Data coordinates have zero in the bottom left.
 #[derive(Clone, Debug, PartialEq)]
@@ -32,13 +31,6 @@ impl Projection {
         let x = self.range.left_x() + (x - self.bounds.left_x()) / self.x_mult;
         let y = self.range.top_y() - (y - self.bounds.bottom_y()) / self.y_mult;
         (x, y)
-    }
-
-    pub fn derive_width(proj: Signal<Projection>) -> Signal<f64> {
-        Signal::derive(move || with!(|proj| proj.bounds.width()))
-    }
-    pub fn derive_height(proj: Signal<Projection>) -> Signal<f64> {
-        Signal::derive(move || with!(|proj| proj.bounds.height()))
     }
 }
 

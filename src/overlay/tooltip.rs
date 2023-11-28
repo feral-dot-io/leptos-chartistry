@@ -1,8 +1,7 @@
 use super::OverlayLayout;
 use crate::{
-    layout::{snippet::SnippetTd, tick_labels::align_tick_labels},
+    layout::{snippet::SnippetTd, tick_labels::align_tick_labels, Layout},
     line::UseLine,
-    projection::Projection,
     series::UseSeries,
     state::{AttrState, State},
     ticks::TickFormatFn,
@@ -85,6 +84,7 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
     let y_format = tooltip.y_format.clone();
     let State {
         attr: AttrState { padding, font, .. },
+        layout: Layout { inner, .. },
         projection,
         mouse_page,
         mouse_chart,
@@ -93,8 +93,8 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
     } = *state;
     let data = series.data;
 
-    let avail_width = Projection::derive_width(projection);
-    let avail_height = Projection::derive_height(projection);
+    let avail_width = Signal::derive(move || with!(|inner| inner.width()));
+    let avail_height = Signal::derive(move || with!(|inner| inner.height()));
     let x_ticks = tooltip.x_ticks.generate_x(&state.attr, data, avail_width);
     let y_ticks = tooltip.y_ticks.generate_y(&state.attr, data, avail_height);
 

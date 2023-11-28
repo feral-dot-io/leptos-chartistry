@@ -56,7 +56,8 @@ impl<Tick: Clone> GridLine<Tick> {
 
 impl<X: Clone + PartialEq, Y> InnerLayout<X, Y> for HorizontalGridLine<X> {
     fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
-        let avail_width = Projection::derive_width(state.projection);
+        let inner = state.layout.inner;
+        let avail_width = Signal::derive(move || with!(|inner| inner.width()));
         Box::new(UseHorizontalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
@@ -71,7 +72,8 @@ impl<X: Clone + PartialEq, Y> InnerLayout<X, Y> for HorizontalGridLine<X> {
 
 impl<X, Y: Clone + PartialEq> InnerLayout<X, Y> for VerticalGridLine<Y> {
     fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
-        let avail_height = Projection::derive_height(state.projection);
+        let inner = state.layout.inner;
+        let avail_height = Signal::derive(move || with!(|inner| inner.height()));
         Box::new(UseVerticalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
