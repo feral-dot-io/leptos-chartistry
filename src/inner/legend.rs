@@ -1,22 +1,12 @@
-use super::{InnerLayout, InnerOption, UseInner};
+use super::{InnerLayout, UseInner};
 use crate::{
-    edge::Edge,
-    layout::legend::UseLegend,
-    series::UseSeries,
-    state::{AttrState, State},
-    Anchor, Legend, Snippet,
+    edge::Edge, layout::legend::UseLegend, series::UseSeries, state::State, Anchor, Legend, Snippet,
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
 
 #[derive(Clone, Debug)]
 pub struct InsetLegend {
-    edge: Edge,
-    legend: Legend,
-}
-
-#[derive(Clone, Debug)]
-pub struct InsetLegendAttr {
     edge: Edge,
     legend: Legend,
 }
@@ -62,15 +52,6 @@ impl InsetLegend {
 }
 
 impl<X, Y> InnerLayout<X, Y> for InsetLegend {
-    fn apply_attr(self, _: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
-        Rc::new(InsetLegendAttr {
-            legend: self.legend,
-            edge: self.edge,
-        })
-    }
-}
-
-impl<X, Y> InnerOption<X, Y> for InsetLegendAttr {
     fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
         Box::new(UseInsetLegend {
             legend: self.legend.clone().into_use(&state.attr, series),

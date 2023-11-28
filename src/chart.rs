@@ -2,7 +2,7 @@ use crate::{
     aspect_ratio::{AspectRatioCalc, CalcUsing},
     bounds::Bounds,
     debug::DebugRect,
-    inner::{InnerLayout, InnerOption},
+    inner::InnerLayout,
     layout::{HorizontalLayout, UnconstrainedLayout, VerticalLayout},
     overlay::{OverlayLayout, UseOverlay},
     series::{Series, UseSeries},
@@ -21,7 +21,7 @@ pub struct Chart<X: 'static, Y: 'static> {
     right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
     bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
     left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
-    inner: Vec<Rc<dyn InnerOption<X, Y>>>,
+    inner: Vec<Rc<dyn InnerLayout<X, Y>>>,
     overlay: Vec<Rc<dyn UseOverlay<X, Y>>>,
     series: UseSeries<X, Y>,
 }
@@ -70,8 +70,8 @@ impl<X, Y> Chart<X, Y> {
         self
     }
 
-    pub fn inner(mut self, opt: impl InnerLayout<X, Y>) -> Self {
-        self.inner.push(opt.apply_attr(&self.attr));
+    pub fn inner(mut self, opt: impl InnerLayout<X, Y> + 'static) -> Self {
+        self.inner.push(Rc::new(opt));
         self
     }
 

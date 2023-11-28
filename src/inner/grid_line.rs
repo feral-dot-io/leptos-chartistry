@@ -1,10 +1,10 @@
-use super::{InnerLayout, InnerOption, UseInner};
+use super::{InnerLayout, UseInner};
 use crate::{
     colours::{Colour, LIGHTER_GREY},
     debug::DebugRect,
     projection::Projection,
     series::UseSeries,
-    state::{AttrState, State},
+    state::State,
     ticks::GeneratedTicks,
     TickLabels,
 };
@@ -22,18 +22,6 @@ pub struct GridLine<Tick: Clone> {
 pub struct HorizontalGridLine<X: Clone>(GridLine<X>);
 #[derive(Clone)]
 pub struct VerticalGridLine<Y: Clone>(GridLine<Y>);
-
-#[derive(Clone)]
-struct GridLineAttr<Tick> {
-    width: MaybeSignal<f64>,
-    colour: MaybeSignal<Colour>,
-    ticks: TickLabels<Tick>,
-}
-
-#[derive(Clone)]
-struct HorizontalGridLineAttr<X>(GridLineAttr<X>);
-#[derive(Clone)]
-struct VerticalGridLineAttr<Y>(GridLineAttr<Y>);
 
 #[derive(Clone)]
 struct UseGridLine<Tick: 'static> {
@@ -64,29 +52,9 @@ impl<Tick: Clone> GridLine<Tick> {
     pub fn horizontal(ticks: impl Borrow<TickLabels<Tick>>) -> VerticalGridLine<Tick> {
         VerticalGridLine(Self::new(ticks))
     }
-
-    fn apply_attr(self, _: &AttrState) -> GridLineAttr<Tick> {
-        GridLineAttr {
-            width: self.width,
-            colour: self.colour,
-            ticks: self.ticks.set_formatter(|s, t| s.short_format(t)),
-        }
-    }
 }
 
-impl<X: Clone + PartialEq + 'static, Y: 'static> InnerLayout<X, Y> for HorizontalGridLine<X> {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
-        Rc::new(HorizontalGridLineAttr(self.0.apply_attr(attr)))
-    }
-}
-
-impl<X: 'static, Y: Clone + PartialEq + 'static> InnerLayout<X, Y> for VerticalGridLine<Y> {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
-        Rc::new(VerticalGridLineAttr(self.0.apply_attr(attr)))
-    }
-}
-
-impl<X: Clone + PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
+impl<X: Clone + PartialEq, Y> InnerLayout<X, Y> for HorizontalGridLine<X> {
     fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
         let avail_width = Projection::derive_width(state.projection);
         Box::new(UseHorizontalGridLine(UseGridLine {
@@ -101,7 +69,7 @@ impl<X: Clone + PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
     }
 }
 
-impl<X, Y: Clone + PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
+impl<X, Y: Clone + PartialEq> InnerLayout<X, Y> for VerticalGridLine<Y> {
     fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
         let avail_height = Projection::derive_height(state.projection);
         Box::new(UseVerticalGridLine(UseGridLine {

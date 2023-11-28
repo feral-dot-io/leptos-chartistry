@@ -1,9 +1,8 @@
-use super::{InnerLayout, InnerOption, UseInner};
+use super::{InnerLayout, UseInner};
 use crate::{
     colours::{Colour, LIGHT_GREY},
-    projection::Projection,
     series::{Data, UseSeries},
-    state::{AttrState, State},
+    state::State,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -73,12 +72,6 @@ impl GuideLine {
 }
 
 impl<X, Y> InnerLayout<X, Y> for GuideLine {
-    fn apply_attr(self, _: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
-        Rc::new(self)
-    }
-}
-
-impl<X, Y> InnerOption<X, Y> for GuideLine {
     fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: &State) -> Box<dyn UseInner> {
         Box::new(UseGuideLine {
             axis: self.axis,
@@ -91,31 +84,29 @@ impl<X, Y> InnerOption<X, Y> for GuideLine {
 
 impl<X, Y> UseInner for UseGuideLine<X, Y> {
     fn render(self: Box<Self>, state: &State) -> View {
-        view! {
-            <GuideLine
-                line=*self
-                projection=state.projection
-                mouse_hover=state.mouse_hover_inner
-                mouse=state.mouse_chart
-            />
-        }
+        view! { <GuideLine line=*self state=state /> }
     }
 }
 
 #[component]
-fn GuideLine<X: 'static, Y: 'static>(
+fn GuideLine<'a, X: 'static, Y: 'static>(
     line: UseGuideLine<X, Y>,
-    projection: Signal<Projection>,
-    mouse_hover: Signal<bool>,
-    mouse: Signal<(f64, f64)>,
+    state: &'a State,
 ) -> impl IntoView {
+    let State {
+        projection,
+        mouse_hover_inner,
+        mouse_chart,
+        ..
+    } = *state;
+
     let render = create_memo(move |_| {
         // Mouse over chart?
-        if !mouse_hover.get() {
+        if !mouse_hover_inner.get() {
             return view!().into_view();
         }
 
-        let (mouse_x, mouse_y) = mouse.get();
+        let (mouse_x, mouse_y) = mouse_chart.get();
         let projection = projection.get();
         let b = projection.bounds();
         let (x1, y1, x2, y2) = match line.axis {

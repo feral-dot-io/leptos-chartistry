@@ -1,9 +1,10 @@
-use super::{InnerLayout, InnerOption, UseInner};
+use super::{InnerLayout, UseInner};
 use crate::{
     colours::{Colour, LIGHTISH_GREY},
     edge::Edge,
     projection::Projection,
-    state::{AttrState, State},
+    state::State,
+    UseSeries,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -73,8 +74,8 @@ impl AxisMarker {
 }
 
 impl<X, Y> InnerLayout<X, Y> for AxisMarker {
-    fn apply_attr(self, _: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
-        Rc::new(self)
+    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: &State) -> Box<dyn UseInner> {
+        Box::new((*self).clone())
     }
 }
 
