@@ -127,32 +127,14 @@ impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
 
 impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAttr<X, Y> {
     fn render(self: Rc<Self>, series: UseSeries<X, Y>, state: &State) -> View {
-        let State {
-            mouse_page,
-            mouse_chart,
-            mouse_hover_inner,
-            ..
-        } = *state;
-
         let tooltip = (*self).clone().into_use(series.data, state);
-        let state = state.clone();
-        create_memo(move |_| {
-            if !mouse_hover_inner.get() {
-                return view!().into_view();
-            }
-
-            view! {
-                <Tooltip
-                    tooltip=tooltip.clone()
-                    series=series.clone()
-                    state=&state
-                    mouse_page=mouse_page
-                    mouse_chart=mouse_chart
-                />
-            }
-            .into_view()
-        })
-        .into_view()
+        view! {
+            <Tooltip
+                tooltip=tooltip.clone()
+                series=series.clone()
+                state=&state
+            />
+        }
     }
 }
 
@@ -161,11 +143,7 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
     tooltip: UseTooltip<X, Y>,
     series: UseSeries<X, Y>,
     state: &'a State,
-    mouse_page: Signal<(f64, f64)>,
-    mouse_chart: Signal<(f64, f64)>,
 ) -> impl IntoView {
-    let proj = state.projection;
-    let padding = state.attr.padding;
     let UseTooltip {
         snippet,
         table_margin,
@@ -174,13 +152,20 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
         x_ticks,
         y_ticks,
     } = tooltip;
+    let State {
+        attr: AttrState { padding, font, .. },
+        projection,
+        mouse_page,
+        mouse_chart,
+        mouse_hover_inner,
+        ..
+    } = *state;
     let data = series.data;
-    let font = state.attr.font;
 
     // Get nearest values
     let data_x = Signal::derive(move || {
         let (chart_x, chart_y) = mouse_chart.get();
-        let (data_x, _) = proj.get().svg_to_data(chart_x, chart_y);
+        let (data_x, _) = projection.get().svg_to_data(chart_x, chart_y);
         data_x
     });
 
@@ -236,25 +221,27 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
     });
 
     view! {
-        <div
-            style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
-            style:top=move || format!("calc({}px)", mouse_page.get().1)
-            style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, table_margin.get())
-            style:padding=move || padding.get().to_style_px()>
-            <table
-                style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; text-align: right;"
-                style:font-size=move || format!("{}px", font.get().height())>
-                <thead>
-                    <tr>
-                        <th colspan=2 style="white-space: pre; font-family: monospace;">
-                            {x_body}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {y_body}
-                </tbody>
-            </table>
-        </div>
+        <Show when=move || mouse_hover_inner.get()>
+            <div
+                style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
+                style:top=move || format!("calc({}px)", mouse_page.get().1)
+                style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, table_margin.get())
+                style:padding=move || padding.get().to_style_px()>
+                <table
+                    style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; text-align: right;"
+                    style:font-size=move || format!("{}px", font.get().height())>
+                    <thead>
+                        <tr>
+                            <th colspan=2 style="white-space: pre; font-family: monospace;">
+                                {x_body.clone()}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {y_body}
+                    </tbody>
+                </table>
+            </div>
+        </Show>
     }
 }
