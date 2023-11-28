@@ -6,7 +6,7 @@ use crate::{
     series::{Data, UseSeries},
     state::{AttrState, State},
     ticks::{GeneratedTicks, TickFormatFn},
-    Snippet, TickLabels,
+    Snippet, TickLabels, TickState,
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
@@ -16,6 +16,8 @@ pub struct Tooltip<X: Clone, Y: Clone> {
     snippet: Snippet,
     table_margin: Option<MaybeSignal<f64>>,
 
+    x_format: TickFormatFn<X>,
+    y_format: TickFormatFn<Y>,
     x_ticks: TickLabels<X>,
     y_ticks: TickLabels<Y>,
 }
@@ -25,6 +27,8 @@ pub struct TooltipAttr<X: 'static, Y: 'static> {
     snippet: Snippet,
     table_margin: MaybeSignal<f64>,
 
+    x_format: TickFormatFn<X>,
+    y_format: TickFormatFn<Y>,
     x_ticks: TickLabels<X>,
     y_ticks: TickLabels<Y>,
 }
@@ -35,8 +39,8 @@ pub struct UseTooltip<X: 'static, Y: 'static> {
     table_margin: MaybeSignal<f64>,
 
     x_format: TickFormatFn<X>,
-    x_ticks: Signal<GeneratedTicks<X>>,
     y_format: TickFormatFn<Y>,
+    x_ticks: Signal<GeneratedTicks<X>>,
     y_ticks: Signal<GeneratedTicks<Y>>,
 }
 
@@ -49,14 +53,10 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
         Self {
             snippet: snippet.borrow().clone(),
             table_margin: None,
-            x_ticks: x_ticks
-                .borrow()
-                .clone()
-                .set_formatter(|s, t| s.long_format(t)),
-            y_ticks: y_ticks
-                .borrow()
-                .clone()
-                .set_formatter(|s, t| s.long_format(t)),
+            x_format: Rc::new(|s, t| s.long_format(t)),
+            y_format: Rc::new(|s, t| s.long_format(t)),
+            x_ticks: x_ticks.borrow().clone(),
+            y_ticks: y_ticks.borrow().clone(),
         }
     }
 
@@ -72,6 +72,22 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
         self.table_margin = Some(table_margin.into());
         self
     }
+
+    pub fn set_x_format(
+        mut self,
+        format: impl Fn(&dyn TickState<Tick = X>, &X) -> String + 'static,
+    ) -> Self {
+        self.x_format = Rc::new(format);
+        self
+    }
+
+    pub fn set_y_format(
+        mut self,
+        format: impl Fn(&dyn TickState<Tick = Y>, &Y) -> String + 'static,
+    ) -> Self {
+        self.y_format = Rc::new(format);
+        self
+    }
 }
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayout<X, Y>
@@ -84,7 +100,8 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayo
             table_margin: self
                 .table_margin
                 .unwrap_or_else(|| Signal::derive(move || font.get().height()).into()),
-
+            x_format: self.x_format,
+            y_format: self.y_format,
             x_ticks: self.x_ticks,
             y_ticks: self.y_ticks,
         })
@@ -96,12 +113,13 @@ impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
         let proj = state.projection;
         let avail_width = Projection::derive_width(proj);
         let avail_height = Projection::derive_height(proj);
+
         UseTooltip {
             snippet: self.snippet,
             table_margin: self.table_margin,
-            x_format: self.x_ticks.format.clone(),
+            x_format: self.x_format,
+            y_format: self.y_format,
             x_ticks: self.x_ticks.generate_x(&state.attr, data, avail_width),
-            y_format: self.y_ticks.format.clone(),
             y_ticks: self.y_ticks.generate_y(&state.attr, data, avail_height),
         }
     }
@@ -152,8 +170,8 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
         snippet,
         table_margin,
         x_format,
-        x_ticks,
         y_format,
+        x_ticks,
         y_ticks,
     } = tooltip;
     let data = series.data;

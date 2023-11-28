@@ -19,7 +19,7 @@ use std::rc::Rc;
 #[derive(Clone)]
 pub struct TickLabels<Tick> {
     min_chars: MaybeSignal<usize>,
-    pub format: TickFormatFn<Tick>, // TODO
+    format: TickFormatFn<Tick>,
     generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
@@ -52,7 +52,7 @@ where
     }
 }
 
-impl<Tick: Clone> TickLabels<Tick> {
+impl<Tick> TickLabels<Tick> {
     fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
             min_chars: 0.into(),
@@ -66,7 +66,7 @@ impl<Tick: Clone> TickLabels<Tick> {
         self
     }
 
-    pub fn set_formatter(
+    pub fn set_format(
         mut self,
         format: impl Fn(&dyn TickState<Tick = Tick>, &Tick) -> String + 'static,
     ) -> Self {
