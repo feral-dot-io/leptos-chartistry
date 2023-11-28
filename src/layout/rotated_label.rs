@@ -1,14 +1,10 @@
-use super::{
-    compose::{UseLayout, VerticalLayout},
-    HorizontalLayout, HorizontalOption, VerticalOption,
-};
+use super::{compose::UseLayout, HorizontalLayout, VerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
     edge::Edge,
     series::UseSeries,
     state::{AttrState, State},
-    Font, Padding,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -24,15 +20,6 @@ pub enum Anchor {
 pub struct RotatedLabel {
     text: MaybeSignal<String>,
     anchor: MaybeSignal<Anchor>,
-}
-
-#[derive(Clone, Debug)]
-pub struct UseRotatedLabel {
-    text: MaybeSignal<String>,
-    anchor: MaybeSignal<Anchor>,
-    font: Signal<Font>,
-    padding: Signal<Padding>,
-    debug: Signal<bool>,
 }
 
 impl RotatedLabel {
@@ -56,55 +43,10 @@ impl RotatedLabel {
         Self::new(Anchor::End, text)
     }
 
-    fn apply_attr(self, attr: &AttrState) -> UseRotatedLabel {
-        UseRotatedLabel {
-            text: self.text,
-            anchor: self.anchor,
-            font: attr.font,
-            padding: attr.padding,
-            debug: attr.debug,
-        }
-    }
-}
-
-impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for RotatedLabel {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn HorizontalOption<X, Y>> {
-        Rc::new(self.apply_attr(attr))
-    }
-}
-
-impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for RotatedLabel {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn VerticalOption<X, Y>> {
-        Rc::new(self.apply_attr(attr))
-    }
-}
-
-impl<X, Y> HorizontalOption<X, Y> for UseRotatedLabel {
-    fn fixed_height(&self) -> Signal<f64> {
-        self.size()
-    }
-
-    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
-        self
-    }
-}
-
-impl<X, Y> VerticalOption<X, Y> for UseRotatedLabel {
-    fn into_use(
-        self: Rc<Self>,
-        _: &UseSeries<X, Y>,
-        _: Signal<f64>,
-    ) -> (Signal<f64>, Rc<dyn UseLayout>) {
-        // Note: width is height because it's rotated
-        (self.size(), self)
-    }
-}
-
-impl UseRotatedLabel {
-    pub fn size(&self) -> Signal<f64> {
+    fn size(&self, attr: &AttrState) -> Signal<f64> {
         let text = self.text.clone();
-        let font = self.font;
-        let padding = self.padding;
+        let font = attr.font;
+        let padding = attr.padding;
         Signal::derive(move || {
             if text.with(|t| t.is_empty()) {
                 0.0
@@ -112,6 +54,33 @@ impl UseRotatedLabel {
                 font.get().height() + padding.get().height()
             }
         })
+    }
+}
+
+impl<X, Y> HorizontalLayout<X, Y> for RotatedLabel {
+    fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
+        self.size(attr)
+    }
+
+    fn into_use(
+        self: Rc<Self>,
+        _: &AttrState,
+        _: &UseSeries<X, Y>,
+        _: Signal<f64>,
+    ) -> Rc<dyn UseLayout> {
+        self
+    }
+}
+
+impl<X, Y> VerticalLayout<X, Y> for RotatedLabel {
+    fn into_use(
+        self: Rc<Self>,
+        attr: &AttrState,
+        _: &UseSeries<X, Y>,
+        _: Signal<f64>,
+    ) -> (Signal<f64>, Rc<dyn UseLayout>) {
+        // Note: width is height because it's rotated
+        (self.size(attr), self)
     }
 }
 
@@ -141,7 +110,7 @@ impl Anchor {
     }
 }
 
-impl UseLayout for UseRotatedLabel {
+impl UseLayout for RotatedLabel {
     fn render(&self, edge: Edge, bounds: Signal<Bounds>, state: &State) -> View {
         view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds state=state /> }
     }
@@ -149,12 +118,12 @@ impl UseLayout for UseRotatedLabel {
 
 #[component]
 fn RotatedLabel<'a>(
-    label: UseRotatedLabel,
+    label: RotatedLabel,
     edge: Edge,
     bounds: Signal<Bounds>,
     state: &'a State,
 ) -> impl IntoView {
-    let UseRotatedLabel { text, anchor, .. } = label;
+    let RotatedLabel { text, anchor } = label;
     let AttrState {
         font,
         padding,

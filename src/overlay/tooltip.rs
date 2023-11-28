@@ -2,13 +2,13 @@ use super::{OverlayLayout, UseOverlay};
 use crate::{
     layout::{
         snippet::{SnippetTd, UseSnippet},
-        tick_labels::{align_tick_labels, TickLabelsAttr},
+        tick_labels::align_tick_labels,
     },
     line::UseLine,
     projection::Projection,
     series::{Data, UseSeries},
     state::{AttrState, State},
-    ticks::{long_format_fn, GeneratedTicks, TickFormatFn},
+    ticks::{GeneratedTicks, TickFormatFn},
     Snippet, TickLabels,
 };
 use leptos::*;
@@ -28,8 +28,8 @@ pub struct TooltipAttr<X: 'static, Y: 'static> {
     snippet: UseSnippet,
     table_margin: MaybeSignal<f64>,
 
-    x_ticks: TickLabelsAttr<X>,
-    y_ticks: TickLabelsAttr<Y>,
+    x_ticks: TickLabels<X>,
+    y_ticks: TickLabels<Y>,
 }
 
 #[derive(Clone)]
@@ -52,8 +52,14 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
         Self {
             snippet: snippet.borrow().clone(),
             table_margin: None,
-            x_ticks: x_ticks.borrow().clone(),
-            y_ticks: y_ticks.borrow().clone(),
+            x_ticks: x_ticks
+                .borrow()
+                .clone()
+                .set_formatter(|s, t| s.long_format(t)),
+            y_ticks: y_ticks
+                .borrow()
+                .clone()
+                .set_formatter(|s, t| s.long_format(t)),
         }
     }
 
@@ -82,23 +88,24 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayo
                 .table_margin
                 .unwrap_or_else(|| Signal::derive(move || font.get().height()).into()),
 
-            x_ticks: self.x_ticks.apply_attr(attr, long_format_fn()),
-            y_ticks: self.y_ticks.apply_attr(attr, long_format_fn()),
+            x_ticks: self.x_ticks,
+            y_ticks: self.y_ticks,
         })
     }
 }
 
 impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
-    fn into_use(self, data: Signal<Data<X, Y>>, proj: Signal<Projection>) -> UseTooltip<X, Y> {
+    fn into_use(self, data: Signal<Data<X, Y>>, state: &State) -> UseTooltip<X, Y> {
+        let proj = state.projection;
         let avail_width = Projection::derive_width(proj);
         let avail_height = Projection::derive_height(proj);
         UseTooltip {
             snippet: self.snippet,
             table_margin: self.table_margin,
             x_format: self.x_ticks.format.clone(),
-            x_ticks: self.x_ticks.generate_x(data, avail_width),
+            x_ticks: self.x_ticks.generate_x(&state.attr, data, avail_width),
             y_format: self.y_ticks.format.clone(),
-            y_ticks: self.y_ticks.generate_y(data, avail_height),
+            y_ticks: self.y_ticks.generate_y(&state.attr, data, avail_height),
         }
     }
 }
@@ -106,14 +113,13 @@ impl<X: PartialEq, Y: PartialEq> TooltipAttr<X, Y> {
 impl<X: Clone + PartialEq, Y: Clone + PartialEq> UseOverlay<X, Y> for TooltipAttr<X, Y> {
     fn render(self: Rc<Self>, series: UseSeries<X, Y>, state: &State) -> View {
         let State {
-            projection,
             mouse_page,
             mouse_chart,
             mouse_hover_inner,
             ..
         } = *state;
 
-        let tooltip = (*self).clone().into_use(series.data, projection);
+        let tooltip = (*self).clone().into_use(series.data, state);
         let state = state.clone();
         create_memo(move |_| {
             if !mouse_hover_inner.get() {

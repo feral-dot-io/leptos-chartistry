@@ -130,12 +130,13 @@ fn scale10(range: f64) -> isize {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{short_format_fn, HorizontalSpan};
+    use super::super::HorizontalSpan;
     use super::*;
+    use std::rc::Rc;
 
     fn mk_span(width: f64) -> Box<dyn Span<f64>> {
         Box::new(HorizontalSpan::new(
-            short_format_fn(),
+            Rc::new(|s, t| s.short_format(t)),
             1.0,
             0.0,
             width + 0.1,

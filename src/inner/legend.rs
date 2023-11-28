@@ -1,8 +1,7 @@
 use super::{InnerLayout, InnerOption, UseInner};
 use crate::{
     edge::Edge,
-    layout::legend::{LegendAttr, UseLegend},
-    projection::Projection,
+    layout::legend::UseLegend,
     series::UseSeries,
     state::{AttrState, State},
     Anchor, Legend, Snippet,
@@ -19,7 +18,7 @@ pub struct InsetLegend {
 #[derive(Clone, Debug)]
 pub struct InsetLegendAttr {
     edge: Edge,
-    legend: LegendAttr,
+    legend: Legend,
 }
 
 #[derive(Clone, Debug)]
@@ -63,22 +62,18 @@ impl InsetLegend {
 }
 
 impl<X, Y> InnerLayout<X, Y> for InsetLegend {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
+    fn apply_attr(self, _: &AttrState) -> Rc<dyn InnerOption<X, Y>> {
         Rc::new(InsetLegendAttr {
-            legend: self.legend.apply_attr(attr),
+            legend: self.legend,
             edge: self.edge,
         })
     }
 }
 
 impl<X, Y> InnerOption<X, Y> for InsetLegendAttr {
-    fn into_use(
-        self: Rc<Self>,
-        series: &UseSeries<X, Y>,
-        _: Signal<Projection>,
-    ) -> Box<dyn UseInner> {
+    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
         Box::new(UseInsetLegend {
-            legend: self.legend.clone().into_use(series),
+            legend: self.legend.clone().into_use(&state.attr, series),
             edge: self.edge,
         })
     }
@@ -93,7 +88,8 @@ impl UseInner for UseInsetLegend {
 #[component]
 fn InsetLegend<'a>(legend: UseLegend, edge: Edge, state: &'a State) -> impl IntoView {
     let proj = state.projection;
-    let (height, width) = (legend.height(), legend.width());
+    let width = legend.width;
+    let height = legend.height;
     let bounds = Signal::derive(move || {
         let bounds = proj.get().bounds();
         let height = height.get();

@@ -1,5 +1,4 @@
 use crate::{
-    projection::Projection,
     series::UseSeries,
     state::{AttrState, State},
 };
@@ -11,11 +10,7 @@ pub trait InnerLayout<X, Y> {
 }
 
 pub trait InnerOption<X, Y> {
-    fn into_use(
-        self: Rc<Self>,
-        series: &UseSeries<X, Y>,
-        proj: Signal<Projection>,
-    ) -> Box<dyn UseInner>;
+    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner>;
 }
 
 pub trait UseInner {
@@ -37,7 +32,7 @@ impl<T, X, Y> InnerOption<X, Y> for T
 where
     T: Clone + UseInner + 'static,
 {
-    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: Signal<Projection>) -> Box<dyn UseInner> {
+    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: &State) -> Box<dyn UseInner> {
         Box::new((*self).clone())
     }
 }

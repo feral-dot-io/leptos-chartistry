@@ -1,6 +1,4 @@
-use super::{
-    compose::UseLayout, HorizontalLayout, HorizontalOption, VerticalLayout, VerticalOption,
-};
+use super::{compose::UseLayout, HorizontalLayout, VerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
@@ -8,10 +6,10 @@ use crate::{
     series::{Data, UseSeries},
     state::{AttrState, State},
     ticks::{
-        short_format_fn, AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen,
-        TickState, TimestampGen, VerticalSpan,
+        AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, TickState,
+        TimestampGen, VerticalSpan,
     },
-    Font, Padding, Period,
+    Period,
 };
 use chrono::prelude::*;
 use leptos::*;
@@ -19,27 +17,14 @@ use std::borrow::Borrow;
 use std::rc::Rc;
 
 #[derive(Clone)]
-pub struct TickLabels<Tick: Clone> {
+pub struct TickLabels<Tick> {
     min_chars: MaybeSignal<usize>,
-    format: Option<TickFormatFn<Tick>>,
-    generator: Rc<dyn TickGen<Tick = Tick>>,
-}
-
-#[derive(Clone)]
-pub struct TickLabelsAttr<Tick> {
-    font: Signal<Font>,
-    padding: Signal<Padding>,
-    debug: Signal<bool>,
-    min_chars: MaybeSignal<usize>,
-    pub format: TickFormatFn<Tick>,
+    pub format: TickFormatFn<Tick>, // TODO
     generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
 #[derive(Clone)]
 pub struct UseTickLabels {
-    font: Signal<Font>,
-    padding: Signal<Padding>,
-    debug: Signal<bool>,
     ticks: Signal<Vec<(f64, String)>>,
 }
 
@@ -71,7 +56,7 @@ impl<Tick: Clone> TickLabels<Tick> {
     fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
             min_chars: 0.into(),
-            format: None,
+            format: Rc::new(|s, t| s.short_format(t)),
             generator: Rc::new(gen),
         }
     }
@@ -85,33 +70,20 @@ impl<Tick: Clone> TickLabels<Tick> {
         mut self,
         format: impl Fn(&dyn TickState<Tick = Tick>, &Tick) -> String + 'static,
     ) -> Self {
-        self.format = Some(Rc::new(format));
+        self.format = Rc::new(format);
         self
-    }
-
-    pub(crate) fn apply_attr(
-        self,
-        attr: &AttrState,
-        def_format: TickFormatFn<Tick>,
-    ) -> TickLabelsAttr<Tick> {
-        TickLabelsAttr {
-            font: attr.font,
-            padding: attr.padding,
-            debug: attr.debug,
-            min_chars: self.min_chars,
-            format: self.format.unwrap_or(def_format),
-            generator: self.generator,
-        }
     }
 }
 
-impl<X: PartialEq> TickLabelsAttr<X> {
+impl<X: PartialEq> TickLabels<X> {
     pub fn generate_x<Y>(
         self,
+        attr: &AttrState,
         data: Signal<Data<X, Y>>,
         avail_width: Signal<f64>,
     ) -> Signal<GeneratedTicks<X>> {
-        let (font, padding) = (self.font, self.padding);
+        let font = attr.font;
+        let padding = attr.padding;
         create_memo(move |_| {
             let format = self.format.clone();
             data.with(|data| {
@@ -134,13 +106,15 @@ impl<X: PartialEq> TickLabelsAttr<X> {
     }
 }
 
-impl<Y: PartialEq> TickLabelsAttr<Y> {
+impl<Y: PartialEq> TickLabels<Y> {
     pub fn generate_y<X>(
         self,
+        attr: &AttrState,
         data: Signal<Data<X, Y>>,
         avail_height: Signal<f64>,
     ) -> Signal<GeneratedTicks<Y>> {
-        let (font, padding) = (self.font, self.padding);
+        let font = attr.font;
+        let padding = attr.padding;
         create_memo(move |_| {
             data.with(|data| {
                 data.y_range()
@@ -156,59 +130,39 @@ impl<Y: PartialEq> TickLabelsAttr<Y> {
     }
 }
 
-impl<X: Clone + PartialEq + 'static, Y: 'static> HorizontalLayout<X, Y> for TickLabels<X> {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn HorizontalOption<X, Y>> {
-        Rc::new(self.apply_attr(attr, short_format_fn()))
-    }
-}
-
-impl<X: 'static, Y: Clone + PartialEq + 'static> VerticalLayout<X, Y> for TickLabels<Y> {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn VerticalOption<X, Y>> {
-        Rc::new(self.apply_attr(attr, short_format_fn()))
-    }
-}
-
-impl<X: Clone + PartialEq, Y> HorizontalOption<X, Y> for TickLabelsAttr<X> {
-    fn fixed_height(&self) -> Signal<f64> {
-        let (font, padding) = (self.font, self.padding);
+impl<X: Clone + PartialEq, Y> HorizontalLayout<X, Y> for TickLabels<X> {
+    fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
+        let font = attr.font;
+        let padding = attr.padding;
         Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
     }
 
     fn into_use(
         self: Rc<Self>,
+        attr: &AttrState,
         series: &UseSeries<X, Y>,
         avail_width: Signal<f64>,
     ) -> Rc<dyn UseLayout> {
         Rc::new(UseTickLabels {
-            font: self.font,
-            padding: self.padding,
-            debug: self.debug,
-            ticks: self.map_ticks((*self).clone().generate_x(series.data, avail_width)),
+            ticks: self.map_ticks((*self).clone().generate_x(attr, series.data, avail_width)),
         })
     }
 }
 
-impl<X, Y: Clone + PartialEq> VerticalOption<X, Y> for TickLabelsAttr<Y> {
+impl<X, Y: Clone + PartialEq> VerticalLayout<X, Y> for TickLabels<Y> {
     fn into_use(
         self: Rc<Self>,
+        attr: &AttrState,
         series: &UseSeries<X, Y>,
         avail_height: Signal<f64>,
     ) -> (Signal<f64>, Rc<dyn UseLayout>) {
-        let ticks = self.map_ticks((*self).clone().generate_y(series.data, avail_height));
-        let width = self.width(ticks);
-        (
-            width,
-            Rc::new(UseTickLabels {
-                font: self.font,
-                padding: self.padding,
-                debug: self.debug,
-                ticks,
-            }),
-        )
+        let ticks = self.map_ticks((*self).clone().generate_y(attr, series.data, avail_height));
+        let width = self.width(attr, ticks);
+        (width, Rc::new(UseTickLabels { ticks }))
     }
 }
 
-impl<Tick> TickLabelsAttr<Tick> {
+impl<Tick: Clone> TickLabels<Tick> {
     fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
         let format = self.format.clone();
         Signal::derive(move || {
@@ -221,9 +175,9 @@ impl<Tick> TickLabelsAttr<Tick> {
         })
     }
 
-    fn width(&self, ticks: Signal<Vec<(f64, String)>>) -> Signal<f64> {
-        let font = self.font;
-        let padding = self.padding;
+    fn width(&self, attr: &AttrState, ticks: Signal<Vec<(f64, String)>>) -> Signal<f64> {
+        let font = attr.font;
+        let padding = attr.padding;
         let min_chars = self.min_chars;
         Signal::derive(move || {
             let longest_chars = ticks.with(|ticks| {

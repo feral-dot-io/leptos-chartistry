@@ -2,7 +2,7 @@ use super::{
     compose::UseLayout,
     rotated_label::Anchor,
     snippet::{Snippet, SnippetTd, UseSnippet},
-    HorizontalLayout, HorizontalOption, VerticalLayout, VerticalOption,
+    HorizontalLayout, VerticalLayout,
 };
 use crate::{
     bounds::Bounds,
@@ -11,7 +11,6 @@ use crate::{
     line::UseLine,
     series::UseSeries,
     state::{AttrState, State},
-    Padding,
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
@@ -23,19 +22,12 @@ pub struct Legend {
 }
 
 #[derive(Clone, Debug)]
-pub struct LegendAttr {
-    snippet: UseSnippet,
-    anchor: MaybeSignal<Anchor>,
-    // TODO get rid of these
-    padding: Signal<Padding>,
-    debug: Signal<bool>,
-}
-
-#[derive(Clone, Debug)]
 pub struct UseLegend {
-    width: Signal<f64>,
-    attr: LegendAttr,
+    pub(crate) snippet: UseSnippet,
+    anchor: MaybeSignal<Anchor>,
     lines: Vec<UseLine>,
+    pub(crate) width: Signal<f64>,
+    pub(crate) height: Signal<f64>,
 }
 
 impl Legend {
@@ -56,96 +48,62 @@ impl Legend {
         Self::new(Anchor::End, snippet)
     }
 
-    pub(crate) fn apply_attr(self, attr: &AttrState) -> LegendAttr {
-        LegendAttr {
-            snippet: self.snippet.into_use(attr),
-            anchor: self.anchor,
-            padding: attr.padding,
-            debug: attr.debug,
-        }
-    }
-}
-
-impl<X: 'static, Y: 'static> HorizontalLayout<X, Y> for Legend {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn HorizontalOption<X, Y>> {
-        Rc::new(self.apply_attr(attr))
-    }
-}
-
-impl<X: 'static, Y: 'static> VerticalLayout<X, Y> for Legend {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn VerticalOption<X, Y>> {
-        Rc::new(self.apply_attr(attr))
-    }
-}
-
-impl LegendAttr {
-    fn height(&self) -> Signal<f64> {
-        let snip_height = self.snippet.height();
-        let font = self.snippet.font;
-        let padding = self.padding;
-        Signal::derive(move || {
-            let text_height = font.get().height() + padding.get().height();
-            text_height.max(snip_height.get())
-        })
-    }
-
-    fn width<X, Y>(&self, series: &UseSeries<X, Y>) -> Signal<f64> {
-        let snip_width = self.snippet.width();
-        let font = self.snippet.font;
-        let padding = self.padding;
-        let lines = series
-            .lines
-            .iter()
-            .map(|line| line.name.clone())
-            .collect::<Vec<_>>();
-        Signal::derive(move || {
-            let font_width = font.get().width();
-            let max_chars = (lines.iter())
-                .map(|line| line.get().len() as f64 * font_width)
-                .reduce(f64::max)
-                .unwrap_or_default();
-            snip_width.get() + font_width + max_chars + padding.get().width()
-        })
-    }
-
-    pub fn into_use<X, Y>(self, series: &UseSeries<X, Y>) -> UseLegend {
-        let width = self.width(series);
+    pub(crate) fn into_use<X, Y>(self, attr: &AttrState, series: &UseSeries<X, Y>) -> UseLegend {
+        let snippet = self.snippet.into_use(attr);
+        let width = mk_width(&snippet, attr, series);
         UseLegend {
-            attr: self,
-            width,
+            snippet,
+            anchor: self.anchor,
             lines: series.lines.clone(),
+            width,
+            height: Snippet::fixed_height(attr),
         }
     }
 }
 
-impl<X, Y> HorizontalOption<X, Y> for LegendAttr {
-    fn fixed_height(&self) -> Signal<f64> {
-        self.height()
-    }
-
-    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: Signal<f64>) -> Rc<dyn UseLayout> {
-        Rc::new((*self).clone().into_use(series))
-    }
+fn mk_width<X, Y>(snippet: &UseSnippet, attr: &AttrState, series: &UseSeries<X, Y>) -> Signal<f64> {
+    let snip_width = snippet.width();
+    let font = attr.font;
+    let padding = attr.padding;
+    let lines = series
+        .lines
+        .iter()
+        .map(|line| line.name.clone())
+        .collect::<Vec<_>>();
+    Signal::derive(move || {
+        let font_width = font.get().width();
+        let max_chars = (lines.iter())
+            .map(|line| line.get().len() as f64 * font_width)
+            .reduce(f64::max)
+            .unwrap_or_default();
+        snip_width.get() + font_width + max_chars + padding.get().width()
+    })
 }
 
-impl<X, Y> VerticalOption<X, Y> for LegendAttr {
+impl<X, Y> HorizontalLayout<X, Y> for Legend {
+    fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
+        Snippet::fixed_height(attr)
+    }
+
     fn into_use(
         self: Rc<Self>,
+        attr: &AttrState,
+        series: &UseSeries<X, Y>,
+        _: Signal<f64>,
+    ) -> Rc<dyn UseLayout> {
+        Rc::new((*self).clone().into_use(attr, series))
+    }
+}
+
+impl<X, Y> VerticalLayout<X, Y> for Legend {
+    fn into_use(
+        self: Rc<Self>,
+        attr: &AttrState,
         series: &UseSeries<X, Y>,
         _: Signal<f64>,
     ) -> (Signal<f64>, Rc<dyn UseLayout>) {
-        let legend = Rc::new((*self).clone().into_use(series));
-        (legend.width(), legend)
-    }
-}
-
-impl UseLegend {
-    pub fn height(&self) -> Signal<f64> {
-        self.attr.height()
-    }
-
-    pub fn width(&self) -> Signal<f64> {
-        self.width
+        let legend = Rc::new((*self).clone().into_use(attr, series));
+        (legend.width, legend)
     }
 }
 
@@ -162,9 +120,9 @@ pub fn Legend<'a>(
     bounds: Signal<Bounds>,
     state: &'a State,
 ) -> impl IntoView {
-    let LegendAttr {
+    let UseLegend {
         snippet, anchor, ..
-    } = legend.attr;
+    } = legend;
     let AttrState {
         debug,
         padding,

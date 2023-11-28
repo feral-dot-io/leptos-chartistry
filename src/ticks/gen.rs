@@ -71,14 +71,6 @@ impl<Tick: PartialEq> PartialEq for GeneratedTicks<Tick> {
     }
 }
 
-pub fn short_format_fn<Tick>() -> TickFormatFn<Tick> {
-    Rc::new(|state, tick| state.short_format(tick))
-}
-
-pub fn long_format_fn<Tick>() -> TickFormatFn<Tick> {
-    Rc::new(|state, tick| state.long_format(tick))
-}
-
 pub struct VerticalSpan {
     avail_height: f64,
     line_height: f64,

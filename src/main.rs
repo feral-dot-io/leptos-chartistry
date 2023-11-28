@@ -67,8 +67,8 @@ pub fn App() -> impl IntoView {
         .top(top_label)
         .top(Legend::end(Snippet::horizontal()))
         // Ticks
-        .left(&left_ticks)
-        .bottom(&bottom_ticks)
+        .left(left_ticks.clone())
+        .bottom(bottom_ticks.clone())
         // Axis lines
         .inner(AxisMarker::left_edge())
         .inner(AxisMarker::horizontal_zero())

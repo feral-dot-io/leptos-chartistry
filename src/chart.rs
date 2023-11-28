@@ -3,9 +3,7 @@ use crate::{
     bounds::Bounds,
     debug::DebugRect,
     inner::{InnerLayout, InnerOption},
-    layout::{
-        HorizontalLayout, HorizontalOption, UnconstrainedLayout, VerticalLayout, VerticalOption,
-    },
+    layout::{HorizontalLayout, UnconstrainedLayout, VerticalLayout},
     overlay::{OverlayLayout, UseOverlay},
     series::{Series, UseSeries},
     state::{AttrState, State},
@@ -19,10 +17,10 @@ use std::rc::Rc;
 pub struct Chart<X: 'static, Y: 'static> {
     attr: AttrState,
 
-    top: Vec<Rc<dyn HorizontalOption<X, Y>>>,
-    right: Vec<Rc<dyn VerticalOption<X, Y>>>,
-    bottom: Vec<Rc<dyn HorizontalOption<X, Y>>>,
-    left: Vec<Rc<dyn VerticalOption<X, Y>>>,
+    top: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
+    right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
+    bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
+    left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
     inner: Vec<Rc<dyn InnerOption<X, Y>>>,
     overlay: Vec<Rc<dyn UseOverlay<X, Y>>>,
     series: UseSeries<X, Y>,
@@ -52,23 +50,23 @@ impl<X, Y> Chart<X, Y> {
         }
     }
 
-    pub fn top(mut self, opt: impl HorizontalLayout<X, Y>) -> Self {
-        self.top.push(opt.apply_attr(&self.attr));
+    pub fn top(mut self, opt: impl HorizontalLayout<X, Y> + 'static) -> Self {
+        self.top.push(Rc::new(opt));
         self
     }
 
-    pub fn right(mut self, opt: impl VerticalLayout<X, Y>) -> Self {
-        self.right.push(opt.apply_attr(&self.attr));
+    pub fn right(mut self, opt: impl VerticalLayout<X, Y> + 'static) -> Self {
+        self.right.push(Rc::new(opt));
         self
     }
 
-    pub fn bottom(mut self, opt: impl HorizontalLayout<X, Y>) -> Self {
-        self.bottom.push(opt.apply_attr(&self.attr));
+    pub fn bottom(mut self, opt: impl HorizontalLayout<X, Y> + 'static) -> Self {
+        self.bottom.push(Rc::new(opt));
         self
     }
 
-    pub fn left(mut self, opt: impl VerticalLayout<X, Y>) -> Self {
-        self.left.push(opt.apply_attr(&self.attr));
+    pub fn left(mut self, opt: impl VerticalLayout<X, Y> + 'static) -> Self {
+        self.left.push(Rc::new(opt));
         self
     }
 
@@ -143,13 +141,13 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     let debug = attr.debug;
 
     // Add top / bottom options
-    let layout = UnconstrainedLayout::horizontal_options(top, bottom);
+    let layout = UnconstrainedLayout::horizontal_options(top, bottom, &attr);
 
     // Add left / right options
     let inner_height = aspect_ratio
         .clone()
         .inner_height_signal(layout.top_height, layout.bottom_height);
-    let layout = layout.vertical_options(left, right, &series, inner_height);
+    let layout = layout.vertical_options(left, right, &attr, &series, inner_height);
 
     // Compose chart
     let inner_width = aspect_ratio.inner_width_signal(layout.left_width, layout.right_width);
@@ -159,7 +157,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
             layout.top_height.get() + inner_height.get() + layout.bottom_height.get(),
         )
     });
-    let layout = layout.compose(outer_bounds, inner_width, &series);
+    let layout = layout.compose(outer_bounds, inner_width, &attr, &series);
     let state = State::new(attr, layout.projection, &watch);
 
     // Edge layout
@@ -168,7 +166,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     // Inner layout
     let inner = inner
         .into_iter()
-        .map(|opt| opt.into_use(&series, state.projection).render(&state))
+        .map(|opt| opt.into_use(&series, &state).render(&state))
         .collect_view();
 
     // Overlay

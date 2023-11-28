@@ -33,6 +33,12 @@ impl Snippet {
         Self::new(Style::VerticalTaster)
     }
 
+    pub(crate) fn fixed_height(attr: &AttrState) -> Signal<f64> {
+        let font = attr.font;
+        let padding = attr.padding;
+        Signal::derive(move || font.get().height() + padding.get().height())
+    }
+
     pub(crate) fn into_use(self, attr: &AttrState) -> UseSnippet {
         UseSnippet {
             style: self.style,

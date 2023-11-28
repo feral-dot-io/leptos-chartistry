@@ -2,11 +2,10 @@ use super::{InnerLayout, InnerOption, UseInner};
 use crate::{
     colours::{Colour, LIGHTER_GREY},
     debug::DebugRect,
-    layout::tick_labels::TickLabelsAttr,
     projection::Projection,
     series::UseSeries,
     state::{AttrState, State},
-    ticks::{short_format_fn, GeneratedTicks},
+    ticks::GeneratedTicks,
     TickLabels,
 };
 use leptos::*;
@@ -28,7 +27,7 @@ pub struct VerticalGridLine<Y: Clone>(GridLine<Y>);
 struct GridLineAttr<Tick> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
-    ticks: TickLabelsAttr<Tick>,
+    ticks: TickLabels<Tick>,
 }
 
 #[derive(Clone)]
@@ -66,11 +65,11 @@ impl<Tick: Clone> GridLine<Tick> {
         VerticalGridLine(Self::new(ticks))
     }
 
-    fn apply_attr(self, attr: &AttrState) -> GridLineAttr<Tick> {
+    fn apply_attr(self, _: &AttrState) -> GridLineAttr<Tick> {
         GridLineAttr {
             width: self.width,
             colour: self.colour,
-            ticks: self.ticks.apply_attr(attr, short_format_fn()),
+            ticks: self.ticks.set_formatter(|s, t| s.short_format(t)),
         }
     }
 }
@@ -88,31 +87,31 @@ impl<X: 'static, Y: Clone + PartialEq + 'static> InnerLayout<X, Y> for VerticalG
 }
 
 impl<X: Clone + PartialEq, Y> InnerOption<X, Y> for HorizontalGridLineAttr<X> {
-    fn into_use(
-        self: Rc<Self>,
-        series: &UseSeries<X, Y>,
-        proj: Signal<Projection>,
-    ) -> Box<dyn UseInner> {
-        let avail_width = Projection::derive_width(proj);
+    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
+        let avail_width = Projection::derive_width(state.projection);
         Box::new(UseHorizontalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            ticks: self.0.ticks.clone().generate_x(series.data, avail_width),
+            ticks: self
+                .0
+                .ticks
+                .clone()
+                .generate_x(&state.attr, series.data, avail_width),
         }))
     }
 }
 
 impl<X, Y: Clone + PartialEq> InnerOption<X, Y> for VerticalGridLineAttr<Y> {
-    fn into_use(
-        self: Rc<Self>,
-        series: &UseSeries<X, Y>,
-        proj: Signal<Projection>,
-    ) -> Box<dyn UseInner> {
-        let avail_height = Projection::derive_height(proj);
+    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
+        let avail_height = Projection::derive_height(state.projection);
         Box::new(UseVerticalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            ticks: self.0.ticks.clone().generate_y(series.data, avail_height),
+            ticks: self
+                .0
+                .ticks
+                .clone()
+                .generate_y(&state.attr, series.data, avail_height),
         }))
     }
 }

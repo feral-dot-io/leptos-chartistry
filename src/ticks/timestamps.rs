@@ -313,8 +313,9 @@ impl<Tz: TimeZone> Add<Period> for DateTime<Tz> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{short_format_fn, HorizontalSpan};
+    use super::super::HorizontalSpan;
     use super::*;
+    use std::rc::Rc;
 
     fn assert_ticks<Tick>(ticks: GeneratedTicks<Tick>, expected: Vec<&'static str>) {
         let GeneratedTicks { ticks, state } = ticks;
@@ -325,7 +326,12 @@ mod tests {
     }
 
     fn mk_span<Tick: 'static>(width: f64) -> Box<dyn Span<Tick>> {
-        Box::new(HorizontalSpan::new(short_format_fn(), 6.0, 2.0, width))
+        Box::new(HorizontalSpan::new(
+            Rc::new(|s, t| s.short_format(t)),
+            6.0,
+            2.0,
+            width,
+        ))
     }
 
     #[test]
