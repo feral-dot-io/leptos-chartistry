@@ -16,8 +16,11 @@ pub struct State {
     pub attr: AttrState,
     pub layout: Layout,
     pub projection: Signal<Projection>,
-    /// Size of chart (left and top are 0)
-    pub bounds: Signal<Option<Bounds>>,
+
+    pub svg_zero: Memo<(f64, f64)>,
+
+    /// Size of chart on page (left and top are 0)
+    pub page_bounds: Signal<Option<Bounds>>,
     /// Mouse position in page coords
     pub mouse_page: Signal<(f64, f64)>,
     /// Mouse position relative to bounds in page coords
@@ -32,15 +35,16 @@ impl State {
     pub fn new(
         attr: AttrState,
         layout: Layout,
-        projection: Signal<Projection>,
+        proj: Signal<Projection>,
         watched_node: &UseWatchedNode,
     ) -> Self {
         let mouse_hover_inner = watched_node.mouse_hover_inner(layout.inner);
         Self {
             attr,
             layout,
-            projection,
-            bounds: watched_node.bounds,
+            projection: proj,
+            svg_zero: create_memo(move |_| proj.get().data_to_svg(0.0, 0.0)),
+            page_bounds: watched_node.bounds,
             mouse_page: watched_node.mouse_page,
             mouse_chart: watched_node.mouse_chart,
             mouse_hover_chart: watched_node.mouse_chart_hover,

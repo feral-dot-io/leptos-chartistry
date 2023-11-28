@@ -23,7 +23,7 @@ fn load_data() -> Vec<Wave> {
     for i in 0..1000 {
         let x = i as f64 / 1000.0 * std::f64::consts::PI * 2.0 * 2.0;
         let sine = x.sin() * SCALE + 1.1;
-        let cosine = x.cos() * SCALE + 1.1;
+        let cosine = x.cos() * SCALE;
         data.push(Wave { x, sine, cosine });
     }
     data
@@ -80,7 +80,7 @@ pub fn App() -> impl IntoView {
         .inner(GuideLine::x_axis())
         .inner(GuideLine::y_axis())
         // Inset legend
-        .inner(InsetLegend::right(snippet.clone()))
+        .inner(InsetLegend::top_right(snippet.clone()))
         // Tooltip
         .overlay(Tooltip::left_cursor(snippet, &bottom_ticks, &left_ticks));
 

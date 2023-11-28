@@ -88,11 +88,10 @@ impl UseInner for AxisMarker {
 #[component]
 pub fn AxisMarker<'a>(marker: AxisMarker, state: &'a State) -> impl IntoView {
     let debug = state.attr.debug;
-    let proj = state.projection;
+    let zero = state.svg_zero;
     let inner = state.layout.inner;
 
     let pos = create_memo(move |_| {
-        let proj = proj.get();
         let inner = inner.get();
         let (top, right, bottom, left) = (
             inner.top_y(),
@@ -109,7 +108,7 @@ pub fn AxisMarker<'a>(marker: AxisMarker, state: &'a State) -> impl IntoView {
             },
 
             Placement::Zero => {
-                let (zero_x, zero_y) = proj.data_to_svg(0.0, 0.0);
+                let (zero_x, zero_y) = zero.get();
                 match marker.edge.get() {
                     Edge::Top => (left, zero_y, right, zero_y),
                     Edge::Bottom => (left, zero_y, right, zero_y),
