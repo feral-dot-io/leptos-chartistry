@@ -3,9 +3,9 @@ use crate::{
     layout::{snippet::SnippetTd, tick_labels::align_tick_labels},
     line::UseLine,
     projection::Projection,
-    series::{Data, UseSeries},
+    series::UseSeries,
     state::{AttrState, State},
-    ticks::{GeneratedTicks, TickFormatFn},
+    ticks::TickFormatFn,
     Snippet, TickLabels, TickState,
 };
 use leptos::*;
@@ -20,17 +20,6 @@ pub struct Tooltip<X, Y> {
 
     x_ticks: TickLabels<X>,
     y_ticks: TickLabels<Y>,
-}
-
-#[derive(Clone)]
-pub struct UseTooltip<X: 'static, Y: 'static> {
-    snippet: Snippet,
-    table_margin: Option<MaybeSignal<f64>>,
-    x_format: TickFormatFn<X>,
-    y_format: TickFormatFn<Y>,
-
-    x_ticks: Signal<GeneratedTicks<X>>,
-    y_ticks: Signal<GeneratedTicks<Y>>,
 }
 
 impl<X: Clone, Y: Clone> Tooltip<X, Y> {
@@ -79,50 +68,21 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
     }
 }
 
-impl<X: PartialEq, Y: PartialEq> Tooltip<X, Y> {
-    fn to_use(&self, data: Signal<Data<X, Y>>, state: &State) -> UseTooltip<X, Y> {
-        let proj = state.projection;
-        let avail_width = Projection::derive_width(proj);
-        let avail_height = Projection::derive_height(proj);
-
-        UseTooltip {
-            snippet: self.snippet.clone(),
-            table_margin: self.table_margin,
-            x_format: self.x_format.clone(),
-            y_format: self.y_format.clone(),
-            x_ticks: self.x_ticks.generate_x(&state.attr, data, avail_width),
-            y_ticks: self.y_ticks.generate_y(&state.attr, data, avail_height),
-        }
-    }
-}
-
 impl<X: PartialEq, Y: PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
     fn render(self: Rc<Self>, series: UseSeries<X, Y>, state: &State) -> View {
-        let tooltip = self.to_use(series.data, state);
-        view! {
-            <Tooltip
-                tooltip=tooltip
-                series=&series
-                state=&state
-            />
-        }
+        view!( <Tooltip tooltip=&self series=&series state=&state /> )
     }
 }
 
 #[component]
-fn Tooltip<'a, X: 'static, Y: 'static>(
-    tooltip: UseTooltip<X, Y>,
+fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
+    tooltip: &'a Tooltip<X, Y>,
     series: &'a UseSeries<X, Y>,
     state: &'a State,
 ) -> impl IntoView {
-    let UseTooltip {
-        snippet,
-        table_margin,
-        x_format,
-        y_format,
-        x_ticks,
-        y_ticks,
-    } = tooltip;
+    let snippet = tooltip.snippet.clone();
+    let x_format = tooltip.x_format.clone();
+    let y_format = tooltip.y_format.clone();
     let State {
         attr: AttrState { padding, font, .. },
         projection,
@@ -132,6 +92,11 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
         ..
     } = *state;
     let data = series.data;
+
+    let avail_width = Projection::derive_width(projection);
+    let avail_height = Projection::derive_height(projection);
+    let x_ticks = tooltip.x_ticks.generate_x(&state.attr, data, avail_width);
+    let y_ticks = tooltip.y_ticks.generate_y(&state.attr, data, avail_height);
 
     // Get nearest values
     let data_x = Signal::derive(move || {
@@ -189,8 +154,9 @@ fn Tooltip<'a, X: 'static, Y: 'static>(
         })
     };
 
-    let table_margin =
-        table_margin.unwrap_or_else(|| Signal::derive(move || font.get().height()).into());
+    let table_margin = tooltip
+        .table_margin
+        .unwrap_or_else(|| Signal::derive(move || font.get().height()).into());
     view! {
         <Show when=move || mouse_hover_inner.get()>
             <div
