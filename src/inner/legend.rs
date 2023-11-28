@@ -32,7 +32,7 @@ impl InsetLegend {
         Self::new(Edge::Top, Anchor::Middle, snippet)
     }
     pub fn top_right(snippet: impl Borrow<Snippet>) -> Self {
-        Self::new(Edge::Top, Anchor::Middle, snippet)
+        Self::new(Edge::Top, Anchor::End, snippet)
     }
     pub fn bottom_left(snippet: impl Borrow<Snippet>) -> Self {
         Self::new(Edge::Bottom, Anchor::Start, snippet)
@@ -41,7 +41,7 @@ impl InsetLegend {
         Self::new(Edge::Bottom, Anchor::Middle, snippet)
     }
     pub fn bottom_right(snippet: impl Borrow<Snippet>) -> Self {
-        Self::new(Edge::Bottom, Anchor::Middle, snippet)
+        Self::new(Edge::Bottom, Anchor::End, snippet)
     }
     pub fn left(snippet: impl Borrow<Snippet>) -> Self {
         Self::new(Edge::Left, Anchor::Middle, snippet)
