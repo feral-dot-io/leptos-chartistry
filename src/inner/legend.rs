@@ -68,21 +68,21 @@ impl UseInner for UseInsetLegend {
 
 #[component]
 fn InsetLegend<'a>(legend: UseLegend, edge: Edge, state: &'a State) -> impl IntoView {
-    let proj = state.projection;
+    let inner = state.layout.inner;
     let width = legend.width;
     let height = legend.height;
     let bounds = create_memo(move |_| {
-        let bounds = proj.get().bounds();
+        let inner = inner.get();
         let height = height.get();
         let width = width.get();
         // Build legend bounds as an inset of the chart bounds
         let (top, right, bottom, left) = match edge {
-            Edge::Top => (0.0, 0.0, bounds.height() - height, 0.0),
-            Edge::Bottom => (bounds.height() - height, 0.0, 0.0, 0.0),
-            Edge::Left => (0.0, bounds.width() - width, 0.0, 0.0),
-            Edge::Right => (0.0, 0.0, 0.0, bounds.width() - width),
+            Edge::Top => (0.0, 0.0, inner.height() - height, 0.0),
+            Edge::Bottom => (inner.height() - height, 0.0, 0.0, 0.0),
+            Edge::Left => (0.0, inner.width() - width, 0.0, 0.0),
+            Edge::Right => (0.0, 0.0, 0.0, inner.width() - width),
         };
-        bounds.shrink(top, right, bottom, left)
+        inner.shrink(top, right, bottom, left)
     });
 
     view! {

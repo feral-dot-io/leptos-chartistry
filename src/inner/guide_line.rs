@@ -2,8 +2,9 @@ use super::{InnerLayout, UseInner};
 use crate::{
     colours::{Colour, LIGHT_GREY},
     debug::DebugRect,
+    layout::Layout,
     series::{Data, UseSeries},
-    state::State,
+    state::{AttrState, State},
 };
 use leptos::*;
 use std::rc::Rc;
@@ -95,17 +96,18 @@ fn GuideLine<'a, X: 'static, Y: 'static>(
     state: &'a State,
 ) -> impl IntoView {
     let State {
+        attr: AttrState { debug, .. },
+        layout: Layout { inner, .. },
         projection,
         mouse_hover_inner,
         mouse_chart,
         ..
     } = *state;
-    let debug = state.attr.debug;
 
     let pos = Signal::derive(move || {
         let (mouse_x, mouse_y) = mouse_chart.get();
         let proj = projection.get();
-        let b = proj.bounds();
+        let inner = inner.get();
         match line.axis {
             Axis::X(AlignOver::Data) => {
                 // Map mouse (SVG coord) to data
@@ -114,10 +116,10 @@ fn GuideLine<'a, X: 'static, Y: 'static>(
                 let position_x = line.data.with(|data| data.nearest_x_position(data_x));
                 // Map back to SVG
                 let (svg_x, _) = proj.data_to_svg(position_x, 0.0);
-                (svg_x, b.top_y(), svg_x, b.bottom_y())
+                (svg_x, inner.top_y(), svg_x, inner.bottom_y())
             }
-            Axis::X(AlignOver::Mouse) => (mouse_x, b.top_y(), mouse_x, b.bottom_y()),
-            Axis::Y => (b.left_x(), mouse_y, b.right_x(), mouse_y),
+            Axis::X(AlignOver::Mouse) => (mouse_x, inner.top_y(), mouse_x, inner.bottom_y()),
+            Axis::Y => (inner.left_x(), mouse_y, inner.right_x(), mouse_y),
         }
     });
     let x1 = create_memo(move |_| pos.get().0);

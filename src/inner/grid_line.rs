@@ -103,6 +103,7 @@ impl<X> UseInner for UseVerticalGridLine<X> {
 #[component]
 fn ViewHorizontalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State) -> impl IntoView {
     let debug = state.attr.debug;
+    let inner = state.layout.inner;
     let proj = state.projection;
     view! {
         <g class="_chartistry_grid_line_x">
@@ -115,9 +116,9 @@ fn ViewHorizontalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State
                 <DebugRect label=format!("grid_line_x/{}", tick.1) debug=debug />
                 <line
                     x1=tick.0
-                    y1=move || proj.get().bounds().top_y()
+                    y1=move || inner.get().top_y()
                     x2=tick.0
-                    y2=move || proj.get().bounds().bottom_y()
+                    y2=move || inner.get().bottom_y()
                     stroke=move || line.colour.get().to_string()
                     stroke-width=line.width
                 />
@@ -129,6 +130,7 @@ fn ViewHorizontalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State
 #[component]
 fn ViewVerticalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State) -> impl IntoView {
     let debug = state.attr.debug;
+    let inner = state.layout.inner;
     let proj = state.projection;
     view! {
         <g class="_chartistry_grid_line_y">
@@ -140,9 +142,9 @@ fn ViewVerticalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State) 
             >
                 <DebugRect label=format!("grid_line_y/{}", tick.1) debug=debug />
                 <line
-                    x1=move || proj.get().bounds().left_x()
+                    x1=move || inner.get().left_x()
                     y1=tick.0
-                    x2=move || proj.get().bounds().right_x()
+                    x2=move || inner.get().right_x()
                     y2=tick.0
                     stroke=move || line.colour.get().to_string()
                     stroke-width=line.width

@@ -35,6 +35,7 @@ impl State {
         projection: Signal<Projection>,
         watched_node: &UseWatchedNode,
     ) -> Self {
+        let mouse_hover_inner = watched_node.mouse_hover_inner(layout.inner);
         Self {
             attr,
             layout,
@@ -43,7 +44,7 @@ impl State {
             mouse_page: watched_node.mouse_page,
             mouse_chart: watched_node.mouse_chart,
             mouse_hover_chart: watched_node.mouse_chart_hover,
-            mouse_hover_inner: watched_node.mouse_hover_inner(projection),
+            mouse_hover_inner,
         }
     }
 }

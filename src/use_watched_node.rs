@@ -1,4 +1,4 @@
-use crate::{bounds::Bounds, projection::Projection};
+use crate::bounds::Bounds;
 use leptos::{html::Div, *};
 use leptos_use::{
     use_element_hover, use_mouse_with_options, use_resize_observer, UseMouseCoordType,
@@ -77,11 +77,11 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
 
 impl UseWatchedNode {
     // Mouse inside inner chart?
-    pub fn mouse_hover_inner(&self, proj: Signal<Projection>) -> Signal<bool> {
+    pub fn mouse_hover_inner(&self, inner: Memo<Bounds>) -> Signal<bool> {
         let (mouse_rel, hover) = (self.mouse_chart, self.mouse_chart_hover);
         create_memo(move |_| {
             let (x, y) = mouse_rel.get();
-            hover.get() && proj.with(|proj| proj.bounds().contains(x, y))
+            hover.get() && inner.get().contains(x, y)
         })
         .into()
     }

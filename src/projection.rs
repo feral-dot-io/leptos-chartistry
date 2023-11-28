@@ -34,15 +34,11 @@ impl Projection {
         (x, y)
     }
 
-    pub fn bounds(&self) -> Bounds {
-        self.bounds
-    }
-
     pub fn derive_width(proj: Signal<Projection>) -> Signal<f64> {
-        Signal::derive(move || with!(|proj| proj.bounds().width()))
+        Signal::derive(move || with!(|proj| proj.bounds.width()))
     }
     pub fn derive_height(proj: Signal<Projection>) -> Signal<f64> {
-        Signal::derive(move || with!(|proj| proj.bounds().height()))
+        Signal::derive(move || with!(|proj| proj.bounds.height()))
     }
 }
 
@@ -61,8 +57,6 @@ mod tests {
         let bounds = Bounds::from_points(10.0, 10.0, 90.0, 90.0);
         let p = Projection::new(bounds, range);
 
-        assert_eq!(p.bounds(), bounds);
-
         // Data range -> view bounds
         assert_coords(&p, (0.0, 0.0), (10.0, 90.0)); // Bottom left
         assert_coords(&p, (100.0, 0.0), (90.0, 90.0)); // Bottom right
@@ -76,7 +70,6 @@ mod tests {
         let bounds = Bounds::from_points(10.0, 10.0, 90.0, 90.0);
         let range = Bounds::from_points(0.0, 0.0, 200.0, 200.0);
         let p = Projection::new(bounds, range);
-        assert_eq!(p.bounds(), bounds);
 
         // Data range (0, 0) to (200, 200) -> view bounds
         assert_coords(&p, (0.0, 0.0), (10.0, 90.0)); // Bottom left

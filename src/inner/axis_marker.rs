@@ -89,11 +89,17 @@ impl UseInner for AxisMarker {
 pub fn AxisMarker<'a>(marker: AxisMarker, state: &'a State) -> impl IntoView {
     let debug = state.attr.debug;
     let proj = state.projection;
+    let inner = state.layout.inner;
 
     let pos = create_memo(move |_| {
         let proj = proj.get();
-        let b = proj.bounds();
-        let (top, right, bottom, left) = (b.top_y(), b.right_x(), b.bottom_y(), b.left_x());
+        let inner = inner.get();
+        let (top, right, bottom, left) = (
+            inner.top_y(),
+            inner.right_x(),
+            inner.bottom_y(),
+            inner.left_x(),
+        );
         let coords @ (x1, y1, x2, y2) = match marker.placement.get() {
             Placement::Edge => match marker.edge.get() {
                 Edge::Top => (left, top, right, top),
@@ -112,7 +118,7 @@ pub fn AxisMarker<'a>(marker: AxisMarker, state: &'a State) -> impl IntoView {
                 }
             }
         };
-        let in_bounds = b.contains(x1, y1) && b.contains(x2, y2);
+        let in_bounds = inner.contains(x1, y1) && inner.contains(x2, y2);
         (in_bounds, coords)
     });
     // Check coords are within projection bounds
