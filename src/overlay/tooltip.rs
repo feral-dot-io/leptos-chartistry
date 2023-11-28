@@ -77,7 +77,7 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> OverlayLayout<X, Y>
     for Tooltip<X, Y>
 {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn UseOverlay<X, Y>> {
+    fn into_use(self, attr: &AttrState) -> Rc<dyn UseOverlay<X, Y>> {
         let font = attr.font;
         Rc::new(TooltipAttr {
             snippet: self.snippet,

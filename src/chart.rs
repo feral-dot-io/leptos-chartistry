@@ -76,7 +76,7 @@ impl<X, Y> Chart<X, Y> {
     }
 
     pub fn overlay(mut self, opt: impl OverlayLayout<X, Y>) -> Self {
-        self.overlay.push(opt.apply_attr(&self.attr));
+        self.overlay.push(opt.into_use(&self.attr));
         self
     }
 }

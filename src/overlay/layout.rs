@@ -6,7 +6,7 @@ use leptos::*;
 use std::rc::Rc;
 
 pub trait OverlayLayout<X, Y> {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn UseOverlay<X, Y>>;
+    fn into_use(self, attr: &AttrState) -> Rc<dyn UseOverlay<X, Y>>;
 }
 
 pub trait UseOverlay<X, Y> {
@@ -18,7 +18,7 @@ impl<T, X, Y> OverlayLayout<X, Y> for &T
 where
     T: Clone + OverlayLayout<X, Y>,
 {
-    fn apply_attr(self, attr: &AttrState) -> Rc<dyn UseOverlay<X, Y>> {
-        self.clone().apply_attr(attr)
+    fn into_use(self, attr: &AttrState) -> Rc<dyn UseOverlay<X, Y>> {
+        self.clone().into_use(attr)
     }
 }
