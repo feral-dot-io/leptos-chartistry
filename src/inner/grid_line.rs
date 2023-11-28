@@ -104,32 +104,24 @@ impl<X> UseInner for UseVerticalGridLine<X> {
 fn ViewHorizontalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State) -> impl IntoView {
     let debug = state.attr.debug;
     let proj = state.projection;
-
-    let ticks = Signal::derive(move || {
-        let ticks = line.ticks; // Ticky ticky tick tick
-        with!(|ticks, proj| {
-            (ticks.ticks.iter())
-                .map(|tick| {
-                    let x = ticks.state.position(tick);
-                    let x = proj.data_to_svg(x, 0.0).0;
-                    let bounds = proj.bounds();
-                    view! {
-                        <line
-                            x1=x
-                            y1=move || bounds.top_y()
-                            x2=x
-                            y2=move || bounds.bottom_y()
-                            stroke=move || line.colour.get().to_string()
-                            stroke-width=line.width />
-                    }
-                })
-                .collect_view()
-        })
-    });
     view! {
         <g class="_chartistry_grid_line_x">
-            <DebugRect label="XGridLine" debug=debug />
-            {ticks}
+            <DebugRect label="grid_line_x" debug=debug />
+            <For
+                each=move || for_ticks(line.ticks, proj, true)
+                key=|(_, label)| label.to_owned()
+                let:tick
+            >
+                <DebugRect label=format!("grid_line_x/{}", tick.1) debug=debug />
+                <line
+                    x1=tick.0
+                    y1=move || proj.get().bounds().top_y()
+                    x2=tick.0
+                    y2=move || proj.get().bounds().bottom_y()
+                    stroke=move || line.colour.get().to_string()
+                    stroke-width=line.width
+                />
+            </For>
         </g>
     }
 }
@@ -138,32 +130,48 @@ fn ViewHorizontalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State
 fn ViewVerticalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State) -> impl IntoView {
     let debug = state.attr.debug;
     let proj = state.projection;
-
-    let ticks = Signal::derive(move || {
-        let ticks = line.ticks;
-        with!(|ticks, proj| {
-            (ticks.ticks.iter())
-                .map(|tick| {
-                    let y = ticks.state.position(tick);
-                    let y = proj.data_to_svg(0.0, y).1;
-                    let bounds = proj.bounds();
-                    view! {
-                        <line
-                            x1=move || bounds.left_x()
-                            y1=y
-                            x2=move || bounds.right_x()
-                            y2=y
-                            stroke=move || line.colour.get().to_string()
-                            stroke-width=line.width />
-                    }
-                })
-                .collect_view()
-        })
-    });
     view! {
         <g class="_chartistry_grid_line_y">
-            <DebugRect label="YGridLine" debug=debug />
-            {ticks}
+            <DebugRect label="grid_line_y" debug=debug />
+            <For
+                each=move || for_ticks(line.ticks, proj, false)
+                key=|(_, label)| label.to_owned()
+                let:tick
+            >
+                <DebugRect label=format!("grid_line_y/{}", tick.1) debug=debug />
+                <line
+                    x1=move || proj.get().bounds().left_x()
+                    y1=tick.0
+                    x2=move || proj.get().bounds().right_x()
+                    y2=tick.0
+                    stroke=move || line.colour.get().to_string()
+                    stroke-width=line.width
+                />
+            </For>
         </g>
     }
+}
+
+fn for_ticks<Tick>(
+    ticks: Signal<GeneratedTicks<Tick>>,
+    proj: Signal<Projection>,
+    is_x: bool,
+) -> Vec<(f64, String)> {
+    ticks.with(move |ticks| {
+        let proj = proj.get();
+        ticks
+            .ticks
+            .iter()
+            .map(|tick| {
+                let label = ticks.state.long_format(tick);
+                let tick = ticks.state.position(tick);
+                let tick = if is_x {
+                    proj.data_to_svg(tick, 0.0).0
+                } else {
+                    proj.data_to_svg(0.0, tick).1
+                };
+                (tick, label)
+            })
+            .collect::<Vec<_>>()
+    })
 }
