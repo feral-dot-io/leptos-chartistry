@@ -3,7 +3,7 @@ use crate::{
     colours::{Colour, LIGHT_GREY},
     debug::DebugRect,
     layout::Layout,
-    series::{Data, UseSeries},
+    series::UseSeries,
     state::{AttrState, State},
 };
 use leptos::*;
@@ -27,14 +27,6 @@ enum AlignOver {
     #[default]
     Data,
     Mouse,
-}
-
-#[derive(Clone, Debug)]
-pub struct UseGuideLine<X: 'static, Y: 'static> {
-    axis: Axis,
-    data: Signal<Data<X, Y>>,
-    width: MaybeSignal<f64>,
-    colour: MaybeSignal<Colour>,
 }
 
 impl GuideLine {
@@ -74,52 +66,34 @@ impl GuideLine {
 }
 
 impl<X, Y> InnerLayout<X, Y> for GuideLine {
-    fn into_use(
-        self: Rc<Self>,
-        series: &UseSeries<X, Y>,
-        _: &State<X, Y>,
-    ) -> Box<dyn UseInner<X, Y>> {
-        Box::new(UseGuideLine {
-            axis: self.axis,
-            data: series.data,
-            width: self.width,
-            colour: self.colour,
-        })
+    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
+        Box::new((*self).clone())
     }
 }
 
-impl<X, Y> UseInner<X, Y> for UseGuideLine<X, Y> {
+impl<X, Y> UseInner<X, Y> for GuideLine {
     fn render(self: Box<Self>, state: &State<X, Y>) -> View {
         view! { <GuideLine line=*self state=state /> }
     }
 }
 
 #[component]
-fn GuideLine<'a, X: 'static, Y: 'static>(
-    line: UseGuideLine<X, Y>,
-    state: &'a State<X, Y>,
-) -> impl IntoView {
+fn GuideLine<'a, X: 'static, Y: 'static>(line: GuideLine, state: &'a State<X, Y>) -> impl IntoView {
     let State {
         attr: AttrState { debug, .. },
         layout: Layout { inner, .. },
-        projection,
         mouse_hover_inner,
         mouse_chart,
+        mouse_hover_nearest_svg_x,
         ..
     } = *state;
 
     let pos = Signal::derive(move || {
         let (mouse_x, mouse_y) = mouse_chart.get();
-        let proj = projection.get();
         let inner = inner.get();
         match line.axis {
             Axis::X(AlignOver::Data) => {
-                // Map mouse (SVG coord) to data
-                let (data_x, _) = proj.svg_to_data(mouse_x, mouse_y);
-                // Map data to nearest position
-                let position_x = line.data.with(|data| data.nearest_x_position(data_x));
-                // Map back to SVG
-                let (svg_x, _) = proj.data_to_svg(position_x, 0.0);
+                let svg_x = mouse_hover_nearest_svg_x.get();
                 (svg_x, inner.top_y(), svg_x, inner.bottom_y())
             }
             Axis::X(AlignOver::Mouse) => (mouse_x, inner.top_y(), mouse_x, inner.bottom_y()),
