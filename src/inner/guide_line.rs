@@ -82,9 +82,9 @@ fn GuideLine<'a, X: 'static, Y: 'static>(line: GuideLine, state: &'a State<X, Y>
     let State {
         attr: AttrState { debug, .. },
         layout: Layout { inner, .. },
-        mouse_hover_inner,
+        hover_inner,
         mouse_chart,
-        mouse_hover_nearest_svg_x,
+        nearest_svg_x,
         ..
     } = *state;
 
@@ -93,7 +93,7 @@ fn GuideLine<'a, X: 'static, Y: 'static>(line: GuideLine, state: &'a State<X, Y>
         let inner = inner.get();
         match line.axis {
             Axis::X(AlignOver::Data) => {
-                let svg_x = mouse_hover_nearest_svg_x.get();
+                let svg_x = nearest_svg_x.get();
                 (svg_x, inner.top_y(), svg_x, inner.bottom_y())
             }
             Axis::X(AlignOver::Mouse) => (mouse_x, inner.top_y(), mouse_x, inner.bottom_y()),
@@ -112,7 +112,7 @@ fn GuideLine<'a, X: 'static, Y: 'static>(line: GuideLine, state: &'a State<X, Y>
 
     view! {
         <g class=format!("_chartistry_guide_line_{}", line.axis)>
-            <Show when=move || mouse_hover_inner.get() && have_data.get() >
+            <Show when=move || hover_inner.get() && have_data.get() >
                 <DebugRect label=format!("guide_line_{}", line.axis) debug=debug />
                 <line
                     x1=x1

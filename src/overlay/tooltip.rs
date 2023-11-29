@@ -88,7 +88,7 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
         projection,
         mouse_page,
         mouse_chart,
-        mouse_hover_inner,
+        hover_inner,
         ..
     } = *state;
     let data = series.data;
@@ -162,7 +162,7 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
         .table_margin
         .unwrap_or_else(|| Signal::derive(move || font.get().height()).into());
     view! {
-        <Show when=move || mouse_hover_inner.get()>
+        <Show when=move || hover_inner.get()>
             <div
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
                 style:top=move || format!("calc({}px)", mouse_page.get().1)

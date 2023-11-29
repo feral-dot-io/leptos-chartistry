@@ -34,19 +34,19 @@ pub struct State<X: 'static, Y: 'static> {
 
     /// Size of chart on page (left and top are 0)
     pub page_bounds: Signal<Option<Bounds>>,
-    /// Mouse position in page coords
+    /// Mouse page position
     pub mouse_page: Signal<(f64, f64)>,
-    /// Mouse position relative to bounds in page coords
+    /// Mouse page position relative to chart
     pub mouse_chart: Signal<(f64, f64)>,
     /// Mouse over chart?
-    pub mouse_hover_chart: Signal<bool>,
+    pub hover_chart: Signal<bool>,
     /// Mouse over inner chart?
-    pub mouse_hover_inner: Signal<bool>,
+    pub hover_inner: Signal<bool>,
 
-    // Data
-    pub mouse_hover_data: Memo<(f64, f64)>,
-    pub mouse_hover_nearest_data_x: Memo<f64>,
-    pub mouse_hover_nearest_svg_x: Memo<f64>,
+    /// X position of nearest data from mouse data
+    pub nearest_data_x: Memo<f64>,
+    /// X coord of nearest mouse data in SVG space
+    pub nearest_svg_x: Memo<f64>,
 }
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X, Y> {
@@ -70,19 +70,19 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         data: Signal<series::Data<X, Y>>,
     ) -> Self {
         let mouse_chart = node.mouse_chart;
-        let mouse_hover_inner = node.mouse_hover_inner(layout.inner);
+        let hover_inner = node.mouse_hover_inner(layout.inner);
 
         // Data
-        let mouse_hover_data = create_memo(move |_| {
+        let hover_data = create_memo(move |_| {
             let (mouse_x, mouse_y) = mouse_chart.get();
             proj.get().svg_to_data(mouse_x, mouse_y)
         });
-        let mouse_hover_nearest_data_x = create_memo(move |_| {
-            let (data_x, _) = mouse_hover_data.get();
+        let nearest_data_x = create_memo(move |_| {
+            let (data_x, _) = hover_data.get();
             data.with(|data| data.nearest_x_position(data_x))
         });
-        let mouse_hover_nearest_svg_x = create_memo(move |_| {
-            let (data_x, _) = mouse_hover_data.get();
+        let nearest_svg_x = create_memo(move |_| {
+            let data_x = nearest_data_x.get();
             let (svg_x, _) = proj.get().data_to_svg(data_x, 0.0);
             svg_x
         });
@@ -96,12 +96,11 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
             page_bounds: node.bounds,
             mouse_page: node.mouse_page,
             mouse_chart,
-            mouse_hover_chart: node.mouse_chart_hover,
-            mouse_hover_inner,
+            hover_chart: node.mouse_chart_hover,
+            hover_inner,
 
-            mouse_hover_data,
-            mouse_hover_nearest_data_x,
-            mouse_hover_nearest_svg_x,
+            nearest_data_x,
+            nearest_svg_x,
         }
     }
 }
