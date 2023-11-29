@@ -10,7 +10,7 @@ use crate::{
     edge::Edge,
     line::UseLine,
     series::UseSeries,
-    state::{AttrState, State},
+    state::{AttrState, PreState, State},
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
@@ -93,38 +93,38 @@ impl<X, Y> HorizontalLayout<X, Y> for Legend {
 
     fn into_use(
         self: Rc<Self>,
-        attr: &AttrState,
+        state: &PreState<X, Y>,
         series: &UseSeries<X, Y>,
         _: Memo<f64>,
-    ) -> Box<dyn UseLayout> {
-        Box::new((*self).clone().into_use(attr, series))
+    ) -> Box<dyn UseLayout<X, Y>> {
+        Box::new((*self).clone().into_use(&state.attr, series))
     }
 }
 
 impl<X, Y> VerticalLayout<X, Y> for Legend {
     fn into_use(
         self: Rc<Self>,
-        attr: &AttrState,
+        state: &PreState<X, Y>,
         series: &UseSeries<X, Y>,
         _: Memo<f64>,
-    ) -> (Signal<f64>, Box<dyn UseLayout>) {
-        let legend = Box::new((*self).clone().into_use(attr, series));
+    ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
+        let legend = Box::new((*self).clone().into_use(&state.attr, series));
         (legend.width, legend)
     }
 }
 
-impl UseLayout for UseLegend {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State) -> View {
+impl<X, Y> UseLayout<X, Y> for UseLegend {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
         view! { <Legend legend=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
 
 #[component]
-pub fn Legend<'a>(
+pub fn Legend<'a, X: 'static, Y: 'static>(
     legend: UseLegend,
     edge: Edge,
     bounds: Memo<Bounds>,
-    state: &'a State,
+    state: &'a State<X, Y>,
 ) -> impl IntoView {
     let UseLegend {
         snippet, anchor, ..
@@ -143,7 +143,7 @@ pub fn Legend<'a>(
         "column"
     };
 
-    let state = state.clone();
+    let attr = state.attr.clone();
     let body = move || {
         // Sort lines by name
         let mut lines = legend.lines.clone();
@@ -155,7 +155,7 @@ pub fn Legend<'a>(
                 <SnippetTd
                     snippet=snippet.clone()
                     line=line
-                    attr=&state.attr
+                    attr=&attr
                     left_padding=edge.is_horizontal() && i != 0
                 >
                     {name}

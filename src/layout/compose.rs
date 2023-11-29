@@ -2,7 +2,7 @@ use crate::{
     aspect_ratio::AspectRatioCalc,
     bounds::Bounds,
     edge::Edge,
-    state::{AttrState, State},
+    state::{AttrState, PreState, State},
     UseSeries,
 };
 use leptos::*;
@@ -26,27 +26,27 @@ pub trait HorizontalLayout<X, Y> {
     fn fixed_height(&self, attr: &AttrState) -> Signal<f64>;
     fn into_use(
         self: Rc<Self>,
-        attr: &AttrState,
+        state: &PreState<X, Y>,
         series: &UseSeries<X, Y>,
         inner_width: Memo<f64>,
-    ) -> Box<dyn UseLayout>;
+    ) -> Box<dyn UseLayout<X, Y>>;
 }
 
 pub trait VerticalLayout<X, Y> {
     fn into_use(
         self: Rc<Self>,
-        attr: &AttrState,
+        state: &PreState<X, Y>,
         series: &UseSeries<X, Y>,
         inner_height: Memo<f64>,
-    ) -> (Signal<f64>, Box<dyn UseLayout>);
+    ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>);
 }
 
-pub trait UseLayout {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State) -> View;
+pub trait UseLayout<X, Y> {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View;
 }
 
-pub struct ComposedLayout {
-    edges: Vec<(Edge, Memo<Bounds>, Box<dyn UseLayout>)>,
+pub struct ComposedLayout<X, Y> {
+    edges: Vec<(Edge, Memo<Bounds>, Box<dyn UseLayout<X, Y>>)>,
 }
 
 impl Layout {
@@ -71,22 +71,22 @@ impl Layout {
         bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
         left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
         aspect_ratio: AspectRatioCalc,
-        attr: &AttrState,
+        state: &PreState<X, Y>,
         series: &UseSeries<X, Y>,
-    ) -> (Layout, ComposedLayout) {
+    ) -> (Layout, ComposedLayout<X, Y>) {
         // Horizontal options
-        let top_heights = collect_heights(&top, attr);
+        let top_heights = collect_heights(&top, &state.attr);
         let top_height = sum_sizes(top_heights.clone());
-        let bottom_heights = collect_heights(&bottom, attr);
+        let bottom_heights = collect_heights(&bottom, &state.attr);
         let bottom_height = sum_sizes(bottom_heights.clone());
         let inner_height = aspect_ratio
             .clone()
             .inner_height_signal(top_height, bottom_height);
 
         // Vertical options
-        let (left_widths, left) = use_vertical(&left, attr, series, inner_height);
+        let (left_widths, left) = use_vertical(&left, state, series, inner_height);
         let left_width = sum_sizes(left_widths.clone());
-        let (right_widths, right) = use_vertical(&right, attr, series, inner_height);
+        let (right_widths, right) = use_vertical(&right, state, series, inner_height);
         let right_width = sum_sizes(right_widths.clone());
         let inner_width = aspect_ratio.inner_width_signal(left_width, right_width);
 
@@ -146,15 +146,20 @@ impl Layout {
                 .map(move |(index, opt)| (edge, bounds[index], opt))
                 .collect::<Vec<_>>()
         };
-        let horizontal = |edge: Edge,
-                          bounds: &[Memo<Bounds>],
-                          items: Vec<Rc<dyn HorizontalLayout<X, Y>>>| {
-            items
-                .into_iter()
-                .enumerate()
-                .map(|(index, opt)| (edge, bounds[index], opt.into_use(attr, series, inner_width)))
-                .collect::<Vec<_>>()
-        };
+        let horizontal =
+            |edge: Edge, bounds: &[Memo<Bounds>], items: Vec<Rc<dyn HorizontalLayout<X, Y>>>| {
+                items
+                    .into_iter()
+                    .enumerate()
+                    .map(|(index, opt)| {
+                        (
+                            edge,
+                            bounds[index],
+                            opt.into_use(state, series, inner_width),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            };
 
         // Chain edges together for a deferred render
         let composed = ComposedLayout {
@@ -181,13 +186,13 @@ fn collect_heights<X, Y>(
 
 fn use_vertical<X, Y>(
     items: &[Rc<dyn VerticalLayout<X, Y>>],
-    attr: &AttrState,
+    state: &PreState<X, Y>,
     series: &UseSeries<X, Y>,
     inner_height: Memo<f64>,
-) -> (Vec<Signal<f64>>, Vec<Box<dyn UseLayout>>) {
+) -> (Vec<Signal<f64>>, Vec<Box<dyn UseLayout<X, Y>>>) {
     items
         .iter()
-        .map(|c| c.clone().into_use(attr, series, inner_height))
+        .map(|c| c.clone().into_use(state, series, inner_height))
         .unzip()
 }
 
@@ -221,13 +226,12 @@ fn option_bounds(edge: Edge, outer: Memo<Bounds>, sizes: Vec<Signal<f64>>) -> Ve
         .collect::<Vec<_>>()
 }
 
-impl ComposedLayout {
-    pub fn render(self, state: &State) -> View {
-        let state = state.clone();
+impl<X, Y> ComposedLayout<X, Y> {
+    pub fn render(self, state: &State<X, Y>) -> View {
         self.edges
             .iter()
             .enumerate()
-            .map(move |(_, &(edge, bounds, ref layout))| layout.render(edge, bounds, &state))
+            .map(move |(_, &(edge, bounds, ref layout))| layout.render(edge, bounds, state))
             .collect_view()
     }
 }

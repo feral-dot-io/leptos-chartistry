@@ -52,7 +52,11 @@ impl InsetLegend {
 }
 
 impl<X, Y> InnerLayout<X, Y> for InsetLegend {
-    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
+    fn into_use(
+        self: Rc<Self>,
+        series: &UseSeries<X, Y>,
+        state: &State<X, Y>,
+    ) -> Box<dyn UseInner<X, Y>> {
         Box::new(UseInsetLegend {
             legend: self.legend.clone().into_use(&state.attr, series),
             edge: self.edge,
@@ -60,14 +64,18 @@ impl<X, Y> InnerLayout<X, Y> for InsetLegend {
     }
 }
 
-impl UseInner for UseInsetLegend {
-    fn render(self: Box<Self>, state: &State) -> View {
+impl<X, Y> UseInner<X, Y> for UseInsetLegend {
+    fn render(self: Box<Self>, state: &State<X, Y>) -> View {
         view!( <InsetLegend legend=self.legend edge=self.edge state=state /> )
     }
 }
 
 #[component]
-fn InsetLegend<'a>(legend: UseLegend, edge: Edge, state: &'a State) -> impl IntoView {
+fn InsetLegend<'a, X: 'static, Y: 'static>(
+    legend: UseLegend,
+    edge: Edge,
+    state: &'a State<X, Y>,
+) -> impl IntoView {
     let inner = state.layout.inner;
     let width = legend.width;
     let height = legend.height;

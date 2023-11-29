@@ -74,19 +74,22 @@ impl AxisMarker {
 }
 
 impl<X, Y> InnerLayout<X, Y> for AxisMarker {
-    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: &State) -> Box<dyn UseInner> {
+    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
         Box::new((*self).clone())
     }
 }
 
-impl UseInner for AxisMarker {
-    fn render(self: Box<Self>, state: &State) -> View {
+impl<X, Y> UseInner<X, Y> for AxisMarker {
+    fn render(self: Box<Self>, state: &State<X, Y>) -> View {
         view!( <AxisMarker marker=*self state=state /> )
     }
 }
 
 #[component]
-pub fn AxisMarker<'a>(marker: AxisMarker, state: &'a State) -> impl IntoView {
+pub fn AxisMarker<'a, X: 'static, Y: 'static>(
+    marker: AxisMarker,
+    state: &'a State<X, Y>,
+) -> impl IntoView {
     let debug = state.attr.debug;
     let zero = state.svg_zero;
     let inner = state.layout.inner;

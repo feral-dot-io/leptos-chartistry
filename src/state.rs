@@ -1,6 +1,6 @@
 use crate::{
-    bounds::Bounds, layout::Layout, projection::Projection, use_watched_node::UseWatchedNode, Font,
-    Padding,
+    bounds::Bounds, layout::Layout, projection::Projection, series,
+    use_watched_node::UseWatchedNode, Font, Padding,
 };
 use leptos::signal_prelude::*;
 
@@ -12,8 +12,21 @@ pub struct AttrState {
 }
 
 #[derive(Clone, Debug)]
-pub struct State {
+pub struct Data<X: 'static, Y: 'static> {
+    pub x_range: Memo<Option<(X, X)>>,
+    pub y_range: Memo<Option<(Y, Y)>>,
+}
+
+#[derive(Clone, Debug)]
+pub struct PreState<X: 'static, Y: 'static> {
     pub attr: AttrState,
+    pub data: Data<X, Y>,
+}
+
+#[derive(Clone, Debug)]
+pub struct State<X: 'static, Y: 'static> {
+    pub attr: AttrState,
+    pub data: Data<X, Y>,
     pub layout: Layout,
     pub projection: Signal<Projection>,
 
@@ -31,23 +44,36 @@ pub struct State {
     pub mouse_hover_inner: Signal<bool>,
 }
 
-impl State {
-    pub fn new(
-        attr: AttrState,
-        layout: Layout,
-        proj: Signal<Projection>,
-        watched_node: &UseWatchedNode,
-    ) -> Self {
-        let mouse_hover_inner = watched_node.mouse_hover_inner(layout.inner);
+impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X, Y> {
+    pub fn new(attr: AttrState, data: Signal<series::Data<X, Y>>) -> Self {
         Self {
             attr,
+            data: Data {
+                x_range: create_memo(move |_| data.with(|data| data.x_range().cloned())),
+                y_range: create_memo(move |_| data.with(|data| data.y_range().cloned())),
+            },
+        }
+    }
+}
+
+impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y> {
+    pub fn new(
+        pre: PreState<X, Y>,
+        node: &UseWatchedNode,
+        layout: Layout,
+        proj: Signal<Projection>,
+    ) -> Self {
+        let mouse_hover_inner = node.mouse_hover_inner(layout.inner);
+        Self {
+            attr: pre.attr,
+            data: pre.data,
             layout,
             projection: proj,
             svg_zero: create_memo(move |_| proj.get().data_to_svg(0.0, 0.0)),
-            page_bounds: watched_node.bounds,
-            mouse_page: watched_node.mouse_page,
-            mouse_chart: watched_node.mouse_chart,
-            mouse_hover_chart: watched_node.mouse_chart_hover,
+            page_bounds: node.bounds,
+            mouse_page: node.mouse_page,
+            mouse_chart: node.mouse_chart,
+            mouse_hover_chart: node.mouse_chart_hover,
             mouse_hover_inner,
         }
     }

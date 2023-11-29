@@ -4,7 +4,7 @@ use crate::{
     debug::DebugRect,
     edge::Edge,
     series::UseSeries,
-    state::{AttrState, State},
+    state::{AttrState, PreState, State},
 };
 use leptos::*;
 use std::rc::Rc;
@@ -64,10 +64,10 @@ impl<X, Y> HorizontalLayout<X, Y> for RotatedLabel {
 
     fn into_use(
         self: Rc<Self>,
-        _: &AttrState,
+        _: &PreState<X, Y>,
         _: &UseSeries<X, Y>,
         _: Memo<f64>,
-    ) -> Box<dyn UseLayout> {
+    ) -> Box<dyn UseLayout<X, Y>> {
         Box::new((*self).clone())
     }
 }
@@ -75,12 +75,12 @@ impl<X, Y> HorizontalLayout<X, Y> for RotatedLabel {
 impl<X, Y> VerticalLayout<X, Y> for RotatedLabel {
     fn into_use(
         self: Rc<Self>,
-        attr: &AttrState,
+        state: &PreState<X, Y>,
         _: &UseSeries<X, Y>,
         _: Memo<f64>,
-    ) -> (Signal<f64>, Box<dyn UseLayout>) {
+    ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
         // Note: width is height because it's rotated
-        (self.size(attr), Box::new((*self).clone()))
+        (self.size(&state.attr), Box::new((*self).clone()))
     }
 }
 
@@ -110,18 +110,18 @@ impl Anchor {
     }
 }
 
-impl UseLayout for RotatedLabel {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State) -> View {
+impl<X, Y> UseLayout<X, Y> for RotatedLabel {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
         view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
 
 #[component]
-fn RotatedLabel<'a>(
+fn RotatedLabel<'a, X: 'static, Y: 'static>(
     label: RotatedLabel,
     edge: Edge,
     bounds: Memo<Bounds>,
-    state: &'a State,
+    state: &'a State<X, Y>,
 ) -> impl IntoView {
     let RotatedLabel { text, anchor } = label;
     let AttrState {

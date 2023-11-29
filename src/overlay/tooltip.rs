@@ -67,17 +67,17 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
     }
 }
 
-impl<X: PartialEq, Y: PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
-    fn render(self: Rc<Self>, series: UseSeries<X, Y>, state: &State) -> View {
-        view!( <Tooltip tooltip=&self series=&series state=&state /> )
+impl<X: Clone + PartialEq, Y: Clone + PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
+    fn render(self: Rc<Self>, series: UseSeries<X, Y>, state: &State<X, Y>) -> View {
+        view!( <Tooltip tooltip=(*self).clone() series=series.clone() state=&state /> )
     }
 }
 
 #[component]
 fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
-    tooltip: &'a Tooltip<X, Y>,
-    series: &'a UseSeries<X, Y>,
-    state: &'a State,
+    tooltip: Tooltip<X, Y>,
+    series: UseSeries<X, Y>,
+    state: &'a State<X, Y>,
 ) -> impl IntoView {
     let snippet = tooltip.snippet.clone();
     let x_format = tooltip.x_format.clone();
@@ -95,8 +95,12 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
 
     let avail_width = Signal::derive(move || with!(|inner| inner.width()));
     let avail_height = Signal::derive(move || with!(|inner| inner.height()));
-    let x_ticks = tooltip.x_ticks.generate_x(&state.attr, data, avail_width);
-    let y_ticks = tooltip.y_ticks.generate_y(&state.attr, data, avail_height);
+    let x_ticks = tooltip
+        .x_ticks
+        .generate_x(&state.attr, &state.data, avail_width);
+    let y_ticks = tooltip
+        .y_ticks
+        .generate_y(&state.attr, &state.data, avail_height);
 
     // Get nearest values
     let data_x = Signal::derive(move || {
@@ -113,8 +117,8 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
             )
         })
     };
-    let state = state.clone();
     let y_body = {
+        let attr = state.attr.clone();
         let lines = series.lines.clone();
         create_memo(move |_| {
             // Sort lines by name
@@ -135,22 +139,22 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
                 .unzip();
             let labels = align_tick_labels(labels);
             lines
-            .into_iter()
-            .zip(labels)
-            .map(|(line, label)| {
-                let name = line.name.clone();
-                view! {
-                    <tr>
-                        <SnippetTd snippet=snippet.clone() line=line attr=&state.attr>{name} ":"</SnippetTd>
-                        <td
-                            style="text-align: left; white-space: pre; font-family: monospace;"
-                            style:padding-left=move || format!("{}px", font.get().width())>
-                            {label}
-                        </td>
-                    </tr>
-                }
-            })
-            .collect_view()
+                .into_iter()
+                .zip(labels)
+                .map(|(line, label)| {
+                    let name = line.name.clone();
+                    view! {
+                        <tr>
+                            <SnippetTd snippet=snippet.clone() line=line attr=&attr>{name} ":"</SnippetTd>
+                            <td
+                                style="text-align: left; white-space: pre; font-family: monospace;"
+                                style:padding-left=move || format!("{}px", font.get().width())>
+                                {label}
+                            </td>
+                        </tr>
+                    }
+                })
+                .collect_view()
         })
     };
 

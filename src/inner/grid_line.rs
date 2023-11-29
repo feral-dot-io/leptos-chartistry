@@ -55,7 +55,11 @@ impl<Tick: Clone> GridLine<Tick> {
 }
 
 impl<X: Clone + PartialEq, Y> InnerLayout<X, Y> for HorizontalGridLine<X> {
-    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
+    fn into_use(
+        self: Rc<Self>,
+        _: &UseSeries<X, Y>,
+        state: &State<X, Y>,
+    ) -> Box<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_width = Signal::derive(move || with!(|inner| inner.width()));
         Box::new(UseHorizontalGridLine(UseGridLine {
@@ -65,13 +69,17 @@ impl<X: Clone + PartialEq, Y> InnerLayout<X, Y> for HorizontalGridLine<X> {
                 .0
                 .ticks
                 .clone()
-                .generate_x(&state.attr, series.data, avail_width),
+                .generate_x(&state.attr, &state.data, avail_width),
         }))
     }
 }
 
 impl<X, Y: Clone + PartialEq> InnerLayout<X, Y> for VerticalGridLine<Y> {
-    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, state: &State) -> Box<dyn UseInner> {
+    fn into_use(
+        self: Rc<Self>,
+        _: &UseSeries<X, Y>,
+        state: &State<X, Y>,
+    ) -> Box<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_height = Signal::derive(move || with!(|inner| inner.height()));
         Box::new(UseVerticalGridLine(UseGridLine {
@@ -81,21 +89,21 @@ impl<X, Y: Clone + PartialEq> InnerLayout<X, Y> for VerticalGridLine<Y> {
                 .0
                 .ticks
                 .clone()
-                .generate_y(&state.attr, series.data, avail_height),
+                .generate_y(&state.attr, &state.data, avail_height),
         }))
     }
 }
 
-impl<X> UseInner for UseHorizontalGridLine<X> {
-    fn render(self: Box<Self>, state: &State) -> View {
+impl<X, Y> UseInner<X, Y> for UseHorizontalGridLine<X> {
+    fn render(self: Box<Self>, state: &State<X, Y>) -> View {
         view! {
             <ViewHorizontalGridLine line=self.0 state=state />
         }
     }
 }
 
-impl<X> UseInner for UseVerticalGridLine<X> {
-    fn render(self: Box<Self>, state: &State) -> View {
+impl<X, Y> UseInner<X, Y> for UseVerticalGridLine<Y> {
+    fn render(self: Box<Self>, state: &State<X, Y>) -> View {
         view! {
             <ViewVerticalGridLine line=self.0 state=state />
         }
@@ -103,7 +111,10 @@ impl<X> UseInner for UseVerticalGridLine<X> {
 }
 
 #[component]
-fn ViewHorizontalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State) -> impl IntoView {
+fn ViewHorizontalGridLine<'a, X: 'static, Y: 'static>(
+    line: UseGridLine<X>,
+    state: &'a State<X, Y>,
+) -> impl IntoView {
     let debug = state.attr.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
@@ -130,7 +141,10 @@ fn ViewHorizontalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State
 }
 
 #[component]
-fn ViewVerticalGridLine<'a, X: 'static>(line: UseGridLine<X>, state: &'a State) -> impl IntoView {
+fn ViewVerticalGridLine<'a, X: 'static, Y: 'static>(
+    line: UseGridLine<Y>,
+    state: &'a State<X, Y>,
+) -> impl IntoView {
     let debug = state.attr.debug;
     let inner = state.layout.inner;
     let proj = state.projection;

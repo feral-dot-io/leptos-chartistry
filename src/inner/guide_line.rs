@@ -74,7 +74,11 @@ impl GuideLine {
 }
 
 impl<X, Y> InnerLayout<X, Y> for GuideLine {
-    fn into_use(self: Rc<Self>, series: &UseSeries<X, Y>, _: &State) -> Box<dyn UseInner> {
+    fn into_use(
+        self: Rc<Self>,
+        series: &UseSeries<X, Y>,
+        _: &State<X, Y>,
+    ) -> Box<dyn UseInner<X, Y>> {
         Box::new(UseGuideLine {
             axis: self.axis,
             data: series.data,
@@ -84,8 +88,8 @@ impl<X, Y> InnerLayout<X, Y> for GuideLine {
     }
 }
 
-impl<X, Y> UseInner for UseGuideLine<X, Y> {
-    fn render(self: Box<Self>, state: &State) -> View {
+impl<X, Y> UseInner<X, Y> for UseGuideLine<X, Y> {
+    fn render(self: Box<Self>, state: &State<X, Y>) -> View {
         view! { <GuideLine line=*self state=state /> }
     }
 }
@@ -93,7 +97,7 @@ impl<X, Y> UseInner for UseGuideLine<X, Y> {
 #[component]
 fn GuideLine<'a, X: 'static, Y: 'static>(
     line: UseGuideLine<X, Y>,
-    state: &'a State,
+    state: &'a State<X, Y>,
 ) -> impl IntoView {
     let State {
         attr: AttrState { debug, .. },

@@ -3,8 +3,8 @@ use crate::{
     bounds::Bounds,
     debug::DebugRect,
     edge::Edge,
-    series::{Data, UseSeries},
-    state::{AttrState, State},
+    series::UseSeries,
+    state::{AttrState, Data, PreState, State},
     ticks::{
         AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, TickState,
         TimestampGen, VerticalSpan,
@@ -79,16 +79,17 @@ impl<X: PartialEq> TickLabels<X> {
     pub fn generate_x<Y>(
         &self,
         attr: &AttrState,
-        data: Signal<Data<X, Y>>,
+        data: &Data<X, Y>,
         avail_width: Signal<f64>,
     ) -> Signal<GeneratedTicks<X>> {
-        let font = attr.font;
-        let padding = attr.padding;
+        let AttrState { font, padding, .. } = *attr;
+        let x_range = data.x_range;
         let format = self.format.clone();
         let gen = self.generator.clone();
         create_memo(move |_| {
-            data.with(|data| {
-                data.x_range()
+            x_range.with(|x_range| {
+                x_range
+                    .as_ref()
                     .map(|(first, last)| {
                         let font_width = font.get().width();
                         let padding_width = padding.get().width();
@@ -111,15 +112,16 @@ impl<Y: PartialEq> TickLabels<Y> {
     pub fn generate_y<X>(
         &self,
         attr: &AttrState,
-        data: Signal<Data<X, Y>>,
+        data: &Data<X, Y>,
         avail_height: Signal<f64>,
     ) -> Signal<GeneratedTicks<Y>> {
-        let font = attr.font;
-        let padding = attr.padding;
+        let AttrState { font, padding, .. } = *attr;
+        let y_range = data.y_range;
         let gen = self.generator.clone();
         create_memo(move |_| {
-            data.with(|data| {
-                data.y_range()
+            y_range.with(|y_range| {
+                y_range
+                    .as_ref()
                     .map(|(first, last)| {
                         let line_height = font.get().height() + padding.get().height();
                         let span = VerticalSpan::new(line_height, avail_height.get());
@@ -132,7 +134,7 @@ impl<Y: PartialEq> TickLabels<Y> {
     }
 }
 
-impl<X: Clone + PartialEq, Y> HorizontalLayout<X, Y> for TickLabels<X> {
+impl<X: Clone + PartialEq, Y: Clone> HorizontalLayout<X, Y> for TickLabels<X> {
     fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
         let font = attr.font;
         let padding = attr.padding;
@@ -141,33 +143,33 @@ impl<X: Clone + PartialEq, Y> HorizontalLayout<X, Y> for TickLabels<X> {
 
     fn into_use(
         self: Rc<Self>,
-        attr: &AttrState,
-        series: &UseSeries<X, Y>,
+        state: &PreState<X, Y>,
+        _: &UseSeries<X, Y>,
         avail_width: Memo<f64>,
-    ) -> Box<dyn UseLayout> {
+    ) -> Box<dyn UseLayout<X, Y>> {
         Box::new(UseTickLabels {
             ticks: self.map_ticks((*self).clone().generate_x(
-                attr,
-                series.data,
+                &state.attr,
+                &state.data,
                 avail_width.into(),
             )),
         })
     }
 }
 
-impl<X, Y: Clone + PartialEq> VerticalLayout<X, Y> for TickLabels<Y> {
+impl<X: Clone, Y: Clone + PartialEq> VerticalLayout<X, Y> for TickLabels<Y> {
     fn into_use(
         self: Rc<Self>,
-        attr: &AttrState,
-        series: &UseSeries<X, Y>,
+        state: &PreState<X, Y>,
+        _: &UseSeries<X, Y>,
         avail_height: Memo<f64>,
-    ) -> (Signal<f64>, Box<dyn UseLayout>) {
+    ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
         let ticks = self.map_ticks((*self).clone().generate_y(
-            attr,
-            series.data,
+            &state.attr,
+            &state.data,
             avail_height.into(),
         ));
-        let width = self.width(attr, ticks);
+        let width = self.width(&state.attr, ticks);
         (width, Box::new(UseTickLabels { ticks }))
     }
 }
@@ -203,8 +205,8 @@ impl<Tick: Clone> TickLabels<Tick> {
     }
 }
 
-impl UseLayout for UseTickLabels {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State) -> View {
+impl<X: Clone, Y: Clone> UseLayout<X, Y> for UseTickLabels {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
         view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
@@ -228,11 +230,11 @@ pub fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
 }
 
 #[component]
-pub fn TickLabels<'a>(
+pub fn TickLabels<'a, X: Clone + 'static, Y: Clone + 'static>(
     ticks: UseTickLabels,
     edge: Edge,
     bounds: Memo<Bounds>,
-    state: &'a State,
+    state: &'a State<X, Y>,
 ) -> impl IntoView {
     let state = state.clone();
     let UseTickLabels { ticks, .. } = ticks;
@@ -263,10 +265,10 @@ pub fn TickLabels<'a>(
 }
 
 #[component]
-fn TickLabel<'a>(
+fn TickLabel<'a, X: 'static, Y: 'static>(
     edge: Edge,
     outer: Memo<Bounds>,
-    state: &'a State,
+    state: &'a State<X, Y>,
     tick: (f64, String),
 ) -> impl IntoView {
     let State {

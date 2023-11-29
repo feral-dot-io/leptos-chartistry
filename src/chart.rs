@@ -6,7 +6,7 @@ use crate::{
     overlay::OverlayLayout,
     projection::Projection,
     series::{Series, UseSeries},
-    state::{AttrState, State},
+    state::{AttrState, PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Font, Padding,
 };
@@ -82,7 +82,7 @@ impl<X, Y> Chart<X, Y> {
 }
 
 #[component]
-pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(
+pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     chart: Chart<X, Y>,
     #[prop(into)] aspect_ratio: MaybeSignal<AspectRatio>,
 ) -> impl IntoView {
@@ -122,7 +122,7 @@ pub fn Chart<X: Clone + 'static, Y: Clone + 'static>(
 }
 
 #[component]
-fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
+fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     chart: Chart<X, Y>,
     watch: UseWatchedNode,
     aspect_ratio: AspectRatioCalc,
@@ -145,7 +145,8 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
     left.reverse();
 
     // Compose edges
-    let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &attr, &series);
+    let pre = PreState::new(attr, series.data);
+    let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre, &series);
 
     // Finalise state
     let projection = {
@@ -154,7 +155,7 @@ fn RenderChart<X: Clone + 'static, Y: Clone + 'static>(
         create_memo(move |_| Projection::new(inner.get(), data.with(|data| data.position_range())))
             .into()
     };
-    let state = State::new(attr, layout, projection, &watch);
+    let state = State::new(pre, &watch, layout, projection);
 
     // Inner layout
     let inner = inner
