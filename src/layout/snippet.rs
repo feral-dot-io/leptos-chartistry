@@ -43,7 +43,7 @@ pub(crate) fn SnippetTd(
     #[prop(optional)] left_padding: bool,
     children: Children,
 ) -> impl IntoView {
-    let snippet = move || match snippet.style.get() {
+    let taster = move || match snippet.style.get() {
         Style::VerticalTaster => view! {
             <SnippetVerticalTaster line=&line font=font />
         },
@@ -57,7 +57,7 @@ pub(crate) fn SnippetTd(
             style="white-space: nowrap;"
             style:padding-left=move || left_padding.then(move || format!("{}px", font.get().width() * 2.0))
         >
-            {snippet}
+            {taster}
             {children()}
         </td>
     }

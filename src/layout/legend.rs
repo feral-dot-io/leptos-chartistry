@@ -11,6 +11,7 @@ use crate::{
     line::UseLine,
     series::UseSeries,
     state::{AttrState, PreState, State},
+    Font,
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
@@ -25,7 +26,6 @@ pub struct Legend {
 pub struct UseLegend {
     pub(crate) snippet: Snippet,
     anchor: MaybeSignal<Anchor>,
-    lines: Vec<UseLine>,
     pub(crate) width: Signal<f64>,
     pub(crate) height: Signal<f64>,
 }
@@ -60,7 +60,6 @@ impl Legend {
         UseLegend {
             snippet: self.snippet,
             anchor: self.anchor,
-            lines: series.lines.clone(),
             width,
             height,
         }
@@ -134,33 +133,19 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
         font,
         ..
     } = state.attr;
+    let lines = state.lines;
 
     let inner = Signal::derive(move || padding.get().apply(bounds.get()));
-    let anchor_dir = if edge.is_horizontal() {
-        "row"
+    let (body, anchor_dir) = if edge.is_horizontal() {
+        (
+            view!(<HorizontalBody snippet=snippet lines=lines font=font />),
+            "row",
+        )
     } else {
-        "column"
-    };
-
-    let body = move || {
-        // Sort lines by name
-        let mut lines = legend.lines.clone();
-        lines.sort_by_key(|line| line.name.get());
-
-        let tds = lines.into_iter().enumerate().map(|(i, line)| {
-            let name = line.name.clone();
-            view! {
-                <SnippetTd snippet=snippet line=line font=font left_padding=edge.is_horizontal() && i != 0>
-                    {name}
-                </SnippetTd>
-            }
-        });
-
-        if edge.is_horizontal() {
-            view!(<tr>{ tds.collect_view() }</tr>).into_view()
-        } else {
-            tds.map(|td| view!(<tr>{ td }</tr>)).collect_view()
-        }
+        (
+            view!(<VerticalBody snippet=snippet lines=lines font=font />),
+            "column",
+        )
     };
 
     view! {
@@ -186,5 +171,45 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
                 </div>
             </foreignObject>
         </g>
+    }
+}
+
+#[component]
+fn VerticalBody(
+    snippet: Snippet,
+    lines: Signal<Vec<UseLine>>,
+    font: Signal<Font>,
+) -> impl IntoView {
+    view! {
+        <For
+            each=move || lines.get().into_iter().enumerate()
+            key=|(_, line)| line.name.get()
+            let:line>
+            <tr>
+                <SnippetTd snippet=snippet line=line.1.clone() font=font>
+                    {line.1.name.get()}
+                </SnippetTd>
+            </tr>
+        </For>
+    }
+}
+
+#[component]
+fn HorizontalBody(
+    snippet: Snippet,
+    lines: Signal<Vec<UseLine>>,
+    font: Signal<Font>,
+) -> impl IntoView {
+    view! {
+        <tr>
+            <For
+                each=move || lines.get().into_iter().enumerate()
+                key=|(_, line)| line.name.get()
+                let:line>
+                <SnippetTd snippet=snippet line=line.1.clone() font=font left_padding=line.0 != 0>
+                    {line.1.name.get()}
+                </SnippetTd>
+            </For>
+        </tr>
     }
 }

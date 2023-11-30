@@ -51,6 +51,8 @@ pub struct State<X: 'static, Y: 'static> {
     pub nearest_data_x: Memo<Option<X>>,
     /// Y values of nearest mouse data. Index corresponds to line index.
     pub nearest_data_y: Memo<Vec<(UseLine, Option<Y>)>>,
+
+    pub lines: Signal<Vec<UseLine>>,
 }
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X, Y> {
@@ -76,9 +78,14 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         let UseSeries { lines, data } = series;
 
         // Sort lines by name
-        let mut lines = lines.into_iter().enumerate().collect::<Vec<_>>();
-        lines.sort_by_key(|(_, line)| line.name.get());
-        let lines = Signal::derive(move || lines.clone());
+        let mut sorted_lines = lines.into_iter().enumerate().collect::<Vec<_>>();
+        sorted_lines.sort_by_key(|(_, line)| line.name.get());
+        let keyed_lines = Signal::derive(move || sorted_lines.to_vec());
+
+        let lines = Signal::derive(move || {
+            let (_, lines): (Vec<_>, Vec<UseLine>) = keyed_lines.get().into_iter().unzip();
+            lines
+        });
 
         // Mouse
         let mouse_chart = node.mouse_chart;
@@ -105,7 +112,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         let nearest_data_y = create_memo(move |_| {
             let pos_x = nearest_pos_x.get();
             data.with(|data| {
-                lines
+                keyed_lines
                     .get()
                     .into_iter()
                     .map(|(id, line)| {
@@ -122,6 +129,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
             layout,
             projection: proj,
             svg_zero: create_memo(move |_| proj.get().data_to_svg(0.0, 0.0)),
+
             page_bounds: node.bounds,
             mouse_page: node.mouse_page,
             mouse_chart,
@@ -132,6 +140,8 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
             nearest_svg_x,
             nearest_data_x,
             nearest_data_y,
+
+            lines,
         }
     }
 }
