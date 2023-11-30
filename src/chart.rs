@@ -89,34 +89,26 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     let root = create_node_ref::<Div>();
     let watch = use_watched_node(root);
 
-    // Note: unravel option here and put the test in the render function
+    // Aspect ratio signal
+    let have_dimensions = create_memo(move |_| watch.bounds.get().is_some());
     let width = create_memo(move |_| watch.bounds.get().unwrap_or_default().width());
     let height = create_memo(move |_| watch.bounds.get().unwrap_or_default().height());
-    let calc = Signal::derive(move || match aspect_ratio.get().0 {
-        CalcUsing::Env(calc) => watch
-            .bounds
-            .get()
-            .map(move |_| calc.mk_signal(width, height)),
-        CalcUsing::Known(calc) => Some(calc),
+    let calc = create_memo(move |_| match aspect_ratio.get().0 {
+        CalcUsing::Env(calc) => calc.mk_signal(width, height),
+        CalcUsing::Known(calc) => calc,
     });
 
-    let render = move || {
-        if let Some(calc) = calc.get() {
-            view! {
+    let debug = chart.debug;
+    view! {
+        <div node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
+            <DebugRect label="Chart" debug=debug />
+            <Show when=move || have_dimensions.get() fallback=|| view!(<p>"Loading..."</p>)>
                 <RenderChart
                     chart=chart.clone()
                     watch=watch.clone()
-                    aspect_ratio=calc />
-            }
-            .into_view()
-        } else {
-            view!(<p>"Loading..."</p>).into_view()
-        }
-    };
-
-    view! {
-        <div node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
-            {render}
+                    aspect_ratio=calc
+                />
+            </Show>
         </div>
     }
 }
@@ -125,7 +117,7 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
 fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     chart: Chart<X, Y>,
     watch: UseWatchedNode,
-    aspect_ratio: AspectRatioCalc,
+    aspect_ratio: Memo<AspectRatioCalc>,
 ) -> impl IntoView {
     let Chart {
         debug,
@@ -158,7 +150,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     };
     let state = State::new(pre, &watch, layout, projection);
 
-    // Edges
+    // Render edges
     let edges = edges.into_iter().map(|r| r.render(&state)).collect_view();
 
     // Inner
@@ -180,7 +172,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             height=move || format!("{}px", outer.get().height())
             viewBox=move || with!(|outer| format!("0 0 {} {}", outer.width(), outer.height()))
             style="display: block; overflow: visible;">
-            <DebugRect label="Chart" debug=debug bounds=vec![outer.into()] />
+            <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
             {inner}
             {edges}
             <Series series=series projection=state.projection />

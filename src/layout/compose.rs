@@ -78,7 +78,7 @@ impl Layout {
         right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
         bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
         left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
-        aspect_ratio: AspectRatioCalc,
+        aspect_ratio: Memo<AspectRatioCalc>,
         state: &PreState<X, Y>,
     ) -> (Layout, Vec<DeferredRender<X, Y>>) {
         // Horizontal options
@@ -86,16 +86,16 @@ impl Layout {
         let top_height = sum_sizes(top_heights.clone());
         let bottom_heights = collect_heights(&bottom, state);
         let bottom_height = sum_sizes(bottom_heights.clone());
-        let inner_height = aspect_ratio
-            .clone()
-            .inner_height_signal(top_height, bottom_height);
+        let inner_height =
+            AspectRatioCalc::inner_height_signal(aspect_ratio, top_height, bottom_height);
 
         // Vertical options
         let (left_widths, left) = use_vertical(&left, state, inner_height);
         let left_width = sum_sizes(left_widths.clone());
         let (right_widths, right) = use_vertical(&right, state, inner_height);
         let right_width = sum_sizes(right_widths.clone());
-        let inner_width = aspect_ratio.inner_width_signal(left_width, right_width);
+        let inner_width =
+            AspectRatioCalc::inner_width_signal(aspect_ratio, left_width, right_width);
 
         // Bounds
         let outer = create_memo(move |_| {
