@@ -52,7 +52,7 @@ impl Legend {
             lines,
             ..
         } = *state;
-        let snippet_width = Snippet::taster_width(font);
+        let snippet_width = Snippet::width(font);
         Signal::derive(move || {
             let font_width = font.get().width();
             let max_chars = lines
@@ -61,7 +61,8 @@ impl Legend {
                 .map(|line| line.name.get().len() as f64 * font_width)
                 .reduce(f64::max)
                 .unwrap_or_default();
-            snippet_width.get() + font_width + max_chars + padding.get().width()
+            let margin_of_error = font_width * 1.5; // Avoid bottom scroll bar
+            snippet_width.get() + max_chars + padding.get().width() + margin_of_error
         })
     }
 }
@@ -131,7 +132,7 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
                 height=move || inner.get().height()
                 style="overflow: visible;">
                 <div
-                    style="display: flex; height: 100%; overflow: visible;"
+                    style="display: flex; height: 100%; overflow: auto;"
                     style:flex-direction=anchor_dir
                     style:justify-content=move || anchor.get().css_justify_content()>
                     <table

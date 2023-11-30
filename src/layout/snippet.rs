@@ -30,8 +30,13 @@ impl Snippet {
         Signal::derive(move || font.get().height())
     }
 
-    pub(crate) fn taster_width(font: Signal<Font>) -> Signal<f64> {
+    fn taster_width(font: Signal<Font>) -> Signal<f64> {
         Signal::derive(move || font.get().width() * 2.0)
+    }
+
+    pub(crate) fn width(font: Signal<Font>) -> Signal<f64> {
+        let taster_width = Self::taster_width(font);
+        Signal::derive(move || taster_width.get() + font.get().width())
     }
 }
 
