@@ -10,9 +10,8 @@ pub struct PreState<X: 'static, Y: 'static> {
     pub font: Signal<Font>,
     pub padding: Signal<Padding>,
     // Data
-    keyed_lines: Signal<Vec<(usize, UseLine)>>,
     data: Signal<Data<X, Y>>,
-    pub lines: Signal<Vec<UseLine>>,
+    pub lines: Memo<Vec<UseLine>>,
     pub x_range: Memo<Option<(X, X)>>,
     pub y_range: Memo<Option<(Y, Y)>>,
 }
@@ -55,13 +54,9 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X,
     ) -> Self {
         let UseSeries { lines, data } = series;
 
-        // Sort lines by name
-        let mut sorted_lines = lines.into_iter().enumerate().collect::<Vec<_>>();
-        sorted_lines.sort_by_key(|(_, line)| line.name.get());
-
-        let keyed_lines = Signal::derive(move || sorted_lines.to_vec());
-        let lines = Signal::derive(move || {
-            let (_, lines): (Vec<_>, Vec<UseLine>) = keyed_lines.get().into_iter().unzip();
+        let lines = create_memo(move |_| {
+            let mut lines = lines.clone();
+            lines.sort_by_key(|line| line.name.get());
             lines
         });
 
@@ -71,7 +66,6 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X,
             padding,
 
             data,
-            keyed_lines,
             lines,
             x_range: create_memo(move |_| data.with(|data| data.x_range().cloned())),
             y_range: create_memo(move |_| data.with(|data| data.y_range().cloned())),
@@ -112,11 +106,11 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         let nearest_data_y = create_memo(move |_| {
             let pos_x = nearest_pos_x.get();
             data.with(|data| {
-                pre.keyed_lines
+                pre.lines
                     .get()
                     .into_iter()
-                    .map(|(id, line)| {
-                        let y_value = data.nearest_y(pos_x, id);
+                    .map(|line| {
+                        let y_value = data.nearest_y(pos_x, line.id);
                         (line, y_value)
                     })
                     .collect::<Vec<_>>()

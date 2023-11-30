@@ -137,8 +137,9 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         let lines = self
             .lines
             .into_iter()
+            .enumerate()
             .zip(self.colours.iter())
-            .map(|(line, colour)| line.use_line(colour))
+            .map(|((id, line), colour)| line.use_line(id, colour))
             .collect::<Vec<_>>();
 
         // Convert data to a signal

@@ -10,6 +10,7 @@ pub struct Line {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
+    pub(crate) id: usize,
     pub(crate) name: MaybeSignal<String>,
     pub(crate) colour: MaybeSignal<Colour>,
     pub(crate) width: MaybeSignal<f64>,
@@ -34,8 +35,9 @@ impl Line {
         self
     }
 
-    pub(super) fn use_line(self, colour: Colour) -> UseLine {
+    pub(super) fn use_line(self, id: usize, colour: Colour) -> UseLine {
         UseLine {
+            id,
             name: self.name,
             colour: self.colour.unwrap_or_else(|| colour.into()),
             width: self.width,

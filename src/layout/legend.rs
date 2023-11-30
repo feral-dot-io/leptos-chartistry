@@ -158,11 +158,7 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
 }
 
 #[component]
-fn VerticalBody(
-    snippet: Snippet,
-    lines: Signal<Vec<UseLine>>,
-    font: Signal<Font>,
-) -> impl IntoView {
+fn VerticalBody(snippet: Snippet, lines: Memo<Vec<UseLine>>, font: Signal<Font>) -> impl IntoView {
     view! {
         <For
             each=move || lines.get().into_iter().enumerate()
@@ -180,7 +176,7 @@ fn VerticalBody(
 #[component]
 fn HorizontalBody(
     snippet: Snippet,
-    lines: Signal<Vec<UseLine>>,
+    lines: Memo<Vec<UseLine>>,
     font: Signal<Font>,
 ) -> impl IntoView {
     view! {
