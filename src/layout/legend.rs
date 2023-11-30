@@ -61,8 +61,7 @@ impl Legend {
                 .map(|line| line.name.get().len() as f64 * font_width)
                 .reduce(f64::max)
                 .unwrap_or_default();
-            let margin_of_error = font_width * 1.5; // Avoid bottom scroll bar
-            snippet_width.get() + max_chars + padding.get().width() + margin_of_error
+            snippet_width.get() + max_chars + padding.get().width()
         })
     }
 }
@@ -109,16 +108,17 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
         ..
     } = state.pre;
 
-    let inner = Signal::derive(move || {
+    // Don't apply padding on the edges of our axis i.e., maximise the space we extend over
+    let padding = create_memo(move |_| {
         let padding = padding.get();
-        // Don't apply padding on the edges of where we extend to
-        let padding = if edge.is_horizontal() {
+        if edge.is_horizontal() {
             Padding::sides(padding.top, 0.0, padding.bottom, 0.0)
         } else {
             Padding::sides(0.0, padding.right, 0.0, padding.left)
-        };
-        padding.apply(bounds.get())
+        }
     });
+    let inner = Signal::derive(move || padding.get().apply(bounds.get()));
+
     let (body, anchor_dir) = if edge.is_horizontal() {
         (
             view!(<HorizontalBody snippet=snippet lines=lines font=font />),
@@ -135,10 +135,10 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
         <g class="_chartistry_legend">
             <DebugRect label="Legend" debug=debug bounds=vec![bounds.into(), inner] />
             <foreignObject
-                x=move || inner.get().left_x()
-                y=move || inner.get().top_y()
-                width=move || inner.get().width()
-                height=move || inner.get().height()
+                x=move || bounds.get().left_x()
+                y=move || bounds.get().top_y()
+                width=move || bounds.get().width()
+                height=move || bounds.get().height()
                 style="overflow: visible;">
                 <div
                     style="display: flex; height: 100%; overflow: auto;"

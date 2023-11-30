@@ -144,7 +144,7 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
                 style:top=move || format!("calc({}px)", mouse_page.get().1)
                 style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, table_margin.get())
-                style:padding=move || padding.get().to_style_px()
+                style:padding=move || padding.get().to_css_style()
             >
                 <table
                     style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; text-align: right;"

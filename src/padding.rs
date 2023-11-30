@@ -46,7 +46,7 @@ impl Padding {
     }
 
     /// Converts the padding to a CSS style string.
-    pub(crate) fn to_style_px(self) -> String {
+    pub(crate) fn to_css_style(self) -> String {
         format!(
             "{}px {}px {}px {}px",
             self.top, self.right, self.bottom, self.left
@@ -77,12 +77,12 @@ mod tests {
             p.apply(Bounds::new(100.0, 200.0)),
             Bounds::from_points(4.4, 1.1, 97.8, 196.7)
         );
-        assert_eq!(p.to_style_px(), "1.1px 2.2px 3.3px 4.4px");
-        assert_eq!(Padding::zero().to_style_px(), "0px 0px 0px 0px");
+        assert_eq!(p.to_css_style(), "1.1px 2.2px 3.3px 4.4px");
+        assert_eq!(Padding::zero().to_css_style(), "0px 0px 0px 0px");
         assert_eq!(
-            Padding::hv(1.1, 2.2).to_style_px(),
+            Padding::hv(1.1, 2.2).to_css_style(),
             "1.1px 2.2px 1.1px 2.2px"
         );
-        assert_eq!(Padding::from(1.1).to_style_px(), "1.1px 1.1px 1.1px 1.1px");
+        assert_eq!(Padding::from(1.1).to_css_style(), "1.1px 1.1px 1.1px 1.1px");
     }
 }
