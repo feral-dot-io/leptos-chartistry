@@ -2,10 +2,10 @@ use super::bounds::Bounds;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Padding {
-    top: f64,
-    right: f64,
-    bottom: f64,
-    left: f64,
+    pub(crate) top: f64,
+    pub(crate) right: f64,
+    pub(crate) bottom: f64,
+    pub(crate) left: f64,
 }
 
 /// Represents padding around a component. Note that the context matters on how it's applied. For example, padding applied to the whole chart will shrink the available space whereas padding applied to a label will increase the size used.

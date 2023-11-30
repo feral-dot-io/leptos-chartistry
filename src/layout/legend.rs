@@ -10,7 +10,7 @@ use crate::{
     edge::Edge,
     line::UseLine,
     state::{PreState, State},
-    Font,
+    Font, Padding,
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
@@ -109,7 +109,16 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
         ..
     } = state.pre;
 
-    let inner = Signal::derive(move || padding.get().apply(bounds.get()));
+    let inner = Signal::derive(move || {
+        let padding = padding.get();
+        // Don't apply padding on the edges of where we extend to
+        let padding = if edge.is_horizontal() {
+            Padding::sides(padding.top, 0.0, padding.bottom, 0.0)
+        } else {
+            Padding::sides(0.0, padding.right, 0.0, padding.left)
+        };
+        padding.apply(bounds.get())
+    });
     let (body, anchor_dir) = if edge.is_horizontal() {
         (
             view!(<HorizontalBody snippet=snippet lines=lines font=font />),
