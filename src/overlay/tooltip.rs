@@ -144,12 +144,10 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
                 style:top=move || format!("calc({}px)", mouse_page.get().1)
                 style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, table_margin.get())
-                style:padding=move || padding.get().to_css_style()
-            >
+                style:padding=move || padding.get().to_css_style()>
                 <table
-                    style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; text-align: right;"
-                    style:font-size=move || format!("{}px", font.get().height())
-                >
+                    style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;"
+                    style:font-size=move || format!("{}px", font.get().height())>
                     <thead>
                         <tr>
                             <th colspan=2 style="white-space: pre; font-family: monospace;">
@@ -161,14 +159,12 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                         <For
                             each=nearest_data_y.clone()
                             key=|(_, y_value)| y_value.to_owned()
-                            let:line
-                        >
+                            let:line>
                             <tr>
-                                <SnippetTd snippet=snippet line=line.0.clone() font=font>{line.0.name} ":"</SnippetTd>
+                                <SnippetTd snippet=snippet line=line.0.clone() font=font>{line.0.name}</SnippetTd>
                                 <td
-                                    style="text-align: left; white-space: pre; font-family: monospace;"
-                                    style:padding-left=move || format!("{}px", font.get().width())
-                                >
+                                    style="white-space: pre; font-family: monospace;"
+                                    style:padding-left=move || format!("{}px", font.get().width())>
                                     {line.1}
                                 </td>
                             </tr>
