@@ -244,7 +244,7 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                     <tbody>
                         <For
                             each=nearest_data_y.clone()
-                            key=|(_, y_value)| y_value.to_owned()
+                            key=|(line, y_value)| (line.id, y_value.to_owned())
                             let:line>
                             <tr>
                                 <SnippetTd snippet=snippet line=line.0.clone() font=font>{line.0.name}</SnippetTd>
