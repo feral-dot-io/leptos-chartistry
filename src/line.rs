@@ -8,7 +8,7 @@ pub struct Line {
     pub(crate) width: MaybeSignal<f64>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
     pub(crate) name: MaybeSignal<String>,
     pub(crate) colour: MaybeSignal<Colour>,

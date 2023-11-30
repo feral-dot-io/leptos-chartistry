@@ -1,7 +1,7 @@
 use super::OverlayLayout;
 use crate::{
-    layout::{snippet::SnippetTd, tick_labels::align_tick_labels, Layout},
-    line::UseLine,
+    debug::DebugRect,
+    layout::{snippet::SnippetTd, Layout},
     series::UseSeries,
     state::{AttrState, State},
     ticks::TickFormatFn,
@@ -28,7 +28,7 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
         y_ticks: impl Borrow<TickLabels<Y>>,
     ) -> Self {
         Self {
-            snippet: snippet.borrow().clone(),
+            snippet: *snippet.borrow(),
             table_margin: None,
             x_format: Rc::new(|s, t| s.long_format(t)),
             y_format: Rc::new(|s, t| s.long_format(t)),
@@ -68,94 +68,73 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
 }
 
 impl<X: Clone + PartialEq, Y: Clone + PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
-    fn render(self: Rc<Self>, series: UseSeries<X, Y>, state: &State<X, Y>) -> View {
-        view!( <Tooltip tooltip=(*self).clone() series=series.clone() state=&state /> )
+    fn render(self: Rc<Self>, _: UseSeries<X, Y>, state: &State<X, Y>) -> View {
+        view!( <Tooltip tooltip=(*self).clone() state=&state /> )
     }
 }
 
 #[component]
-fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
+fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     tooltip: Tooltip<X, Y>,
-    series: UseSeries<X, Y>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
-    let snippet = tooltip.snippet.clone();
-    let x_format = tooltip.x_format.clone();
-    let y_format = tooltip.y_format.clone();
+    let Tooltip {
+        snippet,
+        x_format,
+        y_format,
+        x_ticks,
+        y_ticks,
+        ..
+    } = tooltip;
+
     let State {
-        attr: AttrState { padding, font, .. },
+        attr:
+            AttrState {
+                debug,
+                padding,
+                font,
+                ..
+            },
         layout: Layout { inner, .. },
-        projection,
         mouse_page,
-        mouse_chart,
         hover_inner,
+        nearest_data_x,
+        nearest_data_y,
         ..
     } = *state;
-    let data = series.data;
 
     let avail_width = Signal::derive(move || with!(|inner| inner.width()));
     let avail_height = Signal::derive(move || with!(|inner| inner.height()));
-    let x_ticks = tooltip
-        .x_ticks
-        .generate_x(&state.attr, &state.data, avail_width);
-    let y_ticks = tooltip
-        .y_ticks
-        .generate_y(&state.attr, &state.data, avail_height);
-
-    // Get nearest values
-    let data_x = Signal::derive(move || {
-        let (chart_x, chart_y) = mouse_chart.get();
-        let (data_x, _) = projection.get().svg_to_data(chart_x, chart_y);
-        data_x
-    });
+    let x_ticks = x_ticks.generate_x(&state.attr, &state.data, avail_width);
+    let y_ticks = y_ticks.generate_y(&state.attr, &state.data, avail_height);
 
     let x_body = move || {
-        with!(|x_ticks, data, data_x| {
-            data.nearest_x(*data_x).map_or_else(
+        with!(|nearest_data_x, x_ticks| {
+            nearest_data_x.as_ref().map_or_else(
                 || "no data".to_string(),
                 |x_value| (x_format)(&*x_ticks.state, x_value),
             )
         })
     };
-    let y_body = {
-        let attr = state.attr.clone();
-        let lines = series.lines.clone();
-        create_memo(move |_| {
-            // Sort lines by name
-            let mut lines = lines.clone().into_iter().enumerate().collect::<Vec<_>>();
-            lines.sort_by_key(|(_, line)| line.name.get());
 
-            let (lines, labels): (Vec<UseLine>, Vec<String>) = lines
-                .into_iter()
-                .map(|(line_id, line)| {
-                    let y_value = with!(|data, data_x, y_ticks| {
-                        data.nearest_y(*data_x, line_id).map_or_else(
-                            || "-".to_string(),
-                            |y_value| (y_format)(&*y_ticks.state, y_value),
-                        )
-                    });
-                    (line, y_value)
-                })
-                .unzip();
-            let labels = align_tick_labels(labels);
-            lines
-                .into_iter()
-                .zip(labels)
-                .map(|(line, label)| {
-                    let name = line.name.clone();
-                    view! {
-                        <tr>
-                            <SnippetTd snippet=snippet.clone() line=line attr=&attr>{name} ":"</SnippetTd>
-                            <td
-                                style="text-align: left; white-space: pre; font-family: monospace;"
-                                style:padding-left=move || format!("{}px", font.get().width())>
-                                {label}
-                            </td>
-                        </tr>
-                    }
-                })
-                .collect_view()
+    let format_y_value = move |y_value: Option<Y>| {
+        y_ticks.with(|y_ticks| {
+            y_value.as_ref().map_or_else(
+                || "-".to_string(),
+                |y_value| (y_format)(&*y_ticks.state, y_value),
+            )
         })
+    };
+
+    let nearest_data_y = move || {
+        nearest_data_y
+            .get()
+            .into_iter()
+            .map(|(line, y_value)| {
+                let y_value = format_y_value(y_value);
+                (line, y_value)
+            })
+            .collect::<Vec<_>>()
     };
 
     let table_margin = tooltip
@@ -163,14 +142,17 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
         .unwrap_or_else(|| Signal::derive(move || font.get().height()).into());
     view! {
         <Show when=move || hover_inner.get()>
+            <DebugRect label="tooltip" debug=debug />
             <div
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
                 style:top=move || format!("calc({}px)", mouse_page.get().1)
                 style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, table_margin.get())
-                style:padding=move || padding.get().to_style_px()>
+                style:padding=move || padding.get().to_style_px()
+            >
                 <table
                     style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; text-align: right;"
-                    style:font-size=move || format!("{}px", font.get().height())>
+                    style:font-size=move || format!("{}px", font.get().height())
+                >
                     <thead>
                         <tr>
                             <th colspan=2 style="white-space: pre; font-family: monospace;">
@@ -179,7 +161,21 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: PartialEq + 'static>(
                         </tr>
                     </thead>
                     <tbody>
-                        {y_body}
+                        <For
+                            each=nearest_data_y.clone()
+                            key=|(_, y_value)| y_value.to_owned()
+                            let:line
+                        >
+                            <tr>
+                                <SnippetTd snippet=snippet line=line.0.clone() font=font>{line.0.name} ":"</SnippetTd>
+                                <td
+                                    style="text-align: left; white-space: pre; font-family: monospace;"
+                                    style:padding-left=move || format!("{}px", font.get().width())
+                                >
+                                    {line.1}
+                                </td>
+                            </tr>
+                        </For>
                     </tbody>
                 </table>
             </div>

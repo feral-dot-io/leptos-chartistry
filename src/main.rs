@@ -77,10 +77,10 @@ pub fn App() -> impl IntoView {
         .inner(GridLine::horizontal(left_ticks.clone()))
         .inner(GridLine::vertical(bottom_ticks.clone()))
         // Guide lines
-        .inner(GuideLine::x_axis())
+        .inner(GuideLine::x_axis_over_data())
         .inner(GuideLine::y_axis())
         // Inset legend
-        .inner(InsetLegend::top_right(snippet.clone()))
+        .inner(InsetLegend::top_right(snippet))
         // Tooltip
         .overlay(Tooltip::left_cursor(snippet, &bottom_ticks, &left_ticks));
 

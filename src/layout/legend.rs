@@ -33,7 +33,7 @@ pub struct UseLegend {
 impl Legend {
     pub fn new(anchor: impl Into<MaybeSignal<Anchor>>, snippet: impl Borrow<Snippet>) -> Self {
         Self {
-            snippet: snippet.borrow().clone(),
+            snippet: *snippet.borrow(),
             anchor: anchor.into(),
         }
     }
@@ -56,7 +56,7 @@ impl Legend {
 
     pub(crate) fn into_use<X, Y>(self, attr: &AttrState, series: &UseSeries<X, Y>) -> UseLegend {
         let height = self.fixed_height(attr);
-        let width = mk_width(&self.snippet, attr, series);
+        let width = mk_width(attr, series);
         UseLegend {
             snippet: self.snippet,
             anchor: self.anchor,
@@ -67,10 +67,9 @@ impl Legend {
     }
 }
 
-fn mk_width<X, Y>(snippet: &Snippet, attr: &AttrState, series: &UseSeries<X, Y>) -> Signal<f64> {
-    let snippet_width = snippet.taster_width(attr);
-    let font = attr.font;
-    let padding = attr.padding;
+fn mk_width<X, Y>(attr: &AttrState, series: &UseSeries<X, Y>) -> Signal<f64> {
+    let AttrState { font, padding, .. } = *attr;
+    let snippet_width = Snippet::taster_width(font);
     let lines = series
         .lines
         .iter()
@@ -143,7 +142,6 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
         "column"
     };
 
-    let attr = state.attr.clone();
     let body = move || {
         // Sort lines by name
         let mut lines = legend.lines.clone();
@@ -152,12 +150,7 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
         let tds = lines.into_iter().enumerate().map(|(i, line)| {
             let name = line.name.clone();
             view! {
-                <SnippetTd
-                    snippet=snippet.clone()
-                    line=line
-                    attr=&attr
-                    left_padding=edge.is_horizontal() && i != 0
-                >
+                <SnippetTd snippet=snippet line=line font=font left_padding=edge.is_horizontal() && i != 0>
                     {name}
                 </SnippetTd>
             }

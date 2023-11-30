@@ -1,4 +1,4 @@
-use crate::{line::UseLine, state::AttrState};
+use crate::{line::UseLine, Font};
 use leptos::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -7,7 +7,7 @@ pub enum Style {
     VerticalTaster,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Snippet {
     style: MaybeSignal<Style>,
 }
@@ -26,33 +26,29 @@ impl Snippet {
         Self::new(Style::VerticalTaster)
     }
 
-    fn taster_height(&self, attr: &AttrState) -> Signal<f64> {
-        let font = attr.font;
+    fn taster_height(font: Signal<Font>) -> Signal<f64> {
         Signal::derive(move || font.get().height())
     }
 
-    pub(crate) fn taster_width(&self, attr: &AttrState) -> Signal<f64> {
-        let font = attr.font;
+    pub(crate) fn taster_width(font: Signal<Font>) -> Signal<f64> {
         Signal::derive(move || font.get().width() * 2.0)
     }
 }
 
 #[component]
-pub(crate) fn SnippetTd<'a>(
+pub(crate) fn SnippetTd(
     snippet: Snippet,
     line: UseLine,
-    attr: &'a AttrState,
+    font: Signal<Font>,
     #[prop(optional)] left_padding: bool,
     children: Children,
 ) -> impl IntoView {
-    let font = attr.font;
-    let attr = attr.clone();
     let snippet = move || match snippet.style.get() {
         Style::VerticalTaster => view! {
-            <SnippetVerticalTaster snippet=&snippet line=&line attr=&attr />
+            <SnippetVerticalTaster line=&line font=font />
         },
         Style::HorizontalTaster => view! {
-            <SnippetHorizontalTaster snippet=&snippet line=&line attr=&attr />
+            <SnippetHorizontalTaster line=&line font=font />
         },
     };
     view! {
@@ -68,15 +64,10 @@ pub(crate) fn SnippetTd<'a>(
 }
 
 #[component]
-fn SnippetHorizontalTaster<'a>(
-    snippet: &'a Snippet,
-    line: &'a UseLine,
-    attr: &'a AttrState,
-) -> impl IntoView {
-    let font = attr.font;
+fn SnippetHorizontalTaster<'a>(line: &'a UseLine, font: Signal<Font>) -> impl IntoView {
+    let width = Snippet::taster_width(font);
+    let height = Snippet::taster_height(font);
     let colour = line.colour;
-    let width = snippet.taster_width(attr);
-    let height = snippet.taster_height(attr);
     view! {
         <svg
             class="_chartistry_snippet_horizontal"
@@ -99,14 +90,10 @@ fn SnippetHorizontalTaster<'a>(
 }
 
 #[component]
-fn SnippetVerticalTaster<'a>(
-    snippet: &'a Snippet,
-    line: &'a UseLine,
-    attr: &'a AttrState,
-) -> impl IntoView {
+fn SnippetVerticalTaster<'a>(line: &'a UseLine, font: Signal<Font>) -> impl IntoView {
+    let width = Snippet::taster_width(font);
+    let height = Snippet::taster_height(font);
     let colour = line.colour;
-    let width = snippet.taster_width(attr);
-    let height = snippet.taster_height(attr);
     let x = Signal::derive(move || width.get() / 2.0);
     view! {
         <div

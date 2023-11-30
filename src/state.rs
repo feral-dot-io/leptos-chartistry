@@ -1,6 +1,6 @@
 use crate::{
-    bounds::Bounds, layout::Layout, projection::Projection, series,
-    use_watched_node::UseWatchedNode, Font, Padding,
+    bounds::Bounds, layout::Layout, line::UseLine, projection::Projection, series,
+    use_watched_node::UseWatchedNode, Font, Padding, UseSeries,
 };
 use leptos::signal_prelude::*;
 
@@ -44,9 +44,13 @@ pub struct State<X: 'static, Y: 'static> {
     pub hover_inner: Signal<bool>,
 
     /// X position of nearest data from mouse data
-    pub nearest_data_x: Memo<f64>,
+    pub nearest_pos_x: Memo<f64>,
     /// X coord of nearest mouse data in SVG space
     pub nearest_svg_x: Memo<f64>,
+    /// X value of nearest mouse data
+    pub nearest_data_x: Memo<Option<X>>,
+    /// Y values of nearest mouse data. Index corresponds to line index.
+    pub nearest_data_y: Memo<Vec<(UseLine, Option<Y>)>>,
 }
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X, Y> {
@@ -67,8 +71,16 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         node: &UseWatchedNode,
         layout: Layout,
         proj: Signal<Projection>,
-        data: Signal<series::Data<X, Y>>,
+        series: UseSeries<X, Y>,
     ) -> Self {
+        let UseSeries { lines, data } = series;
+
+        // Sort lines by name
+        let mut lines = lines.into_iter().enumerate().collect::<Vec<_>>();
+        lines.sort_by_key(|(_, line)| line.name.get());
+        let lines = Signal::derive(move || lines.clone());
+
+        // Mouse
         let mouse_chart = node.mouse_chart;
         let hover_inner = node.mouse_hover_inner(layout.inner);
 
@@ -77,14 +89,31 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
             let (mouse_x, mouse_y) = mouse_chart.get();
             proj.get().svg_to_data(mouse_x, mouse_y)
         });
-        let nearest_data_x = create_memo(move |_| {
-            let (data_x, _) = hover_data.get();
-            data.with(|data| data.nearest_x_position(data_x))
+        let nearest_pos_x = create_memo(move |_| {
+            let (pos_x, _) = hover_data.get();
+            data.with(|data| data.nearest_x_position(pos_x))
         });
         let nearest_svg_x = create_memo(move |_| {
-            let data_x = nearest_data_x.get();
+            let data_x = nearest_pos_x.get();
             let (svg_x, _) = proj.get().data_to_svg(data_x, 0.0);
             svg_x
+        });
+        let nearest_data_x = create_memo(move |_| {
+            let (pos_x, _) = hover_data.get();
+            data.with(|data| data.nearest_x(pos_x).cloned())
+        });
+        let nearest_data_y = create_memo(move |_| {
+            let pos_x = nearest_pos_x.get();
+            data.with(|data| {
+                lines
+                    .get()
+                    .into_iter()
+                    .map(|(id, line)| {
+                        let y_value = data.nearest_y(pos_x, id);
+                        (line, y_value)
+                    })
+                    .collect::<Vec<_>>()
+            })
         });
 
         Self {
@@ -99,8 +128,10 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
             hover_chart: node.mouse_chart_hover,
             hover_inner,
 
-            nearest_data_x,
+            nearest_pos_x,
             nearest_svg_x,
+            nearest_data_x,
+            nearest_data_y,
         }
     }
 }

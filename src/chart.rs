@@ -155,7 +155,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         create_memo(move |_| Projection::new(inner.get(), data.with(|data| data.position_range())))
             .into()
     };
-    let state = State::new(pre, &watch, layout, projection, series.data);
+    let state = State::new(pre, &watch, layout, projection, series.clone());
 
     // Inner layout
     let inner = inner

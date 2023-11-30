@@ -21,7 +21,7 @@ impl InsetLegend {
     fn new(edge: Edge, anchor: Anchor, snippet: impl Borrow<Snippet>) -> Self {
         Self {
             edge,
-            legend: Legend::new(anchor, snippet.borrow().clone()),
+            legend: Legend::new(anchor, *snippet.borrow()),
         }
     }
 

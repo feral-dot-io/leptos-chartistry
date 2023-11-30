@@ -300,9 +300,14 @@ impl<X, Y> Data<X, Y> {
             .unwrap_or(f64::NAN)
     }
 
-    pub fn nearest_y(&self, x_pos: f64, line_id: usize) -> Option<&Y> {
-        self.nearest_x_index(x_pos)
-            .map(|x_index| &self.y_points[line_id * self.x_points.len() + x_index])
+    pub fn nearest_y(&self, x_pos: f64, line_id: usize) -> Option<Y>
+    where
+        Y: Clone,
+    {
+        self.nearest_x_index(x_pos).map(|x_index| {
+            let index = line_id * self.x_points.len() + x_index;
+            self.y_points[index].clone()
+        })
     }
 }
 
