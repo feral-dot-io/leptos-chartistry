@@ -147,7 +147,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
 
     // Compose edges
     let pre = PreState::new(debug, font, padding, series.clone());
-    let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre, &series);
+    let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre);
 
     // Finalise state
     let projection = {

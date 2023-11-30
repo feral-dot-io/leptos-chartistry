@@ -3,7 +3,6 @@ use crate::{
     bounds::Bounds,
     edge::Edge,
     state::{PreState, State},
-    UseSeries,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -27,7 +26,6 @@ pub trait HorizontalLayout<X, Y> {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
-        series: &UseSeries<X, Y>,
         inner_width: Memo<f64>,
     ) -> Box<dyn UseLayout<X, Y>>;
 }
@@ -36,7 +34,6 @@ pub trait VerticalLayout<X, Y> {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
-        series: &UseSeries<X, Y>,
         inner_height: Memo<f64>,
     ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>);
 }
@@ -72,7 +69,6 @@ impl Layout {
         left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
         aspect_ratio: AspectRatioCalc,
         state: &PreState<X, Y>,
-        series: &UseSeries<X, Y>,
     ) -> (Layout, ComposedLayout<X, Y>) {
         // Horizontal options
         let top_heights = collect_heights(&top, state);
@@ -84,9 +80,9 @@ impl Layout {
             .inner_height_signal(top_height, bottom_height);
 
         // Vertical options
-        let (left_widths, left) = use_vertical(&left, state, series, inner_height);
+        let (left_widths, left) = use_vertical(&left, state, inner_height);
         let left_width = sum_sizes(left_widths.clone());
-        let (right_widths, right) = use_vertical(&right, state, series, inner_height);
+        let (right_widths, right) = use_vertical(&right, state, inner_height);
         let right_width = sum_sizes(right_widths.clone());
         let inner_width = aspect_ratio.inner_width_signal(left_width, right_width);
 
@@ -151,13 +147,7 @@ impl Layout {
                 items
                     .into_iter()
                     .enumerate()
-                    .map(|(index, opt)| {
-                        (
-                            edge,
-                            bounds[index],
-                            opt.into_use(state, series, inner_width),
-                        )
-                    })
+                    .map(|(index, opt)| (edge, bounds[index], opt.into_use(state, inner_width)))
                     .collect::<Vec<_>>()
             };
 
@@ -187,12 +177,11 @@ fn collect_heights<X, Y>(
 fn use_vertical<X, Y>(
     items: &[Rc<dyn VerticalLayout<X, Y>>],
     state: &PreState<X, Y>,
-    series: &UseSeries<X, Y>,
     inner_height: Memo<f64>,
 ) -> (Vec<Signal<f64>>, Vec<Box<dyn UseLayout<X, Y>>>) {
     items
         .iter()
-        .map(|c| c.clone().into_use(state, series, inner_height))
+        .map(|c| c.clone().into_use(state, inner_height))
         .unzip()
 }
 

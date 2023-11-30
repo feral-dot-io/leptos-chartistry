@@ -3,7 +3,6 @@ use crate::{
     bounds::Bounds,
     debug::DebugRect,
     edge::Edge,
-    series::UseSeries,
     state::{PreState, State},
     ticks::{
         AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, TickState,
@@ -149,7 +148,6 @@ impl<X: Clone + PartialEq, Y: Clone> HorizontalLayout<X, Y> for TickLabels<X> {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
-        _: &UseSeries<X, Y>,
         avail_width: Memo<f64>,
     ) -> Box<dyn UseLayout<X, Y>> {
         Box::new(UseTickLabels {
@@ -162,7 +160,6 @@ impl<X: Clone, Y: Clone + PartialEq> VerticalLayout<X, Y> for TickLabels<Y> {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
-        _: &UseSeries<X, Y>,
         avail_height: Memo<f64>,
     ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
         let ticks = self.map_ticks((*self).clone().generate_y(state, avail_height.into()));

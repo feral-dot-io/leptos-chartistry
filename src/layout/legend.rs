@@ -9,7 +9,6 @@ use crate::{
     debug::DebugRect,
     edge::Edge,
     line::UseLine,
-    series::UseSeries,
     state::{PreState, State},
     Font,
 };
@@ -91,12 +90,7 @@ impl<X, Y> HorizontalLayout<X, Y> for Legend {
         self.fixed_height(state)
     }
 
-    fn into_use(
-        self: Rc<Self>,
-        state: &PreState<X, Y>,
-        _: &UseSeries<X, Y>,
-        _: Memo<f64>,
-    ) -> Box<dyn UseLayout<X, Y>> {
+    fn into_use(self: Rc<Self>, state: &PreState<X, Y>, _: Memo<f64>) -> Box<dyn UseLayout<X, Y>> {
         Box::new((*self).clone().into_use(state))
     }
 }
@@ -105,7 +99,6 @@ impl<X, Y> VerticalLayout<X, Y> for Legend {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
-        _: &UseSeries<X, Y>,
         _: Memo<f64>,
     ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
         let legend = Box::new((*self).clone().into_use(state));

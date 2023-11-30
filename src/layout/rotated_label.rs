@@ -3,7 +3,6 @@ use crate::{
     bounds::Bounds,
     debug::DebugRect,
     edge::Edge,
-    series::UseSeries,
     state::{PreState, State},
 };
 use leptos::*;
@@ -61,12 +60,7 @@ impl<X, Y> HorizontalLayout<X, Y> for RotatedLabel {
         self.size(state)
     }
 
-    fn into_use(
-        self: Rc<Self>,
-        _: &PreState<X, Y>,
-        _: &UseSeries<X, Y>,
-        _: Memo<f64>,
-    ) -> Box<dyn UseLayout<X, Y>> {
+    fn into_use(self: Rc<Self>, _: &PreState<X, Y>, _: Memo<f64>) -> Box<dyn UseLayout<X, Y>> {
         Box::new((*self).clone())
     }
 }
@@ -75,7 +69,6 @@ impl<X, Y> VerticalLayout<X, Y> for RotatedLabel {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
-        _: &UseSeries<X, Y>,
         _: Memo<f64>,
     ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
         // Note: width is height because it's rotated
