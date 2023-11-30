@@ -1,5 +1,5 @@
 use crate::{
-    bounds::Bounds, layout::Layout, line::UseLine, projection::Projection, series,
+    bounds::Bounds, layout::Layout, line::UseLine, projection::Projection, series::Data,
     use_watched_node::UseWatchedNode, Font, Padding, UseSeries,
 };
 use leptos::signal_prelude::*;
@@ -10,6 +10,9 @@ pub struct PreState<X: 'static, Y: 'static> {
     pub font: Signal<Font>,
     pub padding: Signal<Padding>,
     // Data
+    keyed_lines: Signal<Vec<(usize, UseLine)>>,
+    data: Signal<Data<X, Y>>,
+    pub lines: Signal<Vec<UseLine>>,
     pub x_range: Memo<Option<(X, X)>>,
     pub y_range: Memo<Option<(Y, Y)>>,
 }
@@ -41,8 +44,6 @@ pub struct State<X: 'static, Y: 'static> {
     pub nearest_data_x: Memo<Option<X>>,
     /// Y values of nearest mouse data. Index corresponds to line index.
     pub nearest_data_y: Memo<Vec<(UseLine, Option<Y>)>>,
-
-    pub lines: Signal<Vec<UseLine>>,
 }
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X, Y> {
@@ -50,13 +51,28 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X,
         debug: Signal<bool>,
         font: Signal<Font>,
         padding: Signal<Padding>,
-        data: Signal<series::Data<X, Y>>,
+        series: UseSeries<X, Y>,
     ) -> Self {
+        let UseSeries { lines, data } = series;
+
+        // Sort lines by name
+        let mut sorted_lines = lines.into_iter().enumerate().collect::<Vec<_>>();
+        sorted_lines.sort_by_key(|(_, line)| line.name.get());
+
+        let keyed_lines = Signal::derive(move || sorted_lines.to_vec());
+        let lines = Signal::derive(move || {
+            let (_, lines): (Vec<_>, Vec<UseLine>) = keyed_lines.get().into_iter().unzip();
+            lines
+        });
+
         Self {
             debug,
             font,
             padding,
 
+            data,
+            keyed_lines,
+            lines,
             x_range: create_memo(move |_| data.with(|data| data.x_range().cloned())),
             y_range: create_memo(move |_| data.with(|data| data.y_range().cloned())),
         }
@@ -69,20 +85,8 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         node: &UseWatchedNode,
         layout: Layout,
         proj: Signal<Projection>,
-        series: UseSeries<X, Y>,
     ) -> Self {
-        let UseSeries { lines, data } = series;
-
-        // Sort lines by name
-        let mut sorted_lines = lines.into_iter().enumerate().collect::<Vec<_>>();
-        sorted_lines.sort_by_key(|(_, line)| line.name.get());
-        let keyed_lines = Signal::derive(move || sorted_lines.to_vec());
-
-        let lines = Signal::derive(move || {
-            let (_, lines): (Vec<_>, Vec<UseLine>) = keyed_lines.get().into_iter().unzip();
-            lines
-        });
-
+        let data = pre.data;
         // Mouse
         let mouse_chart = node.mouse_chart;
         let hover_inner = node.mouse_hover_inner(layout.inner);
@@ -108,7 +112,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         let nearest_data_y = create_memo(move |_| {
             let pos_x = nearest_pos_x.get();
             data.with(|data| {
-                keyed_lines
+                pre.keyed_lines
                     .get()
                     .into_iter()
                     .map(|(id, line)| {
@@ -135,8 +139,6 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
             nearest_svg_x,
             nearest_data_x,
             nearest_data_y,
-
-            lines,
         }
     }
 }

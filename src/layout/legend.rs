@@ -54,13 +54,9 @@ impl Legend {
         Signal::derive(move || font.get().height() + padding.get().height())
     }
 
-    pub(crate) fn into_use<X, Y>(
-        self,
-        state: &PreState<X, Y>,
-        series: &UseSeries<X, Y>,
-    ) -> UseLegend {
+    pub(crate) fn into_use<X, Y>(self, state: &PreState<X, Y>) -> UseLegend {
         let height = self.fixed_height(state);
-        let width = mk_width(state, series);
+        let width = mk_width(state);
         UseLegend {
             snippet: self.snippet,
             anchor: self.anchor,
@@ -70,18 +66,20 @@ impl Legend {
     }
 }
 
-fn mk_width<X, Y>(state: &PreState<X, Y>, series: &UseSeries<X, Y>) -> Signal<f64> {
-    let PreState { font, padding, .. } = *state;
+fn mk_width<X, Y>(state: &PreState<X, Y>) -> Signal<f64> {
+    let PreState {
+        font,
+        padding,
+        lines,
+        ..
+    } = *state;
     let snippet_width = Snippet::taster_width(font);
-    let lines = series
-        .lines
-        .iter()
-        .map(|line| line.name.clone())
-        .collect::<Vec<_>>();
     Signal::derive(move || {
         let font_width = font.get().width();
-        let max_chars = (lines.iter())
-            .map(|line| line.get().len() as f64 * font_width)
+        let max_chars = lines
+            .get()
+            .into_iter()
+            .map(|line| line.name.get().len() as f64 * font_width)
             .reduce(f64::max)
             .unwrap_or_default();
         snippet_width.get() + font_width + max_chars + padding.get().width()
@@ -96,10 +94,10 @@ impl<X, Y> HorizontalLayout<X, Y> for Legend {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
-        series: &UseSeries<X, Y>,
+        _: &UseSeries<X, Y>,
         _: Memo<f64>,
     ) -> Box<dyn UseLayout<X, Y>> {
-        Box::new((*self).clone().into_use(state, series))
+        Box::new((*self).clone().into_use(state))
     }
 }
 
@@ -107,10 +105,10 @@ impl<X, Y> VerticalLayout<X, Y> for Legend {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
-        series: &UseSeries<X, Y>,
+        _: &UseSeries<X, Y>,
         _: Memo<f64>,
     ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
-        let legend = Box::new((*self).clone().into_use(state, series));
+        let legend = Box::new((*self).clone().into_use(state));
         (legend.width, legend)
     }
 }
@@ -135,9 +133,9 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
         debug,
         padding,
         font,
+        lines,
         ..
     } = state.pre;
-    let lines = state.lines;
 
     let inner = Signal::derive(move || padding.get().apply(bounds.get()));
     let (body, anchor_dir) = if edge.is_horizontal() {

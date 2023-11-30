@@ -146,7 +146,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     left.reverse();
 
     // Compose edges
-    let pre = PreState::new(debug, font, padding, series.data);
+    let pre = PreState::new(debug, font, padding, series.clone());
     let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre, &series);
 
     // Finalise state
@@ -156,7 +156,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         create_memo(move |_| Projection::new(inner.get(), data.with(|data| data.position_range())))
             .into()
     };
-    let state = State::new(pre, &watch, layout, projection, series.clone());
+    let state = State::new(pre, &watch, layout, projection);
 
     // Inner layout
     let inner = inner
