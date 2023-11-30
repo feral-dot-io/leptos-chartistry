@@ -2,7 +2,6 @@ use super::OverlayLayout;
 use crate::{
     debug::DebugRect,
     layout::{snippet::SnippetTd, Layout},
-    series::UseSeries,
     state::{AttrState, State},
     ticks::TickFormatFn,
     Snippet, TickLabels, TickState,
@@ -68,7 +67,7 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
 }
 
 impl<X: Clone + PartialEq, Y: Clone + PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
-    fn render(self: Rc<Self>, _: UseSeries<X, Y>, state: &State<X, Y>) -> View {
+    fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
         view!( <Tooltip tooltip=(*self).clone() state=&state /> )
     }
 }

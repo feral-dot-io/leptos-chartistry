@@ -166,7 +166,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     // Overlay
     let overlay = overlay
         .into_iter()
-        .map(|opt| opt.render(series.clone(), &state))
+        .map(|opt| opt.render(&state))
         .collect_view();
 
     let outer = state.layout.outer;
