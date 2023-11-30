@@ -65,14 +65,14 @@ impl GuideLine {
 }
 
 impl<X, Y> InnerLayout<X, Y> for GuideLine {
-    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
-        Box::new((*self).clone())
+    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+        self
     }
 }
 
 impl<X, Y> UseInner<X, Y> for GuideLine {
-    fn render(self: Box<Self>, state: &State<X, Y>) -> View {
-        view! { <GuideLine line=*self state=state /> }
+    fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
+        view!( <GuideLine line=(*self).clone() state=state /> )
     }
 }
 

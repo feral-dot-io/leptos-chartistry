@@ -8,9 +8,9 @@ use leptos::*;
 use std::rc::Rc;
 
 pub trait InnerLayout<X, Y> {
-    fn into_use(self: Rc<Self>, state: &State<X, Y>) -> Box<dyn UseInner<X, Y>>;
+    fn into_use(self: Rc<Self>, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>>;
 }
 
 pub trait UseInner<X, Y> {
-    fn render(self: Box<Self>, state: &State<X, Y>) -> View;
+    fn render(self: Rc<Self>, state: &State<X, Y>) -> View;
 }

@@ -73,14 +73,14 @@ impl AxisMarker {
 }
 
 impl<X, Y> InnerLayout<X, Y> for AxisMarker {
-    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
-        Box::new((*self).clone())
+    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+        self
     }
 }
 
 impl<X, Y> UseInner<X, Y> for AxisMarker {
-    fn render(self: Box<Self>, state: &State<X, Y>) -> View {
-        view!( <AxisMarker marker=*self state=state /> )
+    fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
+        view!( <AxisMarker marker=(*self).clone() state=state /> )
     }
 }
 
