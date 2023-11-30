@@ -27,7 +27,7 @@ pub trait HorizontalLayout<X, Y> {
         self: Rc<Self>,
         state: &PreState<X, Y>,
         inner_width: Memo<f64>,
-    ) -> Rc<dyn UseLayout<X, Y>>;
+    ) -> UseLayoutResult<X, Y>;
 }
 
 pub trait VerticalLayout<X, Y> {
@@ -35,15 +35,26 @@ pub trait VerticalLayout<X, Y> {
         self: Rc<Self>,
         state: &PreState<X, Y>,
         inner_height: Memo<f64>,
-    ) -> (Signal<f64>, Rc<dyn UseLayout<X, Y>>);
+    ) -> (Signal<f64>, UseLayoutResult<X, Y>);
 }
+
+type UseLayoutResult<X, Y> = Rc<dyn UseLayout<X, Y>>;
 
 pub trait UseLayout<X, Y> {
     fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View;
 }
 
-pub struct ComposedLayout<X, Y> {
-    edges: Vec<(Edge, Memo<Bounds>, Rc<dyn UseLayout<X, Y>>)>,
+#[derive(Clone)]
+pub struct DeferredRender<X, Y> {
+    edge: Edge,
+    bounds: Memo<Bounds>,
+    layout: Rc<dyn UseLayout<X, Y>>,
+}
+
+impl<X, Y> DeferredRender<X, Y> {
+    pub fn render(self, state: &State<X, Y>) -> View {
+        self.layout.render(self.edge, self.bounds, state)
+    }
 }
 
 impl Layout {
@@ -69,7 +80,7 @@ impl Layout {
         left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
         aspect_ratio: AspectRatioCalc,
         state: &PreState<X, Y>,
-    ) -> (Layout, ComposedLayout<X, Y>) {
+    ) -> (Layout, Vec<DeferredRender<X, Y>>) {
         // Horizontal options
         let top_heights = collect_heights(&top, state);
         let top_height = sum_sizes(top_heights.clone());
@@ -152,15 +163,19 @@ impl Layout {
             };
 
         // Chain edges together for a deferred render
-        let composed = ComposedLayout {
-            edges: vertical(Edge::Left, &layout.left, left)
-                .into_iter()
-                .chain(vertical(Edge::Right, &layout.right, right))
-                .chain(horizontal(Edge::Top, &layout.top, top))
-                .chain(horizontal(Edge::Bottom, &layout.bottom, bottom))
-                .collect::<Vec<_>>(),
-        };
-        (layout, composed)
+        let deferred = vertical(Edge::Left, &layout.left, left)
+            .into_iter()
+            .chain(vertical(Edge::Right, &layout.right, right))
+            .chain(horizontal(Edge::Top, &layout.top, top))
+            .chain(horizontal(Edge::Bottom, &layout.bottom, bottom))
+            .map(|(edge, bounds, layout)| DeferredRender {
+                edge,
+                bounds,
+                layout,
+            })
+            .collect::<Vec<_>>();
+
+        (layout, deferred)
     }
 }
 
@@ -178,7 +193,7 @@ fn use_vertical<X, Y>(
     items: &[Rc<dyn VerticalLayout<X, Y>>],
     state: &PreState<X, Y>,
     inner_height: Memo<f64>,
-) -> (Vec<Signal<f64>>, Vec<Rc<dyn UseLayout<X, Y>>>) {
+) -> (Vec<Signal<f64>>, Vec<UseLayoutResult<X, Y>>) {
     items
         .iter()
         .map(|c| c.clone().into_use(state, inner_height))
@@ -213,14 +228,4 @@ fn option_bounds(edge: Edge, outer: Memo<Bounds>, sizes: Vec<Signal<f64>>) -> Ve
             })
         })
         .collect::<Vec<_>>()
-}
-
-impl<X, Y> ComposedLayout<X, Y> {
-    pub fn render(self, state: &State<X, Y>) -> View {
-        self.edges
-            .iter()
-            .enumerate()
-            .map(move |(_, &(edge, bounds, ref layout))| layout.render(edge, bounds, state))
-            .collect_view()
-    }
 }

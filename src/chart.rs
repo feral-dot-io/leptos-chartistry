@@ -158,7 +158,10 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     };
     let state = State::new(pre, &watch, layout, projection);
 
-    // Inner layout
+    // Edges
+    let edges = edges.into_iter().map(|r| r.render(&state)).collect_view();
+
+    // Inner
     let inner = inner
         .into_iter()
         .map(|opt| opt.into_use(&state).render(&state))
@@ -176,11 +179,10 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             width=move || format!("{}px", outer.get().width())
             height=move || format!("{}px", outer.get().height())
             viewBox=move || with!(|outer| format!("0 0 {} {}", outer.width(), outer.height()))
-            style="display: block; overflow: visible;"
-        >
+            style="display: block; overflow: visible;">
             <DebugRect label="Chart" debug=debug bounds=vec![outer.into()] />
-            {edges.render(&state)}
             {inner}
+            {edges}
             <Series series=series projection=state.projection />
         </svg>
         {overlay}
