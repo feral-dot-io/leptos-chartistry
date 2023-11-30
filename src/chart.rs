@@ -15,9 +15,7 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Chart<X: 'static, Y: 'static> {
-    debug: Signal<bool>,
     font: Signal<Font>,
-    padding: Signal<Padding>,
 
     top: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
     right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
@@ -29,16 +27,9 @@ pub struct Chart<X: 'static, Y: 'static> {
 }
 
 impl<X, Y> Chart<X, Y> {
-    pub fn new(
-        debug: impl Into<Signal<bool>>,
-        padding: impl Into<Signal<Padding>>,
-        font: impl Into<Signal<Font>>,
-        series: UseSeries<X, Y>,
-    ) -> Self {
+    pub fn new(font: impl Into<Signal<Font>>, series: UseSeries<X, Y>) -> Self {
         Self {
-            debug: debug.into(),
             font: font.into(),
-            padding: padding.into(),
 
             top: vec![],
             right: vec![],
@@ -84,7 +75,9 @@ impl<X, Y> Chart<X, Y> {
 #[component]
 pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     chart: Chart<X, Y>,
+    #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into)] aspect_ratio: MaybeSignal<AspectRatio>,
+    #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
 ) -> impl IntoView {
     let root = create_node_ref::<Div>();
     let watch = use_watched_node(root);
@@ -98,7 +91,12 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         CalcUsing::Known(calc) => calc,
     });
 
-    let debug = chart.debug;
+    let debug = create_memo(move |_| debug.get());
+    let padding = create_memo(move |_| {
+        padding
+            .map(|p| p.get())
+            .unwrap_or_else(move || Padding::from(chart.font.get().width()))
+    });
     view! {
         <div node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
             <DebugRect label="Chart" debug=debug />
@@ -106,7 +104,9 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                 <RenderChart
                     chart=chart.clone()
                     watch=watch.clone()
+                    debug=debug
                     aspect_ratio=calc
+                    padding=move || padding.get()
                 />
             </Show>
         </div>
@@ -117,12 +117,12 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
 fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     chart: Chart<X, Y>,
     watch: UseWatchedNode,
+    #[prop(into)] debug: Signal<bool>,
     aspect_ratio: Memo<AspectRatioCalc>,
+    #[prop(into)] padding: Signal<Padding>,
 ) -> impl IntoView {
     let Chart {
-        debug,
         font,
-        padding,
 
         mut top,
         right,
