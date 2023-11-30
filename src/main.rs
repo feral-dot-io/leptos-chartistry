@@ -50,7 +50,7 @@ pub fn App() -> impl IntoView {
     // Data
     let (data, _) = create_signal(load_data());
     let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
-        .add_line("Sphinx", &|_: &Wave| f64::NAN)
+        .add_line("NaN", &|_: &Wave| f64::NAN)
         .add_line("Sphinx", &|w: &Wave| w.sine)
         .add_line("Cophine", &|w: &Wave| w.cosine)
         .use_data::<Vec<_>>(data);
@@ -82,7 +82,9 @@ pub fn App() -> impl IntoView {
         .right(Legend::middle(Snippet::vertical()))
         .inner(InsetLegend::top_right(snippet))
         // Tooltip
-        .overlay(Tooltip::left_cursor(snippet, &bottom_ticks, &left_ticks));
+        .overlay(
+            Tooltip::left_cursor(snippet, &bottom_ticks, &left_ticks).sort_by_f64_descending(),
+        );
 
     view! {
         <h1>"Chartistry"</h1>

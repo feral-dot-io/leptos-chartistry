@@ -2,15 +2,24 @@ use super::OverlayLayout;
 use crate::{
     debug::DebugRect,
     layout::{snippet::SnippetTd, Layout},
+    line::UseLine,
     state::{PreState, State},
     ticks::TickFormatFn,
     Snippet, TickLabels, TickState,
 };
 use leptos::*;
-use std::{borrow::Borrow, rc::Rc};
+use std::{
+    borrow::Borrow,
+    cmp::{Ordering, Reverse},
+    rc::Rc,
+};
+
+type SortByFn<Y> = dyn Fn(&mut [(UseLine, Option<Y>)]);
 
 #[derive(Clone)]
 pub struct Tooltip<X, Y> {
+    sort_by: Rc<SortByFn<Y>>,
+    skip_missing: MaybeSignal<bool>,
     snippet: Snippet,
     table_margin: Option<MaybeSignal<f64>>,
     x_format: TickFormatFn<X>,
@@ -27,6 +36,8 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
         y_ticks: impl Borrow<TickLabels<Y>>,
     ) -> Self {
         Self {
+            sort_by: Rc::new(|_| ()),
+            skip_missing: false.into(),
             snippet: *snippet.borrow(),
             table_margin: None,
             x_format: Rc::new(|s, t| s.long_format(t)),
@@ -42,6 +53,13 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
         y_ticks: impl Borrow<TickLabels<Y>>,
     ) -> Self {
         Self::new(snippet, x_ticks, y_ticks)
+    }
+}
+
+impl<X, Y> Tooltip<X, Y> {
+    pub fn set_skip_missing(mut self, skip_missing: impl Into<MaybeSignal<bool>>) -> Self {
+        self.skip_missing = skip_missing.into();
+        self
     }
 
     pub fn set_table_margin(mut self, table_margin: impl Into<MaybeSignal<f64>>) -> Self {
@@ -64,6 +82,58 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
         self.y_format = Rc::new(format);
         self
     }
+
+    pub fn sort_by(mut self, f: impl Fn(&mut [(UseLine, Option<Y>)]) + 'static) -> Self {
+        self.sort_by = Rc::new(f);
+        self
+    }
+
+    pub fn sort_by_default(self) -> Self {
+        self.sort_by(|_| ())
+    }
+}
+
+impl<X, Y: Clone + Ord + 'static> Tooltip<X, Y> {
+    pub fn sort_by_ascending(self) -> Self {
+        self.sort_by(|lines: &mut [(UseLine, Option<Y>)]| lines.sort_by_key(|(_, y)| y.clone()))
+    }
+
+    pub fn sort_by_descending(self) -> Self {
+        self.sort_by(|lines: &mut [(UseLine, Option<Y>)]| {
+            lines.sort_by_key(|(_, y)| Reverse(y.clone()))
+        })
+    }
+}
+
+#[derive(Copy, Clone, PartialEq)]
+struct F64Ord(f64);
+
+impl PartialOrd for F64Ord {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for F64Ord {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.total_cmp(&other.0)
+    }
+}
+
+impl Eq for F64Ord {}
+
+impl<X> Tooltip<X, f64> {
+    pub fn sort_by_f64_ascending(self) -> Self {
+        self.sort_by(|lines: &mut [(UseLine, Option<f64>)]| {
+            lines.sort_by_key(|(_, y)| y.map(F64Ord))
+        })
+    }
+
+    pub fn sort_by_f64_descending(self) -> Self {
+        self.sort_by(|lines: &mut [(UseLine, Option<f64>)]| {
+            lines.sort_by_key(|(_, y)| y.map(|y| Reverse(F64Ord(y))))
+        })
+    }
 }
 
 impl<X: Clone + PartialEq, Y: Clone + PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
@@ -78,6 +148,8 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     state: &'a State<X, Y>,
 ) -> impl IntoView {
     let Tooltip {
+        sort_by,
+        skip_missing,
         snippet,
         x_format,
         y_format,
@@ -123,8 +195,22 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         })
     };
 
+    let nearest_y_values = create_memo(move |_| {
+        let mut y_values = nearest_data_y.get();
+        // Skip missing?
+        if skip_missing.get() {
+            y_values = y_values
+                .into_iter()
+                .filter(|(_, y_value)| y_value.is_some())
+                .collect::<Vec<_>>();
+        }
+        // Sort values
+        (sort_by)(&mut y_values);
+        y_values
+    });
+
     let nearest_data_y = move || {
-        nearest_data_y
+        nearest_y_values
             .get()
             .into_iter()
             .map(|(line, y_value)| {
