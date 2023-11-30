@@ -4,7 +4,7 @@ use crate::{
     debug::DebugRect,
     edge::Edge,
     series::UseSeries,
-    state::{AttrState, Data, PreState, State},
+    state::{PreState, State},
     ticks::{
         AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, TickState,
         TimestampGen, VerticalSpan,
@@ -78,12 +78,15 @@ impl<Tick> TickLabels<Tick> {
 impl<X: PartialEq> TickLabels<X> {
     pub fn generate_x<Y>(
         &self,
-        attr: &AttrState,
-        data: &Data<X, Y>,
+        state: &PreState<X, Y>,
         avail_width: Signal<f64>,
     ) -> Signal<GeneratedTicks<X>> {
-        let AttrState { font, padding, .. } = *attr;
-        let x_range = data.x_range;
+        let PreState {
+            font,
+            padding,
+            x_range,
+            ..
+        } = *state;
         let format = self.format.clone();
         let gen = self.generator.clone();
         create_memo(move |_| {
@@ -111,12 +114,15 @@ impl<X: PartialEq> TickLabels<X> {
 impl<Y: PartialEq> TickLabels<Y> {
     pub fn generate_y<X>(
         &self,
-        attr: &AttrState,
-        data: &Data<X, Y>,
+        state: &PreState<X, Y>,
         avail_height: Signal<f64>,
     ) -> Signal<GeneratedTicks<Y>> {
-        let AttrState { font, padding, .. } = *attr;
-        let y_range = data.y_range;
+        let PreState {
+            font,
+            padding,
+            y_range,
+            ..
+        } = *state;
         let gen = self.generator.clone();
         create_memo(move |_| {
             y_range.with(|y_range| {
@@ -135,9 +141,8 @@ impl<Y: PartialEq> TickLabels<Y> {
 }
 
 impl<X: Clone + PartialEq, Y: Clone> HorizontalLayout<X, Y> for TickLabels<X> {
-    fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
-        let font = attr.font;
-        let padding = attr.padding;
+    fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64> {
+        let PreState { font, padding, .. } = *state;
         Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
     }
 
@@ -148,11 +153,7 @@ impl<X: Clone + PartialEq, Y: Clone> HorizontalLayout<X, Y> for TickLabels<X> {
         avail_width: Memo<f64>,
     ) -> Box<dyn UseLayout<X, Y>> {
         Box::new(UseTickLabels {
-            ticks: self.map_ticks((*self).clone().generate_x(
-                &state.attr,
-                &state.data,
-                avail_width.into(),
-            )),
+            ticks: self.map_ticks((*self).clone().generate_x(state, avail_width.into())),
         })
     }
 }
@@ -164,14 +165,29 @@ impl<X: Clone, Y: Clone + PartialEq> VerticalLayout<X, Y> for TickLabels<Y> {
         _: &UseSeries<X, Y>,
         avail_height: Memo<f64>,
     ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
-        let ticks = self.map_ticks((*self).clone().generate_y(
-            &state.attr,
-            &state.data,
-            avail_height.into(),
-        ));
-        let width = self.width(&state.attr, ticks);
+        let ticks = self.map_ticks((*self).clone().generate_y(state, avail_height.into()));
+        let width = mk_width(self.min_chars, state, ticks);
         (width, Box::new(UseTickLabels { ticks }))
     }
+}
+
+fn mk_width<X, Y>(
+    min_chars: MaybeSignal<usize>,
+    state: &PreState<X, Y>,
+    ticks: Signal<Vec<(f64, String)>>,
+) -> Signal<f64> {
+    let PreState { font, padding, .. } = *state;
+    Signal::derive(move || {
+        let longest_chars = ticks.with(|ticks| {
+            ticks
+                .iter()
+                .map(|(_, label)| label.len())
+                .max()
+                .unwrap_or_default()
+                .max(min_chars.get())
+        }) as f64;
+        font.get().width() * longest_chars + padding.get().width()
+    })
 }
 
 impl<Tick: Clone> TickLabels<Tick> {
@@ -184,23 +200,6 @@ impl<Tick: Clone> TickLabels<Tick> {
                     .map(|tick| (state.position(tick), (format)(&**state, tick)))
                     .collect()
             })
-        })
-    }
-
-    fn width(&self, attr: &AttrState, ticks: Signal<Vec<(f64, String)>>) -> Signal<f64> {
-        let font = attr.font;
-        let padding = attr.padding;
-        let min_chars = self.min_chars;
-        Signal::derive(move || {
-            let longest_chars = ticks.with(|ticks| {
-                ticks
-                    .iter()
-                    .map(|(_, label)| label.len())
-                    .max()
-                    .unwrap_or_default()
-                    .max(min_chars.get())
-            }) as f64;
-            font.get().width() * longest_chars + padding.get().width()
         })
     }
 }
@@ -271,17 +270,13 @@ fn TickLabel<'a, X: 'static, Y: 'static>(
     state: &'a State<X, Y>,
     tick: (f64, String),
 ) -> impl IntoView {
-    let State {
-        projection,
-        attr:
-            AttrState {
-                debug,
-                font,
-                padding,
-                ..
-            },
+    let PreState {
+        debug,
+        font,
+        padding,
         ..
-    } = *state;
+    } = state.pre;
+    let projection = state.projection;
 
     let (position, label) = tick;
     let label_len = label.len();

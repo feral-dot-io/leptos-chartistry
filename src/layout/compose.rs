@@ -2,7 +2,7 @@ use crate::{
     aspect_ratio::AspectRatioCalc,
     bounds::Bounds,
     edge::Edge,
-    state::{AttrState, PreState, State},
+    state::{PreState, State},
     UseSeries,
 };
 use leptos::*;
@@ -23,7 +23,7 @@ pub struct Layout {
 }
 
 pub trait HorizontalLayout<X, Y> {
-    fn fixed_height(&self, attr: &AttrState) -> Signal<f64>;
+    fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64>;
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
@@ -75,9 +75,9 @@ impl Layout {
         series: &UseSeries<X, Y>,
     ) -> (Layout, ComposedLayout<X, Y>) {
         // Horizontal options
-        let top_heights = collect_heights(&top, &state.attr);
+        let top_heights = collect_heights(&top, state);
         let top_height = sum_sizes(top_heights.clone());
-        let bottom_heights = collect_heights(&bottom, &state.attr);
+        let bottom_heights = collect_heights(&bottom, state);
         let bottom_height = sum_sizes(bottom_heights.clone());
         let inner_height = aspect_ratio
             .clone()
@@ -176,11 +176,11 @@ impl Layout {
 
 fn collect_heights<X, Y>(
     items: &[Rc<dyn HorizontalLayout<X, Y>>],
-    attr: &AttrState,
+    state: &PreState<X, Y>,
 ) -> Vec<Signal<f64>> {
     items
         .iter()
-        .map(|c| c.fixed_height(attr))
+        .map(|c| c.fixed_height(state))
         .collect::<Vec<_>>()
 }
 

@@ -58,7 +58,7 @@ impl<X, Y> InnerLayout<X, Y> for InsetLegend {
         state: &State<X, Y>,
     ) -> Box<dyn UseInner<X, Y>> {
         Box::new(UseInsetLegend {
-            legend: self.legend.clone().into_use(&state.attr, series),
+            legend: self.legend.clone().into_use(&state.pre, series),
             edge: self.edge,
         })
     }

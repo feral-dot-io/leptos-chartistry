@@ -6,7 +6,7 @@ use crate::{
     overlay::OverlayLayout,
     projection::Projection,
     series::{Series, UseSeries},
-    state::{AttrState, PreState, State},
+    state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Font, Padding,
 };
@@ -15,7 +15,9 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Chart<X: 'static, Y: 'static> {
-    attr: AttrState,
+    debug: Signal<bool>,
+    font: Signal<Font>,
+    padding: Signal<Padding>,
 
     top: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
     right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
@@ -34,11 +36,9 @@ impl<X, Y> Chart<X, Y> {
         series: UseSeries<X, Y>,
     ) -> Self {
         Self {
-            attr: AttrState {
-                debug: debug.into(),
-                font: font.into(),
-                padding: padding.into(),
-            },
+            debug: debug.into(),
+            font: font.into(),
+            padding: padding.into(),
 
             top: vec![],
             right: vec![],
@@ -128,7 +128,9 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     aspect_ratio: AspectRatioCalc,
 ) -> impl IntoView {
     let Chart {
-        attr,
+        debug,
+        font,
+        padding,
 
         mut top,
         right,
@@ -138,14 +140,13 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         overlay,
         series,
     } = chart;
-    let debug = attr.debug;
 
     // Edges are added top to bottom, left to right. Layout compoeses inside out:
     top.reverse();
     left.reverse();
 
     // Compose edges
-    let pre = PreState::new(attr, series.data);
+    let pre = PreState::new(debug, font, padding, series.data);
     let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre, &series);
 
     // Finalise state

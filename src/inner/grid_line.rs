@@ -65,11 +65,7 @@ impl<X: Clone + PartialEq, Y> InnerLayout<X, Y> for HorizontalGridLine<X> {
         Box::new(UseHorizontalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            ticks: self
-                .0
-                .ticks
-                .clone()
-                .generate_x(&state.attr, &state.data, avail_width),
+            ticks: self.0.ticks.clone().generate_x(&state.pre, avail_width),
         }))
     }
 }
@@ -85,11 +81,7 @@ impl<X, Y: Clone + PartialEq> InnerLayout<X, Y> for VerticalGridLine<Y> {
         Box::new(UseVerticalGridLine(UseGridLine {
             width: self.0.width,
             colour: self.0.colour,
-            ticks: self
-                .0
-                .ticks
-                .clone()
-                .generate_y(&state.attr, &state.data, avail_height),
+            ticks: self.0.ticks.clone().generate_y(&state.pre, avail_height),
         }))
     }
 }
@@ -115,7 +107,7 @@ fn ViewHorizontalGridLine<'a, X: 'static, Y: 'static>(
     line: UseGridLine<X>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
-    let debug = state.attr.debug;
+    let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
     view! {
@@ -145,7 +137,7 @@ fn ViewVerticalGridLine<'a, X: 'static, Y: 'static>(
     line: UseGridLine<Y>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
-    let debug = state.attr.debug;
+    let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
     view! {

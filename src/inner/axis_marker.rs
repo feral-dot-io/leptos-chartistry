@@ -90,7 +90,7 @@ pub fn AxisMarker<'a, X: 'static, Y: 'static>(
     marker: AxisMarker,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
-    let debug = state.attr.debug;
+    let debug = state.pre.debug;
     let zero = state.svg_zero;
     let inner = state.layout.inner;
 

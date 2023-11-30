@@ -4,7 +4,7 @@ use crate::{
     debug::DebugRect,
     layout::Layout,
     series::UseSeries,
-    state::{AttrState, State},
+    state::State,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -79,8 +79,8 @@ impl<X, Y> UseInner<X, Y> for GuideLine {
 
 #[component]
 fn GuideLine<'a, X: 'static, Y: 'static>(line: GuideLine, state: &'a State<X, Y>) -> impl IntoView {
+    let debug = state.pre.debug;
     let State {
-        attr: AttrState { debug, .. },
         layout: Layout { inner, .. },
         hover_inner,
         mouse_chart,

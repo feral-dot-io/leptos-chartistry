@@ -10,7 +10,7 @@ use crate::{
     edge::Edge,
     line::UseLine,
     series::UseSeries,
-    state::{AttrState, PreState, State},
+    state::{PreState, State},
     Font,
 };
 use leptos::*;
@@ -48,15 +48,19 @@ impl Legend {
         Self::new(Anchor::End, snippet)
     }
 
-    fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
-        let font = attr.font;
-        let padding = attr.padding;
+    fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+        let font = state.font;
+        let padding = state.padding;
         Signal::derive(move || font.get().height() + padding.get().height())
     }
 
-    pub(crate) fn into_use<X, Y>(self, attr: &AttrState, series: &UseSeries<X, Y>) -> UseLegend {
-        let height = self.fixed_height(attr);
-        let width = mk_width(attr, series);
+    pub(crate) fn into_use<X, Y>(
+        self,
+        state: &PreState<X, Y>,
+        series: &UseSeries<X, Y>,
+    ) -> UseLegend {
+        let height = self.fixed_height(state);
+        let width = mk_width(state, series);
         UseLegend {
             snippet: self.snippet,
             anchor: self.anchor,
@@ -66,8 +70,8 @@ impl Legend {
     }
 }
 
-fn mk_width<X, Y>(attr: &AttrState, series: &UseSeries<X, Y>) -> Signal<f64> {
-    let AttrState { font, padding, .. } = *attr;
+fn mk_width<X, Y>(state: &PreState<X, Y>, series: &UseSeries<X, Y>) -> Signal<f64> {
+    let PreState { font, padding, .. } = *state;
     let snippet_width = Snippet::taster_width(font);
     let lines = series
         .lines
@@ -85,8 +89,8 @@ fn mk_width<X, Y>(attr: &AttrState, series: &UseSeries<X, Y>) -> Signal<f64> {
 }
 
 impl<X, Y> HorizontalLayout<X, Y> for Legend {
-    fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
-        self.fixed_height(attr)
+    fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64> {
+        self.fixed_height(state)
     }
 
     fn into_use(
@@ -95,7 +99,7 @@ impl<X, Y> HorizontalLayout<X, Y> for Legend {
         series: &UseSeries<X, Y>,
         _: Memo<f64>,
     ) -> Box<dyn UseLayout<X, Y>> {
-        Box::new((*self).clone().into_use(&state.attr, series))
+        Box::new((*self).clone().into_use(state, series))
     }
 }
 
@@ -106,7 +110,7 @@ impl<X, Y> VerticalLayout<X, Y> for Legend {
         series: &UseSeries<X, Y>,
         _: Memo<f64>,
     ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
-        let legend = Box::new((*self).clone().into_use(&state.attr, series));
+        let legend = Box::new((*self).clone().into_use(state, series));
         (legend.width, legend)
     }
 }
@@ -127,12 +131,12 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
     let UseLegend {
         snippet, anchor, ..
     } = legend;
-    let AttrState {
+    let PreState {
         debug,
         padding,
         font,
         ..
-    } = state.attr;
+    } = state.pre;
     let lines = state.lines;
 
     let inner = Signal::derive(move || padding.get().apply(bounds.get()));

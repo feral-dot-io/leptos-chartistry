@@ -4,7 +4,7 @@ use crate::{
     debug::DebugRect,
     edge::Edge,
     series::UseSeries,
-    state::{AttrState, PreState, State},
+    state::{PreState, State},
 };
 use leptos::*;
 use std::rc::Rc;
@@ -43,10 +43,9 @@ impl RotatedLabel {
         Self::new(Anchor::End, text)
     }
 
-    fn size(&self, attr: &AttrState) -> Signal<f64> {
+    fn size<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         let text = self.text.clone();
-        let font = attr.font;
-        let padding = attr.padding;
+        let PreState { font, padding, .. } = *state;
         Signal::derive(move || {
             if text.with(|t| t.is_empty()) {
                 0.0
@@ -58,8 +57,8 @@ impl RotatedLabel {
 }
 
 impl<X, Y> HorizontalLayout<X, Y> for RotatedLabel {
-    fn fixed_height(&self, attr: &AttrState) -> Signal<f64> {
-        self.size(attr)
+    fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64> {
+        self.size(state)
     }
 
     fn into_use(
@@ -80,7 +79,7 @@ impl<X, Y> VerticalLayout<X, Y> for RotatedLabel {
         _: Memo<f64>,
     ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
         // Note: width is height because it's rotated
-        (self.size(&state.attr), Box::new((*self).clone()))
+        (self.size(state), Box::new((*self).clone()))
     }
 }
 
@@ -124,12 +123,12 @@ fn RotatedLabel<'a, X: 'static, Y: 'static>(
     state: &'a State<X, Y>,
 ) -> impl IntoView {
     let RotatedLabel { text, anchor } = label;
-    let AttrState {
+    let PreState {
         font,
         padding,
         debug,
         ..
-    } = state.attr;
+    } = state.pre;
 
     let content = Signal::derive(move || padding.get().apply(bounds.get()));
     let position = create_memo(move |_| {

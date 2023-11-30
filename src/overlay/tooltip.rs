@@ -2,7 +2,7 @@ use super::OverlayLayout;
 use crate::{
     debug::DebugRect,
     layout::{snippet::SnippetTd, Layout},
-    state::{AttrState, State},
+    state::{PreState, State},
     ticks::TickFormatFn,
     Snippet, TickLabels, TickState,
 };
@@ -85,15 +85,13 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         y_ticks,
         ..
     } = tooltip;
-
+    let PreState {
+        debug,
+        font,
+        padding,
+        ..
+    } = state.pre;
     let State {
-        attr:
-            AttrState {
-                debug,
-                padding,
-                font,
-                ..
-            },
         layout: Layout { inner, .. },
         mouse_page,
         hover_inner,
@@ -104,8 +102,8 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
 
     let avail_width = Signal::derive(move || with!(|inner| inner.width()));
     let avail_height = Signal::derive(move || with!(|inner| inner.height()));
-    let x_ticks = x_ticks.generate_x(&state.attr, &state.data, avail_width);
-    let y_ticks = y_ticks.generate_y(&state.attr, &state.data, avail_height);
+    let x_ticks = x_ticks.generate_x(&state.pre, avail_width);
+    let y_ticks = y_ticks.generate_y(&state.pre, avail_height);
 
     let x_body = move || {
         with!(|nearest_data_x, x_ticks| {

@@ -5,28 +5,18 @@ use crate::{
 use leptos::signal_prelude::*;
 
 #[derive(Clone, Debug)]
-pub struct AttrState {
+pub struct PreState<X: 'static, Y: 'static> {
     pub debug: Signal<bool>,
     pub font: Signal<Font>,
     pub padding: Signal<Padding>,
-}
-
-#[derive(Clone, Debug)]
-pub struct Data<X: 'static, Y: 'static> {
+    // Data
     pub x_range: Memo<Option<(X, X)>>,
     pub y_range: Memo<Option<(Y, Y)>>,
 }
 
 #[derive(Clone, Debug)]
-pub struct PreState<X: 'static, Y: 'static> {
-    pub attr: AttrState,
-    pub data: Data<X, Y>,
-}
-
-#[derive(Clone, Debug)]
 pub struct State<X: 'static, Y: 'static> {
-    pub attr: AttrState,
-    pub data: Data<X, Y>,
+    pub pre: PreState<X, Y>,
     pub layout: Layout,
     pub projection: Signal<Projection>,
 
@@ -56,13 +46,19 @@ pub struct State<X: 'static, Y: 'static> {
 }
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X, Y> {
-    pub fn new(attr: AttrState, data: Signal<series::Data<X, Y>>) -> Self {
+    pub fn new(
+        debug: Signal<bool>,
+        font: Signal<Font>,
+        padding: Signal<Padding>,
+        data: Signal<series::Data<X, Y>>,
+    ) -> Self {
         Self {
-            attr,
-            data: Data {
-                x_range: create_memo(move |_| data.with(|data| data.x_range().cloned())),
-                y_range: create_memo(move |_| data.with(|data| data.y_range().cloned())),
-            },
+            debug,
+            font,
+            padding,
+
+            x_range: create_memo(move |_| data.with(|data| data.x_range().cloned())),
+            y_range: create_memo(move |_| data.with(|data| data.y_range().cloned())),
         }
     }
 }
@@ -124,8 +120,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         });
 
         Self {
-            attr: pre.attr,
-            data: pre.data,
+            pre,
             layout,
             projection: proj,
             svg_zero: create_memo(move |_| proj.get().data_to_svg(0.0, 0.0)),
