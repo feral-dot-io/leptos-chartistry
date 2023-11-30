@@ -3,7 +3,6 @@ use crate::{
     colours::{Colour, LIGHT_GREY},
     debug::DebugRect,
     layout::Layout,
-    series::UseSeries,
     state::State,
 };
 use leptos::*;
@@ -66,7 +65,7 @@ impl GuideLine {
 }
 
 impl<X, Y> InnerLayout<X, Y> for GuideLine {
-    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
+    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
         Box::new((*self).clone())
     }
 }

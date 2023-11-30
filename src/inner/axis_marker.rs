@@ -4,7 +4,6 @@ use crate::{
     debug::DebugRect,
     edge::Edge,
     state::State,
-    UseSeries,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -74,7 +73,7 @@ impl AxisMarker {
 }
 
 impl<X, Y> InnerLayout<X, Y> for AxisMarker {
-    fn into_use(self: Rc<Self>, _: &UseSeries<X, Y>, _: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
+    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
         Box::new((*self).clone())
     }
 }

@@ -1,7 +1,5 @@
 use super::{InnerLayout, UseInner};
-use crate::{
-    edge::Edge, layout::legend::UseLegend, series::UseSeries, state::State, Anchor, Legend, Snippet,
-};
+use crate::{edge::Edge, layout::legend::UseLegend, state::State, Anchor, Legend, Snippet};
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
 
@@ -52,11 +50,7 @@ impl InsetLegend {
 }
 
 impl<X, Y> InnerLayout<X, Y> for InsetLegend {
-    fn into_use(
-        self: Rc<Self>,
-        _: &UseSeries<X, Y>,
-        state: &State<X, Y>,
-    ) -> Box<dyn UseInner<X, Y>> {
+    fn into_use(self: Rc<Self>, state: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
         Box::new(UseInsetLegend {
             legend: self.legend.clone().into_use(&state.pre),
             edge: self.edge,

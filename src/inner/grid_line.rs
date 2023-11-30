@@ -3,7 +3,6 @@ use crate::{
     colours::{Colour, LIGHTER_GREY},
     debug::DebugRect,
     projection::Projection,
-    series::UseSeries,
     state::State,
     ticks::GeneratedTicks,
     TickLabels,
@@ -55,11 +54,7 @@ impl<Tick: Clone> GridLine<Tick> {
 }
 
 impl<X: Clone + PartialEq, Y> InnerLayout<X, Y> for HorizontalGridLine<X> {
-    fn into_use(
-        self: Rc<Self>,
-        _: &UseSeries<X, Y>,
-        state: &State<X, Y>,
-    ) -> Box<dyn UseInner<X, Y>> {
+    fn into_use(self: Rc<Self>, state: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_width = Signal::derive(move || with!(|inner| inner.width()));
         Box::new(UseHorizontalGridLine(UseGridLine {
@@ -71,11 +66,7 @@ impl<X: Clone + PartialEq, Y> InnerLayout<X, Y> for HorizontalGridLine<X> {
 }
 
 impl<X, Y: Clone + PartialEq> InnerLayout<X, Y> for VerticalGridLine<Y> {
-    fn into_use(
-        self: Rc<Self>,
-        _: &UseSeries<X, Y>,
-        state: &State<X, Y>,
-    ) -> Box<dyn UseInner<X, Y>> {
+    fn into_use(self: Rc<Self>, state: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_height = Signal::derive(move || with!(|inner| inner.height()));
         Box::new(UseVerticalGridLine(UseGridLine {
