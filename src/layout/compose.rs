@@ -27,7 +27,7 @@ pub trait HorizontalLayout<X, Y> {
         self: Rc<Self>,
         state: &PreState<X, Y>,
         inner_width: Memo<f64>,
-    ) -> Box<dyn UseLayout<X, Y>>;
+    ) -> Rc<dyn UseLayout<X, Y>>;
 }
 
 pub trait VerticalLayout<X, Y> {
@@ -35,7 +35,7 @@ pub trait VerticalLayout<X, Y> {
         self: Rc<Self>,
         state: &PreState<X, Y>,
         inner_height: Memo<f64>,
-    ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>);
+    ) -> (Signal<f64>, Rc<dyn UseLayout<X, Y>>);
 }
 
 pub trait UseLayout<X, Y> {
@@ -43,7 +43,7 @@ pub trait UseLayout<X, Y> {
 }
 
 pub struct ComposedLayout<X, Y> {
-    edges: Vec<(Edge, Memo<Bounds>, Box<dyn UseLayout<X, Y>>)>,
+    edges: Vec<(Edge, Memo<Bounds>, Rc<dyn UseLayout<X, Y>>)>,
 }
 
 impl Layout {
@@ -178,7 +178,7 @@ fn use_vertical<X, Y>(
     items: &[Rc<dyn VerticalLayout<X, Y>>],
     state: &PreState<X, Y>,
     inner_height: Memo<f64>,
-) -> (Vec<Signal<f64>>, Vec<Box<dyn UseLayout<X, Y>>>) {
+) -> (Vec<Signal<f64>>, Vec<Rc<dyn UseLayout<X, Y>>>) {
     items
         .iter()
         .map(|c| c.clone().into_use(state, inner_height))

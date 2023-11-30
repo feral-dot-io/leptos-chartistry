@@ -149,8 +149,8 @@ impl<X: Clone + PartialEq, Y: Clone> HorizontalLayout<X, Y> for TickLabels<X> {
         self: Rc<Self>,
         state: &PreState<X, Y>,
         avail_width: Memo<f64>,
-    ) -> Box<dyn UseLayout<X, Y>> {
-        Box::new(UseTickLabels {
+    ) -> Rc<dyn UseLayout<X, Y>> {
+        Rc::new(UseTickLabels {
             ticks: self.map_ticks((*self).clone().generate_x(state, avail_width.into())),
         })
     }
@@ -161,10 +161,10 @@ impl<X: Clone, Y: Clone + PartialEq> VerticalLayout<X, Y> for TickLabels<Y> {
         self: Rc<Self>,
         state: &PreState<X, Y>,
         avail_height: Memo<f64>,
-    ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
+    ) -> (Signal<f64>, Rc<dyn UseLayout<X, Y>>) {
         let ticks = self.map_ticks((*self).clone().generate_y(state, avail_height.into()));
-        let width = mk_width(self.min_chars, state, ticks);
-        (width, Box::new(UseTickLabels { ticks }))
+        let width: Signal<f64> = mk_width(self.min_chars, state, ticks);
+        (width, Rc::new(UseTickLabels { ticks }))
     }
 }
 
@@ -232,12 +232,9 @@ pub fn TickLabels<'a, X: Clone + 'static, Y: Clone + 'static>(
     bounds: Memo<Bounds>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
-    let state = state.clone();
-    let UseTickLabels { ticks, .. } = ticks;
-
-    let ticks = move || {
+    let each_tick = move || {
         // Align vertical labels
-        let ticks = ticks.get();
+        let ticks = ticks.ticks.get();
         if edge.is_vertical() {
             let (pos, labels): (Vec<f64>, Vec<String>) = ticks.into_iter().unzip();
             let labels = align_tick_labels(labels);
@@ -247,13 +244,13 @@ pub fn TickLabels<'a, X: Clone + 'static, Y: Clone + 'static>(
         }
     };
 
+    let state = state.clone();
     view! {
         <g class="_chartistry_tick_labels">
             <For
-                each=ticks
+                each=each_tick
                 key=|(_, label)| label.to_owned()
-                let:tick
-            >
+                let:tick>
                 <TickLabel edge=edge outer=bounds state=&state tick=tick />
             </For>
         </g>

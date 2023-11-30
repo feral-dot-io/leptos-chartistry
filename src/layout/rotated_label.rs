@@ -60,8 +60,8 @@ impl<X, Y> HorizontalLayout<X, Y> for RotatedLabel {
         self.size(state)
     }
 
-    fn into_use(self: Rc<Self>, _: &PreState<X, Y>, _: Memo<f64>) -> Box<dyn UseLayout<X, Y>> {
-        Box::new((*self).clone())
+    fn into_use(self: Rc<Self>, _: &PreState<X, Y>, _: Memo<f64>) -> Rc<dyn UseLayout<X, Y>> {
+        self
     }
 }
 
@@ -70,9 +70,9 @@ impl<X, Y> VerticalLayout<X, Y> for RotatedLabel {
         self: Rc<Self>,
         state: &PreState<X, Y>,
         _: Memo<f64>,
-    ) -> (Signal<f64>, Box<dyn UseLayout<X, Y>>) {
+    ) -> (Signal<f64>, Rc<dyn UseLayout<X, Y>>) {
         // Note: width is height because it's rotated
-        (self.size(state), Box::new((*self).clone()))
+        (self.size(state), self)
     }
 }
 
