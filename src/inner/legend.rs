@@ -1,5 +1,5 @@
 use super::{InnerLayout, UseInner};
-use crate::{edge::Edge, layout::legend::UseLegend, state::State, Anchor, Legend, Snippet};
+use crate::{edge::Edge, state::State, Anchor, Legend, Snippet};
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
 
@@ -7,12 +7,6 @@ use std::{borrow::Borrow, rc::Rc};
 pub struct InsetLegend {
     edge: Edge,
     legend: Legend,
-}
-
-#[derive(Clone, Debug)]
-pub struct UseInsetLegend {
-    edge: Edge,
-    legend: UseLegend,
 }
 
 impl InsetLegend {
@@ -50,15 +44,12 @@ impl InsetLegend {
 }
 
 impl<X, Y> InnerLayout<X, Y> for InsetLegend {
-    fn into_use(self: Rc<Self>, state: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
-        Box::new(UseInsetLegend {
-            legend: self.legend.clone().into_use(&state.pre),
-            edge: self.edge,
-        })
+    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Box<dyn UseInner<X, Y>> {
+        Box::new((*self).clone())
     }
 }
 
-impl<X, Y> UseInner<X, Y> for UseInsetLegend {
+impl<X, Y> UseInner<X, Y> for InsetLegend {
     fn render(self: Box<Self>, state: &State<X, Y>) -> View {
         view!( <InsetLegend legend=self.legend edge=self.edge state=state /> )
     }
@@ -66,13 +57,13 @@ impl<X, Y> UseInner<X, Y> for UseInsetLegend {
 
 #[component]
 fn InsetLegend<'a, X: 'static, Y: 'static>(
-    legend: UseLegend,
+    legend: Legend,
     edge: Edge,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
     let inner = state.layout.inner;
-    let width = legend.width;
-    let height = legend.height;
+    let width = Legend::width(&state.pre);
+    let height = legend.fixed_height(&state.pre);
     let bounds = create_memo(move |_| {
         let inner = inner.get();
         let height = height.get();

@@ -65,8 +65,6 @@ pub fn App() -> impl IntoView {
     let chart = Chart::new(debug, padding, font, series)
         // Labels
         .top(top_label)
-        .top(Legend::end(Snippet::horizontal()))
-        .right(Legend::middle(Snippet::vertical()))
         // Ticks
         .left(left_ticks.clone())
         .bottom(bottom_ticks.clone())
@@ -79,7 +77,9 @@ pub fn App() -> impl IntoView {
         // Guide lines
         .inner(GuideLine::x_axis_over_data())
         .inner(GuideLine::y_axis())
-        // Inset legend
+        // Legend
+        .top(Legend::end(Snippet::horizontal()))
+        .right(Legend::middle(Snippet::vertical()))
         .inner(InsetLegend::top_right(snippet))
         // Tooltip
         .overlay(Tooltip::left_cursor(snippet, &bottom_ticks, &left_ticks));

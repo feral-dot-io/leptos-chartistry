@@ -21,14 +21,6 @@ pub struct Legend {
     anchor: MaybeSignal<Anchor>,
 }
 
-#[derive(Clone, Debug)]
-pub struct UseLegend {
-    pub(crate) snippet: Snippet,
-    anchor: MaybeSignal<Anchor>,
-    pub(crate) width: Signal<f64>,
-    pub(crate) height: Signal<f64>,
-}
-
 impl Legend {
     pub fn new(anchor: impl Into<MaybeSignal<Anchor>>, snippet: impl Borrow<Snippet>) -> Self {
         Self {
@@ -47,42 +39,31 @@ impl Legend {
         Self::new(Anchor::End, snippet)
     }
 
-    fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    pub(crate) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         let font = state.font;
         let padding = state.padding;
         Signal::derive(move || font.get().height() + padding.get().height())
     }
 
-    pub(crate) fn into_use<X, Y>(self, state: &PreState<X, Y>) -> UseLegend {
-        let height = self.fixed_height(state);
-        let width = mk_width(state);
-        UseLegend {
-            snippet: self.snippet,
-            anchor: self.anchor,
-            width,
-            height,
-        }
+    pub(crate) fn width<X, Y>(state: &PreState<X, Y>) -> Signal<f64> {
+        let PreState {
+            font,
+            padding,
+            lines,
+            ..
+        } = *state;
+        let snippet_width = Snippet::taster_width(font);
+        Signal::derive(move || {
+            let font_width = font.get().width();
+            let max_chars = lines
+                .get()
+                .into_iter()
+                .map(|line| line.name.get().len() as f64 * font_width)
+                .reduce(f64::max)
+                .unwrap_or_default();
+            snippet_width.get() + font_width + max_chars + padding.get().width()
+        })
     }
-}
-
-fn mk_width<X, Y>(state: &PreState<X, Y>) -> Signal<f64> {
-    let PreState {
-        font,
-        padding,
-        lines,
-        ..
-    } = *state;
-    let snippet_width = Snippet::taster_width(font);
-    Signal::derive(move || {
-        let font_width = font.get().width();
-        let max_chars = lines
-            .get()
-            .into_iter()
-            .map(|line| line.name.get().len() as f64 * font_width)
-            .reduce(f64::max)
-            .unwrap_or_default();
-        snippet_width.get() + font_width + max_chars + padding.get().width()
-    })
 }
 
 impl<X, Y> HorizontalLayout<X, Y> for Legend {
@@ -90,8 +71,8 @@ impl<X, Y> HorizontalLayout<X, Y> for Legend {
         self.fixed_height(state)
     }
 
-    fn into_use(self: Rc<Self>, state: &PreState<X, Y>, _: Memo<f64>) -> Rc<dyn UseLayout<X, Y>> {
-        Rc::new((*self).clone().into_use(state))
+    fn into_use(self: Rc<Self>, _: &PreState<X, Y>, _: Memo<f64>) -> Rc<dyn UseLayout<X, Y>> {
+        self
     }
 }
 
@@ -101,12 +82,11 @@ impl<X, Y> VerticalLayout<X, Y> for Legend {
         state: &PreState<X, Y>,
         _: Memo<f64>,
     ) -> (Signal<f64>, Rc<dyn UseLayout<X, Y>>) {
-        let legend = Rc::new((*self).clone().into_use(state));
-        (legend.width, legend)
+        (Self::width(state), self)
     }
 }
 
-impl<X, Y> UseLayout<X, Y> for UseLegend {
+impl<X, Y> UseLayout<X, Y> for Legend {
     fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
         view! { <Legend legend=self.clone() edge=edge bounds=bounds state=state /> }
     }
@@ -114,14 +94,12 @@ impl<X, Y> UseLayout<X, Y> for UseLegend {
 
 #[component]
 pub fn Legend<'a, X: 'static, Y: 'static>(
-    legend: UseLegend,
+    legend: Legend,
     edge: Edge,
     bounds: Memo<Bounds>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
-    let UseLegend {
-        snippet, anchor, ..
-    } = legend;
+    let Legend { snippet, anchor } = legend;
     let PreState {
         debug,
         padding,
