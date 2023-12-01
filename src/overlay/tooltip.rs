@@ -2,7 +2,7 @@ use super::OverlayLayout;
 use crate::{
     debug::DebugRect,
     layout::{snippet::SnippetTd, Layout},
-    line::UseLine,
+    series::Series,
     state::{PreState, State},
     ticks::TickFormatFn,
     Snippet, TickLabels, TickState,
@@ -14,7 +14,7 @@ use std::{
     rc::Rc,
 };
 
-type SortByFn<Y> = dyn Fn(&mut [(UseLine, Option<Y>)]);
+type SortByFn<Y> = dyn Fn(&mut [(Series, Option<Y>)]);
 
 #[derive(Clone)]
 pub struct Tooltip<X, Y> {
@@ -83,7 +83,7 @@ impl<X, Y> Tooltip<X, Y> {
         self
     }
 
-    pub fn sort_by(mut self, f: impl Fn(&mut [(UseLine, Option<Y>)]) + 'static) -> Self {
+    pub fn sort_by(mut self, f: impl Fn(&mut [(Series, Option<Y>)]) + 'static) -> Self {
         self.sort_by = Rc::new(f);
         self
     }
@@ -95,11 +95,11 @@ impl<X, Y> Tooltip<X, Y> {
 
 impl<X, Y: Clone + Ord + 'static> Tooltip<X, Y> {
     pub fn sort_by_ascending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseLine, Option<Y>)]| lines.sort_by_key(|(_, y)| y.clone()))
+        self.sort_by(|lines: &mut [(Series, Option<Y>)]| lines.sort_by_key(|(_, y)| y.clone()))
     }
 
     pub fn sort_by_descending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseLine, Option<Y>)]| {
+        self.sort_by(|lines: &mut [(Series, Option<Y>)]| {
             lines.sort_by_key(|(_, y)| Reverse(y.clone()))
         })
     }
@@ -124,13 +124,13 @@ impl Eq for F64Ord {}
 
 impl<X> Tooltip<X, f64> {
     pub fn sort_by_f64_ascending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseLine, Option<f64>)]| {
+        self.sort_by(|lines: &mut [(Series, Option<f64>)]| {
             lines.sort_by_key(|(_, y)| y.map(F64Ord))
         })
     }
 
     pub fn sort_by_f64_descending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseLine, Option<f64>)]| {
+        self.sort_by(|lines: &mut [(Series, Option<f64>)]| {
             lines.sort_by_key(|(_, y)| y.map(|y| Reverse(F64Ord(y))))
         })
     }
@@ -244,14 +244,14 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                     <tbody>
                         <For
                             each=nearest_data_y.clone()
-                            key=|(line, y_value)| (line.id, y_value.to_owned())
-                            let:line>
+                            key=|(series, y_value)| (series.id, y_value.to_owned())
+                            let:series>
                             <tr>
-                                <SnippetTd snippet=snippet line=line.0.clone() font=font>{line.0.name}</SnippetTd>
+                                <SnippetTd snippet=snippet series=series.0.clone() font=font>{series.0.name}</SnippetTd>
                                 <td
                                     style="white-space: pre; font-family: monospace;"
                                     style:padding-left=move || format!("{}px", font.get().width())>
-                                    {line.1}
+                                    {series.1}
                                 </td>
                             </tr>
                         </For>

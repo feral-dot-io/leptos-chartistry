@@ -8,7 +8,7 @@ use crate::{
     bounds::Bounds,
     debug::DebugRect,
     edge::Edge,
-    line::UseLine,
+    series::Series,
     state::{PreState, State},
     Font, Padding,
 };
@@ -49,7 +49,7 @@ impl Legend {
         let PreState {
             font,
             padding,
-            lines,
+            series: lines,
             ..
         } = *state;
         let snippet_width = Snippet::width(font);
@@ -104,7 +104,7 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
         debug,
         padding,
         font,
-        lines,
+        series,
         ..
     } = state.pre;
 
@@ -121,12 +121,12 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
 
     let (body, anchor_dir) = if edge.is_horizontal() {
         (
-            view!(<HorizontalBody snippet=snippet lines=lines font=font />),
+            view!(<HorizontalBody snippet=snippet series=series font=font />),
             "row",
         )
     } else {
         (
-            view!(<VerticalBody snippet=snippet lines=lines font=font />),
+            view!(<VerticalBody snippet=snippet series=series font=font />),
             "column",
         )
     };
@@ -158,15 +158,15 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
 }
 
 #[component]
-fn VerticalBody(snippet: Snippet, lines: Memo<Vec<UseLine>>, font: Signal<Font>) -> impl IntoView {
+fn VerticalBody(snippet: Snippet, series: Memo<Vec<Series>>, font: Signal<Font>) -> impl IntoView {
     view! {
         <For
-            each=move || lines.get().into_iter().enumerate()
-            key=|(_, line)| line.name.get()
-            let:line>
+            each=move || series.get().into_iter().enumerate()
+            key=|(_, series)| series.name.get()
+            let:series>
             <tr>
-                <SnippetTd snippet=snippet line=line.1.clone() font=font>
-                    {line.1.name.get()}
+                <SnippetTd snippet=snippet series=series.1.clone() font=font>
+                    {series.1.name.get()}
                 </SnippetTd>
             </tr>
         </For>
@@ -176,17 +176,17 @@ fn VerticalBody(snippet: Snippet, lines: Memo<Vec<UseLine>>, font: Signal<Font>)
 #[component]
 fn HorizontalBody(
     snippet: Snippet,
-    lines: Memo<Vec<UseLine>>,
+    series: Memo<Vec<Series>>,
     font: Signal<Font>,
 ) -> impl IntoView {
     view! {
         <tr>
             <For
-                each=move || lines.get().into_iter().enumerate()
-                key=|(_, line)| line.name.get()
-                let:line>
-                <SnippetTd snippet=snippet line=line.1.clone() font=font left_padding=line.0 != 0>
-                    {line.1.name.get()}
+                each=move || series.get().into_iter().enumerate()
+                key=|(_, series)| series.name.get()
+                let:series>
+                <SnippetTd snippet=snippet series=series.1.clone() font=font left_padding=series.0 != 0>
+                    {series.1.name.get()}
                 </SnippetTd>
             </For>
         </tr>

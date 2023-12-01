@@ -49,10 +49,10 @@ pub fn App() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-    let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
-        .add_line(Line::new(&|_: &Wave| f64::NAN))
-        .add_line(Line::new(&|w: &Wave| w.sine).set_name("Sphinx"))
-        .add_line(Line::new(&|w: &Wave| w.cosine).set_name("Cophine"))
+    let series = SeriesData::new(&|w: &Wave| f64_to_dt(w.x))
+        .add_series(Line::new(&|_: &Wave| f64::NAN))
+        .add_series(Line::new(&|w: &Wave| w.sine).set_name("Sphinx"))
+        .add_series(Line::new(&|w: &Wave| w.cosine).set_name("Cophine"))
         .use_data::<Vec<_>>(data);
 
     let (anchor, _) = create_signal(Anchor::Middle);

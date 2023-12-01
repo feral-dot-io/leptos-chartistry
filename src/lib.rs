@@ -7,7 +7,6 @@ mod edge;
 mod font;
 mod inner;
 mod layout;
-mod line;
 mod overlay;
 mod padding;
 mod projection;
@@ -28,8 +27,7 @@ pub use layout::{
     snippet::Snippet,
     tick_labels::TickLabels,
 };
-pub use line::Line;
 pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;
-pub use series::{Series, UseSeries};
+pub use series::{line::Line, SeriesData, UseSeriesData};
 pub use ticks::{Period, TickState};

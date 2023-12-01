@@ -1,6 +1,10 @@
 use crate::{
-    bounds::Bounds, layout::Layout, line::UseLine, projection::Projection, series::Data,
-    use_watched_node::UseWatchedNode, Font, Padding, UseSeries,
+    bounds::Bounds,
+    layout::Layout,
+    projection::Projection,
+    series::{Data, Series},
+    use_watched_node::UseWatchedNode,
+    Font, Padding, UseSeriesData,
 };
 use leptos::signal_prelude::*;
 
@@ -11,7 +15,7 @@ pub struct PreState<X: 'static, Y: 'static> {
     pub padding: Signal<Padding>,
     // Data
     data: Signal<Data<X, Y>>,
-    pub lines: Memo<Vec<UseLine>>,
+    pub series: Memo<Vec<Series>>,
     pub x_range: Memo<Option<(X, X)>>,
     pub y_range: Memo<Option<(Y, Y)>>,
 }
@@ -42,7 +46,7 @@ pub struct State<X: 'static, Y: 'static> {
     /// X value of nearest mouse data
     pub nearest_data_x: Memo<Option<X>>,
     /// Y values of nearest mouse data. Index corresponds to line index.
-    pub nearest_data_y: Memo<Vec<(UseLine, Option<Y>)>>,
+    pub nearest_data_y: Memo<Vec<(Series, Option<Y>)>>,
 }
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X, Y> {
@@ -50,14 +54,15 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X,
         debug: Signal<bool>,
         font: Signal<Font>,
         padding: Signal<Padding>,
-        series: UseSeries<X, Y>,
+        series: UseSeriesData<X, Y>,
     ) -> Self {
-        let UseSeries { lines, data } = series;
+        let UseSeriesData { series, data } = series;
 
+        let series = series.into_iter().map(|s| s.describe()).collect::<Vec<_>>();
         let lines = create_memo(move |_| {
-            let mut lines = lines.clone();
-            lines.sort_by_key(|line| line.name.get());
-            lines
+            let mut series = series.clone();
+            series.sort_by_key(|series| series.name.get());
+            series
         });
 
         Self {
@@ -66,7 +71,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X,
             padding,
 
             data,
-            lines,
+            series: lines,
             x_range: create_memo(move |_| data.with(|data| data.x_range().cloned())),
             y_range: create_memo(move |_| data.with(|data| data.y_range().cloned())),
         }
@@ -106,7 +111,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         let nearest_data_y = create_memo(move |_| {
             let pos_x = nearest_pos_x.get();
             data.with(|data| {
-                pre.lines
+                pre.series
                     .get()
                     .into_iter()
                     .map(|line| {

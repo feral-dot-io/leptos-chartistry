@@ -1,4 +1,4 @@
-use crate::{line::UseLine, Font};
+use crate::{series::Series, Font};
 use leptos::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -43,17 +43,17 @@ impl Snippet {
 #[component]
 pub(crate) fn SnippetTd(
     snippet: Snippet,
-    line: UseLine,
+    series: Series,
     font: Signal<Font>,
     #[prop(optional)] left_padding: bool,
     children: Children,
 ) -> impl IntoView {
     let taster = move || match snippet.style.get() {
         Style::VerticalTaster => view! {
-            <SnippetVerticalTaster line=&line font=font />
+            <SnippetVerticalTaster series=&series font=font />
         },
         Style::HorizontalTaster => view! {
-            <SnippetHorizontalTaster line=&line font=font />
+            <SnippetHorizontalTaster series=&series font=font />
         },
     };
     view! {
@@ -69,10 +69,10 @@ pub(crate) fn SnippetTd(
 }
 
 #[component]
-fn SnippetHorizontalTaster<'a>(line: &'a UseLine, font: Signal<Font>) -> impl IntoView {
+fn SnippetHorizontalTaster<'a>(series: &'a Series, font: Signal<Font>) -> impl IntoView {
     let width = Snippet::taster_width(font);
     let height = Snippet::taster_height(font);
-    let colour = line.colour;
+    let colour = series.colour;
     view! {
         <svg
             class="_chartistry_snippet_horizontal"
@@ -88,17 +88,17 @@ fn SnippetHorizontalTaster<'a>(line: &'a UseLine, font: Signal<Font>) -> impl In
                 y1=move || font.get().width()
                 y2=move || font.get().width()
                 stroke=move || colour.get().to_string()
-                stroke-width=line.width
+                stroke-width=1.0
             />
         </svg>
     }
 }
 
 #[component]
-fn SnippetVerticalTaster<'a>(line: &'a UseLine, font: Signal<Font>) -> impl IntoView {
+fn SnippetVerticalTaster<'a>(series: &'a Series, font: Signal<Font>) -> impl IntoView {
     let width = Snippet::taster_width(font);
     let height = Snippet::taster_height(font);
-    let colour = line.colour;
+    let colour = series.colour;
     let x = Signal::derive(move || width.get() / 2.0);
     view! {
         <div
@@ -121,7 +121,7 @@ fn SnippetVerticalTaster<'a>(line: &'a UseLine, font: Signal<Font>) -> impl Into
                     y1=0
                     y2=height
                     stroke=move || colour.get().to_string()
-                    stroke-width=line.width
+                    stroke-width=1.0 // TODO
                 />
             </svg>
         </div>

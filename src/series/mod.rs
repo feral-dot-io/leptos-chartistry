@@ -1,20 +1,21 @@
+pub mod line;
+
 use crate::{
     bounds::Bounds,
-    colours::{self, ColourScheme},
-    line::{Line, UseLine},
-    projection::Projection,
+    colours::{self, Colour, ColourScheme},
+    state::State,
 };
 use chrono::prelude::*;
 use leptos::*;
 use std::rc::Rc;
 
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
-pub(crate) type GetY<T, Y> = Rc<dyn Fn(&T) -> Y>;
+pub type GetY<T, Y> = Rc<dyn Fn(&T) -> Y>;
 
 #[derive(Clone)]
-pub struct Series<T: 'static, X: 'static, Y: 'static> {
+pub struct SeriesData<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
-    lines: Vec<Line<T, Y>>,
+    series: Vec<Rc<dyn IntoSeries<T, X, Y>>>,
     colours: ColourScheme,
     x_lower: Signal<Option<X>>,
     x_upper: Signal<Option<X>>,
@@ -22,13 +23,26 @@ pub struct Series<T: 'static, X: 'static, Y: 'static> {
     y_upper: Signal<Option<Y>>,
 }
 
-pub trait Series2<Y> {
-    fn get_y(&self, y: Y) -> Option<usize>;
+#[derive(Clone, Debug, PartialEq)]
+pub struct Series {
+    pub id: usize,
+    pub name: MaybeSignal<String>,
+    pub colour: MaybeSignal<Colour>,
 }
 
-#[derive(Clone, Debug)]
-pub struct UseSeries<X: 'static, Y: 'static> {
-    pub(crate) lines: Vec<UseLine>,
+pub trait IntoSeries<T, X, Y> {
+    fn into_use(self: Rc<Self>, id: usize, colour: Colour)
+        -> (GetY<T, Y>, Rc<dyn UseSeries<X, Y>>);
+}
+
+pub trait UseSeries<X, Y> {
+    fn describe(&self) -> Series;
+    fn render(&self, positions: Vec<(f64, f64)>, state: &State<X, Y>) -> View;
+}
+
+#[derive(Clone)]
+pub struct UseSeriesData<X: 'static, Y: 'static> {
+    pub(crate) series: Vec<Rc<dyn UseSeries<X, Y>>>,
     pub(crate) data: Signal<Data<X, Y>>,
 }
 
@@ -43,11 +57,13 @@ pub struct Data<X, Y> {
     y_range: Option<(Y, Y)>,
 }
 
-impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T, X, Y> {
+impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
+    SeriesData<T, X, Y>
+{
     pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
-        Series {
+        Self {
             get_x: Rc::new(get_x),
-            lines: Vec::new(),
+            series: Vec::new(),
             colours: colours::ARBITRARY.as_ref().into(),
             x_lower: Signal::default(),
             x_upper: Signal::default(),
@@ -121,12 +137,12 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         self.set_y_min(lower).set_y_max(upper)
     }
 
-    pub fn add_line(mut self, line: impl Into<Line<T, Y>>) -> Self {
-        self.lines.push(line.into());
+    pub fn add_series(mut self, series: impl IntoSeries<T, X, Y> + 'static) -> Self {
+        self.series.push(Rc::new(series));
         self
     }
 
-    pub fn use_data<Ts>(self, data: impl Into<MaybeSignal<Ts>> + 'static) -> UseSeries<X, Y>
+    pub fn use_data<Ts>(self, data: impl Into<MaybeSignal<Ts>> + 'static) -> UseSeriesData<X, Y>
     where
         Ts: AsRef<[T]> + 'static,
         X: PartialOrd + Position,
@@ -134,11 +150,11 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
     {
         // Apply colours to lines
         let (get_ys, lines): (Vec<_>, Vec<_>) = self
-            .lines
+            .series
             .into_iter()
             .enumerate()
             .zip(self.colours.iter())
-            .map(|((id, line), colour)| line.use_line(id, colour))
+            .map(|((id, series), colour)| series.into_use(id, colour))
             .unzip();
 
         // Convert data to a signal
@@ -204,7 +220,10 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         })
         .into();
 
-        UseSeries { lines, data }
+        UseSeriesData {
+            series: lines,
+            data,
+        }
     }
 
     fn map_min_max_range<V: PartialOrd>(
@@ -327,39 +346,55 @@ impl<Tz: TimeZone> Position for DateTime<Tz> {
     }
 }
 
+impl<X, Y> UseSeriesData<X, Y> {
+    pub fn render(self, state: State<X, Y>) -> View {
+        view!( <RenderSeries series=self state=state /> )
+    }
+}
+
 #[component]
-pub(crate) fn Series<X: 'static, Y: 'static>(
-    series: UseSeries<X, Y>,
-    projection: Signal<Projection>,
+pub fn RenderSeries<X: 'static, Y: 'static>(
+    series: UseSeriesData<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
-    let series = move || {
-        let proj = projection.get();
+    let proj = state.projection;
+    let get_positions = move |id| {
         series.data.with(|data| {
+            let proj = proj.get();
             let points = data.x_points.len();
-            series
-                .lines
+            let start = id * points;
+            let end = start + points;
+            data.x_positions
                 .iter()
-                .map(|line| {
-                    let positions = data
-                        .x_positions
-                        .iter()
-                        .enumerate()
-                        .map(|(i, &x)| {
-                            let y = data.y_positions[line.id * points + i];
-                            // Map from data to viewport coords
-                            proj.data_to_svg(x, y)
-                        })
-                        .collect::<Vec<_>>();
-                    view! {
-                        <Line line=line positions=positions />
-                    }
+                .zip(&data.y_positions[start..end])
+                .map(|(x, y)| {
+                    // Map from data to viewport coords
+                    proj.data_to_svg(*x, *y)
                 })
-                .collect_view()
+                .collect::<Vec<_>>()
         })
     };
+
+    let render = move |(id, series): (usize, Rc<dyn UseSeries<X, Y>>)| {
+        let positions = get_positions(id);
+        series.render(positions, &state)
+    };
+
+    let series = series
+        .series
+        .iter()
+        .map(|s| {
+            let id = s.describe().id;
+            (id, s.clone())
+        })
+        .collect::<Vec<_>>();
     view! {
         <g class="_chartistry_series">
-            {series}
+            <For
+                each=move || series.to_vec()
+                key=|series| series.0
+                children=render
+            />
         </g>
     }
 }

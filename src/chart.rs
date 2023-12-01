@@ -5,7 +5,7 @@ use crate::{
     layout::{HorizontalLayout, Layout, VerticalLayout},
     overlay::OverlayLayout,
     projection::Projection,
-    series::{Series, UseSeries},
+    series::{RenderSeries, UseSeriesData},
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Font, Padding,
@@ -23,11 +23,11 @@ pub struct Chart<X: 'static, Y: 'static> {
     left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
     inner: Vec<Rc<dyn InnerLayout<X, Y>>>,
     overlay: Vec<Rc<dyn OverlayLayout<X, Y>>>,
-    series: UseSeries<X, Y>,
+    series: UseSeriesData<X, Y>,
 }
 
 impl<X, Y> Chart<X, Y> {
-    pub fn new(font: impl Into<Signal<Font>>, series: UseSeries<X, Y>) -> Self {
+    pub fn new(font: impl Into<Signal<Font>>, series: UseSeriesData<X, Y>) -> Self {
         Self {
             font: font.into(),
 
@@ -175,7 +175,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
             {inner}
             {edges}
-            <Series series=series projection=state.projection />
+            <RenderSeries series=series state=state />
         </svg>
         {overlay}
     }

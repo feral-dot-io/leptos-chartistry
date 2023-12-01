@@ -1,4 +1,5 @@
-use crate::{colours::Colour, series::GetY};
+use super::{IntoSeries, Series, UseSeries};
+use crate::{colours::Colour, series::GetY, state::State};
 use leptos::*;
 use std::rc::Rc;
 
@@ -12,10 +13,10 @@ pub struct Line<T, Y> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
-    pub id: usize,
-    pub name: MaybeSignal<String>,
-    pub colour: MaybeSignal<Colour>,
-    pub width: MaybeSignal<f64>,
+    id: usize,
+    name: MaybeSignal<String>,
+    colour: MaybeSignal<Colour>,
+    width: MaybeSignal<f64>,
 }
 
 impl<T, Y> Line<T, Y> {
@@ -42,20 +43,40 @@ impl<T, Y> Line<T, Y> {
         self.width = width.into();
         self
     }
+}
 
-    pub(super) fn use_line(self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
+impl<T, X, Y> IntoSeries<T, X, Y> for Line<T, Y> {
+    fn into_use(
+        self: Rc<Self>,
+        id: usize,
+        colour: Colour,
+    ) -> (GetY<T, Y>, Rc<dyn UseSeries<X, Y>>) {
         let line = UseLine {
             id,
-            name: self.name,
+            name: self.name.clone(),
             colour: self.colour.unwrap_or_else(|| colour.into()),
             width: self.width,
         };
-        (self.get_y, line)
+        (self.get_y.clone(), Rc::new(line))
+    }
+}
+
+impl<X, Y> UseSeries<X, Y> for UseLine {
+    fn describe(&self) -> Series {
+        Series {
+            id: self.id,
+            name: self.name.clone(),
+            colour: self.colour,
+        }
+    }
+
+    fn render(&self, positions: Vec<(f64, f64)>, _state: &State<X, Y>) -> View {
+        view!( <RenderLine line=self positions=positions /> )
     }
 }
 
 #[component]
-pub fn Line<'a>(line: &'a UseLine, positions: Vec<(f64, f64)>) -> impl IntoView {
+pub fn RenderLine<'a>(line: &'a UseLine, positions: Vec<(f64, f64)>) -> impl IntoView {
     let mut need_move = true;
     let path = positions
         .into_iter()
