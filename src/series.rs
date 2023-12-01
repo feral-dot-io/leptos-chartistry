@@ -9,18 +9,21 @@ use leptos::*;
 use std::rc::Rc;
 
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
-type GetY<T, Y> = Rc<dyn Fn(&T) -> Y>;
+pub(crate) type GetY<T, Y> = Rc<dyn Fn(&T) -> Y>;
 
 #[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
-    get_ys: Vec<GetY<T, Y>>,
-    lines: Vec<Line>,
+    lines: Vec<Line<T, Y>>,
     colours: ColourScheme,
     x_lower: Signal<Option<X>>,
     x_upper: Signal<Option<X>>,
     y_lower: Signal<Option<Y>>,
     y_upper: Signal<Option<Y>>,
+}
+
+pub trait Series2<Y> {
+    fn get_y(&self, y: Y) -> Option<usize>;
 }
 
 #[derive(Clone, Debug)]
@@ -44,7 +47,6 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
     pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
         Series {
             get_x: Rc::new(get_x),
-            get_ys: Vec::new(),
             lines: Vec::new(),
             colours: colours::ARBITRARY.as_ref().into(),
             x_lower: Signal::default(),
@@ -119,8 +121,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         self.set_y_min(lower).set_y_max(upper)
     }
 
-    pub fn add_line(mut self, line: impl Into<Line>, get_y: impl Fn(&T) -> Y + 'static) -> Self {
-        self.get_ys.push(Rc::new(get_y));
+    pub fn add_line(mut self, line: impl Into<Line<T, Y>>) -> Self {
         self.lines.push(line.into());
         self
     }
@@ -131,21 +132,19 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         X: PartialOrd + Position,
         Y: PartialOrd + Position,
     {
-        let Series { get_x, get_ys, .. } = self;
-
         // Apply colours to lines
-        let lines = self
+        let (get_ys, lines): (Vec<_>, Vec<_>) = self
             .lines
             .into_iter()
             .enumerate()
             .zip(self.colours.iter())
             .map(|((id, line), colour)| line.use_line(id, colour))
-            .collect::<Vec<_>>();
+            .unzip();
 
         // Convert data to a signal
         let data = data.into();
         let data = create_memo(move |_| {
-            let get_x = &get_x;
+            let get_x = self.get_x.clone();
             let x_lower = self.x_lower.get();
             let x_upper = self.x_upper.get();
             let y_lower = self.y_lower.get();
@@ -333,31 +332,34 @@ pub(crate) fn Series<X: 'static, Y: 'static>(
     series: UseSeries<X, Y>,
     projection: Signal<Projection>,
 ) -> impl IntoView {
-    let lines = move || {
+    let series = move || {
         let proj = projection.get();
         series.data.with(|data| {
             let points = data.x_points.len();
-            (series.lines.iter())
-                .enumerate()
-                .map(|(line_i, line)| {
-                    let positions = (data.x_positions.iter())
+            series
+                .lines
+                .iter()
+                .map(|line| {
+                    let positions = data
+                        .x_positions
+                        .iter()
                         .enumerate()
                         .map(|(i, &x)| {
-                            let y = data.y_positions[line_i * points + i];
+                            let y = data.y_positions[line.id * points + i];
                             // Map from data to viewport coords
                             proj.data_to_svg(x, y)
                         })
                         .collect::<Vec<_>>();
                     view! {
-                        <g class=format!("_chartistry_line_{}", line_i)>
-                            <Line line=line positions=positions />
-                        </g>
+                        <Line line=line positions=positions />
                     }
                 })
                 .collect_view()
         })
     };
     view! {
-        <g class="_chartistry_series">{lines}</g>
+        <g class="_chartistry_series">
+            {series}
+        </g>
     }
 }

@@ -1,28 +1,36 @@
-use crate::colours::Colour;
+use crate::{colours::Colour, series::GetY};
 use leptos::*;
+use std::rc::Rc;
 
-#[derive(Clone, Debug)]
-pub struct Line {
-    pub(crate) name: MaybeSignal<String>,
-    pub(crate) colour: Option<MaybeSignal<Colour>>,
-    pub(crate) width: MaybeSignal<f64>,
+#[derive(Clone)]
+pub struct Line<T, Y> {
+    get_y: GetY<T, Y>,
+    name: MaybeSignal<String>,
+    colour: Option<MaybeSignal<Colour>>,
+    width: MaybeSignal<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
-    pub(crate) id: usize,
-    pub(crate) name: MaybeSignal<String>,
-    pub(crate) colour: MaybeSignal<Colour>,
-    pub(crate) width: MaybeSignal<f64>,
+    pub id: usize,
+    pub name: MaybeSignal<String>,
+    pub colour: MaybeSignal<Colour>,
+    pub width: MaybeSignal<f64>,
 }
 
-impl Line {
-    pub fn new(name: impl Into<MaybeSignal<String>>) -> Self {
+impl<T, Y> Line<T, Y> {
+    pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self {
         Self {
-            name: name.into(),
+            get_y: Rc::new(get_y),
+            name: MaybeSignal::default(),
             colour: None,
             width: 1.0.into(),
         }
+    }
+
+    pub fn set_name(mut self, name: impl Into<MaybeSignal<String>>) -> Self {
+        self.name = name.into();
+        self
     }
 
     pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Colour>>) -> Self {
@@ -35,25 +43,14 @@ impl Line {
         self
     }
 
-    pub(super) fn use_line(self, id: usize, colour: Colour) -> UseLine {
-        UseLine {
+    pub(super) fn use_line(self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
+        let line = UseLine {
             id,
             name: self.name,
             colour: self.colour.unwrap_or_else(|| colour.into()),
             width: self.width,
-        }
-    }
-}
-
-impl From<&str> for Line {
-    fn from(name: &str) -> Self {
-        Self::new(name)
-    }
-}
-
-impl From<String> for Line {
-    fn from(name: String) -> Self {
-        Self::new(name)
+        };
+        (self.get_y, line)
     }
 }
 
@@ -76,11 +73,13 @@ pub fn Line<'a>(line: &'a UseLine, positions: Vec<(f64, f64)>) -> impl IntoView 
         .collect::<String>();
     let colour = line.colour;
     view! {
-        <path
-            d=path
-            fill="none"
-            stroke=move || colour.get().to_string()
-            stroke-width=line.width
-        />
+        <g class="_chartistry_line">
+            <path
+                d=path
+                fill="none"
+                stroke=move || colour.get().to_string()
+                stroke-width=line.width
+            />
+        </g>
     }
 }
