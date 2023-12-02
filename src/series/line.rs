@@ -7,7 +7,6 @@ use std::rc::Rc;
 pub struct Line<T, Y> {
     get_y: GetY<T, Y>,
     name: MaybeSignal<String>,
-    colour: Option<MaybeSignal<Colour>>,
     width: MaybeSignal<f64>,
 }
 
@@ -15,7 +14,7 @@ pub struct Line<T, Y> {
 pub struct UseLine {
     id: usize,
     name: MaybeSignal<String>,
-    colour: MaybeSignal<Colour>,
+    colour: Colour,
     width: MaybeSignal<f64>,
 }
 
@@ -24,18 +23,12 @@ impl<T, Y> Line<T, Y> {
         Self {
             get_y: Rc::new(get_y),
             name: MaybeSignal::default(),
-            colour: None,
             width: 1.0.into(),
         }
     }
 
     pub fn set_name(mut self, name: impl Into<MaybeSignal<String>>) -> Self {
         self.name = name.into();
-        self
-    }
-
-    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Colour>>) -> Self {
-        self.colour = Some(colour.into());
         self
     }
 
@@ -50,7 +43,7 @@ impl<T, X, Y> IntoSeries<T, X, Y> for Line<T, Y> {
         let line = UseLine {
             id,
             name: self.name.clone(),
-            colour: self.colour.unwrap_or_else(|| colour.into()),
+            colour,
             width: self.width,
         };
         (self.get_y.clone(), UseSeries::Line(line))
@@ -77,14 +70,13 @@ impl UseLine {
 
 #[component]
 fn LineTaster<'a>(line: &'a UseLine, bounds: Memo<Bounds>) -> impl IntoView {
-    let colour = line.colour;
     view! {
         <line
             x1=move || bounds.get().left_x()
             x2=move || bounds.get().right_x()
             y1=move || bounds.get().centre_y() + 1.0
             y2=move || bounds.get().centre_y() + 1.0
-            stroke=move || colour.get().to_string()
+            stroke=line.colour.to_string()
             stroke-width=line.width
         />
     }
@@ -111,13 +103,12 @@ fn RenderLine<'a>(line: &'a UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl
                 .collect::<String>()
         })
     };
-    let colour = line.colour;
     view! {
         <g class="_chartistry_line">
             <path
                 d=path
                 fill="none"
-                stroke=move || colour.get().to_string()
+                stroke=line.colour.to_string()
                 stroke-width=line.width
             />
         </g>
