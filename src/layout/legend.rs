@@ -1,42 +1,35 @@
-use super::{
-    compose::UseLayout,
-    rotated_label::Anchor,
-    snippet::{Snippet, SnippetTd},
-    HorizontalLayout, VerticalLayout,
-};
+use super::{compose::UseLayout, rotated_label::Anchor, HorizontalLayout, VerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
     edge::Edge,
-    series::Series,
+    series::{Snippet, UseSeries},
     state::{PreState, State},
-    Font, Padding,
+    Padding,
 };
 use leptos::*;
-use std::{borrow::Borrow, rc::Rc};
+use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct Legend {
-    snippet: Snippet,
     anchor: MaybeSignal<Anchor>,
 }
 
 impl Legend {
-    pub fn new(anchor: impl Into<MaybeSignal<Anchor>>, snippet: impl Borrow<Snippet>) -> Self {
+    pub fn new(anchor: impl Into<MaybeSignal<Anchor>>) -> Self {
         Self {
-            snippet: *snippet.borrow(),
             anchor: anchor.into(),
         }
     }
 
-    pub fn start(snippet: impl Borrow<Snippet>) -> Self {
-        Self::new(Anchor::Start, snippet)
+    pub fn start() -> Self {
+        Self::new(Anchor::Start)
     }
-    pub fn middle(snippet: impl Borrow<Snippet>) -> Self {
-        Self::new(Anchor::Middle, snippet)
+    pub fn middle() -> Self {
+        Self::new(Anchor::Middle)
     }
-    pub fn end(snippet: impl Borrow<Snippet>) -> Self {
-        Self::new(Anchor::End, snippet)
+    pub fn end() -> Self {
+        Self::new(Anchor::End)
     }
 
     pub(crate) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
@@ -52,21 +45,21 @@ impl Legend {
             series: lines,
             ..
         } = *state;
-        let snippet_width = Snippet::width(font);
+        let snippet_bounds = UseSeries::snippet_width(font);
         Signal::derive(move || {
             let font_width = font.get().width();
             let max_chars = lines
                 .get()
                 .into_iter()
-                .map(|line| line.name.get().len() as f64 * font_width)
+                .map(|line| line.name().get().len() as f64 * font_width)
                 .reduce(f64::max)
                 .unwrap_or_default();
-            snippet_width.get() + max_chars + padding.get().width()
+            snippet_bounds.get() + max_chars + padding.get().width()
         })
     }
 }
 
-impl<X, Y> HorizontalLayout<X, Y> for Legend {
+impl<X: Clone, Y: Clone> HorizontalLayout<X, Y> for Legend {
     fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64> {
         self.fixed_height(state)
     }
@@ -76,7 +69,7 @@ impl<X, Y> HorizontalLayout<X, Y> for Legend {
     }
 }
 
-impl<X, Y> VerticalLayout<X, Y> for Legend {
+impl<X: Clone, Y: Clone> VerticalLayout<X, Y> for Legend {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
@@ -86,20 +79,20 @@ impl<X, Y> VerticalLayout<X, Y> for Legend {
     }
 }
 
-impl<X, Y> UseLayout<X, Y> for Legend {
+impl<X: Clone, Y: Clone> UseLayout<X, Y> for Legend {
     fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
         view! { <Legend legend=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
 
 #[component]
-pub fn Legend<'a, X: 'static, Y: 'static>(
+pub fn Legend<'a, X: Clone + 'static, Y: Clone + 'static>(
     legend: Legend,
     edge: Edge,
     bounds: Memo<Bounds>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
-    let Legend { snippet, anchor } = legend;
+    let Legend { anchor } = legend;
     let PreState {
         debug,
         padding,
@@ -120,15 +113,9 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
     let inner = Signal::derive(move || padding.get().apply(bounds.get()));
 
     let (body, anchor_dir) = if edge.is_horizontal() {
-        (
-            view!(<HorizontalBody snippet=snippet series=series font=font />),
-            "row",
-        )
+        (view!(<HorizontalBody series=series state=state />), "row")
     } else {
-        (
-            view!(<VerticalBody snippet=snippet series=series font=font />),
-            "column",
-        )
+        (view!(<VerticalBody series=series state=state />), "column")
     };
 
     view! {
@@ -145,7 +132,7 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
                     style:flex-direction=anchor_dir
                     style:justify-content=move || anchor.get().css_justify_content()>
                     <table
-                        style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;"
+                        style="border-collapse: collapse; border-spacing: 0; margin: 0;"
                         style:font-size=move || format!("{}px", font.get().height())>
                         <tbody>
                             {body}
@@ -158,36 +145,49 @@ pub fn Legend<'a, X: 'static, Y: 'static>(
 }
 
 #[component]
-fn VerticalBody(snippet: Snippet, series: Memo<Vec<Series>>, font: Signal<Font>) -> impl IntoView {
+fn VerticalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
+    series: Memo<Vec<UseSeries>>,
+    state: &'a State<X, Y>,
+) -> impl IntoView {
+    let padding = state.pre.padding;
+    let state = state.clone();
     view! {
         <For
-            each=move || series.get().into_iter().enumerate()
-            key=|(_, series)| series.name.get()
+            each=move || series.get()
+            key=|series| series.id()
             let:series>
             <tr>
-                <SnippetTd snippet=snippet series=series.1.clone() font=font>
-                    {series.1.name.get()}
-                </SnippetTd>
+                <td style:padding=move || padding.get().to_css_horizontal_style()>
+                    <Snippet series=series state=&state />
+                </td>
             </tr>
         </For>
     }
 }
 
 #[component]
-fn HorizontalBody(
-    snippet: Snippet,
-    series: Memo<Vec<Series>>,
-    font: Signal<Font>,
+fn HorizontalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
+    series: Memo<Vec<UseSeries>>,
+    state: &'a State<X, Y>,
 ) -> impl IntoView {
+    let padding = state.pre.padding;
+    let padding = move |i| -> Option<String> {
+        if i != 0 {
+            Some(format!("{}px", padding.get().left))
+        } else {
+            None
+        }
+    };
+    let state = state.clone();
     view! {
         <tr>
             <For
                 each=move || series.get().into_iter().enumerate()
-                key=|(_, series)| series.name.get()
+                key=|(_, series)| series.id()
                 let:series>
-                <SnippetTd snippet=snippet series=series.1.clone() font=font left_padding=series.0 != 0>
-                    {series.1.name.get()}
-                </SnippetTd>
+                <td style:padding-left=move || padding(series.0)>
+                    <Snippet series=series.1 state=&state />
+                </td>
             </For>
         </tr>
     }

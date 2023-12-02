@@ -1,11 +1,11 @@
 use super::OverlayLayout;
 use crate::{
     debug::DebugRect,
-    layout::{snippet::SnippetTd, Layout},
-    series::Series,
+    layout::Layout,
+    series::{Snippet, UseSeries},
     state::{PreState, State},
     ticks::TickFormatFn,
-    Snippet, TickLabels, TickState,
+    TickLabels, TickState,
 };
 use leptos::*;
 use std::{
@@ -14,13 +14,12 @@ use std::{
     rc::Rc,
 };
 
-type SortByFn<Y> = dyn Fn(&mut [(Series, Option<Y>)]);
+type SortByFn<Y> = dyn Fn(&mut [(UseSeries, Option<Y>)]);
 
 #[derive(Clone)]
 pub struct Tooltip<X, Y> {
     sort_by: Rc<SortByFn<Y>>,
     skip_missing: MaybeSignal<bool>,
-    snippet: Snippet,
     table_margin: Option<MaybeSignal<f64>>,
     x_format: TickFormatFn<X>,
     y_format: TickFormatFn<Y>,
@@ -30,15 +29,10 @@ pub struct Tooltip<X, Y> {
 }
 
 impl<X: Clone, Y: Clone> Tooltip<X, Y> {
-    fn new(
-        snippet: impl Borrow<Snippet>,
-        x_ticks: impl Borrow<TickLabels<X>>,
-        y_ticks: impl Borrow<TickLabels<Y>>,
-    ) -> Self {
+    fn new(x_ticks: impl Borrow<TickLabels<X>>, y_ticks: impl Borrow<TickLabels<Y>>) -> Self {
         Self {
             sort_by: Rc::new(|_| ()),
             skip_missing: false.into(),
-            snippet: *snippet.borrow(),
             table_margin: None,
             x_format: Rc::new(|s, t| s.long_format(t)),
             y_format: Rc::new(|s, t| s.long_format(t)),
@@ -48,11 +42,10 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
     }
 
     pub fn left_cursor(
-        snippet: impl Borrow<Snippet>,
         x_ticks: impl Borrow<TickLabels<X>>,
         y_ticks: impl Borrow<TickLabels<Y>>,
     ) -> Self {
-        Self::new(snippet, x_ticks, y_ticks)
+        Self::new(x_ticks, y_ticks)
     }
 }
 
@@ -83,7 +76,7 @@ impl<X, Y> Tooltip<X, Y> {
         self
     }
 
-    pub fn sort_by(mut self, f: impl Fn(&mut [(Series, Option<Y>)]) + 'static) -> Self {
+    pub fn sort_by(mut self, f: impl Fn(&mut [(UseSeries, Option<Y>)]) + 'static) -> Self {
         self.sort_by = Rc::new(f);
         self
     }
@@ -95,11 +88,11 @@ impl<X, Y> Tooltip<X, Y> {
 
 impl<X, Y: Clone + Ord + 'static> Tooltip<X, Y> {
     pub fn sort_by_ascending(self) -> Self {
-        self.sort_by(|lines: &mut [(Series, Option<Y>)]| lines.sort_by_key(|(_, y)| y.clone()))
+        self.sort_by(|lines: &mut [(UseSeries, Option<Y>)]| lines.sort_by_key(|(_, y)| y.clone()))
     }
 
     pub fn sort_by_descending(self) -> Self {
-        self.sort_by(|lines: &mut [(Series, Option<Y>)]| {
+        self.sort_by(|lines: &mut [(UseSeries, Option<Y>)]| {
             lines.sort_by_key(|(_, y)| Reverse(y.clone()))
         })
     }
@@ -124,13 +117,13 @@ impl Eq for F64Ord {}
 
 impl<X> Tooltip<X, f64> {
     pub fn sort_by_f64_ascending(self) -> Self {
-        self.sort_by(|lines: &mut [(Series, Option<f64>)]| {
+        self.sort_by(|lines: &mut [(UseSeries, Option<f64>)]| {
             lines.sort_by_key(|(_, y)| y.map(F64Ord))
         })
     }
 
     pub fn sort_by_f64_descending(self) -> Self {
-        self.sort_by(|lines: &mut [(Series, Option<f64>)]| {
+        self.sort_by(|lines: &mut [(UseSeries, Option<f64>)]| {
             lines.sort_by_key(|(_, y)| y.map(|y| Reverse(F64Ord(y))))
         })
     }
@@ -138,19 +131,18 @@ impl<X> Tooltip<X, f64> {
 
 impl<X: Clone + PartialEq, Y: Clone + PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
     fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
-        view!( <Tooltip tooltip=(*self).clone() state=&state /> )
+        view!( <Tooltip tooltip=(*self).clone() state=state /> )
     }
 }
 
 #[component]
-fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
+fn Tooltip<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     tooltip: Tooltip<X, Y>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
     let Tooltip {
         sort_by,
         skip_missing,
-        snippet,
         x_format,
         y_format,
         x_ticks,
@@ -220,44 +212,51 @@ fn Tooltip<'a, X: PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             .collect::<Vec<_>>()
     };
 
+    let series_tr = {
+        let state = state.clone();
+        move |(series, y_value): (UseSeries, String)| {
+            view! {
+                <tr>
+                    <td><Snippet series=series state=&state /></td>
+                    <td
+                        style="white-space: pre; font-family: monospace; text-align: right;"
+                        style:padding-top=move || format!("{}px", font.get().height() / 4.0)
+                        style:padding-left=move || format!("{}px", font.get().width())>
+                        {y_value}
+                    </td>
+                </tr>
+            }
+        }
+    };
+
     let table_margin = tooltip
         .table_margin
         .unwrap_or_else(|| Signal::derive(move || font.get().height()).into());
     view! {
         <Show when=move || hover_inner.get()>
             <DebugRect label="tooltip" debug=debug />
-            <div
-                style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff;"
+            <aside
+                style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff; white-space: pre; font-family: monospace;"
                 style:top=move || format!("calc({}px)", mouse_page.get().1)
                 style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, table_margin.get())
                 style:padding=move || padding.get().to_css_style()>
-                <table
-                    style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;"
+                <h2
+                    style="margin: 0; text-align: center;"
                     style:font-size=move || format!("{}px", font.get().height())>
-                    <thead>
-                        <tr>
-                            <th colspan=2 style="white-space: pre; font-family: monospace;">
-                                {x_body.clone()}
-                            </th>
-                        </tr>
-                    </thead>
+                    {x_body.clone()}
+                </h2>
+                <table
+                    style="border-collapse: collapse; border-spacing: 0; margin: 0 auto; padding: 0;"
+                    style:font-size=move || format!("{}px", font.get().height())>
                     <tbody>
                         <For
                             each=nearest_data_y.clone()
-                            key=|(series, y_value)| (series.id, y_value.to_owned())
-                            let:series>
-                            <tr>
-                                <SnippetTd snippet=snippet series=series.0.clone() font=font>{series.0.name}</SnippetTd>
-                                <td
-                                    style="white-space: pre; font-family: monospace;"
-                                    style:padding-left=move || format!("{}px", font.get().width())>
-                                    {series.1}
-                                </td>
-                            </tr>
-                        </For>
+                            key=|(series, y_value)| (series.id(), y_value.to_owned())
+                            children=series_tr.clone()
+                        />
                     </tbody>
                 </table>
-            </div>
+            </aside>
         </Show>
     }
 }

@@ -45,7 +45,6 @@ impl<Tz> TimestampGen<Tz> {
 impl<Tz: 'static> TickGen for TimestampGen<Tz>
 where
     Tz: TimeZone,
-    Tz: std::fmt::Debug,
     Tz::Offset: Display,
 {
     type Tick = DateTime<Tz>;

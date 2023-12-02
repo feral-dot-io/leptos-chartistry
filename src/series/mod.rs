@@ -1,9 +1,12 @@
 pub mod line;
 
+use self::line::UseLine;
 use crate::{
     bounds::Bounds,
     colours::{self, Colour, ColourScheme},
+    debug::DebugRect,
     state::State,
+    Font,
 };
 use chrono::prelude::*;
 use leptos::*;
@@ -23,26 +26,19 @@ pub struct SeriesData<T: 'static, X: 'static, Y: 'static> {
     y_upper: Signal<Option<Y>>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Series {
-    pub id: usize,
-    pub name: MaybeSignal<String>,
-    pub colour: MaybeSignal<Colour>,
-}
-
 pub trait IntoSeries<T, X, Y> {
-    fn into_use(self: Rc<Self>, id: usize, colour: Colour)
-        -> (GetY<T, Y>, Rc<dyn UseSeries<X, Y>>);
+    fn into_use(self: Rc<Self>, id: usize, colour: Colour) -> (GetY<T, Y>, UseSeries);
 }
 
-pub trait UseSeries<X, Y> {
-    fn describe(&self) -> Series;
-    fn render(&self, positions: Vec<(f64, f64)>, state: &State<X, Y>) -> View;
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
+pub enum UseSeries {
+    Line(UseLine),
 }
 
 #[derive(Clone)]
 pub struct UseSeriesData<X: 'static, Y: 'static> {
-    pub(crate) series: Vec<Rc<dyn UseSeries<X, Y>>>,
+    pub(crate) series: Vec<UseSeries>,
     pub(crate) data: Signal<Data<X, Y>>,
 }
 
@@ -346,53 +342,126 @@ impl<Tz: TimeZone> Position for DateTime<Tz> {
     }
 }
 
-impl<X, Y> UseSeriesData<X, Y> {
-    pub fn render(self, state: State<X, Y>) -> View {
-        view!( <RenderSeries series=self state=state /> )
+impl UseSeries {
+    pub fn id(&self) -> usize {
+        match self {
+            Self::Line(line) => line.id(),
+        }
+    }
+
+    pub fn name(&self) -> MaybeSignal<String> {
+        match self {
+            Self::Line(line) => line.name(),
+        }
+    }
+
+    pub fn taster_bounds(font: Signal<Font>) -> Memo<Bounds> {
+        create_memo(move |_| {
+            let font = font.get();
+            Bounds::new(font.width() * 2.0, font.height())
+        })
+    }
+
+    pub fn snippet_width(font: Signal<Font>) -> Signal<f64> {
+        let taster_bounds = Self::taster_bounds(font);
+        Signal::derive(move || taster_bounds.get().width() + font.get().width())
+    }
+
+    pub fn taster<X, Y>(&self, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
+        match self {
+            Self::Line(line) => line.taster(bounds, state),
+        }
+    }
+
+    pub fn render<X, Y>(&self, positions: Signal<Vec<(f64, f64)>>, state: &State<X, Y>) -> View {
+        match self {
+            Self::Line(line) => line.render(positions, state),
+        }
+    }
+}
+
+impl<X: Clone, Y: Clone> UseSeriesData<X, Y> {
+    pub fn render(self, state: &State<X, Y>) -> View {
+        view!( <RenderSeriesData series=self state=state /> )
     }
 }
 
 #[component]
-pub fn RenderSeries<X: 'static, Y: 'static>(
+pub fn Snippet<'a, X: 'static, Y: 'static>(
+    series: UseSeries,
+    state: &'a State<X, Y>,
+) -> impl IntoView {
+    let debug = state.pre.debug;
+    let name = series.name();
+    view! {
+        <div class="_chartistry_snippet" style="white-space: nowrap;">
+            <DebugRect label="snippet" debug=debug />
+            <Taster series=series state=state />
+            {name}
+        </div>
+    }
+}
+
+#[component]
+pub fn Taster<'a, X: 'static, Y: 'static>(
+    series: UseSeries,
+    state: &'a State<X, Y>,
+) -> impl IntoView {
+    let debug = state.pre.debug;
+    let font = state.pre.font;
+    let bounds = UseSeries::taster_bounds(font);
+    view! {
+        <svg
+            class="_chartistry_taster"
+            width=move || bounds.get().width()
+            height=move || bounds.get().height()
+            viewBox=move || format!("0 0 {} {}", bounds.get().width(), bounds.get().height())
+            style:padding-right=move || format!("{}px", font.get().width())>
+            <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
+            {series.taster(bounds, state)}
+        </svg>
+    }
+}
+
+#[component]
+pub fn RenderSeriesData<'a, X: Clone + 'static, Y: Clone + 'static>(
     series: UseSeriesData<X, Y>,
-    state: State<X, Y>,
+    state: &'a State<X, Y>,
 ) -> impl IntoView {
     let proj = state.projection;
     let get_positions = move |id| {
-        series.data.with(|data| {
-            let proj = proj.get();
-            let points = data.x_points.len();
-            let start = id * points;
-            let end = start + points;
-            data.x_positions
-                .iter()
-                .zip(&data.y_positions[start..end])
-                .map(|(x, y)| {
-                    // Map from data to viewport coords
-                    proj.data_to_svg(*x, *y)
-                })
-                .collect::<Vec<_>>()
+        Signal::derive(move || {
+            series.data.with(|data| {
+                let proj = proj.get();
+                let points = data.x_points.len();
+                let start = id * points;
+                let end = start + points;
+                data.x_positions
+                    .iter()
+                    .zip(&data.y_positions[start..end])
+                    .map(|(x, y)| {
+                        // Map from data to viewport coords
+                        proj.data_to_svg(*x, *y)
+                    })
+                    .collect::<Vec<_>>()
+            })
         })
     };
 
-    let render = move |(id, series): (usize, Rc<dyn UseSeries<X, Y>>)| {
-        let positions = get_positions(id);
-        series.render(positions, &state)
+    let render = {
+        let state = state.clone();
+        move |series: UseSeries| {
+            let id = series.id();
+            let positions = get_positions(id);
+            series.render(positions, &state)
+        }
     };
 
-    let series = series
-        .series
-        .iter()
-        .map(|s| {
-            let id = s.describe().id;
-            (id, s.clone())
-        })
-        .collect::<Vec<_>>();
     view! {
         <g class="_chartistry_series">
             <For
-                each=move || series.to_vec()
-                key=|series| series.0
+                each=move || series.series.to_vec()
+                key=|series| series.id()
                 children=render
             />
         </g>

@@ -35,7 +35,7 @@ impl TickLabels<f64> {
 
 impl<Tz> TickLabels<DateTime<Tz>>
 where
-    Tz: TimeZone + std::fmt::Debug + 'static,
+    Tz: TimeZone + 'static,
     Tz::Offset: std::fmt::Display,
 {
     pub fn timestamps() -> Self {

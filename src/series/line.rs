@@ -1,5 +1,5 @@
-use super::{IntoSeries, Series, UseSeries};
-use crate::{colours::Colour, series::GetY, state::State};
+use super::{IntoSeries, UseSeries};
+use crate::{bounds::Bounds, colours::Colour, series::GetY, state::State};
 use leptos::*;
 use std::rc::Rc;
 
@@ -46,52 +46,71 @@ impl<T, Y> Line<T, Y> {
 }
 
 impl<T, X, Y> IntoSeries<T, X, Y> for Line<T, Y> {
-    fn into_use(
-        self: Rc<Self>,
-        id: usize,
-        colour: Colour,
-    ) -> (GetY<T, Y>, Rc<dyn UseSeries<X, Y>>) {
+    fn into_use(self: Rc<Self>, id: usize, colour: Colour) -> (GetY<T, Y>, UseSeries) {
         let line = UseLine {
             id,
             name: self.name.clone(),
             colour: self.colour.unwrap_or_else(|| colour.into()),
             width: self.width,
         };
-        (self.get_y.clone(), Rc::new(line))
+        (self.get_y.clone(), UseSeries::Line(line))
     }
 }
 
-impl<X, Y> UseSeries<X, Y> for UseLine {
-    fn describe(&self) -> Series {
-        Series {
-            id: self.id,
-            name: self.name.clone(),
-            colour: self.colour,
-        }
+impl UseLine {
+    pub fn id(&self) -> usize {
+        self.id
     }
 
-    fn render(&self, positions: Vec<(f64, f64)>, _state: &State<X, Y>) -> View {
+    pub fn name(&self) -> MaybeSignal<String> {
+        self.name.clone()
+    }
+
+    pub fn taster<X, Y>(&self, bounds: Memo<Bounds>, _: &State<X, Y>) -> View {
+        view!( <LineTaster line=self bounds=bounds /> )
+    }
+
+    pub fn render<X, Y>(&self, positions: Signal<Vec<(f64, f64)>>, _state: &State<X, Y>) -> View {
         view!( <RenderLine line=self positions=positions /> )
     }
 }
 
 #[component]
-pub fn RenderLine<'a>(line: &'a UseLine, positions: Vec<(f64, f64)>) -> impl IntoView {
-    let mut need_move = true;
-    let path = positions
-        .into_iter()
-        .map(|(x, y)| {
-            if x.is_nan() || y.is_nan() {
-                need_move = true;
-                "".to_string()
-            } else if need_move {
-                need_move = false;
-                format!("M {} {} ", x, y)
-            } else {
-                format!("L {} {} ", x, y)
-            }
+fn LineTaster<'a>(line: &'a UseLine, bounds: Memo<Bounds>) -> impl IntoView {
+    let colour = line.colour;
+    view! {
+        <line
+            x1=move || bounds.get().left_x()
+            x2=move || bounds.get().right_x()
+            y1=move || bounds.get().centre_y() + 1.0
+            y2=move || bounds.get().centre_y() + 1.0
+            stroke=move || colour.get().to_string()
+            stroke-width=line.width
+        />
+    }
+}
+
+#[component]
+fn RenderLine<'a>(line: &'a UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
+    let path = move || {
+        positions.with(|positions| {
+            let mut need_move = true;
+            positions
+                .iter()
+                .map(|(x, y)| {
+                    if x.is_nan() || y.is_nan() {
+                        need_move = true;
+                        "".to_string()
+                    } else if need_move {
+                        need_move = false;
+                        format!("M {} {} ", x, y)
+                    } else {
+                        format!("L {} {} ", x, y)
+                    }
+                })
+                .collect::<String>()
         })
-        .collect::<String>();
+    };
     let colour = line.colour;
     view! {
         <g class="_chartistry_line">

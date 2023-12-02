@@ -58,7 +58,6 @@ pub fn App() -> impl IntoView {
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
     let top_label = RotatedLabel::new(anchor, text);
-    let snippet = Snippet::horizontal();
     let left_ticks = TickLabels::aligned_floats().set_min_chars(20);
     let bottom_ticks = TickLabels::timestamps();
 
@@ -78,13 +77,11 @@ pub fn App() -> impl IntoView {
         .inner(GuideLine::x_axis_over_data())
         .inner(GuideLine::y_axis())
         // Legend
-        .top(Legend::end(Snippet::horizontal()))
-        .right(Legend::middle(Snippet::vertical()))
-        .inner(InsetLegend::top_right(snippet))
+        .top(Legend::end())
+        .right(Legend::middle())
+        .inner(InsetLegend::top_right())
         // Tooltip
-        .overlay(
-            Tooltip::left_cursor(snippet, &bottom_ticks, &left_ticks).sort_by_f64_descending(),
-        );
+        .overlay(Tooltip::left_cursor(&bottom_ticks, &left_ticks).sort_by_f64_descending());
 
     view! {
         <h1>"Chartistry"</h1>

@@ -24,7 +24,6 @@ pub use inner::{
 pub use layout::{
     legend::Legend,
     rotated_label::{Anchor, RotatedLabel},
-    snippet::Snippet,
     tick_labels::TickLabels,
 };
 pub use overlay::tooltip::Tooltip;

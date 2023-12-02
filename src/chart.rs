@@ -5,7 +5,7 @@ use crate::{
     layout::{HorizontalLayout, Layout, VerticalLayout},
     overlay::OverlayLayout,
     projection::Projection,
-    series::{RenderSeries, UseSeriesData},
+    series::{RenderSeriesData, UseSeriesData},
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Font, Padding,
@@ -98,7 +98,7 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             .unwrap_or_else(move || Padding::from(chart.font.get().width()))
     });
     view! {
-        <div node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
+        <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
             <DebugRect label="Chart" debug=debug />
             <Show when=move || have_dimensions.get() fallback=|| view!(<p>"Loading..."</p>)>
                 <RenderChart
@@ -175,7 +175,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
             {inner}
             {edges}
-            <RenderSeries series=series state=state />
+            <RenderSeriesData series=series state=&state />
         </svg>
         {overlay}
     }
