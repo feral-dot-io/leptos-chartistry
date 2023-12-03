@@ -4,7 +4,7 @@ use crate::{
     projection::Projection,
     series::{Data, UseSeries},
     use_watched_node::UseWatchedNode,
-    Font, Padding, UseSeriesData,
+    Font, Padding,
 };
 use leptos::signal_prelude::*;
 
@@ -14,7 +14,6 @@ pub struct PreState<X: 'static, Y: 'static> {
     pub font: Signal<Font>,
     pub padding: Signal<Padding>,
     // Data
-    data: Signal<Data<X, Y>>,
     pub series: Memo<Vec<UseSeries>>,
     pub x_range: Memo<Option<(X, X)>>,
     pub y_range: Memo<Option<(Y, Y)>>,
@@ -39,8 +38,6 @@ pub struct State<X: 'static, Y: 'static> {
     /// Mouse over inner chart?
     pub hover_inner: Signal<bool>,
 
-    /// X position of nearest data from mouse data
-    pub nearest_pos_x: Memo<f64>,
     /// X coord of nearest mouse data in SVG space
     pub nearest_svg_x: Memo<f64>,
     /// X value of nearest mouse data
@@ -49,18 +46,18 @@ pub struct State<X: 'static, Y: 'static> {
     pub nearest_data_y: Memo<Vec<(UseSeries, Option<Y>)>>,
 }
 
-impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X, Y> {
+impl<X, Y> PreState<X, Y> {
     pub fn new(
         debug: Signal<bool>,
         font: Signal<Font>,
         padding: Signal<Padding>,
-        series: UseSeriesData<X, Y>,
+        series: Vec<UseSeries>,
+        x_range: Memo<Option<(X, X)>>,
+        y_range: Memo<Option<(Y, Y)>>,
     ) -> Self {
-        let UseSeriesData { series, data } = series;
-
-        let lines = create_memo(move |_| {
+        let series = create_memo(move |_| {
             let mut series = series.clone();
-            series.sort_by_key(|series| series.name().get());
+            series.sort_by_key(|series| series.name.get());
             series
         });
 
@@ -68,11 +65,10 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X,
             debug,
             font,
             padding,
-
-            data,
-            series: lines,
-            x_range: create_memo(move |_| data.with(|data| data.x_range().cloned())),
-            y_range: create_memo(move |_| data.with(|data| data.y_range().cloned())),
+            // Data
+            series,
+            x_range,
+            y_range,
         }
     }
 }
@@ -80,11 +76,11 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> PreState<X,
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y> {
     pub fn new(
         pre: PreState<X, Y>,
+        data: Signal<Data<X, Y>>,
         node: &UseWatchedNode,
         layout: Layout,
         proj: Signal<Projection>,
     ) -> Self {
-        let data = pre.data;
         // Mouse
         let mouse_chart = node.mouse_chart;
         let hover_inner = node.mouse_hover_inner(layout.inner);
@@ -114,7 +110,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
                     .get()
                     .into_iter()
                     .map(|line| {
-                        let y_value = data.nearest_y(pos_x, line.id());
+                        let y_value = data.nearest_y(pos_x, line.id);
                         (line, y_value)
                     })
                     .collect::<Vec<_>>()
@@ -133,7 +129,6 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
             hover_chart: node.mouse_chart_hover,
             hover_inner,
 
-            nearest_pos_x,
             nearest_svg_x,
             nearest_data_x,
             nearest_data_y,

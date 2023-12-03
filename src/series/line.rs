@@ -1,4 +1,7 @@
-use super::{IntoSeries, UseSeries};
+use super::{
+    data::IntoSeries,
+    use_series::{RenderSeries, UseSeries},
+};
 use crate::{bounds::Bounds, colours::Colour, series::GetY, state::State};
 use leptos::*;
 use std::rc::Rc;
@@ -12,9 +15,6 @@ pub struct Line<T, Y> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
-    id: usize,
-    name: MaybeSignal<String>,
-    colour: Colour,
     width: MaybeSignal<f64>,
 }
 
@@ -40,50 +40,52 @@ impl<T, Y> Line<T, Y> {
 
 impl<T, X, Y> IntoSeries<T, X, Y> for Line<T, Y> {
     fn into_use(self: Rc<Self>, id: usize, colour: Colour) -> (GetY<T, Y>, UseSeries) {
-        let line = UseLine {
-            id,
-            name: self.name.clone(),
-            colour,
-            width: self.width,
-        };
-        (self.get_y.clone(), UseSeries::Line(line))
+        let line = RenderSeries::Line(UseLine { width: self.width });
+        let series = UseSeries::new(id, self.name.clone(), colour, line);
+        (self.get_y.clone(), series)
     }
 }
 
 impl UseLine {
-    pub fn id(&self) -> usize {
-        self.id
+    pub fn taster<X, Y>(&self, series: &UseSeries, bounds: Memo<Bounds>, _: &State<X, Y>) -> View {
+        view!( <LineTaster line=self series=series bounds=bounds /> )
     }
 
-    pub fn name(&self) -> MaybeSignal<String> {
-        self.name.clone()
-    }
-
-    pub fn taster<X, Y>(&self, bounds: Memo<Bounds>, _: &State<X, Y>) -> View {
-        view!( <LineTaster line=self bounds=bounds /> )
-    }
-
-    pub fn render<X, Y>(&self, positions: Signal<Vec<(f64, f64)>>, _state: &State<X, Y>) -> View {
-        view!( <RenderLine line=self positions=positions /> )
+    pub fn render<X, Y>(
+        &self,
+        series: &UseSeries,
+        positions: Signal<Vec<(f64, f64)>>,
+        _state: &State<X, Y>,
+    ) -> View {
+        view!( <RenderLine line=self series=series positions=positions /> )
     }
 }
 
 #[component]
-fn LineTaster<'a>(line: &'a UseLine, bounds: Memo<Bounds>) -> impl IntoView {
+pub fn LineTaster<'a>(
+    series: &'a UseSeries,
+    line: &'a UseLine,
+    bounds: Memo<Bounds>,
+) -> impl IntoView {
+    let colour = series.colour;
     view! {
         <line
             x1=move || bounds.get().left_x()
             x2=move || bounds.get().right_x()
             y1=move || bounds.get().centre_y() + 1.0
             y2=move || bounds.get().centre_y() + 1.0
-            stroke=line.colour.to_string()
+            stroke=move || colour.get().to_string()
             stroke-width=line.width
         />
     }
 }
 
 #[component]
-fn RenderLine<'a>(line: &'a UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
+fn RenderLine<'a>(
+    series: &'a UseSeries,
+    line: &'a UseLine,
+    positions: Signal<Vec<(f64, f64)>>,
+) -> impl IntoView {
     let path = move || {
         positions.with(|positions| {
             let mut need_move = true;
@@ -103,12 +105,13 @@ fn RenderLine<'a>(line: &'a UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl
                 .collect::<String>()
         })
     };
+    let colour = series.colour;
     view! {
         <g class="_chartistry_line">
             <path
                 d=path
                 fill="none"
-                stroke=line.colour.to_string()
+                stroke=move || colour.get().to_string()
                 stroke-width=line.width
             />
         </g>

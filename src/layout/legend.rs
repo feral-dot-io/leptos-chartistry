@@ -51,7 +51,7 @@ impl Legend {
             let max_chars = lines
                 .get()
                 .into_iter()
-                .map(|line| line.name().get().len() as f64 * font_width)
+                .map(|line| line.name.get().len() as f64 * font_width)
                 .reduce(f64::max)
                 .unwrap_or_default();
             snippet_bounds.get() + max_chars + padding.get().width()
@@ -154,7 +154,7 @@ fn VerticalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
     view! {
         <For
             each=move || series.get()
-            key=|series| series.id()
+            key=|series| series.id
             let:series>
             <tr>
                 <td style:padding=move || padding.get().to_css_horizontal_style()>
@@ -183,7 +183,7 @@ fn HorizontalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
         <tr>
             <For
                 each=move || series.get().into_iter().enumerate()
-                key=|(_, series)| series.id()
+                key=|(_, series)| series.id
                 let:series>
                 <td style:padding-left=move || padding(series.0)>
                     <Snippet series=series.1 state=&state />

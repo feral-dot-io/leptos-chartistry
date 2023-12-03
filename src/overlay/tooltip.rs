@@ -251,7 +251,7 @@ fn Tooltip<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                     <tbody>
                         <For
                             each=nearest_data_y.clone()
-                            key=|(series, y_value)| (series.id(), y_value.to_owned())
+                            key=|(series, y_value)| (series.id, y_value.to_owned())
                             children=series_tr.clone()
                         />
                     </tbody>
