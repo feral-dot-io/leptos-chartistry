@@ -5,7 +5,7 @@ use crate::{
     layout::{HorizontalLayout, Layout, VerticalLayout},
     overlay::OverlayLayout,
     projection::Projection,
-    series::{RenderSeriesData, UseSeriesData},
+    series::{RenderSeriesData, UseData},
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Font, Padding,
@@ -23,11 +23,11 @@ pub struct Chart<X: 'static, Y: 'static> {
     left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
     inner: Vec<Rc<dyn InnerLayout<X, Y>>>,
     overlay: Vec<Rc<dyn OverlayLayout<X, Y>>>,
-    series: UseSeriesData<X, Y>,
+    series: UseData<X, Y>,
 }
 
 impl<X, Y> Chart<X, Y> {
-    pub fn new(font: impl Into<Signal<Font>>, series: UseSeriesData<X, Y>) -> Self {
+    pub fn new(font: impl Into<Signal<Font>>, series: UseData<X, Y>) -> Self {
         Self {
             font: font.into(),
 
@@ -130,7 +130,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         mut left,
         inner,
         overlay,
-        series,
+        series: data,
     } = chart;
 
     // Edges are added top to bottom, left to right. Layout compoeses inside out:
@@ -138,25 +138,16 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     left.reverse();
 
     // Compose edges
-    let data = series.data;
-    let pre = PreState::new(
-        debug,
-        font,
-        padding,
-        series.series.to_vec(),
-        create_memo(move |_| with!(|data| data.x_range().cloned())),
-        create_memo(move |_| with!(|data| data.y_range().cloned())),
-    );
+    let pre = PreState::new(debug, font, padding, data.clone());
     let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre);
 
     // Finalise state
     let projection = {
         let inner = layout.inner;
-        let data = series.data;
-        create_memo(move |_| Projection::new(inner.get(), data.with(|data| data.position_range())))
-            .into()
+        let position_range = data.position_range;
+        create_memo(move |_| Projection::new(inner.get(), position_range.get())).into()
     };
-    let state = State::new(pre, data, &watch, layout, projection);
+    let state = State::new(pre, &watch, layout, projection);
 
     // Render edges
     let edges = edges.into_iter().map(|r| r.render(&state)).collect_view();
@@ -183,7 +174,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
             {inner}
             {edges}
-            <RenderSeriesData series=series state=&state />
+            <RenderSeriesData data=data state=&state />
         </svg>
         {overlay}
     }

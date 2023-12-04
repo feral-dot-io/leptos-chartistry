@@ -80,17 +80,13 @@ impl<X: PartialEq> TickLabels<X> {
         state: &PreState<X, Y>,
         avail_width: Signal<f64>,
     ) -> Signal<GeneratedTicks<X>> {
-        let PreState {
-            font,
-            padding,
-            x_range,
-            ..
-        } = *state;
+        let PreState { font, padding, .. } = *state;
+        let range_x = state.data.range_x;
         let format = self.format.clone();
         let gen = self.generator.clone();
         create_memo(move |_| {
-            x_range.with(|x_range| {
-                x_range
+            range_x.with(|range_x| {
+                range_x
                     .as_ref()
                     .map(|(first, last)| {
                         let font_width = font.get().width();
@@ -116,16 +112,12 @@ impl<Y: PartialEq> TickLabels<Y> {
         state: &PreState<X, Y>,
         avail_height: Signal<f64>,
     ) -> Signal<GeneratedTicks<Y>> {
-        let PreState {
-            font,
-            padding,
-            y_range,
-            ..
-        } = *state;
+        let PreState { font, padding, .. } = *state;
+        let range_y = state.data.range_y_abs;
         let gen = self.generator.clone();
         create_memo(move |_| {
-            y_range.with(|y_range| {
-                y_range
+            range_y.with(|range_y| {
+                range_y
                     .as_ref()
                     .map(|(first, last)| {
                         let line_height = font.get().height() + padding.get().height();

@@ -16,31 +16,30 @@ pub struct SeriesData<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
     series: Vec<Rc<dyn IntoSeries<T, X, Y>>>,
     colours: ColourScheme,
-    x_lower: Signal<Option<X>>,
-    x_upper: Signal<Option<X>>,
-    y_lower: Signal<Option<Y>>,
-    y_upper: Signal<Option<Y>>,
+    min_x: Signal<Option<X>>,
+    min_y: Signal<Option<Y>>,
+    max_x: Signal<Option<X>>,
+    max_y: Signal<Option<Y>>,
 }
 
 pub trait IntoSeries<T, X, Y> {
     fn into_use(self: Rc<Self>, id: usize, colour: Colour) -> (GetY<T, Y>, UseSeries);
 }
 
-#[derive(Clone)]
-pub struct UseSeriesData<X: 'static, Y: 'static> {
-    pub(crate) series: Vec<UseSeries>,
-    pub(crate) data: Signal<Data<X, Y>>,
-}
+#[derive(Clone, Debug)]
+pub struct UseData<X: 'static, Y: 'static> {
+    pub series: Memo<Vec<UseSeries>>,
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Data<X, Y> {
-    position_range: Bounds,
-    x_points: Vec<X>,
-    x_positions: Vec<f64>,
-    x_range: Option<(X, X)>,
-    y_points: Vec<Y>,
-    y_positions: Vec<f64>,
-    y_range: Option<(Y, Y)>,
+    pub data_x: Memo<Vec<X>>,
+    pub data_y: Vec<Memo<Vec<Y>>>,
+
+    pub range_x: Memo<Option<(X, X)>>,
+    pub range_y: Vec<Memo<Option<(Y, Y)>>>,
+    pub range_y_abs: Memo<Option<(Y, Y)>>,
+
+    pub positions_x: Memo<Vec<f64>>,
+    pub positions_y: Vec<Memo<Vec<f64>>>,
+    pub position_range: Memo<Bounds>,
 }
 
 impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
@@ -51,10 +50,10 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
             get_x: Rc::new(get_x),
             series: Vec::new(),
             colours: colours::ARBITRARY.as_ref().into(),
-            x_lower: Signal::default(),
-            x_upper: Signal::default(),
-            y_lower: Signal::default(),
-            y_upper: Signal::default(),
+            min_x: Signal::default(),
+            max_x: Signal::default(),
+            min_y: Signal::default(),
+            max_y: Signal::default(),
         }
     }
 
@@ -68,7 +67,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         Opt: Clone + Into<Option<X>> + 'static,
     {
         let lower = lower.into();
-        self.x_lower = Signal::derive(move || lower.get().into());
+        self.min_x = Signal::derive(move || lower.get().into());
         self
     }
 
@@ -77,7 +76,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         Opt: Clone + Into<Option<X>> + 'static,
     {
         let upper = upper.into();
-        self.x_upper = Signal::derive(move || upper.get().into());
+        self.max_x = Signal::derive(move || upper.get().into());
         self
     }
 
@@ -98,7 +97,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         Opt: Clone + Into<Option<Y>> + 'static,
     {
         let lower = lower.into();
-        self.y_lower = Signal::derive(move || lower.get().into());
+        self.min_y = Signal::derive(move || lower.get().into());
         self
     }
 
@@ -107,7 +106,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         Opt: Clone + Into<Option<Y>> + 'static,
     {
         let upper = upper.into();
-        self.y_upper = Signal::derive(move || upper.get().into());
+        self.max_y = Signal::derive(move || upper.get().into());
         self
     }
 
@@ -128,13 +127,13 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         self
     }
 
-    pub fn use_data<Ts>(self, data: impl Into<MaybeSignal<Ts>> + 'static) -> UseSeriesData<X, Y>
+    pub fn use_data(self, data: impl Into<Signal<Vec<T>>>) -> UseData<X, Y>
     where
-        Ts: AsRef<[T]> + 'static,
-        X: PartialOrd + Position,
-        Y: PartialOrd + Position,
+        X: PartialOrd + Position + std::fmt::Debug,
+        Y: PartialOrd + Position + std::fmt::Debug,
     {
-        // Apply colours to lines
+        let data = data.into();
+        // Build list of series
         let (get_ys, series): (Vec<_>, Vec<_>) = self
             .series
             .into_iter()
@@ -142,174 +141,223 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
             .zip(self.colours.iter())
             .map(|((id, series), colour)| series.into_use(id, colour))
             .unzip();
+        // Sort series by name
+        let series = create_memo(move |_| {
+            let mut series = series.clone();
+            series.sort_by_key(|series| series.name.get());
+            series
+        });
 
-        // Convert data to a signal
-        let data = data.into();
-        let data = create_memo(move |_| {
+        // Data signals
+        let data_x = create_memo(move |_| {
             let get_x = self.get_x.clone();
-            let x_lower = self.x_lower.get();
-            let x_upper = self.x_upper.get();
-            let y_lower = self.y_lower.get();
-            let y_upper = self.y_upper.get();
-            let get_ys = get_ys.iter().as_slice();
-            data.with(move |data| {
-                let data = data.as_ref();
-                // Collect data points
-                let x_points = data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>();
-                let x_positions = x_points.iter().map(|x| x.position()).collect::<Vec<_>>();
-                let y_points = get_ys
-                    .iter()
-                    .flat_map(|get_y| data.iter().map(|datum| (get_y)(datum)))
-                    .collect::<Vec<_>>();
-                let y_positions = y_points.iter().map(|y| y.position()).collect::<Vec<_>>();
-
-                // Find min/max
-                let x_range = Self::find_min_max_index(&x_positions)
-                    .map(|(min_i, max_i)| (get_x(&data[min_i]), get_x(&data[max_i])))
-                    .map(Self::map_min_max_range(x_lower, x_upper));
-                let y_range = Self::find_min_max_index(&y_positions)
-                    .map(|(min_i, max_i)| {
-                        (
-                            Self::reverse_get_y(get_ys, data, min_i),
-                            Self::reverse_get_y(get_ys, data, max_i),
-                        )
-                    })
-                    .map(Self::map_min_max_range(y_lower, y_upper));
-
-                let position_range = {
-                    let (x_min, x_max) = x_range
-                        .as_ref()
-                        .map(|(min, max)| (min.position(), max.position()))
-                        .unwrap_or_default();
-                    let (y_min, y_max) = y_range
-                        .as_ref()
-                        .map(|(min, max)| (min.position(), max.position()))
-                        .unwrap_or_default();
-                    Bounds::from_points(
-                        x_min.position(),
-                        y_min.position(),
-                        x_max.position(),
-                        y_max.position(),
-                    )
-                };
-
-                Data {
-                    position_range,
-                    x_points,
-                    x_positions,
-                    x_range,
-                    y_points,
-                    y_positions,
-                    y_range,
-                }
+            data.with(|data| data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>())
+        });
+        let data_y = get_ys
+            .into_iter()
+            .map(|get_y| {
+                create_memo(move |_| {
+                    data.with(|data| data.iter().map(|datum| (get_y)(datum)).collect::<Vec<_>>())
+                })
             })
-        })
-        .into();
+            .collect::<Vec<_>>();
 
-        UseSeriesData { series, data }
-    }
+        // Position signals
+        let positions_x = create_memo(move |_| {
+            data_x.with(move |data_x| data_x.iter().map(|x| x.position()).collect::<Vec<_>>())
+        });
+        let positions_y = data_y
+            .iter()
+            .map(|&data_y| {
+                create_memo(move |_| {
+                    data_y
+                        .with(move |data_y| data_y.iter().map(|y| y.position()).collect::<Vec<_>>())
+                })
+            })
+            .collect::<Vec<_>>();
 
-    fn map_min_max_range<V: PartialOrd>(
-        lower: Option<V>,
-        upper: Option<V>,
-    ) -> impl FnOnce((V, V)) -> (V, V) {
-        |(min, max)| {
-            (
-                lower
-                    .and_then(|v| if v < min { Some(v) } else { None })
-                    .unwrap_or(min),
-                upper
-                    .and_then(|v| if v > max { Some(v) } else { None })
-                    .unwrap_or(max),
-            )
+        // Range signals
+        let range_x: Memo<Option<(X, X)>> = create_memo(move |_| {
+            let range: Option<(X, X)> =
+                with!(|positions_x, data_x| Self::data_range(positions_x, data_x));
+
+            // Expand specified range to single Option
+            let specified: Option<(X, X)> = match (self.min_x.get(), self.max_x.get()) {
+                (Some(min_x), Some(max_x)) => Some((min_x.clone(), max_x.clone())),
+                (Some(min_x), None) => Some((min_x.clone(), min_x.clone())),
+                (None, Some(max_x)) => Some((max_x.clone(), max_x.clone())),
+                (None, None) => None,
+            };
+
+            // Extend range if specified is outside
+            range
+                .or(specified.clone()) // Avoid no range
+                .zip(specified)
+                .map(|((min_r, max_r), (min_s, max_s))| {
+                    // We have both a range + specified. Check min / max
+                    (
+                        if min_r.position() < min_s.position() {
+                            min_r
+                        } else {
+                            min_s
+                        },
+                        if max_r.position() > max_s.position() {
+                            max_r
+                        } else {
+                            max_s
+                        },
+                    )
+                })
+        });
+        let range_y = positions_y
+            .iter()
+            .zip(data_y.iter())
+            .map(|(&positions_y, &data_y)| {
+                create_memo(move |_| {
+                    with!(|positions_y, data_y| Self::data_range(positions_y, data_y))
+                })
+            })
+            .collect::<Vec<_>>();
+        let range_y_abs: Memo<Option<(Y, Y)>> = {
+            let range_y = range_y.to_vec();
+            create_memo(move |_| {
+                // Fetch min / max from each range
+                let ranges = range_y.iter().map(|r| r.get());
+                let min = ranges
+                    .clone()
+                    .map(|r| r.map(|(min, _)| min))
+                    .chain([self.min_y.get()]) // Specified min
+                    .flatten()
+                    // Note: ranges are all is_finite
+                    .min_by(|a, b| a.position().total_cmp(&b.position()));
+                let max = ranges
+                    .map(|r| r.map(|(_, max)| max))
+                    .chain([self.max_y.get()]) // Specified max
+                    .flatten()
+                    .max_by(|a, b| a.position().total_cmp(&b.position()));
+                min.zip(max).map(|(min, max)| (min.clone(), max.clone()))
+            })
+        };
+
+        // Position range signal
+        let position_range = create_memo(move |_| {
+            let (min_x, max_x) = range_x
+                .get()
+                .map(|(min, max)| (min.position(), max.position()))
+                .unwrap_or_default();
+            let (min_y, max_y) = range_y_abs
+                .get()
+                .map(|(min, max)| (min.position(), max.position()))
+                .unwrap_or_default();
+            Bounds::from_points(min_x, min_y, max_x, max_y)
+        });
+
+        UseData {
+            series,
+            data_x,
+            data_y,
+            range_x,
+            range_y,
+            range_y_abs,
+            positions_x,
+            positions_y,
+            position_range,
         }
     }
 
-    fn find_min_max_index(positions: &[f64]) -> Option<(usize, usize)> {
-        positions.iter().enumerate().fold(None, |range, (i, &pos)| {
-            // Skip NaN values
-            if pos.is_nan() {
-                return range;
-            };
-            range.map_or_else(
-                || Some((i, i)), // First seen
-                |(min_i, max_i)| {
-                    // Find index of min/max
-                    Some((
-                        if pos < positions[min_i] { i } else { min_i },
-                        if pos > positions[max_i] { i } else { max_i },
-                    ))
-                },
-            )
-        })
-    }
-
-    /// Given an Data::y_points index, return the corresponding y value. Note that y_points is a flat map of all the y values for each series.
-    fn reverse_get_y(get_ys: &[GetY<T, Y>], data: &[T], index: usize) -> Y {
-        let series_i = index / data.len();
-        let data_i = index % data.len();
-        (get_ys[series_i])(&data[data_i])
+    /// Given a list of positions. Finds the min / max indexes using is_finite to skip infinite and NaNs. Returns the data values at those indexes. Returns `None` if no data.
+    fn data_range<V: Clone + PartialOrd>(positions: &[f64], data: &[V]) -> Option<(V, V)> {
+        // Find min / max indexes in positions
+        let indexes = positions.iter().enumerate().fold(None, |acc, (i, &pos)| {
+            if pos.is_finite() {
+                acc.map(|(min, max)| {
+                    (
+                        if pos < positions[min] { i } else { min },
+                        if pos > positions[max] { i } else { max },
+                    )
+                })
+                .or(Some((i, i)))
+            } else {
+                acc
+            }
+        });
+        // Return data values
+        indexes.map(|(min, max)| (data[min].clone(), data[max].clone()))
     }
 }
 
-impl<X, Y> Data<X, Y> {
-    pub fn position_range(&self) -> Bounds {
-        self.position_range
+impl<X: 'static, Y: 'static> UseData<X, Y> {
+    fn nearest_index(&self, pos_x: Signal<f64>) -> Signal<Option<usize>> {
+        let positions_x = self.positions_x;
+        Signal::derive(move || {
+            positions_x.with(move |positions_x| {
+                // No values
+                if positions_x.is_empty() {
+                    return None;
+                }
+                // Find index after pos
+                let pos_x = pos_x.get();
+                let index = positions_x.partition_point(|&v| v < pos_x);
+                // No value before
+                if index == 0 {
+                    return Some(0);
+                }
+                // No value ahead
+                if index == positions_x.len() {
+                    return Some(index - 1);
+                }
+                // Find closest index
+                let ahead = positions_x[index] - pos_x;
+                let before = pos_x - positions_x[index - 1];
+                if ahead < before {
+                    Some(index)
+                } else {
+                    Some(index - 1)
+                }
+            })
+        })
     }
 
-    pub fn x_range(&self) -> Option<&(X, X)> {
-        self.x_range.as_ref()
-    }
-
-    pub fn y_range(&self) -> Option<&(Y, Y)> {
-        self.y_range.as_ref()
-    }
-
-    fn nearest_x_index(&self, pos: f64) -> Option<usize> {
-        // No values
-        if self.x_positions.is_empty() {
-            return None;
-        }
-        // Find index after pos
-        let index = self.x_positions.partition_point(|&v| v < pos);
-        // No value before
-        if index == 0 {
-            return Some(0);
-        }
-        // No value ahead
-        if index == self.x_points.len() {
-            return Some(index - 1);
-        }
-        // Find closest index
-        let ahead = self.x_positions[index] - pos;
-        let before = pos - self.x_positions[index - 1];
-        if ahead < before {
-            Some(index)
-        } else {
-            Some(index - 1)
-        }
-    }
-
-    pub fn nearest_x(&self, x_pos: f64) -> Option<&X> {
-        self.nearest_x_index(x_pos)
-            .map(|x_index| &self.x_points[x_index])
+    pub fn nearest_data_x(&self, pos_x: Signal<f64>) -> Memo<Option<X>>
+    where
+        X: Clone + PartialEq,
+    {
+        let data_x = self.data_x;
+        let index = self.nearest_index(pos_x);
+        create_memo(move |_| {
+            index
+                .get()
+                .map(|index| with!(|data_x| data_x[index].clone()))
+        })
     }
 
     /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
-    pub fn nearest_x_position(&self, x_pos: f64) -> f64 {
-        self.nearest_x_index(x_pos)
-            .map(|x_index| self.x_positions[x_index])
-            .unwrap_or(f64::NAN)
+    pub fn nearest_position_x(&self, pos_x: Signal<f64>) -> Memo<f64> {
+        let positions_x = self.positions_x;
+        let index = self.nearest_index(pos_x);
+        create_memo(move |_| {
+            index
+                .get()
+                .map(|index| with!(|positions_x| positions_x[index]))
+                .unwrap_or(f64::NAN)
+        })
     }
 
-    pub fn nearest_y(&self, x_pos: f64, line_id: usize) -> Option<Y>
+    pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Vec<Memo<Option<Y>>>
     where
-        Y: Clone,
+        Y: Clone + PartialEq,
     {
-        self.nearest_x_index(x_pos).map(|x_index| {
-            let index = line_id * self.x_points.len() + x_index;
-            self.y_points[index].clone()
-        })
+        let index = self.nearest_index(pos_x);
+        self.data_y
+            .iter()
+            .map(|&data_y| {
+                create_memo(move |_| {
+                    index
+                        .get()
+                        .map(|index| with!(|data_y| data_y[index].clone()))
+                })
+            })
+            .collect::<Vec<_>>()
     }
 }
 
@@ -331,24 +379,19 @@ impl<Tz: TimeZone> Position for DateTime<Tz> {
 
 #[component]
 pub fn RenderSeriesData<'a, X: Clone + 'static, Y: Clone + 'static>(
-    series: UseSeriesData<X, Y>,
+    data: UseData<X, Y>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
+    let data_x = data.positions_x;
     let proj = state.projection;
-    let get_positions = move |id| {
+    let svg_coords = move |data_y: Memo<Vec<f64>>| {
         Signal::derive(move || {
-            series.data.with(|data| {
-                let proj = proj.get();
-                let points = data.x_points.len();
-                let start = id * points;
-                let end = start + points;
-                data.x_positions
+            let proj = proj.get();
+            with!(|data_x, data_y| {
+                data_x
                     .iter()
-                    .zip(&data.y_positions[start..end])
-                    .map(|(x, y)| {
-                        // Map from data to viewport coords
-                        proj.data_to_svg(*x, *y)
-                    })
+                    .zip(data_y.iter())
+                    .map(|(x, y)| proj.data_to_svg(*x, *y))
                     .collect::<Vec<_>>()
             })
         })
@@ -357,7 +400,8 @@ pub fn RenderSeriesData<'a, X: Clone + 'static, Y: Clone + 'static>(
     let render = {
         let state = state.clone();
         move |series: UseSeries| {
-            let positions = get_positions(series.id);
+            let positions_y = data.positions_y[series.id];
+            let positions = svg_coords(positions_y);
             series.render(positions, &state)
         }
     };
@@ -365,7 +409,7 @@ pub fn RenderSeriesData<'a, X: Clone + 'static, Y: Clone + 'static>(
     view! {
         <g class="_chartistry_series">
             <For
-                each=move || series.series.to_vec()
+                each=move || data.series.get()
                 key=|series| series.id
                 children=render
             />

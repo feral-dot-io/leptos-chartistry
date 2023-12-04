@@ -1,10 +1,6 @@
 use crate::{
-    bounds::Bounds,
-    layout::Layout,
-    projection::Projection,
-    series::{Data, UseSeries},
-    use_watched_node::UseWatchedNode,
-    Font, Padding,
+    bounds::Bounds, layout::Layout, projection::Projection, series::UseSeries,
+    use_watched_node::UseWatchedNode, Font, Padding, UseData,
 };
 use leptos::signal_prelude::*;
 
@@ -13,10 +9,7 @@ pub struct PreState<X: 'static, Y: 'static> {
     pub debug: Signal<bool>,
     pub font: Signal<Font>,
     pub padding: Signal<Padding>,
-    // Data
-    pub series: Memo<Vec<UseSeries>>,
-    pub x_range: Memo<Option<(X, X)>>,
-    pub y_range: Memo<Option<(Y, Y)>>,
+    pub data: UseData<X, Y>,
 }
 
 #[derive(Clone, Debug)]
@@ -51,24 +44,13 @@ impl<X, Y> PreState<X, Y> {
         debug: Signal<bool>,
         font: Signal<Font>,
         padding: Signal<Padding>,
-        series: Vec<UseSeries>,
-        x_range: Memo<Option<(X, X)>>,
-        y_range: Memo<Option<(Y, Y)>>,
+        data: UseData<X, Y>,
     ) -> Self {
-        let series = create_memo(move |_| {
-            let mut series = series.clone();
-            series.sort_by_key(|series| series.name.get());
-            series
-        });
-
         Self {
             debug,
             font,
             padding,
-            // Data
-            series,
-            x_range,
-            y_range,
+            data,
         }
     }
 }
@@ -76,7 +58,6 @@ impl<X, Y> PreState<X, Y> {
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y> {
     pub fn new(
         pre: PreState<X, Y>,
-        data: Signal<Data<X, Y>>,
         node: &UseWatchedNode,
         layout: Layout,
         proj: Signal<Projection>,
@@ -90,32 +71,28 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
             let (mouse_x, mouse_y) = mouse_chart.get();
             proj.get().svg_to_data(mouse_x, mouse_y)
         });
-        let nearest_pos_x = create_memo(move |_| {
-            let (pos_x, _) = hover_data.get();
-            data.with(|data| data.nearest_x_position(pos_x))
-        });
+        let hover_data_x = Signal::derive(move || hover_data.get().0);
+
+        let nearest_pos_x = pre.data.nearest_position_x(hover_data_x);
         let nearest_svg_x = create_memo(move |_| {
             let data_x = nearest_pos_x.get();
             let (svg_x, _) = proj.get().data_to_svg(data_x, 0.0);
             svg_x
         });
-        let nearest_data_x = create_memo(move |_| {
-            let (pos_x, _) = hover_data.get();
-            data.with(|data| data.nearest_x(pos_x).cloned())
-        });
-        let nearest_data_y = create_memo(move |_| {
-            let pos_x = nearest_pos_x.get();
-            data.with(|data| {
-                pre.series
+
+        let nearest_data_x = pre.data.nearest_data_x(hover_data_x);
+        let nearest_data_y = {
+            let series = pre.data.series;
+            let values = pre.data.nearest_data_y(hover_data_x);
+            create_memo(move |_| {
+                series
                     .get()
                     .into_iter()
-                    .map(|line| {
-                        let y_value = data.nearest_y(pos_x, line.id);
-                        (line, y_value)
-                    })
+                    .zip(values.iter())
+                    .map(|(series, value)| (series, value.get()))
                     .collect::<Vec<_>>()
             })
-        });
+        };
 
         Self {
             pre,

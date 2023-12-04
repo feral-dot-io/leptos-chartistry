@@ -53,7 +53,10 @@ pub fn App() -> impl IntoView {
         .add_series(Line::new(&|_: &Wave| f64::NAN))
         .add_series(Line::new(&|w: &Wave| w.sine).set_name("Sphinx"))
         .add_series(Line::new(&|w: &Wave| w.cosine).set_name("Cophine"))
-        .use_data::<Vec<_>>(data);
+        .set_y_min(-1.5)
+        .set_y_max(2.5)
+        .set_x_range(f64_to_dt(-1.0), f64_to_dt(20.0))
+        .use_data(data);
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
