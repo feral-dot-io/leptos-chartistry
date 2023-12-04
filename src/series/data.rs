@@ -384,14 +384,14 @@ pub fn RenderSeriesData<'a, X: Clone + 'static, Y: Clone + 'static>(
 ) -> impl IntoView {
     let data_x = data.positions_x;
     let proj = state.projection;
-    let svg_coords = move |data_y: Memo<Vec<f64>>| {
+    let svg_coords = move |pos_y: Memo<Vec<f64>>| {
         Signal::derive(move || {
             let proj = proj.get();
-            with!(|data_x, data_y| {
+            with!(|data_x, pos_y| {
                 data_x
                     .iter()
-                    .zip(data_y.iter())
-                    .map(|(x, y)| proj.data_to_svg(*x, *y))
+                    .zip(pos_y.iter())
+                    .map(|(x, y)| proj.position_to_svg(*x, *y))
                     .collect::<Vec<_>>()
             })
         })

@@ -20,14 +20,14 @@ impl Projection {
     }
 
     /// Converts a data point to SVG view coordinates. View coordinates are in SVG space with zero at top left. Data coordinates are in chart space with zero at bottom left.
-    pub fn data_to_svg(&self, x: f64, y: f64) -> (f64, f64) {
+    pub fn position_to_svg(&self, x: f64, y: f64) -> (f64, f64) {
         let x = self.bounds.left_x() + (x - self.range.left_x()) * self.x_mult;
         let y = self.bounds.bottom_y() - (y - self.range.top_y()) * self.y_mult;
         (x, y)
     }
 
     /// Converts an SVG point to data coordinates. View coordinates are in SVG space with zero at top left. Data coordinates are in chart space with zero at bottom left.
-    pub fn svg_to_data(&self, x: f64, y: f64) -> (f64, f64) {
+    pub fn svg_to_position(&self, x: f64, y: f64) -> (f64, f64) {
         let x = self.range.left_x() + (x - self.bounds.left_x()) / self.x_mult;
         let y = self.range.top_y() - (y - self.bounds.bottom_y()) / self.y_mult;
         (x, y)
@@ -38,9 +38,9 @@ impl Projection {
 mod tests {
     use super::*;
 
-    fn assert_coords(p: &Projection, (data_x, data_y): (f64, f64), (svg_x, svg_y): (f64, f64)) {
-        assert_eq!(p.data_to_svg(data_x, data_y), (svg_x, svg_y));
-        assert_eq!(p.svg_to_data(svg_x, svg_y), (data_x, data_y));
+    fn assert_coords(p: &Projection, (pos_x, pos_y): (f64, f64), (svg_x, svg_y): (f64, f64)) {
+        assert_eq!(p.position_to_svg(pos_x, pos_y), (svg_x, svg_y));
+        assert_eq!(p.svg_to_position(svg_x, svg_y), (pos_x, pos_y));
     }
 
     #[test]

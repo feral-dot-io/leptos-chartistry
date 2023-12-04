@@ -277,13 +277,13 @@ fn TickLabel<'a, X: 'static, Y: 'static>(
         let outer = outer.get();
         match edge {
             Edge::Top | Edge::Bottom => {
-                let (x, _) = proj.data_to_svg(position, 0.0);
+                let (x, _) = proj.position_to_svg(position, 0.0);
                 let x = x - width / 2.0;
                 Bounds::from_points(x, outer.top_y(), x + width, outer.bottom_y())
             }
 
             Edge::Left | Edge::Right => {
-                let (_, y) = proj.data_to_svg(0.0, position);
+                let (_, y) = proj.position_to_svg(0.0, position);
                 let y = y - height / 2.0;
                 Bounds::from_points(outer.left_x(), y, outer.right_x(), y + height)
             }

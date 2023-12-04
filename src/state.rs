@@ -69,14 +69,14 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         // Data
         let hover_data = create_memo(move |_| {
             let (mouse_x, mouse_y) = mouse_chart.get();
-            proj.get().svg_to_data(mouse_x, mouse_y)
+            proj.get().svg_to_position(mouse_x, mouse_y)
         });
         let hover_data_x = Signal::derive(move || hover_data.get().0);
 
         let nearest_pos_x = pre.data.nearest_position_x(hover_data_x);
         let nearest_svg_x = create_memo(move |_| {
             let data_x = nearest_pos_x.get();
-            let (svg_x, _) = proj.get().data_to_svg(data_x, 0.0);
+            let (svg_x, _) = proj.get().position_to_svg(data_x, 0.0);
             svg_x
         });
 
@@ -98,7 +98,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
             pre,
             layout,
             projection: proj,
-            svg_zero: create_memo(move |_| proj.get().data_to_svg(0.0, 0.0)),
+            svg_zero: create_memo(move |_| proj.get().position_to_svg(0.0, 0.0)),
 
             page_bounds: node.bounds,
             mouse_page: node.mouse_page,

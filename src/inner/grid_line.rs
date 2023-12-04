@@ -163,9 +163,9 @@ fn for_ticks<Tick>(
                 let label = ticks.state.long_format(tick);
                 let tick = ticks.state.position(tick);
                 let tick = if is_x {
-                    proj.data_to_svg(tick, 0.0).0
+                    proj.position_to_svg(tick, 0.0).0
                 } else {
-                    proj.data_to_svg(0.0, tick).1
+                    proj.position_to_svg(0.0, tick).1
                 };
                 (tick, label)
             })
