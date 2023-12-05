@@ -1,4 +1,4 @@
-use super::use_series::{IntoUseLine, NextSeries, PrepareSeries, RenderSeries};
+use super::use_series::{NextSeries, PrepareSeries, RenderSeries, ToUseLine};
 use crate::{bounds::Bounds, colours::Colour, series::GetY, state::State, Font};
 use leptos::*;
 use std::rc::Rc;
@@ -45,8 +45,8 @@ impl<T: 'static, X, Y: 'static> PrepareSeries<T, X, Y> for Line<T, Y> {
     }
 }
 
-impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
-    fn into_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
+impl<T, Y> ToUseLine<T, Y> for Line<T, Y> {
+    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
         let line = UseLine {
             id,
             name: self.name.clone(),

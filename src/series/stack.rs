@@ -1,4 +1,4 @@
-use super::use_series::{IntoUseLine, NextSeries, PrepareSeries};
+use super::use_series::{NextSeries, PrepareSeries, ToUseLine};
 use super::GetY;
 use super::{line::UseLine, use_series::RenderSeries};
 use crate::colours::Colour;
@@ -48,9 +48,9 @@ impl<T: 'static, X, Y: Add<Output = Y> + 'static> PrepareSeries<T, X, Y> for Sta
     }
 }
 
-impl<'a, T: 'static, Y: Add<Output = Y> + 'static> IntoUseLine<T, Y> for StackedLine<'a, T, Y> {
-    fn into_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
-        let (get_y, line) = self.line.into_use_line(id, colour);
+impl<'a, T: 'static, Y: Add<Output = Y> + 'static> ToUseLine<T, Y> for StackedLine<'a, T, Y> {
+    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
+        let (get_y, line) = self.line.to_use_line(id, colour);
         let previous = self.previous.clone();
         let get_y = move |t: &T| {
             previous

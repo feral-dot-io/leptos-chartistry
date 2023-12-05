@@ -22,8 +22,8 @@ pub trait PrepareSeries<T, X, Y> {
     fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) -> Rc<dyn RenderSeries<X, Y>>;
 }
 
-pub trait IntoUseLine<T, Y> {
-    fn into_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine);
+pub trait ToUseLine<T, Y> {
+    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine);
 }
 
 pub trait RenderSeries<X, Y> {
@@ -57,9 +57,9 @@ impl<T, Y> NextSeries<T, Y> {
         }
     }
 
-    pub fn add_line(&mut self, line: &dyn IntoUseLine<T, Y>) -> (GetY<T, Y>, UseLine) {
+    pub fn add_line(&mut self, line: &dyn ToUseLine<T, Y>) -> (GetY<T, Y>, UseLine) {
         let id = self.next_id;
-        let (get_y, line) = line.into_use_line(id, self.colours.by_index(id));
+        let (get_y, line) = line.to_use_line(id, self.colours.by_index(id));
         self.get_ys.push(get_y.clone());
         self.lines.push(line.clone());
         self.next_id += 1;
