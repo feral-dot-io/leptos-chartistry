@@ -1,4 +1,4 @@
-use super::use_series::IntoUseLine;
+use super::use_series::{IntoUseLine, NextSeries, PrepareSeries, RenderSeries};
 use crate::{bounds::Bounds, colours::Colour, series::GetY, state::State, Font};
 use leptos::*;
 use std::rc::Rc;
@@ -38,8 +38,15 @@ impl<T, Y> Line<T, Y> {
     }
 }
 
-impl<T, X, Y> IntoUseLine<T, X, Y> for Line<T, Y> {
-    fn into_use_line(self: Rc<Self>, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
+impl<T: 'static, X, Y: 'static> PrepareSeries<T, X, Y> for Line<T, Y> {
+    fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) -> Rc<dyn RenderSeries<X, Y>> {
+        let (_, line) = acc.add_line(&*self);
+        Rc::new(line)
+    }
+}
+
+impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
+    fn into_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
         let line = UseLine {
             id,
             name: self.name.clone(),
@@ -66,14 +73,16 @@ impl UseLine {
     pub fn taster<X, Y>(&self, bounds: Memo<Bounds>, _: &State<X, Y>) -> View {
         view!( <LineTaster line=self bounds=bounds /> )
     }
+}
 
-    pub fn render<X, Y>(&self, positions: Signal<Vec<(f64, f64)>>, _: &State<X, Y>) -> View {
-        view!( <RenderLine line=self positions=positions /> )
+impl<X, Y> RenderSeries<X, Y> for UseLine {
+    fn render(self: Rc<Self>, positions: Vec<Signal<Vec<(f64, f64)>>>, _: &State<X, Y>) -> View {
+        view!( <RenderLine line=&self positions=positions[self.id]  /> )
     }
 }
 
 #[component]
-pub fn LineTaster<'a>(line: &'a UseLine, bounds: Memo<Bounds>) -> impl IntoView {
+fn LineTaster<'a>(line: &'a UseLine, bounds: Memo<Bounds>) -> impl IntoView {
     let colour = line.colour;
     view! {
         <line
@@ -88,7 +97,7 @@ pub fn LineTaster<'a>(line: &'a UseLine, bounds: Memo<Bounds>) -> impl IntoView 
 }
 
 #[component]
-fn RenderLine<'a>(line: &'a UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
+pub fn RenderLine<'a>(line: &'a UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
     let path = move || {
         positions.with(|positions| {
             let mut need_move = true;

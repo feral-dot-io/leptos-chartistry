@@ -1,7 +1,11 @@
-use super::{use_series::IntoUseLine, UseLine};
+use super::{
+    use_series::{self, PrepareSeries, RenderSeries},
+    UseLine,
+};
 use crate::{
     bounds::Bounds,
     colours::{self, ColourScheme},
+    state::State,
 };
 use chrono::prelude::*;
 use leptos::*;
@@ -12,7 +16,7 @@ type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
 #[derive(Clone)]
 pub struct SeriesData<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
-    series: Vec<Rc<dyn IntoUseLine<T, X, Y>>>,
+    series: Vec<Rc<dyn PrepareSeries<T, X, Y>>>,
     colours: ColourScheme,
     min_x: Signal<Option<X>>,
     min_y: Signal<Option<Y>>,
@@ -20,9 +24,10 @@ pub struct SeriesData<T: 'static, X: 'static, Y: 'static> {
     max_y: Signal<Option<Y>>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {
-    pub series: Memo<Vec<UseLine>>,
+    pub lines: Memo<Vec<UseLine>>,
+    series: Vec<Rc<dyn RenderSeries<X, Y>>>,
 
     pub data_x: Memo<Vec<X>>,
     pub data_y: Vec<Memo<Vec<Y>>>,
@@ -116,7 +121,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         self.set_y_min(lower).set_y_max(upper)
     }
 
-    pub fn add_series(mut self, series: impl IntoUseLine<T, X, Y> + 'static) -> Self {
+    pub fn add_series(mut self, series: impl PrepareSeries<T, X, Y> + 'static) -> Self {
         self.series.push(Rc::new(series));
         self
     }
@@ -129,16 +134,10 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         let data = data.into();
 
         // Build list of series
-        let (get_ys, series): (Vec<_>, Vec<_>) = self
-            .series
-            .into_iter()
-            .enumerate()
-            .zip(self.colours.iter())
-            .map(|((id, series), colour)| series.into_use_line(id, colour))
-            .unzip();
+        let (get_ys, lines, series) = use_series::prepare(self.series, self.colours);
         // Sort series by name
-        let series = create_memo(move |_| {
-            let mut series = series.clone();
+        let lines = create_memo(move |_| {
+            let mut series = lines.clone();
             series.sort_by_key(|series| series.name.get());
             series
         });
@@ -251,6 +250,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         });
 
         UseData {
+            lines,
             series,
             data_x,
             data_y,
@@ -372,5 +372,42 @@ impl Position for f64 {
 impl<Tz: TimeZone> Position for DateTime<Tz> {
     fn position(&self) -> f64 {
         self.timestamp() as f64 + (self.timestamp_subsec_nanos() as f64 / 1e9)
+    }
+}
+
+#[component]
+pub fn RenderData<X: Clone + 'static, Y: Clone + 'static>(
+    data: UseData<X, Y>,
+    state: State<X, Y>,
+) -> impl IntoView {
+    let proj = state.projection;
+    let pos_x = data.positions_x;
+    let svg_coords = data
+        .positions_y
+        .iter()
+        .map(|&pos_y| {
+            Signal::derive(move || {
+                let proj = proj.get();
+                with!(|pos_x, pos_y| {
+                    pos_x
+                        .iter()
+                        .zip(pos_y.iter())
+                        .map(|(x, y)| proj.position_to_svg(*x, *y))
+                        .collect::<Vec<_>>()
+                })
+            })
+        })
+        .collect::<Vec<_>>();
+
+    let series = data
+        .series
+        .into_iter()
+        .map(|series| series.render(svg_coords.clone(), &state))
+        .collect_view();
+
+    view! {
+        <g class="_chartistry_series">
+            {series}
+        </g>
     }
 }

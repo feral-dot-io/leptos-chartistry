@@ -1,7 +1,9 @@
 mod data;
 mod line;
+mod stack;
 mod use_series;
 
-pub use data::{SeriesData, UseData};
+pub use data::{RenderData, SeriesData, UseData};
 pub use line::{Line, UseLine};
-pub use use_series::{GetY, RenderSeriesData, Snippet};
+pub use stack::Stack;
+pub use use_series::{GetY, Snippet};

@@ -22,8 +22,8 @@ fn load_data() -> Vec<Wave> {
     let mut data = Vec::new();
     for i in 0..1000 {
         let x = i as f64 / 1000.0 * std::f64::consts::PI * 2.0 * 2.0;
-        let sine = x.sin() * SCALE + 1.1;
-        let cosine = x.cos() * SCALE;
+        let sine = x.sin() * SCALE + 1.0;
+        let cosine = x.cos() * SCALE + 1.0;
         data.push(Wave { x, sine, cosine });
     }
     data
@@ -50,12 +50,14 @@ pub fn App() -> impl IntoView {
     // Data
     let (data, _) = create_signal(load_data());
     let series = SeriesData::new(&|w: &Wave| f64_to_dt(w.x))
-        .add_series(Line::new(&|_: &Wave| f64::NAN))
-        .add_series(Line::new(&|w: &Wave| w.sine).set_name("Sphinx"))
-        .add_series(Line::new(&|w: &Wave| w.cosine).set_name("Cophine"))
-        .set_y_min(-1.5)
-        .set_y_max(2.5)
-        .set_x_range(f64_to_dt(-1.0), f64_to_dt(20.0))
+        .add_series(Line::new(&|w: &Wave| w.sine).set_name("A").set_width(5.0))
+        .add_series(Line::new(&|w: &Wave| w.cosine).set_name("B").set_width(5.0))
+        //.add_series(Line::new(&|_: &Wave| f64::NAN))
+        .add_series(Stack::new(vec![
+            Line::new(&|w: &Wave| w.sine).set_name("Stack-A"),
+            Line::new(&|w: &Wave| w.cosine).set_name("Stack-B"),
+            //Line::new(&|_: &Wave| f64::NAN),
+        ]))
         .use_data(data);
 
     let (anchor, _) = create_signal(Anchor::Middle);

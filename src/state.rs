@@ -4,7 +4,7 @@ use crate::{
 };
 use leptos::signal_prelude::*;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct PreState<X: 'static, Y: 'static> {
     pub debug: Signal<bool>,
     pub font: Signal<Font>,
@@ -12,7 +12,7 @@ pub struct PreState<X: 'static, Y: 'static> {
     pub data: UseData<X, Y>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct State<X: 'static, Y: 'static> {
     pub pre: PreState<X, Y>,
     pub layout: Layout,
@@ -82,7 +82,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
 
         let nearest_data_x = pre.data.nearest_data_x(hover_data_x);
         let nearest_data_y = {
-            let series = pre.data.series;
+            let series = pre.data.lines;
             let values = pre.data.nearest_data_y(hover_data_x);
             create_memo(move |_| {
                 series

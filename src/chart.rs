@@ -5,7 +5,7 @@ use crate::{
     layout::{HorizontalLayout, Layout, VerticalLayout},
     overlay::OverlayLayout,
     projection::Projection,
-    series::{RenderSeriesData, UseData},
+    series::{RenderData, UseData},
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Font, Padding,
@@ -174,7 +174,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
             {inner}
             {edges}
-            <RenderSeriesData data=data state=&state />
+            <RenderData data=data state=state />
         </svg>
         {overlay}
     }
