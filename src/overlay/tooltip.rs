@@ -2,7 +2,7 @@ use super::OverlayLayout;
 use crate::{
     debug::DebugRect,
     layout::Layout,
-    series::{Snippet, UseSeries},
+    series::{Snippet, UseLine},
     state::{PreState, State},
     ticks::TickFormatFn,
     TickLabels, TickState,
@@ -14,7 +14,7 @@ use std::{
     rc::Rc,
 };
 
-type SortByFn<Y> = dyn Fn(&mut [(UseSeries, Option<Y>)]);
+type SortByFn<Y> = dyn Fn(&mut [(UseLine, Option<Y>)]);
 
 #[derive(Clone)]
 pub struct Tooltip<X, Y> {
@@ -76,7 +76,7 @@ impl<X, Y> Tooltip<X, Y> {
         self
     }
 
-    pub fn sort_by(mut self, f: impl Fn(&mut [(UseSeries, Option<Y>)]) + 'static) -> Self {
+    pub fn sort_by(mut self, f: impl Fn(&mut [(UseLine, Option<Y>)]) + 'static) -> Self {
         self.sort_by = Rc::new(f);
         self
     }
@@ -88,11 +88,11 @@ impl<X, Y> Tooltip<X, Y> {
 
 impl<X, Y: Clone + Ord + 'static> Tooltip<X, Y> {
     pub fn sort_by_ascending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseSeries, Option<Y>)]| lines.sort_by_key(|(_, y)| y.clone()))
+        self.sort_by(|lines: &mut [(UseLine, Option<Y>)]| lines.sort_by_key(|(_, y)| y.clone()))
     }
 
     pub fn sort_by_descending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseSeries, Option<Y>)]| {
+        self.sort_by(|lines: &mut [(UseLine, Option<Y>)]| {
             lines.sort_by_key(|(_, y)| Reverse(y.clone()))
         })
     }
@@ -117,13 +117,13 @@ impl Eq for F64Ord {}
 
 impl<X> Tooltip<X, f64> {
     pub fn sort_by_f64_ascending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseSeries, Option<f64>)]| {
+        self.sort_by(|lines: &mut [(UseLine, Option<f64>)]| {
             lines.sort_by_key(|(_, y)| y.map(F64Ord))
         })
     }
 
     pub fn sort_by_f64_descending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseSeries, Option<f64>)]| {
+        self.sort_by(|lines: &mut [(UseLine, Option<f64>)]| {
             lines.sort_by_key(|(_, y)| y.map(|y| Reverse(F64Ord(y))))
         })
     }
@@ -214,7 +214,7 @@ fn Tooltip<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
 
     let series_tr = {
         let state = state.clone();
-        move |(series, y_value): (UseSeries, String)| {
+        move |(series, y_value): (UseLine, String)| {
             view! {
                 <tr>
                     <td><Snippet series=series state=&state /></td>

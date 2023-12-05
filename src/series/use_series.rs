@@ -1,64 +1,60 @@
 use super::line::UseLine;
-use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State, Font};
+use crate::{colours::Colour, debug::DebugRect, state::State, UseData};
 use leptos::*;
+use std::rc::Rc;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct UseSeries {
-    pub id: usize,
-    pub name: MaybeSignal<String>,
-    pub colour: MaybeSignal<Colour>,
-    render: RenderSeries,
+pub type GetY<T, Y> = Rc<dyn Fn(&T) -> Y>;
+
+pub trait IntoUseLine<T, X, Y> {
+    fn into_use_line(self: Rc<Self>, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine);
 }
 
-#[derive(Clone, Debug, PartialEq)]
-#[non_exhaustive]
-pub(super) enum RenderSeries {
-    Line(UseLine),
-}
-
-impl UseSeries {
-    pub(super) fn new(
-        id: usize,
-        name: impl Into<MaybeSignal<String>>,
-        colour: impl Into<MaybeSignal<Colour>>,
-        render: RenderSeries,
-    ) -> Self {
-        Self {
-            id,
-            name: name.into(),
-            colour: colour.into(),
-            render,
-        }
-    }
-
-    pub fn taster_bounds(font: Signal<Font>) -> Memo<Bounds> {
-        create_memo(move |_| {
-            let font = font.get();
-            Bounds::new(font.width() * 2.0, font.height())
+#[component]
+pub fn RenderSeriesData<'a, X: Clone + 'static, Y: Clone + 'static>(
+    data: UseData<X, Y>,
+    state: &'a State<X, Y>,
+) -> impl IntoView {
+    let proj = state.projection;
+    let pos_x = data.positions_x;
+    let svg_coords = data
+        .positions_y
+        .iter()
+        .map(|&pos_y| {
+            Signal::derive(move || {
+                let proj = proj.get();
+                with!(|pos_x, pos_y| {
+                    pos_x
+                        .iter()
+                        .zip(pos_y.iter())
+                        .map(|(x, y)| proj.position_to_svg(*x, *y))
+                        .collect::<Vec<_>>()
+                })
+            })
         })
-    }
+        .collect::<Vec<_>>();
 
-    pub fn snippet_width(font: Signal<Font>) -> Signal<f64> {
-        let taster_bounds = Self::taster_bounds(font);
-        Signal::derive(move || taster_bounds.get().width() + font.get().width())
-    }
-
-    pub fn taster<X, Y>(&self, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
-        match &self.render {
-            RenderSeries::Line(line) => line.taster(self, bounds, state),
+    let render = {
+        let state = state.clone();
+        move |series: UseLine| {
+            let positions = svg_coords[series.id];
+            series.render(positions, &state)
         }
-    }
+    };
 
-    pub fn render<X, Y>(&self, positions: Signal<Vec<(f64, f64)>>, state: &State<X, Y>) -> View {
-        match &self.render {
-            RenderSeries::Line(line) => line.render(self, positions, state),
-        }
+    view! {
+        <g class="_chartistry_series">
+            <For
+                each=move || data.series.get()
+                key=|series| series.id
+                children=render
+            />
+        </g>
     }
 }
 
 #[component]
 pub fn Snippet<'a, X: 'static, Y: 'static>(
-    series: UseSeries,
+    series: UseLine,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
     let debug = state.pre.debug;
@@ -74,12 +70,12 @@ pub fn Snippet<'a, X: 'static, Y: 'static>(
 
 #[component]
 pub fn Taster<'a, X: 'static, Y: 'static>(
-    series: UseSeries,
+    series: UseLine,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
     let debug = state.pre.debug;
     let font = state.pre.font;
-    let bounds = UseSeries::taster_bounds(font);
+    let bounds = UseLine::taster_bounds(font);
     view! {
         <svg
             class="_chartistry_taster"

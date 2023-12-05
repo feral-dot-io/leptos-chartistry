@@ -1,8 +1,5 @@
-use super::{
-    data::IntoSeries,
-    use_series::{RenderSeries, UseSeries},
-};
-use crate::{bounds::Bounds, colours::Colour, series::GetY, state::State};
+use super::use_series::IntoUseLine;
+use crate::{bounds::Bounds, colours::Colour, series::GetY, state::State, Font};
 use leptos::*;
 use std::rc::Rc;
 
@@ -15,6 +12,9 @@ pub struct Line<T, Y> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
+    pub id: usize,
+    pub name: MaybeSignal<String>,
+    pub colour: MaybeSignal<Colour>,
     width: MaybeSignal<f64>,
 }
 
@@ -38,36 +38,43 @@ impl<T, Y> Line<T, Y> {
     }
 }
 
-impl<T, X, Y> IntoSeries<T, X, Y> for Line<T, Y> {
-    fn into_use(self: Rc<Self>, id: usize, colour: Colour) -> (GetY<T, Y>, UseSeries) {
-        let line = RenderSeries::Line(UseLine { width: self.width });
-        let series = UseSeries::new(id, self.name.clone(), colour, line);
-        (self.get_y.clone(), series)
+impl<T, X, Y> IntoUseLine<T, X, Y> for Line<T, Y> {
+    fn into_use_line(self: Rc<Self>, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
+        let line = UseLine {
+            id,
+            name: self.name.clone(),
+            colour: colour.into(),
+            width: self.width,
+        };
+        (self.get_y.clone(), line)
     }
 }
 
 impl UseLine {
-    pub fn taster<X, Y>(&self, series: &UseSeries, bounds: Memo<Bounds>, _: &State<X, Y>) -> View {
-        view!( <LineTaster line=self series=series bounds=bounds /> )
+    pub fn taster_bounds(font: Signal<Font>) -> Memo<Bounds> {
+        create_memo(move |_| {
+            let font = font.get();
+            Bounds::new(font.width() * 2.0, font.height())
+        })
     }
 
-    pub fn render<X, Y>(
-        &self,
-        series: &UseSeries,
-        positions: Signal<Vec<(f64, f64)>>,
-        _state: &State<X, Y>,
-    ) -> View {
-        view!( <RenderLine line=self series=series positions=positions /> )
+    pub fn snippet_width(font: Signal<Font>) -> Signal<f64> {
+        let taster_bounds = Self::taster_bounds(font);
+        Signal::derive(move || taster_bounds.get().width() + font.get().width())
+    }
+
+    pub fn taster<X, Y>(&self, bounds: Memo<Bounds>, _: &State<X, Y>) -> View {
+        view!( <LineTaster line=self bounds=bounds /> )
+    }
+
+    pub fn render<X, Y>(&self, positions: Signal<Vec<(f64, f64)>>, _: &State<X, Y>) -> View {
+        view!( <RenderLine line=self positions=positions /> )
     }
 }
 
 #[component]
-pub fn LineTaster<'a>(
-    series: &'a UseSeries,
-    line: &'a UseLine,
-    bounds: Memo<Bounds>,
-) -> impl IntoView {
-    let colour = series.colour;
+pub fn LineTaster<'a>(line: &'a UseLine, bounds: Memo<Bounds>) -> impl IntoView {
+    let colour = line.colour;
     view! {
         <line
             x1=move || bounds.get().left_x()
@@ -81,11 +88,7 @@ pub fn LineTaster<'a>(
 }
 
 #[component]
-fn RenderLine<'a>(
-    series: &'a UseSeries,
-    line: &'a UseLine,
-    positions: Signal<Vec<(f64, f64)>>,
-) -> impl IntoView {
+fn RenderLine<'a>(line: &'a UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
     let path = move || {
         positions.with(|positions| {
             let mut need_move = true;
@@ -105,7 +108,7 @@ fn RenderLine<'a>(
                 .collect::<String>()
         })
     };
-    let colour = series.colour;
+    let colour = line.colour;
     view! {
         <g class="_chartistry_line">
             <path

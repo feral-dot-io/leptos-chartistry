@@ -3,7 +3,7 @@ use crate::{
     bounds::Bounds,
     debug::DebugRect,
     edge::Edge,
-    series::{Snippet, UseSeries},
+    series::{Snippet, UseLine},
     state::{PreState, State},
     Padding,
 };
@@ -41,7 +41,7 @@ impl Legend {
     pub(crate) fn width<X, Y>(state: &PreState<X, Y>) -> Signal<f64> {
         let PreState { font, padding, .. } = *state;
         let series = state.data.series;
-        let snippet_bounds = UseSeries::snippet_width(font);
+        let snippet_bounds = UseLine::snippet_width(font);
         Signal::derive(move || {
             let font_width = font.get().width();
             let max_chars = series
@@ -142,7 +142,7 @@ pub fn Legend<'a, X: Clone + 'static, Y: Clone + 'static>(
 
 #[component]
 fn VerticalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
-    series: Memo<Vec<UseSeries>>,
+    series: Memo<Vec<UseLine>>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
     let padding = state.pre.padding;
@@ -163,7 +163,7 @@ fn VerticalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
 
 #[component]
 fn HorizontalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
-    series: Memo<Vec<UseSeries>>,
+    series: Memo<Vec<UseLine>>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
     let padding = state.pre.padding;

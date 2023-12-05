@@ -1,5 +1,5 @@
 use crate::{
-    bounds::Bounds, layout::Layout, projection::Projection, series::UseSeries,
+    bounds::Bounds, layout::Layout, projection::Projection, series::UseLine,
     use_watched_node::UseWatchedNode, Font, Padding, UseData,
 };
 use leptos::signal_prelude::*;
@@ -36,7 +36,7 @@ pub struct State<X: 'static, Y: 'static> {
     /// X value of nearest mouse data
     pub nearest_data_x: Memo<Option<X>>,
     /// Y values of nearest mouse data. Index corresponds to line index.
-    pub nearest_data_y: Memo<Vec<(UseSeries, Option<Y>)>>,
+    pub nearest_data_y: Memo<Vec<(UseLine, Option<Y>)>>,
 }
 
 impl<X, Y> PreState<X, Y> {
