@@ -184,25 +184,28 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
                 (None, None) => None,
             };
 
-            // Extend range if specified is outside
-            range
-                .or(specified.clone()) // Avoid no range
-                .zip(specified)
-                .map(|((min_r, max_r), (min_s, max_s))| {
-                    // We have both a range + specified. Check min / max
-                    (
-                        if min_r.position() < min_s.position() {
-                            min_r
-                        } else {
-                            min_s
-                        },
-                        if max_r.position() > max_s.position() {
-                            max_r
-                        } else {
-                            max_s
-                        },
-                    )
-                })
+            // Extend range by specified?
+            match (range, specified) {
+                (None, None) => None, // No data, no range
+
+                // One of range or specified
+                (Some(range), None) => Some(range),
+                (None, Some(specified)) => Some(specified),
+
+                // Calculate min / max of range and specified
+                (Some((min_r, max_r)), Some((min_s, max_s))) => Some((
+                    if min_r.position() < min_s.position() {
+                        min_r
+                    } else {
+                        min_s
+                    },
+                    if max_r.position() > max_s.position() {
+                        max_r
+                    } else {
+                        max_s
+                    },
+                )),
+            }
         });
         let range_y = positions_y
             .iter()
