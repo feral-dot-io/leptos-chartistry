@@ -28,5 +28,5 @@ pub use layout::{
 };
 pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;
-pub use series::{line::Line, SeriesData, UseData};
+pub use series::{Line, SeriesData, UseData};
 pub use ticks::{Period, TickState};
