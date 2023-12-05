@@ -15,6 +15,7 @@ pub struct NextSeries<T, Y> {
     next_id: usize,
     colours: ColourScheme,
     get_ys: Vec<GetY<T, Y>>,
+    get_positions: Vec<GetY<T, Y>>,
     lines: Vec<UseLine>,
 }
 
@@ -23,18 +24,18 @@ pub trait PrepareSeries<T, X, Y> {
 }
 
 pub trait ToUseLine<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine);
+    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, GetY<T, Y>, UseLine);
 }
 
 pub(super) fn prepare<T, X, Y>(
     series: Vec<Rc<dyn PrepareSeries<T, X, Y>>>,
     colours: ColourScheme,
-) -> (Vec<GetY<T, Y>>, Vec<UseLine>) {
+) -> (Vec<GetY<T, Y>>, Vec<GetY<T, Y>>, Vec<UseLine>) {
     let mut acc = NextSeries::new(colours);
     for series in series {
         series.prepare(&mut acc);
     }
-    (acc.get_ys, acc.lines)
+    (acc.get_ys, acc.get_positions, acc.lines)
 }
 
 impl<T, Y> NextSeries<T, Y> {
@@ -43,14 +44,16 @@ impl<T, Y> NextSeries<T, Y> {
             next_id: 0,
             colours,
             get_ys: Vec::new(),
+            get_positions: Vec::new(),
             lines: Vec::new(),
         }
     }
 
     pub fn add_line(&mut self, line: &dyn ToUseLine<T, Y>) -> (GetY<T, Y>, UseLine) {
         let id = self.next_id;
-        let (get_y, line) = line.to_use_line(id, self.colours.by_index(id));
+        let (get_y, get_pos, line) = line.to_use_line(id, self.colours.by_index(id));
         self.get_ys.push(get_y.clone());
+        self.get_positions.push(get_pos);
         self.lines.push(line.clone());
         self.next_id += 1;
         (get_y, line)

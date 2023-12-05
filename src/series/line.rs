@@ -45,14 +45,14 @@ impl<T: 'static, X, Y: 'static> PrepareSeries<T, X, Y> for Line<T, Y> {
 }
 
 impl<T, Y> ToUseLine<T, Y> for Line<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
+    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, GetY<T, Y>, UseLine) {
         let line = UseLine {
             id,
             name: self.name.clone(),
             colour: colour.into(),
             width: self.width,
         };
-        (self.get_y.clone(), line)
+        (self.get_y.clone(), self.get_y.clone(), line)
     }
 }
 

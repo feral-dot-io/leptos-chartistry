@@ -42,14 +42,17 @@ impl<T: 'static, X, Y: Add<Output = Y> + 'static> PrepareSeries<T, X, Y> for Sta
 }
 
 impl<'a, T: 'static, Y: Add<Output = Y> + 'static> ToUseLine<T, Y> for StackedLine<'a, T, Y> {
-    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine) {
-        let (get_y, line) = self.line.to_use_line(id, colour);
+    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, GetY<T, Y>, UseLine) {
+        let (get_y, get_pos, line) = self.line.to_use_line(id, colour);
         let previous = self.previous.clone();
-        let get_y = move |t: &T| {
-            previous
-                .as_ref()
-                .map_or_else(|| get_y(t), |prev| get_y(t) + prev(t))
+        let get_pos = {
+            let get_y = get_y.clone();
+            Rc::new(move |t: &T| {
+                previous
+                    .as_ref()
+                    .map_or_else(|| get_y(t), |prev| get_y(t) + prev(t))
+            })
         };
-        (Rc::new(get_y), line)
+        (get_y.clone(), get_pos, line)
     }
 }
