@@ -1,11 +1,10 @@
 use super::use_series::{NextSeries, PrepareSeries, ToUseLine};
-use crate::{bounds::Bounds, colours::Colour, series::GetY, state::State, Font};
+use crate::{bounds::Bounds, colours::Colour, series::GetYValue, state::State, Font};
 use leptos::*;
 use std::rc::Rc;
 
-#[derive(Clone)]
 pub struct Line<T, Y> {
-    get_y: GetY<T, Y>,
+    get_y: Rc<dyn GetYValue<T, Y>>,
     name: MaybeSignal<String>,
     width: MaybeSignal<f64>,
 }
@@ -38,6 +37,26 @@ impl<T, Y> Line<T, Y> {
     }
 }
 
+impl<T, Y> Clone for Line<T, Y> {
+    fn clone(&self) -> Self {
+        Self {
+            get_y: self.get_y.clone(),
+            name: self.name.clone(),
+            width: self.width,
+        }
+    }
+}
+
+impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
+    fn value(&self, t: &T) -> Y {
+        self(t)
+    }
+
+    fn position(&self, t: &T) -> Y {
+        self(t)
+    }
+}
+
 impl<T: 'static, X, Y: 'static> PrepareSeries<T, X, Y> for Line<T, Y> {
     fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) {
         acc.add_line(&*self);
@@ -45,14 +64,14 @@ impl<T: 'static, X, Y: 'static> PrepareSeries<T, X, Y> for Line<T, Y> {
 }
 
 impl<T, Y> ToUseLine<T, Y> for Line<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, GetY<T, Y>, UseLine) {
+    fn to_use_line(&self, id: usize, colour: Colour) -> (Rc<dyn GetYValue<T, Y>>, UseLine) {
         let line = UseLine {
             id,
             name: self.name.clone(),
             colour: colour.into(),
             width: self.width,
         };
-        (self.get_y.clone(), self.get_y.clone(), line)
+        (self.get_y.clone(), line)
     }
 }
 

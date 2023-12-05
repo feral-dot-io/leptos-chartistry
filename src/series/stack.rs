@@ -1,6 +1,6 @@
 use super::line::UseLine;
 use super::use_series::{NextSeries, PrepareSeries, ToUseLine};
-use super::GetY;
+use super::GetYValue;
 use crate::colours::Colour;
 use crate::Line;
 use std::ops::Add;
@@ -12,9 +12,15 @@ pub struct Stack<T, Y> {
 }
 
 #[derive(Clone)]
-struct StackedLine<'a, T, Y> {
-    line: &'a Line<T, Y>,
-    previous: Option<GetY<T, Y>>,
+struct StackLine<T, Y> {
+    line: Line<T, Y>,
+    previous: Option<Rc<dyn GetYValue<T, Y>>>,
+}
+
+#[derive(Clone)]
+struct UseStackLine<T, Y> {
+    current: Rc<dyn GetYValue<T, Y>>,
+    previous: Option<Rc<dyn GetYValue<T, Y>>>,
 }
 
 impl<T, Y> Stack<T, Y> {
@@ -25,34 +31,40 @@ impl<T, Y> Stack<T, Y> {
 
 impl<T: 'static, X, Y: Add<Output = Y> + 'static> PrepareSeries<T, X, Y> for Stack<T, Y> {
     fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) {
-        let mut lines = Vec::new();
-        let mut previous: Option<GetY<T, Y>> = None;
-        for line in &self.lines {
+        let mut previous = None;
+        for line in self.lines.clone() {
             // Add stacked line to acc
-            let line = StackedLine {
+            let line = StackLine {
                 line,
                 previous: previous.clone(),
             };
-            let (get_y, line) = acc.add_line(&line);
+            let get_y = acc.add_line(&line);
             // Next line will be summed with this one
             previous = Some(get_y.clone());
-            lines.push(line);
         }
     }
 }
 
-impl<'a, T: 'static, Y: Add<Output = Y> + 'static> ToUseLine<T, Y> for StackedLine<'a, T, Y> {
-    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, GetY<T, Y>, UseLine) {
-        let (get_y, get_pos, line) = self.line.to_use_line(id, colour);
-        let previous = self.previous.clone();
-        let get_pos = {
-            let get_y = get_y.clone();
-            Rc::new(move |t: &T| {
-                previous
-                    .as_ref()
-                    .map_or_else(|| get_y(t), |prev| get_y(t) + prev(t))
-            })
-        };
-        (get_y.clone(), get_pos, line)
+impl<T: 'static, Y: Add<Output = Y> + 'static> ToUseLine<T, Y> for StackLine<T, Y> {
+    fn to_use_line(&self, id: usize, colour: Colour) -> (Rc<dyn GetYValue<T, Y>>, UseLine) {
+        let (get_y, line) = self.line.to_use_line(id, colour);
+        let get_y = Rc::new(UseStackLine {
+            current: get_y,
+            previous: self.previous.clone(),
+        });
+        (get_y, line)
+    }
+}
+
+impl<T, Y: Add<Output = Y> + 'static> GetYValue<T, Y> for UseStackLine<T, Y> {
+    fn value(&self, t: &T) -> Y {
+        self.current.value(t)
+    }
+
+    fn position(&self, t: &T) -> Y {
+        self.previous.as_ref().map_or_else(
+            || self.current.position(t),
+            |prev| self.current.position(t) + prev.position(t),
+        )
     }
 }

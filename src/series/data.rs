@@ -131,11 +131,11 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         let data = data.into();
 
         // Build list of series
-        let (get_ys, get_positions, lines) = use_series::prepare(self.series, self.colours);
+        let (get_ys, lines) = use_series::prepare(self.series, self.colours);
         // Sort series by name
         let lines = create_memo(move |_| {
             let mut series = lines.clone();
-            series.sort_by_key(|series| series.name.get());
+            //series.sort_by_key(|series| series.name.get());
             series
         });
 
@@ -144,21 +144,31 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
             let get_x = self.get_x.clone();
             data.with(|data| data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>())
         });
-        let y_maker = |getters: Vec<Rc<dyn Fn(&T) -> Y>>| {
-            getters
+        let y_maker = |value: bool| {
+            get_ys
+                .clone()
                 .into_iter()
                 .map(|get_y| {
                     create_memo(move |_| {
                         data.with(|data| {
-                            data.iter().map(|datum| (get_y)(datum)).collect::<Vec<_>>()
+                            data.iter()
+                                .map(|datum| {
+                                    // This is ick yet practical
+                                    if value {
+                                        get_y.value(datum)
+                                    } else {
+                                        get_y.position(datum)
+                                    }
+                                })
+                                .collect::<Vec<_>>()
                         })
                     })
                 })
                 .collect::<Vec<_>>()
         };
         // Generate two sets of Ys: original and chart position. They can differ when stacked
-        let data_y_lines = y_maker(get_ys);
-        let data_y_positions = y_maker(get_positions);
+        let data_y_lines = y_maker(true);
+        let data_y_positions = y_maker(false);
 
         // Position signals
         let positions_x = create_memo(move |_| {
