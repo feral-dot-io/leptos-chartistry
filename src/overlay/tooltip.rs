@@ -160,7 +160,6 @@ fn Tooltip<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         mouse_page,
         hover_inner,
         nearest_data_x,
-        nearest_data_y,
         ..
     } = *state;
 
@@ -187,19 +186,29 @@ fn Tooltip<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         })
     };
 
-    let nearest_y_values = create_memo(move |_| {
-        let mut y_values = nearest_data_y.get();
-        // Skip missing?
-        if skip_missing.get() {
-            y_values = y_values
+    let nearest_y_values = {
+        let nearest_data_y = state.nearest_data_y.clone();
+        create_memo(move |_| {
+            // Fetch Y values
+            let mut y_values = nearest_data_y
+                .clone()
                 .into_iter()
-                .filter(|(_, y_value)| y_value.is_some())
+                .map(|(line, y_value)| (line, y_value.get()))
                 .collect::<Vec<_>>();
-        }
-        // Sort values
-        (sort_by)(&mut y_values);
-        y_values
-    });
+
+            // Skip missing?
+            if skip_missing.get() {
+                y_values = y_values
+                    .into_iter()
+                    .filter(|(_, y_value)| y_value.is_some())
+                    .collect::<Vec<_>>()
+            }
+
+            // Sort values
+            (sort_by)(&mut y_values);
+            y_values
+        })
+    };
 
     let nearest_data_y = move || {
         nearest_y_values

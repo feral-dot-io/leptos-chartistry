@@ -5,7 +5,7 @@ use crate::{
     state::State,
 };
 use leptos::*;
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
 
 pub type GetY<T, Y> = Rc<dyn GetYValue<T, Y>>;
 pub trait GetYValue<T, Y> {
@@ -18,8 +18,8 @@ pub trait GetYValue<T, Y> {
 pub struct NextSeries<T, Y> {
     next_id: usize,
     colours: ColourScheme,
-    get_ys: Vec<GetY<T, Y>>,
-    lines: Vec<UseLine>,
+    lines: HashMap<usize, UseLine>,
+    get_ys: HashMap<usize, GetY<T, Y>>,
 }
 
 pub trait PrepareSeries<T, X, Y> {
@@ -33,12 +33,12 @@ pub trait ToUseLine<T, Y> {
 pub(super) fn prepare<T, X, Y>(
     series: Vec<Rc<dyn PrepareSeries<T, X, Y>>>,
     colours: ColourScheme,
-) -> (Vec<GetY<T, Y>>, Vec<UseLine>) {
+) -> (HashMap<usize, UseLine>, HashMap<usize, GetY<T, Y>>) {
     let mut acc = NextSeries::new(colours);
     for series in series {
         series.prepare(&mut acc);
     }
-    (acc.get_ys, acc.lines)
+    (acc.lines, acc.get_ys)
 }
 
 impl<T, Y> NextSeries<T, Y> {
@@ -46,17 +46,17 @@ impl<T, Y> NextSeries<T, Y> {
         Self {
             next_id: 0,
             colours,
-            get_ys: Vec::new(),
-            lines: Vec::new(),
+            lines: HashMap::new(),
+            get_ys: HashMap::new(),
         }
     }
 
     pub fn add_line(&mut self, line: &dyn ToUseLine<T, Y>) -> GetY<T, Y> {
         let id = self.next_id;
         let (get_y, line) = line.to_use_line(id, self.colours.by_index(id));
-        self.get_ys.push(get_y.clone());
-        self.lines.push(line);
         self.next_id += 1;
+        self.lines.insert(id, line);
+        self.get_ys.insert(id, get_y.clone());
         get_y
     }
 }

@@ -40,7 +40,7 @@ impl Legend {
 
     pub(crate) fn width<X, Y>(state: &PreState<X, Y>) -> Signal<f64> {
         let PreState { font, padding, .. } = *state;
-        let series = state.data.lines;
+        let series = state.data.series;
         let snippet_bounds = UseLine::snippet_width(font);
         Signal::derive(move || {
             let font_width = font.get().width();
@@ -95,7 +95,7 @@ pub fn Legend<'a, X: Clone + 'static, Y: Clone + 'static>(
         font,
         ..
     } = state.pre;
-    let series = state.pre.data.lines;
+    let series = state.pre.data.series;
 
     // Don't apply padding on the edges of our axis i.e., maximise the space we extend over
     let padding = create_memo(move |_| {

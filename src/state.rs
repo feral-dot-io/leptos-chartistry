@@ -36,7 +36,8 @@ pub struct State<X: 'static, Y: 'static> {
     /// X value of nearest mouse data
     pub nearest_data_x: Memo<Option<X>>,
     /// Y values of nearest mouse data. Index corresponds to line index.
-    pub nearest_data_y: Memo<Vec<(UseLine, Option<Y>)>>,
+    //pub nearest_data_y: Memo<Vec<(UseLine, Option<Y>)>>,
+    pub nearest_data_y: Vec<(UseLine, Memo<Option<Y>>)>,
 }
 
 impl<X, Y> PreState<X, Y> {
@@ -81,18 +82,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         });
 
         let nearest_data_x = pre.data.nearest_data_x(hover_data_x);
-        let nearest_data_y = {
-            let series = pre.data.lines;
-            let values = pre.data.nearest_data_y(hover_data_x);
-            create_memo(move |_| {
-                series
-                    .get()
-                    .into_iter()
-                    .zip(values.iter())
-                    .map(|(series, value)| (series, value.get()))
-                    .collect::<Vec<_>>()
-            })
-        };
+        let nearest_data_y = pre.data.nearest_data_y(hover_data_x);
 
         Self {
             pre,
