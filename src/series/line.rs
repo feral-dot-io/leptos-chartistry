@@ -1,4 +1,4 @@
-use super::use_series::{NextSeries, PrepareSeries, RenderSeries, ToUseLine};
+use super::use_series::{NextSeries, PrepareSeries, ToUseLine};
 use crate::{bounds::Bounds, colours::Colour, series::GetY, state::State, Font};
 use leptos::*;
 use std::rc::Rc;
@@ -39,9 +39,8 @@ impl<T, Y> Line<T, Y> {
 }
 
 impl<T: 'static, X, Y: 'static> PrepareSeries<T, X, Y> for Line<T, Y> {
-    fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) -> Rc<dyn RenderSeries<X, Y>> {
-        let (_, line) = acc.add_line(&*self);
-        Rc::new(line)
+    fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) {
+        acc.add_line(&*self);
     }
 }
 
@@ -73,11 +72,9 @@ impl UseLine {
     pub fn taster<X, Y>(&self, bounds: Memo<Bounds>, _: &State<X, Y>) -> View {
         view!( <LineTaster line=self bounds=bounds /> )
     }
-}
 
-impl<X, Y> RenderSeries<X, Y> for UseLine {
-    fn render(self: Rc<Self>, positions: Vec<Signal<Vec<(f64, f64)>>>, _: &State<X, Y>) -> View {
-        view!( <RenderLine line=&self positions=positions[self.id]  /> )
+    pub(super) fn render(&self, positions: Signal<Vec<(f64, f64)>>) -> View {
+        view!( <RenderLine line=self positions=positions /> )
     }
 }
 

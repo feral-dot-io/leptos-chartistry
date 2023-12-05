@@ -1,9 +1,8 @@
+use super::line::UseLine;
 use super::use_series::{NextSeries, PrepareSeries, ToUseLine};
 use super::GetY;
-use super::{line::UseLine, use_series::RenderSeries};
 use crate::colours::Colour;
-use crate::{series::line::RenderLine, state::State, Line};
-use leptos::*;
+use crate::Line;
 use std::ops::Add;
 use std::rc::Rc;
 
@@ -18,11 +17,6 @@ struct StackedLine<'a, T, Y> {
     previous: Option<GetY<T, Y>>,
 }
 
-#[derive(Clone)]
-pub struct UseStack {
-    lines: Vec<UseLine>,
-}
-
 impl<T, Y> Stack<T, Y> {
     pub fn new(lines: Vec<Line<T, Y>>) -> Self {
         Self { lines }
@@ -30,7 +24,7 @@ impl<T, Y> Stack<T, Y> {
 }
 
 impl<T: 'static, X, Y: Add<Output = Y> + 'static> PrepareSeries<T, X, Y> for Stack<T, Y> {
-    fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) -> Rc<dyn RenderSeries<X, Y>> {
+    fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) {
         let mut lines = Vec::new();
         let mut previous: Option<GetY<T, Y>> = None;
         for line in &self.lines {
@@ -44,7 +38,6 @@ impl<T: 'static, X, Y: Add<Output = Y> + 'static> PrepareSeries<T, X, Y> for Sta
             previous = Some(get_y.clone());
             lines.push(line);
         }
-        Rc::new(UseStack { lines })
     }
 }
 
@@ -58,26 +51,5 @@ impl<'a, T: 'static, Y: Add<Output = Y> + 'static> ToUseLine<T, Y> for StackedLi
                 .map_or_else(|| get_y(t), |prev| get_y(t) + prev(t))
         };
         (Rc::new(get_y), line)
-    }
-}
-
-impl<X, Y> RenderSeries<X, Y> for UseStack {
-    fn render(self: Rc<Self>, positions: Vec<Signal<Vec<(f64, f64)>>>, _: &State<X, Y>) -> View {
-        view!( <RenderStack stack=&self positions=positions  /> )
-    }
-}
-
-#[component]
-fn RenderStack<'a>(stack: &'a UseStack, positions: Vec<Signal<Vec<(f64, f64)>>>) -> impl IntoView {
-    let lines = stack.lines.clone();
-    view! {
-        <g class="_chartistry_stack">
-            <For
-                each=move || lines.clone().into_iter()
-                key=|line| line.id
-                let:line>
-                <RenderLine line=&line positions=positions[line.id] />
-            </For>
-        </g>
     }
 }

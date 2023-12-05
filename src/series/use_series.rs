@@ -19,32 +19,22 @@ pub struct NextSeries<T, Y> {
 }
 
 pub trait PrepareSeries<T, X, Y> {
-    fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) -> Rc<dyn RenderSeries<X, Y>>;
+    fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>);
 }
 
 pub trait ToUseLine<T, Y> {
     fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine);
 }
 
-pub trait RenderSeries<X, Y> {
-    fn render(self: Rc<Self>, positions: Vec<Signal<Vec<(f64, f64)>>>, state: &State<X, Y>)
-        -> View;
-}
-
 pub(super) fn prepare<T, X, Y>(
     series: Vec<Rc<dyn PrepareSeries<T, X, Y>>>,
     colours: ColourScheme,
-) -> (
-    Vec<GetY<T, Y>>,
-    Vec<UseLine>,
-    Vec<Rc<dyn RenderSeries<X, Y>>>,
-) {
+) -> (Vec<GetY<T, Y>>, Vec<UseLine>) {
     let mut acc = NextSeries::new(colours);
-    let series = series
-        .into_iter()
-        .map(|series| series.prepare(&mut acc))
-        .collect::<Vec<_>>();
-    (acc.get_ys, acc.lines, series)
+    for series in series {
+        series.prepare(&mut acc);
+    }
+    (acc.get_ys, acc.lines)
 }
 
 impl<T, Y> NextSeries<T, Y> {

@@ -1,5 +1,5 @@
 use super::{
-    use_series::{self, PrepareSeries, RenderSeries},
+    use_series::{self, PrepareSeries},
     UseLine,
 };
 use crate::{
@@ -27,7 +27,6 @@ pub struct SeriesData<T: 'static, X: 'static, Y: 'static> {
 #[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {
     pub lines: Memo<Vec<UseLine>>,
-    series: Vec<Rc<dyn RenderSeries<X, Y>>>,
 
     pub data_x: Memo<Vec<X>>,
     pub data_y: Vec<Memo<Vec<Y>>>,
@@ -134,7 +133,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         let data = data.into();
 
         // Build list of series
-        let (get_ys, lines, series) = use_series::prepare(self.series, self.colours);
+        let (get_ys, lines) = use_series::prepare(self.series, self.colours);
         // Sort series by name
         let lines = create_memo(move |_| {
             let mut series = lines.clone();
@@ -251,7 +250,6 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
 
         UseData {
             lines,
-            series,
             data_x,
             data_y,
             range_x,
@@ -399,15 +397,13 @@ pub fn RenderData<X: Clone + 'static, Y: Clone + 'static>(
         })
         .collect::<Vec<_>>();
 
-    let series = data
-        .series
-        .into_iter()
-        .map(|series| series.render(svg_coords.clone(), &state))
-        .collect_view();
-
     view! {
         <g class="_chartistry_series">
-            {series}
+            <For
+                each=move || data.lines.get()
+                key=|line| line.id
+                children=move |line| line.render(svg_coords[line.id])
+            />
         </g>
     }
 }
