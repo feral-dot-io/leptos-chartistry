@@ -113,7 +113,7 @@ impl<Y: PartialEq> TickLabels<Y> {
         avail_height: Signal<f64>,
     ) -> Signal<GeneratedTicks<Y>> {
         let PreState { font, padding, .. } = *state;
-        let range_y = state.data.range_y_abs;
+        let range_y = state.data.range_y;
         let gen = self.generator.clone();
         create_memo(move |_| {
             range_y.with(|range_y| {

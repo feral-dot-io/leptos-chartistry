@@ -29,14 +29,14 @@ pub struct UseData<X: 'static, Y: 'static> {
     pub lines: Memo<Vec<UseLine>>,
 
     pub data_x: Memo<Vec<X>>,
-    pub data_y: Vec<Memo<Vec<Y>>>,
+    pub data_y_lines: Vec<Memo<Vec<Y>>>,
 
     pub range_x: Memo<Option<(X, X)>>,
-    pub range_y: Vec<Memo<Option<(Y, Y)>>>,
-    pub range_y_abs: Memo<Option<(Y, Y)>>,
+    pub range_y: Memo<Option<(Y, Y)>>,
+    pub range_y_lines: Vec<Memo<Option<(Y, Y)>>>,
 
     pub positions_x: Memo<Vec<f64>>,
-    pub positions_y: Vec<Memo<Vec<f64>>>,
+    pub positions_y_lines: Vec<Memo<Vec<f64>>>,
     pub position_range: Memo<Bounds>,
 }
 
@@ -125,8 +125,8 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
 
     pub fn use_data(self, data: impl Into<Signal<Vec<T>>>) -> UseData<X, Y>
     where
-        X: PartialOrd + Position + std::fmt::Debug,
-        Y: PartialOrd + Position + std::fmt::Debug,
+        X: PartialOrd + Position,
+        Y: PartialOrd + Position,
     {
         let data = data.into();
 
@@ -144,7 +144,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
             let get_x = self.get_x.clone();
             data.with(|data| data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>())
         });
-        let data_y = get_ys
+        let data_y_lines = get_ys
             .into_iter()
             .map(|get_y| {
                 create_memo(move |_| {
@@ -157,7 +157,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         let positions_x = create_memo(move |_| {
             data_x.with(move |data_x| data_x.iter().map(|x| x.position()).collect::<Vec<_>>())
         });
-        let positions_y = data_y
+        let positions_y_lines = data_y_lines
             .iter()
             .map(|&data_y| {
                 create_memo(move |_| {
@@ -203,17 +203,17 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
                 )),
             }
         });
-        let range_y = positions_y
+        let range_y_lines = positions_y_lines
             .iter()
-            .zip(data_y.iter())
+            .zip(data_y_lines.iter())
             .map(|(&positions_y, &data_y)| {
                 create_memo(move |_| {
                     with!(|positions_y, data_y| Self::data_range(positions_y, data_y))
                 })
             })
             .collect::<Vec<_>>();
-        let range_y_abs: Memo<Option<(Y, Y)>> = {
-            let range_y = range_y.to_vec();
+        let range_y: Memo<Option<(Y, Y)>> = {
+            let range_y = range_y_lines.to_vec();
             create_memo(move |_| {
                 // Fetch min / max from each range
                 let ranges = range_y.iter().map(|r| r.get());
@@ -239,7 +239,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
                 .get()
                 .map(|(min, max)| (min.position(), max.position()))
                 .unwrap_or_default();
-            let (min_y, max_y) = range_y_abs
+            let (min_y, max_y) = range_y
                 .get()
                 .map(|(min, max)| (min.position(), max.position()))
                 .unwrap_or_default();
@@ -249,12 +249,12 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         UseData {
             lines,
             data_x,
-            data_y,
+            data_y_lines,
             range_x,
             range_y,
-            range_y_abs,
+            range_y_lines,
             positions_x,
-            positions_y,
+            positions_y_lines,
             position_range,
         }
     }
@@ -342,7 +342,7 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
         Y: Clone + PartialEq,
     {
         let index = self.nearest_index(pos_x);
-        self.data_y
+        self.data_y_lines
             .iter()
             .map(|&data_y| {
                 create_memo(move |_| {
@@ -379,7 +379,7 @@ pub fn RenderData<X: Clone + 'static, Y: Clone + 'static>(
     let proj = state.projection;
     let pos_x = data.positions_x;
     let svg_coords = data
-        .positions_y
+        .positions_y_lines
         .iter()
         .map(|&pos_y| {
             Signal::derive(move || {
