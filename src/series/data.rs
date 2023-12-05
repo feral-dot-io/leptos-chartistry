@@ -127,7 +127,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
     pub fn use_data(self, data: impl Into<Signal<Vec<T>>>) -> UseData<X, Y>
     where
         X: PartialOrd + Position,
-        Y: PartialOrd + Position + std::fmt::Debug,
+        Y: PartialOrd + Position,
     {
         let data = data.into();
 
@@ -175,7 +175,6 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         // Generate two sets of Ys: original and chart position. They can differ when stacked
         let data_y_lines = y_maker(true);
         let data_y_positions = y_maker(false);
-        log::info!("series: {:?}", series.get_untracked());
 
         // Position signals
         let positions_x = create_memo(move |_| {
@@ -239,13 +238,6 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
                 (line.id, ranges)
             })
             .collect::<HashMap<_, _>>();
-        log::info!(
-            "range_y_lines: {:?}",
-            range_y_lines
-                .iter()
-                .map(|(id, r)| (id, r.get_untracked()))
-                .collect::<Vec<_>>()
-        );
 
         let range_y = {
             let range_y = range_y_lines.clone().into_values().collect::<Vec<_>>();
@@ -267,7 +259,6 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
                 min.zip(max).map(|(min, max)| (min.clone(), max.clone()))
             })
         };
-        log::info!("range_y: {:?}", range_y.get_untracked());
 
         // Position range signal
         let position_range = create_memo(move |_| {
