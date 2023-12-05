@@ -382,26 +382,29 @@ pub fn RenderSeriesData<'a, X: Clone + 'static, Y: Clone + 'static>(
     data: UseData<X, Y>,
     state: &'a State<X, Y>,
 ) -> impl IntoView {
-    let data_x = data.positions_x;
     let proj = state.projection;
-    let svg_coords = move |pos_y: Memo<Vec<f64>>| {
-        Signal::derive(move || {
-            let proj = proj.get();
-            with!(|data_x, pos_y| {
-                data_x
-                    .iter()
-                    .zip(pos_y.iter())
-                    .map(|(x, y)| proj.position_to_svg(*x, *y))
-                    .collect::<Vec<_>>()
+    let pos_x = data.positions_x;
+    let svg_coords = data
+        .positions_y
+        .iter()
+        .map(|&pos_y| {
+            Signal::derive(move || {
+                let proj = proj.get();
+                with!(|pos_x, pos_y| {
+                    pos_x
+                        .iter()
+                        .zip(pos_y.iter())
+                        .map(|(x, y)| proj.position_to_svg(*x, *y))
+                        .collect::<Vec<_>>()
+                })
             })
         })
-    };
+        .collect::<Vec<_>>();
 
     let render = {
         let state = state.clone();
         move |series: UseSeries| {
-            let positions_y = data.positions_y[series.id];
-            let positions = svg_coords(positions_y);
+            let positions = svg_coords[series.id];
             series.render(positions, &state)
         }
     };
