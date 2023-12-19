@@ -76,17 +76,17 @@ impl<X: Clone, Y: Clone> VerticalLayout<X, Y> for Legend {
 }
 
 impl<X: Clone, Y: Clone> UseLayout<X, Y> for Legend {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: State<X, Y>) -> View {
         view! { <Legend legend=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
 
 #[component]
-pub fn Legend<'a, X: Clone + 'static, Y: Clone + 'static>(
+pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     legend: Legend,
     edge: Edge,
     bounds: Memo<Bounds>,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
     let Legend { anchor } = legend;
     let PreState {
@@ -141,9 +141,9 @@ pub fn Legend<'a, X: Clone + 'static, Y: Clone + 'static>(
 }
 
 #[component]
-fn VerticalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
+fn VerticalBody<X: Clone + 'static, Y: Clone + 'static>(
     series: Memo<Vec<UseLine>>,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
     let padding = state.pre.padding;
     let state = state.clone();
@@ -154,7 +154,7 @@ fn VerticalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
             let:series>
             <tr>
                 <td style:padding=move || padding.get().to_css_horizontal_style()>
-                    <Snippet series=series state=&state />
+                    <Snippet series=series state=state.clone() />
                 </td>
             </tr>
         </For>
@@ -162,9 +162,9 @@ fn VerticalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
 }
 
 #[component]
-fn HorizontalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
+fn HorizontalBody<X: Clone + 'static, Y: Clone + 'static>(
     series: Memo<Vec<UseLine>>,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
     let padding = state.pre.padding;
     let padding = move |i| -> Option<String> {
@@ -182,7 +182,7 @@ fn HorizontalBody<'a, X: Clone + 'static, Y: Clone + 'static>(
                 key=|(_, series)| series.id
                 let:series>
                 <td style:padding-left=move || padding(series.0)>
-                    <Snippet series=series.1 state=&state />
+                    <Snippet series=series.1 state=state.clone() />
                 </td>
             </For>
         </tr>

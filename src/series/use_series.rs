@@ -62,10 +62,7 @@ impl<T, Y> NextSeries<T, Y> {
 }
 
 #[component]
-pub fn Snippet<'a, X: 'static, Y: 'static>(
-    series: UseLine,
-    state: &'a State<X, Y>,
-) -> impl IntoView {
+pub fn Snippet<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
     let name = series.name.clone();
     view! {
@@ -78,10 +75,7 @@ pub fn Snippet<'a, X: 'static, Y: 'static>(
 }
 
 #[component]
-pub fn Taster<'a, X: 'static, Y: 'static>(
-    series: UseLine,
-    state: &'a State<X, Y>,
-) -> impl IntoView {
+pub fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
     let font = state.pre.font;
     let bounds = UseLine::taster_bounds(font);
@@ -93,7 +87,7 @@ pub fn Taster<'a, X: 'static, Y: 'static>(
             viewBox=move || format!("0 0 {} {}", bounds.get().width(), bounds.get().height())
             style:padding-right=move || format!("{}px", font.get().width())>
             <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
-            {series.taster(bounds, state)}
+            {series.taster(bounds)}
         </svg>
     }
 }

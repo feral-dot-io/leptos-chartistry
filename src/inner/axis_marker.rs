@@ -79,16 +79,13 @@ impl<X, Y> InnerLayout<X, Y> for AxisMarker {
 }
 
 impl<X, Y> UseInner<X, Y> for AxisMarker {
-    fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
+    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
         view!( <AxisMarker marker=(*self).clone() state=state /> )
     }
 }
 
 #[component]
-pub fn AxisMarker<'a, X: 'static, Y: 'static>(
-    marker: AxisMarker,
-    state: &'a State<X, Y>,
-) -> impl IntoView {
+pub fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
     let zero = state.svg_zero;
     let inner = state.layout.inner;

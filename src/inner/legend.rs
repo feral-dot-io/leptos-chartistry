@@ -50,15 +50,15 @@ impl<X: Clone, Y: Clone> InnerLayout<X, Y> for InsetLegend {
 }
 
 impl<X: Clone, Y: Clone> UseInner<X, Y> for InsetLegend {
-    fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
+    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
         view!( <InsetLegend legend=(*self).clone() state=state /> )
     }
 }
 
 #[component]
-fn InsetLegend<'a, X: Clone + 'static, Y: Clone + 'static>(
+fn InsetLegend<X: Clone + 'static, Y: Clone + 'static>(
     legend: InsetLegend,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
     let InsetLegend { edge, legend } = legend;
     let inner = state.layout.inner;

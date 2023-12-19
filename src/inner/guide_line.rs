@@ -71,13 +71,13 @@ impl<X, Y> InnerLayout<X, Y> for GuideLine {
 }
 
 impl<X, Y> UseInner<X, Y> for GuideLine {
-    fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
+    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
         view!( <GuideLine line=(*self).clone() state=state /> )
     }
 }
 
 #[component]
-fn GuideLine<'a, X: 'static, Y: 'static>(line: GuideLine, state: &'a State<X, Y>) -> impl IntoView {
+fn GuideLine<X: 'static, Y: 'static>(line: GuideLine, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
     let State {
         layout: Layout { inner, .. },
@@ -85,7 +85,7 @@ fn GuideLine<'a, X: 'static, Y: 'static>(line: GuideLine, state: &'a State<X, Y>
         mouse_chart,
         nearest_svg_x,
         ..
-    } = *state;
+    } = state;
 
     let pos = Signal::derive(move || {
         let (mouse_x, mouse_y) = mouse_chart.get();

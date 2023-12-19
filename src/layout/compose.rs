@@ -41,7 +41,7 @@ pub trait VerticalLayout<X, Y> {
 type UseLayoutResult<X, Y> = Rc<dyn UseLayout<X, Y>>;
 
 pub trait UseLayout<X, Y> {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View;
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: State<X, Y>) -> View;
 }
 
 #[derive(Clone)]
@@ -52,7 +52,7 @@ pub struct DeferredRender<X, Y> {
 }
 
 impl<X, Y> DeferredRender<X, Y> {
-    pub fn render(self, state: &State<X, Y>) -> View {
+    pub fn render(self, state: State<X, Y>) -> View {
         self.layout.render(self.edge, self.bounds, state)
     }
 }

@@ -1,5 +1,5 @@
 use super::use_series::{NextSeries, PrepareSeries, ToUseLine};
-use crate::{bounds::Bounds, colours::Colour, series::GetYValue, state::State, Font};
+use crate::{bounds::Bounds, colours::Colour, series::GetYValue, Font};
 use leptos::*;
 use std::rc::Rc;
 
@@ -88,17 +88,17 @@ impl UseLine {
         Signal::derive(move || taster_bounds.get().width() + font.get().width())
     }
 
-    pub fn taster<X, Y>(&self, bounds: Memo<Bounds>, _: &State<X, Y>) -> View {
-        view!( <LineTaster line=self bounds=bounds /> )
+    pub fn taster(&self, bounds: Memo<Bounds>) -> View {
+        view!( <LineTaster line=self.clone() bounds=bounds /> )
     }
 
     pub(super) fn render(&self, positions: Signal<Vec<(f64, f64)>>) -> View {
-        view!( <RenderLine line=self positions=positions /> )
+        view!( <RenderLine line=self.clone() positions=positions /> )
     }
 }
 
 #[component]
-fn LineTaster<'a>(line: &'a UseLine, bounds: Memo<Bounds>) -> impl IntoView {
+fn LineTaster(line: UseLine, bounds: Memo<Bounds>) -> impl IntoView {
     let colour = line.colour;
     view! {
         <line
@@ -113,7 +113,7 @@ fn LineTaster<'a>(line: &'a UseLine, bounds: Memo<Bounds>) -> impl IntoView {
 }
 
 #[component]
-pub fn RenderLine<'a>(line: &'a UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
+pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
     let path = move || {
         positions.with(|positions| {
             let mut need_move = true;

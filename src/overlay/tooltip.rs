@@ -130,15 +130,15 @@ impl<X> Tooltip<X, f64> {
 }
 
 impl<X: Clone + PartialEq, Y: Clone + PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
-    fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
+    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
         view!( <Tooltip tooltip=(*self).clone() state=state /> )
     }
 }
 
 #[component]
-fn Tooltip<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
+fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     tooltip: Tooltip<X, Y>,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
     let Tooltip {
         sort_by,
@@ -161,7 +161,7 @@ fn Tooltip<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         hover_inner,
         nearest_data_x,
         ..
-    } = *state;
+    } = state;
 
     let avail_width = Signal::derive(move || with!(|inner| inner.width()));
     let avail_height = Signal::derive(move || with!(|inner| inner.height()));
@@ -226,7 +226,7 @@ fn Tooltip<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         move |(series, y_value): (UseLine, String)| {
             view! {
                 <tr>
-                    <td><Snippet series=series state=&state /></td>
+                    <td><Snippet series=series state=state.clone() /></td>
                     <td
                         style="white-space: pre; font-family: monospace; text-align: right;"
                         style:padding-top=move || format!("{}px", font.get().height() / 4.0)

@@ -78,21 +78,21 @@ impl<X, Y: Clone + PartialEq> InnerLayout<X, Y> for VerticalGridLine<Y> {
 }
 
 impl<X: Clone, Y> UseInner<X, Y> for UseHorizontalGridLine<X> {
-    fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
+    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
         view!( <ViewHorizontalGridLine line=self.0.clone() state=state /> )
     }
 }
 
 impl<X, Y: Clone> UseInner<X, Y> for UseVerticalGridLine<Y> {
-    fn render(self: Rc<Self>, state: &State<X, Y>) -> View {
+    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
         view!( <ViewVerticalGridLine line=self.0.clone() state=state /> )
     }
 }
 
 #[component]
-fn ViewHorizontalGridLine<'a, X: 'static, Y: 'static>(
+fn ViewHorizontalGridLine<X: 'static, Y: 'static>(
     line: UseGridLine<X>,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
     let debug = state.pre.debug;
     let inner = state.layout.inner;
@@ -120,9 +120,9 @@ fn ViewHorizontalGridLine<'a, X: 'static, Y: 'static>(
 }
 
 #[component]
-fn ViewVerticalGridLine<'a, X: 'static, Y: 'static>(
+fn ViewVerticalGridLine<X: 'static, Y: 'static>(
     line: UseGridLine<Y>,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
     let debug = state.pre.debug;
     let inner = state.layout.inner;

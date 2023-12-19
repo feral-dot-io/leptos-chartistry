@@ -150,18 +150,21 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     let state = State::new(pre, &watch, layout, projection);
 
     // Render edges
-    let edges = edges.into_iter().map(|r| r.render(&state)).collect_view();
+    let edges = edges
+        .into_iter()
+        .map(|r| r.render(state.clone()))
+        .collect_view();
 
     // Inner
     let inner = inner
         .into_iter()
-        .map(|opt| opt.into_use(&state).render(&state))
+        .map(|opt| opt.into_use(&state).render(state.clone()))
         .collect_view();
 
     // Overlay
     let overlay = overlay
         .into_iter()
-        .map(|opt| opt.render(&state))
+        .map(|opt| opt.render(state.clone()))
         .collect_view();
 
     let outer = state.layout.outer;

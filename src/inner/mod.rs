@@ -12,5 +12,5 @@ pub trait InnerLayout<X, Y> {
 }
 
 pub trait UseInner<X, Y> {
-    fn render(self: Rc<Self>, state: &State<X, Y>) -> View;
+    fn render(self: Rc<Self>, state: State<X, Y>) -> View;
 }

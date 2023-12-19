@@ -76,7 +76,7 @@ pub fn App() -> impl IntoView {
         .inner(AxisMarker::left_edge())
         .inner(AxisMarker::horizontal_zero())
         // Grid lines
-        .inner(GridLine::horizontal(left_ticks.clone()))
+        //.inner(GridLine::horizontal(left_ticks.clone()))
         .inner(GridLine::vertical(bottom_ticks.clone()))
         // Guide lines
         .inner(GuideLine::x_axis_over_data())

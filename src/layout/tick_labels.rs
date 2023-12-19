@@ -194,7 +194,7 @@ impl<Tick: Clone> TickLabels<Tick> {
 }
 
 impl<X: Clone, Y: Clone> UseLayout<X, Y> for UseTickLabels {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: State<X, Y>) -> View {
         view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
@@ -218,11 +218,11 @@ pub fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
 }
 
 #[component]
-pub fn TickLabels<'a, X: Clone + 'static, Y: Clone + 'static>(
+pub fn TickLabels<X: Clone + 'static, Y: Clone + 'static>(
     ticks: UseTickLabels,
     edge: Edge,
     bounds: Memo<Bounds>,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
     let each_tick = move || {
         // Align vertical labels
@@ -243,17 +243,17 @@ pub fn TickLabels<'a, X: Clone + 'static, Y: Clone + 'static>(
                 each=each_tick
                 key=|(_, label)| label.to_owned()
                 let:tick>
-                <TickLabel edge=edge outer=bounds state=&state tick=tick />
+                <TickLabel edge=edge outer=bounds state=state.clone() tick=tick />
             </For>
         </g>
     }
 }
 
 #[component]
-fn TickLabel<'a, X: 'static, Y: 'static>(
+fn TickLabel<X: 'static, Y: 'static>(
     edge: Edge,
     outer: Memo<Bounds>,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
     tick: (f64, String),
 ) -> impl IntoView {
     let PreState {

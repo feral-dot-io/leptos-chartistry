@@ -103,17 +103,17 @@ impl Anchor {
 }
 
 impl<X, Y> UseLayout<X, Y> for RotatedLabel {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: &State<X, Y>) -> View {
+    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: State<X, Y>) -> View {
         view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds state=state /> }
     }
 }
 
 #[component]
-fn RotatedLabel<'a, X: 'static, Y: 'static>(
+fn RotatedLabel<X: 'static, Y: 'static>(
     label: RotatedLabel,
     edge: Edge,
     bounds: Memo<Bounds>,
-    state: &'a State<X, Y>,
+    state: State<X, Y>,
 ) -> impl IntoView {
     let RotatedLabel { text, anchor } = label;
     let PreState {
