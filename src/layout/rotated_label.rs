@@ -8,9 +8,10 @@ use crate::{
 use leptos::*;
 use std::rc::Rc;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum Anchor {
     Start,
+    #[default]
     Middle,
     End,
 }
@@ -98,6 +99,17 @@ impl Anchor {
             Anchor::Start => "flex-start",
             Anchor::Middle => "center",
             Anchor::End => "flex-end",
+        }
+    }
+}
+
+impl From<String> for Anchor {
+    fn from(s: String) -> Self {
+        match s.to_lowercase().as_str() {
+            "start" => Anchor::Start,
+            "middle" => Anchor::Middle,
+            "end" => Anchor::End,
+            _ => Anchor::default(),
         }
     }
 }
