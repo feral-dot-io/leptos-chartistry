@@ -19,7 +19,6 @@ pub struct Chart<X: 'static, Y: 'static> {
     right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
     bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
     left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
-    inner: Vec<Rc<dyn InnerLayout<X, Y>>>,
     series: UseData<X, Y>,
 }
 
@@ -30,7 +29,6 @@ impl<X, Y> Chart<X, Y> {
             right: vec![],
             bottom: vec![],
             left: vec![],
-            inner: vec![],
             series,
         }
     }
@@ -54,11 +52,6 @@ impl<X, Y> Chart<X, Y> {
         self.left.push(Rc::new(opt));
         self
     }
-
-    pub fn inner(mut self, opt: impl InnerLayout<X, Y> + 'static) -> Self {
-        self.inner.push(Rc::new(opt));
-        self
-    }
 }
 
 #[component]
@@ -68,6 +61,7 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     #[prop(into)] font: MaybeSignal<Font>,
     #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
+    #[prop(optional)] inner: Vec<InnerLayout<X, Y>>,
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 ) -> impl IntoView {
     let root = create_node_ref::<Div>();
@@ -88,6 +82,7 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             .map(|p| p.get())
             .unwrap_or_else(move || Padding::from(font.get().width()))
     });
+
     view! {
         <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
             <DebugRect label="Chart" debug=debug />
@@ -99,6 +94,7 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                     aspect_ratio=calc
                     font=move || font.get()
                     padding=move || padding.get()
+                    inner=inner.clone()
                     tooltip=tooltip.clone()
                 />
             </Show>
@@ -114,6 +110,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     aspect_ratio: Memo<AspectRatioCalc>,
     #[prop(into)] font: Signal<Font>,
     #[prop(into)] padding: Signal<Padding>,
+    inner: Vec<InnerLayout<X, Y>>,
     #[prop(into)] tooltip: Option<Tooltip<X, Y>>,
 ) -> impl IntoView {
     let Chart {
@@ -121,7 +118,6 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         right,
         bottom,
         mut left,
-        inner,
         series: data,
     } = chart;
 

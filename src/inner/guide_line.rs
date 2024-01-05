@@ -29,30 +29,32 @@ enum AlignOver {
 }
 
 impl GuideLine {
-    fn new(axis: Axis) -> Self {
-        Self {
+    fn layout<X: Clone, Y: Clone>(axis: Axis) -> InnerLayout<X, Y> {
+        InnerLayout::GuideLine(Self {
             axis,
             width: 1.0.into(),
             colour: Into::<Colour>::into(LIGHT_GREY).into(),
-        }
+        })
     }
 
-    pub fn x_axis() -> Self {
-        Self::new(Axis::X(AlignOver::default()))
+    pub fn x_axis<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Axis::X(AlignOver::default()))
     }
 
-    pub fn x_axis_over_data() -> Self {
-        Self::new(Axis::X(AlignOver::Data))
+    pub fn x_axis_over_data<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Axis::X(AlignOver::Data))
     }
 
-    pub fn x_axis_over_mouse() -> Self {
-        Self::new(Axis::X(AlignOver::Mouse))
+    pub fn x_axis_over_mouse<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Axis::X(AlignOver::Mouse))
     }
 
-    pub fn y_axis() -> Self {
-        Self::new(Axis::Y)
+    pub fn y_axis<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Axis::Y)
     }
+}
 
+impl GuideLine {
     pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
         self.width = width.into();
         self
@@ -60,12 +62,6 @@ impl GuideLine {
 
     pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Colour>>) -> Self {
         self.colour = colour.into();
-        self
-    }
-}
-
-impl<X, Y> InnerLayout<X, Y> for GuideLine {
-    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         self
     }
 }

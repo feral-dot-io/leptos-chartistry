@@ -24,38 +24,40 @@ enum Placement {
 }
 
 impl AxisMarker {
-    fn new(
+    fn layout<X: Clone, Y: Clone>(
         edge: impl Into<MaybeSignal<Edge>>,
         placement: impl Into<MaybeSignal<Placement>>,
-    ) -> Self {
-        Self {
+    ) -> InnerLayout<X, Y> {
+        InnerLayout::AxisMarker(Self {
             edge: edge.into(),
             placement: placement.into(),
             colour: Into::<Colour>::into(LIGHTISH_GREY).into(),
             arrow: true.into(),
             width: 1.0.into(),
-        }
+        })
     }
 
-    pub fn top_edge() -> Self {
-        Self::new(Edge::Top, Placement::Edge)
+    pub fn top_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Top, Placement::Edge)
     }
-    pub fn right_edge() -> Self {
-        Self::new(Edge::Right, Placement::Edge)
+    pub fn right_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Right, Placement::Edge)
     }
-    pub fn bottom_edge() -> Self {
-        Self::new(Edge::Bottom, Placement::Edge)
+    pub fn bottom_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Bottom, Placement::Edge)
     }
-    pub fn left_edge() -> Self {
-        Self::new(Edge::Left, Placement::Edge)
+    pub fn left_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Left, Placement::Edge)
     }
-    pub fn horizontal_zero() -> Self {
-        Self::new(Edge::Bottom, Placement::Zero)
+    pub fn horizontal_zero<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Bottom, Placement::Zero)
     }
-    pub fn vertical_zero() -> Self {
-        Self::new(Edge::Left, Placement::Zero)
+    pub fn vertical_zero<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Left, Placement::Zero)
     }
+}
 
+impl AxisMarker {
     pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Colour>>) -> Self {
         self.colour = colour.into();
         self
@@ -68,12 +70,6 @@ impl AxisMarker {
 
     pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
         self.width = width.into();
-        self
-    }
-}
-
-impl<X, Y> InnerLayout<X, Y> for AxisMarker {
-    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         self
     }
 }

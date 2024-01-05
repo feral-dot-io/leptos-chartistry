@@ -7,19 +7,28 @@ use crate::state::State;
 use leptos::*;
 use std::rc::Rc;
 
-pub trait InnerLayout<X, Y>: private::Sealed {
-    fn into_use(self: Rc<Self>, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>>;
+#[derive(Clone)]
+pub enum InnerLayout<X: Clone, Y: Clone> {
+    AxisMarker(axis_marker::AxisMarker),
+    HorizontalGridLine(grid_line::GridLine<X>),
+    VerticalGridLine(grid_line::GridLine<Y>),
+    // TODO: promote GuideLine::Axis into this enum
+    GuideLine(guide_line::GuideLine),
+    Legend(legend::InsetLegend),
+}
+
+impl<X: Clone + PartialEq, Y: Clone + PartialEq> InnerLayout<X, Y> {
+    pub fn into_use(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+        match self {
+            Self::AxisMarker(inner) => Rc::new(inner),
+            Self::HorizontalGridLine(inner) => inner.use_horizontal(state),
+            Self::VerticalGridLine(inner) => inner.use_vertical(state),
+            Self::GuideLine(inner) => Rc::new(inner),
+            Self::Legend(inner) => Rc::new(inner),
+        }
+    }
 }
 
 pub trait UseInner<X, Y> {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View;
-}
-
-mod private {
-    pub trait Sealed {}
-    impl Sealed for super::axis_marker::AxisMarker {}
-    impl<X: Clone> Sealed for super::grid_line::HorizontalGridLine<X> {}
-    impl<Y: Clone> Sealed for super::grid_line::VerticalGridLine<Y> {}
-    impl Sealed for super::guide_line::GuideLine {}
-    impl Sealed for super::legend::InsetLegend {}
 }

@@ -66,27 +66,15 @@ pub fn App() -> impl IntoView {
     let left_ticks = TickLabels::aligned_floats().set_min_chars(20);
     let bottom_ticks = TickLabels::timestamps();
 
-    let chart = Chart::new(font, series)
+    let chart = Chart::new(series)
         // Labels
         .top(top_label)
         // Ticks
         .left(left_ticks.clone())
         .bottom(bottom_ticks.clone())
-        // Axis lines
-        .inner(AxisMarker::left_edge())
-        .inner(AxisMarker::horizontal_zero())
-        // Grid lines
-        //.inner(GridLine::horizontal(left_ticks.clone()))
-        .inner(GridLine::vertical(bottom_ticks.clone()))
-        // Guide lines
-        .inner(GuideLine::x_axis_over_data())
-        .inner(GuideLine::y_axis())
         // Legend
         .top(Legend::end())
-        .right(Legend::middle())
-        .inner(InsetLegend::top_right())
-        // Tooltip
-        .overlay(Tooltip::left_cursor(&bottom_ticks, &left_ticks).sort_by_f64_descending());
+        .right(Legend::middle());
 
     view! {
         <h1>"Chartistry"</h1>
@@ -119,9 +107,20 @@ pub fn App() -> impl IntoView {
 
         <Chart
             chart=chart
-            debug=debug
             aspect_ratio=AspectRatio::outer_width(1100.0, 0.6)
+            font=font
+            debug=debug
             padding=padding
+            inner=vec![
+                AxisMarker::left_edge(),
+                AxisMarker::horizontal_zero(),
+                GridLine::horizontal(left_ticks.clone()),
+                GridLine::vertical(bottom_ticks.clone()),
+                GuideLine::x_axis_over_data(),
+                GuideLine::y_axis(),
+                InsetLegend::top_right()
+            ]
+            tooltip=Tooltip::left_cursor(&bottom_ticks, &left_ticks).sort_by_f64_descending()
         />
     }
 }

@@ -10,42 +10,36 @@ pub struct InsetLegend {
 }
 
 impl InsetLegend {
-    fn new(edge: Edge, anchor: Anchor) -> Self {
-        Self {
+    fn layout<X: Clone, Y: Clone>(edge: Edge, anchor: Anchor) -> InnerLayout<X, Y> {
+        InnerLayout::Legend(Self {
             edge,
             legend: Legend::new(anchor),
-        }
+        })
     }
 
-    pub fn top_left() -> Self {
-        Self::new(Edge::Top, Anchor::Start)
+    pub fn top_left<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Top, Anchor::Start)
     }
-    pub fn top() -> Self {
-        Self::new(Edge::Top, Anchor::Middle)
+    pub fn top<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Top, Anchor::Middle)
     }
-    pub fn top_right() -> Self {
-        Self::new(Edge::Top, Anchor::End)
+    pub fn top_right<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Top, Anchor::End)
     }
-    pub fn bottom_left() -> Self {
-        Self::new(Edge::Bottom, Anchor::Start)
+    pub fn bottom_left<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Bottom, Anchor::Start)
     }
-    pub fn bottom() -> Self {
-        Self::new(Edge::Bottom, Anchor::Middle)
+    pub fn bottom<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Bottom, Anchor::Middle)
     }
-    pub fn bottom_right() -> Self {
-        Self::new(Edge::Bottom, Anchor::End)
+    pub fn bottom_right<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Bottom, Anchor::End)
     }
-    pub fn left() -> Self {
-        Self::new(Edge::Left, Anchor::Middle)
+    pub fn left<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Left, Anchor::Middle)
     }
-    pub fn right() -> Self {
-        Self::new(Edge::Right, Anchor::Middle)
-    }
-}
-
-impl<X: Clone, Y: Clone> InnerLayout<X, Y> for InsetLegend {
-    fn into_use(self: Rc<Self>, _: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
-        self
+    pub fn right<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        Self::layout(Edge::Right, Anchor::Middle)
     }
 }
 

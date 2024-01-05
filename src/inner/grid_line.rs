@@ -18,11 +18,6 @@ pub struct GridLine<Tick: Clone> {
 }
 
 #[derive(Clone)]
-pub struct HorizontalGridLine<X: Clone>(GridLine<X>);
-#[derive(Clone)]
-pub struct VerticalGridLine<Y: Clone>(GridLine<Y>);
-
-#[derive(Clone)]
 struct UseGridLine<Tick: 'static> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Colour>,
@@ -35,44 +30,49 @@ struct UseHorizontalGridLine<X: 'static>(UseGridLine<X>);
 struct UseVerticalGridLine<Y: 'static>(UseGridLine<Y>);
 
 impl<Tick: Clone> GridLine<Tick> {
-    fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
+    fn layout(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
         Self {
             width: 1.0.into(),
             colour: Into::<Colour>::into(LIGHTER_GREY).into(),
             ticks: ticks.borrow().clone(),
         }
     }
+}
 
+impl<X: Clone> GridLine<X> {
     /// Vertical grid lines running parallel to the y-axis. These run from top to bottom at each tick.
-    pub fn vertical(ticks: impl Borrow<TickLabels<Tick>>) -> HorizontalGridLine<Tick> {
-        HorizontalGridLine(Self::new(ticks))
-    }
-    /// Horizontal grid lines running parallel to the x-axis. These run from left to right at each tick.
-    pub fn horizontal(ticks: impl Borrow<TickLabels<Tick>>) -> VerticalGridLine<Tick> {
-        VerticalGridLine(Self::new(ticks))
+    pub fn vertical<Y: Clone>(ticks: impl Borrow<TickLabels<X>>) -> InnerLayout<X, Y> {
+        InnerLayout::HorizontalGridLine(Self::layout(ticks))
     }
 }
 
-impl<X: Clone + PartialEq, Y> InnerLayout<X, Y> for HorizontalGridLine<X> {
-    fn into_use(self: Rc<Self>, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+impl<Y: Clone> GridLine<Y> {
+    /// Horizontal grid lines running parallel to the x-axis. These run from left to right at each tick.
+    pub fn horizontal<X: Clone>(ticks: impl Borrow<TickLabels<Y>>) -> InnerLayout<X, Y> {
+        InnerLayout::VerticalGridLine(Self::layout(ticks))
+    }
+}
+
+impl<X: Clone + PartialEq> GridLine<X> {
+    pub fn use_horizontal<Y>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_width = Signal::derive(move || with!(|inner| inner.width()));
         Rc::new(UseHorizontalGridLine(UseGridLine {
-            width: self.0.width,
-            colour: self.0.colour,
-            ticks: self.0.ticks.clone().generate_x(&state.pre, avail_width),
+            width: self.width,
+            colour: self.colour,
+            ticks: self.ticks.clone().generate_x(&state.pre, avail_width),
         }))
     }
 }
 
-impl<X, Y: Clone + PartialEq> InnerLayout<X, Y> for VerticalGridLine<Y> {
-    fn into_use(self: Rc<Self>, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+impl<Y: Clone + PartialEq> GridLine<Y> {
+    pub fn use_vertical<X>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_height = Signal::derive(move || with!(|inner| inner.height()));
         Rc::new(UseVerticalGridLine(UseGridLine {
-            width: self.0.width,
-            colour: self.0.colour,
-            ticks: self.0.ticks.clone().generate_y(&state.pre, avail_height),
+            width: self.width,
+            colour: self.colour,
+            ticks: self.ticks.clone().generate_y(&state.pre, avail_height),
         }))
     }
 }
