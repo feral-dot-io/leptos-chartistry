@@ -28,7 +28,7 @@ pub use layout::{
     tick_labels::TickLabels,
     HorizontalLayout, VerticalLayout,
 };
-pub use overlay::{tooltip::Tooltip, OverlayLayout};
+pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;
 pub use series::{Line, Series, Stack, UseData};
 pub use ticks::{Period, TickState};
