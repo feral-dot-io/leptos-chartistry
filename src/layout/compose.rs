@@ -21,7 +21,7 @@ pub struct Layout {
     pub inner: Memo<Bounds>,
 }
 
-pub trait HorizontalLayout<X, Y> {
+pub trait HorizontalLayout<X, Y>: private::Sealed {
     fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64>;
     fn into_use(
         self: Rc<Self>,
@@ -30,12 +30,19 @@ pub trait HorizontalLayout<X, Y> {
     ) -> UseLayoutResult<X, Y>;
 }
 
-pub trait VerticalLayout<X, Y> {
+pub trait VerticalLayout<X, Y>: private::Sealed {
     fn into_use(
         self: Rc<Self>,
         state: &PreState<X, Y>,
         inner_height: Memo<f64>,
     ) -> (Signal<f64>, UseLayoutResult<X, Y>);
+}
+
+mod private {
+    pub trait Sealed {}
+    impl Sealed for super::super::legend::Legend {}
+    impl Sealed for super::super::rotated_label::RotatedLabel {}
+    impl<Tick> Sealed for super::super::tick_labels::TickLabels<Tick> {}
 }
 
 type UseLayoutResult<X, Y> = Rc<dyn UseLayout<X, Y>>;

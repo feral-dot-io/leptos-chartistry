@@ -20,13 +20,15 @@ pub use chart::Chart;
 pub use font::Font;
 pub use inner::{
     axis_marker::AxisMarker, grid_line::GridLine, guide_line::GuideLine, legend::InsetLegend,
+    InnerLayout,
 };
 pub use layout::{
     legend::Legend,
     rotated_label::{Anchor, RotatedLabel},
     tick_labels::TickLabels,
+    HorizontalLayout, VerticalLayout,
 };
-pub use overlay::tooltip::Tooltip;
+pub use overlay::{tooltip::Tooltip, OverlayLayout};
 pub use padding::Padding;
 pub use series::{Line, Series, Stack, UseData};
 pub use ticks::{Period, TickState};
