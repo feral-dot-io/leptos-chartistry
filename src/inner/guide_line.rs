@@ -2,59 +2,58 @@ use super::{InnerLayout, UseInner};
 use crate::{
     colours::{Colour, LIGHT_GREY},
     debug::DebugRect,
-    layout::Layout,
     state::State,
 };
 use leptos::*;
 use std::rc::Rc;
 
-#[derive(Clone, Debug)]
-pub struct GuideLine {
-    axis: Axis,
-    width: MaybeSignal<f64>,
-    colour: MaybeSignal<Colour>,
-}
-
 #[derive(Copy, Clone, Debug, PartialEq)]
-enum Axis {
-    X(AlignOver),
-    Y,
-}
-
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
 enum AlignOver {
-    #[default]
     Data,
     Mouse,
 }
 
+#[derive(Clone, Debug)]
+pub struct GuideLine {
+    align: AlignOver,
+    width: MaybeSignal<f64>,
+    colour: MaybeSignal<Colour>,
+}
+
+#[derive(Clone)]
+struct UseXGuideLine(GuideLine);
+#[derive(Clone)]
+struct UseYGuideLine(GuideLine);
+
 impl GuideLine {
-    fn layout<X: Clone, Y: Clone>(axis: Axis) -> InnerLayout<X, Y> {
-        InnerLayout::GuideLine(Self {
-            axis,
+    fn new(align: AlignOver) -> Self {
+        Self {
+            align,
             width: 1.0.into(),
             colour: Into::<Colour>::into(LIGHT_GREY).into(),
-        })
+        }
     }
 
     pub fn x_axis<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Axis::X(AlignOver::default()))
+        InnerLayout::XGuideLine(Self::new(AlignOver::Data))
     }
 
     pub fn x_axis_over_data<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Axis::X(AlignOver::Data))
+        InnerLayout::XGuideLine(Self::new(AlignOver::Data))
     }
 
     pub fn x_axis_over_mouse<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Axis::X(AlignOver::Mouse))
+        InnerLayout::XGuideLine(Self::new(AlignOver::Mouse))
     }
 
     pub fn y_axis<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Axis::Y)
+        InnerLayout::YGuideLine(Self::new(AlignOver::Mouse))
     }
-}
 
-impl GuideLine {
+    pub fn y_axis_over_mouse<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
+        InnerLayout::YGuideLine(Self::new(AlignOver::Mouse))
+    }
+
     pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
         self.width = width.into();
         self
@@ -66,35 +65,74 @@ impl GuideLine {
     }
 }
 
-impl<X, Y> UseInner<X, Y> for GuideLine {
+impl GuideLine {
+    pub(crate) fn use_x<X, Y>(self) -> Rc<dyn UseInner<X, Y>> {
+        Rc::new(UseXGuideLine(self))
+    }
+
+    pub(crate) fn use_y<X, Y>(self) -> Rc<dyn UseInner<X, Y>> {
+        Rc::new(UseYGuideLine(self))
+    }
+}
+
+impl<X, Y> UseInner<X, Y> for UseXGuideLine {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <GuideLine line=(*self).clone() state=state /> )
+        view!( <XGuideLine line=self.0.clone() state=state /> )
+    }
+}
+
+impl<X, Y> UseInner<X, Y> for UseYGuideLine {
+    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
+        view!( <YGuideLine line=self.0.clone() state=state /> )
     }
 }
 
 #[component]
-fn GuideLine<X: 'static, Y: 'static>(line: GuideLine, state: State<X, Y>) -> impl IntoView {
-    let debug = state.pre.debug;
-    let State {
-        layout: Layout { inner, .. },
-        hover_inner,
-        mouse_chart,
-        nearest_svg_x,
-        ..
-    } = state;
-
+fn XGuideLine<X: 'static, Y: 'static>(line: GuideLine, state: State<X, Y>) -> impl IntoView {
+    let inner = state.layout.inner;
+    let mouse_chart = state.mouse_chart;
+    let nearest_svg_x = state.nearest_svg_x;
     let pos = Signal::derive(move || {
-        let (mouse_x, mouse_y) = mouse_chart.get();
+        let (mouse_x, _) = mouse_chart.get();
         let inner = inner.get();
-        match line.axis {
-            Axis::X(AlignOver::Data) => {
+        match line.align {
+            AlignOver::Data => {
                 let svg_x = nearest_svg_x.get();
                 (svg_x, inner.top_y(), svg_x, inner.bottom_y())
             }
-            Axis::X(AlignOver::Mouse) => (mouse_x, inner.top_y(), mouse_x, inner.bottom_y()),
-            Axis::Y => (inner.left_x(), mouse_y, inner.right_x(), mouse_y),
+            AlignOver::Mouse => (mouse_x, inner.top_y(), mouse_x, inner.bottom_y()),
         }
     });
+    view! {
+        <GuideLine id="x" line=line state=state pos=pos />
+    }
+}
+
+#[component]
+fn YGuideLine<X: 'static, Y: 'static>(line: GuideLine, state: State<X, Y>) -> impl IntoView {
+    let inner = state.layout.inner;
+    let mouse_chart = state.mouse_chart;
+    // TODO align over
+    let pos = Signal::derive(move || {
+        let (_, mouse_y) = mouse_chart.get();
+        let inner = inner.get();
+        (inner.left_x(), mouse_y, inner.right_x(), mouse_y)
+    });
+    view! {
+        <GuideLine id="y" line=line state=state pos=pos />
+    }
+}
+
+#[component]
+fn GuideLine<X: 'static, Y: 'static>(
+    id: &'static str,
+    line: GuideLine,
+    state: State<X, Y>,
+    pos: Signal<(f64, f64, f64, f64)>,
+) -> impl IntoView {
+    let debug = state.pre.debug;
+    let hover_inner = state.hover_inner;
+
     let x1 = create_memo(move |_| pos.get().0);
     let y1 = create_memo(move |_| pos.get().1);
     let x2 = create_memo(move |_| pos.get().2);
@@ -106,9 +144,9 @@ fn GuideLine<X: 'static, Y: 'static>(line: GuideLine, state: State<X, Y>) -> imp
     });
 
     view! {
-        <g class=format!("_chartistry_guide_line_{}", line.axis)>
+        <g class=format!("_chartistry_{}_guide_line", id)>
             <Show when=move || hover_inner.get() && have_data.get() >
-                <DebugRect label=format!("guide_line_{}", line.axis) debug=debug />
+                <DebugRect label=format!("{}_guide_line", id) debug=debug />
                 <line
                     x1=x1
                     y1=y1
@@ -119,14 +157,5 @@ fn GuideLine<X: 'static, Y: 'static>(line: GuideLine, state: State<X, Y>) -> imp
                 />
             </Show>
         </g>
-    }
-}
-
-impl std::fmt::Display for Axis {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Axis::X(_) => write!(f, "x"),
-            Axis::Y => write!(f, "y"),
-        }
     }
 }

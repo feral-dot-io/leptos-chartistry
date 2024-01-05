@@ -365,6 +365,26 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
         })
     }
 
+    pub fn nearest_position_y(&self, pos_x: Signal<f64>) -> Vec<(UseLine, Memo<f64>)>
+    where
+        Y: Clone + PartialEq,
+    {
+        let index_x = self.nearest_index(pos_x);
+        self.positions_y_lines
+            .iter()
+            .map(|(id, &pos_y)| {
+                let line = self.series_by_id[&id].clone();
+                let value = create_memo(move |_| {
+                    index_x
+                        .get()
+                        .map(|index_x| with!(|pos_y| pos_y[index_x]))
+                        .unwrap_or(f64::NAN)
+                });
+                (line, value)
+            })
+            .collect::<Vec<_>>()
+    }
+
     pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Vec<(UseLine, Memo<Option<Y>>)>
     where
         Y: Clone + PartialEq,

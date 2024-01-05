@@ -54,7 +54,7 @@ impl<Y: Clone> GridLine<Y> {
 }
 
 impl<X: Clone + PartialEq> GridLine<X> {
-    pub fn use_horizontal<Y>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+    pub(crate) fn use_horizontal<Y>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_width = Signal::derive(move || with!(|inner| inner.width()));
         Rc::new(UseHorizontalGridLine(UseGridLine {
@@ -66,7 +66,7 @@ impl<X: Clone + PartialEq> GridLine<X> {
 }
 
 impl<Y: Clone + PartialEq> GridLine<Y> {
-    pub fn use_vertical<X>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+    pub(crate) fn use_vertical<X>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_height = Signal::derive(move || with!(|inner| inner.height()));
         Rc::new(UseVerticalGridLine(UseGridLine {

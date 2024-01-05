@@ -12,8 +12,8 @@ pub enum InnerLayout<X: Clone, Y: Clone> {
     AxisMarker(axis_marker::AxisMarker),
     HorizontalGridLine(grid_line::GridLine<X>),
     VerticalGridLine(grid_line::GridLine<Y>),
-    // TODO: promote GuideLine::Axis into this enum
-    GuideLine(guide_line::GuideLine),
+    XGuideLine(guide_line::GuideLine),
+    YGuideLine(guide_line::GuideLine),
     Legend(legend::InsetLegend),
 }
 
@@ -23,7 +23,8 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> InnerLayout<X, Y> {
             Self::AxisMarker(inner) => Rc::new(inner),
             Self::HorizontalGridLine(inner) => inner.use_horizontal(state),
             Self::VerticalGridLine(inner) => inner.use_vertical(state),
-            Self::GuideLine(inner) => Rc::new(inner),
+            Self::XGuideLine(inner) => inner.use_x(),
+            Self::YGuideLine(inner) => inner.use_y(),
             Self::Legend(inner) => Rc::new(inner),
         }
     }
