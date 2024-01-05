@@ -111,7 +111,7 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     #[prop(into)] font: Signal<Font>,
     #[prop(into)] padding: Signal<Padding>,
     inner: Vec<InnerLayout<X, Y>>,
-    #[prop(into)] tooltip: Option<Tooltip<X, Y>>,
+    tooltip: Option<Tooltip<X, Y>>,
 ) -> impl IntoView {
     let Chart {
         mut top,
