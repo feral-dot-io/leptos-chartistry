@@ -3,7 +3,7 @@ use crate::{
     debug::DebugRect,
     inner::InnerLayout,
     layout::{HorizontalLayout, Layout, VerticalLayout},
-    overlay::OverlayLayout,
+    overlay::tooltip::Tooltip,
     projection::Projection,
     series::{RenderData, UseData},
     state::{PreState, State},
@@ -15,28 +15,22 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Chart<X: 'static, Y: 'static> {
-    font: Signal<Font>,
-
     top: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
     right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
     bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
     left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
     inner: Vec<Rc<dyn InnerLayout<X, Y>>>,
-    overlay: Vec<Rc<dyn OverlayLayout<X, Y>>>,
     series: UseData<X, Y>,
 }
 
 impl<X, Y> Chart<X, Y> {
-    pub fn new(font: impl Into<Signal<Font>>, series: UseData<X, Y>) -> Self {
+    pub fn new(series: UseData<X, Y>) -> Self {
         Self {
-            font: font.into(),
-
             top: vec![],
             right: vec![],
             bottom: vec![],
             left: vec![],
             inner: vec![],
-            overlay: vec![],
             series,
         }
     }
@@ -65,19 +59,16 @@ impl<X, Y> Chart<X, Y> {
         self.inner.push(Rc::new(opt));
         self
     }
-
-    pub fn overlay(mut self, opt: impl OverlayLayout<X, Y> + 'static) -> Self {
-        self.overlay.push(Rc::new(opt));
-        self
-    }
 }
 
 #[component]
 pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     chart: Chart<X, Y>,
-    #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into)] aspect_ratio: MaybeSignal<AspectRatio>,
+    #[prop(into)] font: MaybeSignal<Font>,
+    #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
+    #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 ) -> impl IntoView {
     let root = create_node_ref::<Div>();
     let watch = use_watched_node(root);
@@ -95,7 +86,7 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     let padding = create_memo(move |_| {
         padding
             .map(|p| p.get())
-            .unwrap_or_else(move || Padding::from(chart.font.get().width()))
+            .unwrap_or_else(move || Padding::from(font.get().width()))
     });
     view! {
         <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
@@ -106,7 +97,9 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                     watch=watch.clone()
                     debug=debug
                     aspect_ratio=calc
+                    font=move || font.get()
                     padding=move || padding.get()
+                    tooltip=tooltip.clone()
                 />
             </Show>
         </div>
@@ -119,17 +112,16 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     watch: UseWatchedNode,
     #[prop(into)] debug: Signal<bool>,
     aspect_ratio: Memo<AspectRatioCalc>,
+    #[prop(into)] font: Signal<Font>,
     #[prop(into)] padding: Signal<Padding>,
+    #[prop(into)] tooltip: Option<Tooltip<X, Y>>,
 ) -> impl IntoView {
     let Chart {
-        font,
-
         mut top,
         right,
         bottom,
         mut left,
         inner,
-        overlay,
         series: data,
     } = chart;
 
@@ -161,12 +153,6 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         .map(|opt| opt.into_use(&state).render(state.clone()))
         .collect_view();
 
-    // Overlay
-    let overlay = overlay
-        .into_iter()
-        .map(|opt| opt.render(state.clone()))
-        .collect_view();
-
     let outer = state.layout.outer;
     view! {
         <svg
@@ -177,8 +163,10 @@ fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
             {inner}
             {edges}
-            <RenderData data=data state=state />
+            <RenderData data=data state=state.clone() />
         </svg>
-        {overlay}
+        {tooltip.map(|tooltip| view! {
+            <Tooltip tooltip=tooltip state=state />
+        })}
     }
 }
