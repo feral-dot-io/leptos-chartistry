@@ -1,4 +1,3 @@
-use super::OverlayLayout;
 use crate::{
     debug::DebugRect,
     layout::Layout,
@@ -129,14 +128,8 @@ impl<X> Tooltip<X, f64> {
     }
 }
 
-impl<X: Clone + PartialEq, Y: Clone + PartialEq> OverlayLayout<X, Y> for Tooltip<X, Y> {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <Tooltip tooltip=(*self).clone() state=state /> )
-    }
-}
-
 #[component]
-fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
+pub fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     tooltip: Tooltip<X, Y>,
     state: State<X, Y>,
 ) -> impl IntoView {
