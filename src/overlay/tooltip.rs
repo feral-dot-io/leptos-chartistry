@@ -17,9 +17,10 @@ type SortByFn<Y> = dyn Fn(&mut [(UseLine, Option<Y>)]);
 
 #[derive(Clone)]
 pub struct Tooltip<X, Y> {
-    sort_by: Rc<SortByFn<Y>>,
     skip_missing: MaybeSignal<bool>,
-    table_margin: Option<MaybeSignal<f64>>,
+    table_margin: MaybeSignal<Option<f64>>,
+    sort_by: Rc<SortByFn<Y>>,
+
     x_format: TickFormatFn<X>,
     y_format: TickFormatFn<Y>,
 
@@ -30,9 +31,9 @@ pub struct Tooltip<X, Y> {
 impl<X: Clone, Y: Clone> Tooltip<X, Y> {
     fn new(x_ticks: impl Borrow<TickLabels<X>>, y_ticks: impl Borrow<TickLabels<Y>>) -> Self {
         Self {
-            sort_by: Rc::new(|_| ()),
             skip_missing: false.into(),
-            table_margin: None,
+            table_margin: None.into(),
+            sort_by: Rc::new(|_| ()),
             x_format: Rc::new(|s, t| s.long_format(t)),
             y_format: Rc::new(|s, t| s.long_format(t)),
             x_ticks: x_ticks.borrow().clone(),
@@ -54,8 +55,8 @@ impl<X, Y> Tooltip<X, Y> {
         self
     }
 
-    pub fn set_table_margin(mut self, table_margin: impl Into<MaybeSignal<f64>>) -> Self {
-        self.table_margin = Some(table_margin.into());
+    pub fn set_table_margin(mut self, table_margin: impl Into<MaybeSignal<Option<f64>>>) -> Self {
+        self.table_margin = table_margin.into();
         self
     }
 
@@ -136,11 +137,11 @@ pub fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     let Tooltip {
         sort_by,
         skip_missing,
+        table_margin,
         x_format,
         y_format,
         x_ticks,
         y_ticks,
-        ..
     } = tooltip;
     let PreState {
         debug,
@@ -231,9 +232,8 @@ pub fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
         }
     };
 
-    let table_margin = tooltip
-        .table_margin
-        .unwrap_or_else(|| Signal::derive(move || font.get().height()).into());
+    let table_margin =
+        Signal::derive(move || table_margin.get().unwrap_or_else(|| font.get().height()));
     view! {
         <Show when=move || hover_inner.get()>
             <DebugRect label="tooltip" debug=debug />
