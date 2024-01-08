@@ -30,7 +30,7 @@ struct UseHorizontalGridLine<X: 'static>(UseGridLine<X>);
 struct UseVerticalGridLine<Y: 'static>(UseGridLine<Y>);
 
 impl<Tick: Clone> GridLine<Tick> {
-    fn layout(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
+    fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
         Self {
             width: 1.0.into(),
             colour: Into::<Colour>::into(LIGHTER_GREY).into(),
@@ -42,14 +42,14 @@ impl<Tick: Clone> GridLine<Tick> {
 impl<X: Clone> GridLine<X> {
     /// Vertical grid lines running parallel to the y-axis. These run from top to bottom at each tick.
     pub fn vertical<Y: Clone>(ticks: impl Borrow<TickLabels<X>>) -> InnerLayout<X, Y> {
-        InnerLayout::HorizontalGridLine(Self::layout(ticks))
+        InnerLayout::HorizontalGridLine(Self::new(ticks))
     }
 }
 
 impl<Y: Clone> GridLine<Y> {
     /// Horizontal grid lines running parallel to the x-axis. These run from left to right at each tick.
     pub fn horizontal<X: Clone>(ticks: impl Borrow<TickLabels<Y>>) -> InnerLayout<X, Y> {
-        InnerLayout::VerticalGridLine(Self::layout(ticks))
+        InnerLayout::VerticalGridLine(Self::new(ticks))
     }
 }
 
