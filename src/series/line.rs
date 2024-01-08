@@ -8,6 +8,7 @@ use std::rc::Rc;
 pub struct Line<T, Y> {
     get_y: Rc<dyn GetYValue<T, Y>>,
     name: MaybeSignal<String>,
+    colour: MaybeSignal<Option<Colour>>,
     width: MaybeSignal<f64>,
 }
 
@@ -24,12 +25,18 @@ impl<T, Y> Line<T, Y> {
         Self {
             get_y: Rc::new(get_y),
             name: MaybeSignal::default(),
+            colour: MaybeSignal::default(),
             width: 1.0.into(),
         }
     }
 
     pub fn set_name(mut self, name: impl Into<MaybeSignal<String>>) -> Self {
         self.name = name.into();
+        self
+    }
+
+    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
+        self.colour = colour.into();
         self
     }
 
@@ -50,6 +57,7 @@ impl<T, Y> Clone for Line<T, Y> {
         Self {
             get_y: self.get_y.clone(),
             name: self.name.clone(),
+            colour: self.colour,
             width: self.width,
         }
     }
@@ -67,6 +75,8 @@ impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
 
 impl<T, Y> ToUseLine<T, Y> for Line<T, Y> {
     fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (Rc<dyn GetYValue<T, Y>>, UseLine) {
+        let override_colour = self.colour;
+        let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
         let line = UseLine {
             id,
             name: self.name.clone(),
