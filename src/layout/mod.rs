@@ -13,6 +13,7 @@ use crate::{
 use leptos::*;
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub enum HorizontalLayout<X> {
     Legend(legend::Legend),
     RotatedLabel(rotated_label::RotatedLabel),
@@ -20,26 +21,27 @@ pub enum HorizontalLayout<X> {
 }
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub enum VerticalLayout<Y> {
     Legend(legend::Legend),
     RotatedLabel(rotated_label::RotatedLabel),
     TickLabels(tick_labels::TickLabels<Y>),
 }
 
-pub struct UseVerticalLayout {
-    pub width: Signal<f64>,
-    pub layout: UseLayout,
+struct UseVerticalLayout {
+    width: Signal<f64>,
+    layout: UseLayout,
 }
 
 #[derive(Clone)]
-pub enum UseLayout {
+enum UseLayout {
     Legend(legend::Legend),
     RotatedLabel(rotated_label::RotatedLabel),
     TickLabels(tick_labels::UseTickLabels),
 }
 
 impl UseLayout {
-    pub fn render<X: Clone, Y: Clone>(
+    fn render<X: Clone, Y: Clone>(
         self,
         edge: Edge,
         bounds: Memo<Bounds>,
@@ -60,7 +62,7 @@ impl UseLayout {
 }
 
 impl<X: PartialEq> HorizontalLayout<X> {
-    pub fn fixed_height<Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    fn fixed_height<Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         match self {
             Self::Legend(inner) => inner.fixed_height(state),
             Self::RotatedLabel(inner) => inner.fixed_height(state),
@@ -68,7 +70,7 @@ impl<X: PartialEq> HorizontalLayout<X> {
         }
     }
 
-    pub fn to_use<Y>(&self, state: &PreState<X, Y>, avail_width: Memo<f64>) -> UseLayout {
+    fn to_use<Y>(&self, state: &PreState<X, Y>, avail_width: Memo<f64>) -> UseLayout {
         match self {
             Self::Legend(inner) => inner.to_horizontal_use(),
             Self::RotatedLabel(inner) => inner.to_horizontal_use(),
@@ -78,7 +80,7 @@ impl<X: PartialEq> HorizontalLayout<X> {
 }
 
 impl<Y: PartialEq> VerticalLayout<Y> {
-    pub fn to_use<X>(&self, state: &PreState<X, Y>, avail_height: Memo<f64>) -> UseVerticalLayout {
+    fn to_use<X>(&self, state: &PreState<X, Y>, avail_height: Memo<f64>) -> UseVerticalLayout {
         match self {
             Self::Legend(inner) => inner.to_vertical_use(state),
             Self::RotatedLabel(inner) => inner.to_vertical_use(state),
