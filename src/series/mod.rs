@@ -24,7 +24,6 @@ pub struct SeriesAcc<T, Y> {
     get_ys: HashMap<usize, GetY<T, Y>>,
 }
 
-// TODO rename to Series
 pub trait Series<T, Y> {
     fn prepare(self: Rc<Self>, acc: &mut SeriesAcc<T, Y>);
 }
