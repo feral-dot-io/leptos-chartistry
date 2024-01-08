@@ -59,13 +59,6 @@ impl UseLayout {
     }
 }
 
-// TODO consider different impl to avoid this
-impl UseVerticalLayout {
-    fn unzip(self) -> (Signal<f64>, UseLayout) {
-        (self.width, self.layout)
-    }
-}
-
 impl<X: PartialEq> HorizontalLayout<X> {
     pub fn fixed_height<Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         match self {
@@ -93,6 +86,8 @@ impl<Y: PartialEq> VerticalLayout<Y> {
         }
     }
 }
+
+// TODO: use macros to reduce boilerplate
 
 /// Conversion to a HorizontalLayout
 pub trait ToHorizontal<X> {

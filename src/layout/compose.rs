@@ -172,7 +172,10 @@ fn use_vertical<X: PartialEq, Y: PartialEq>(
 ) -> (Vec<Signal<f64>>, Vec<UseLayout>) {
     items
         .iter()
-        .map(|c| c.to_use(state, avail_height).unzip())
+        .map(|c| {
+            let vert = c.to_use(state, avail_height);
+            (vert.width, vert.layout)
+        })
         .unzip()
 }
 
