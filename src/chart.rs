@@ -28,6 +28,10 @@ pub fn Chart<T, X, Y>(
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 
     #[prop(into)] series: Series<T, X, Y>,
+    #[prop(into, optional)] min_x: MaybeSignal<Option<X>>,
+    #[prop(into, optional)] max_x: MaybeSignal<Option<X>>,
+    #[prop(into, optional)] min_y: MaybeSignal<Option<Y>>,
+    #[prop(into, optional)] max_y: MaybeSignal<Option<Y>>,
     #[prop(into)] data: Signal<Vec<T>>,
 ) -> impl IntoView
 where
@@ -59,7 +63,7 @@ where
     left.reverse();
 
     // Build data
-    let data = series.use_data(data);
+    let data = series.use_data(min_x, max_x, min_y, max_y, data);
 
     view! {
         <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">

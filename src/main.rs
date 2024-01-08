@@ -117,6 +117,7 @@ pub fn App() -> impl IntoView {
             tooltip=Tooltip::left_cursor(bottom_ticks, left_ticks).sort_by_f64_descending()
 
             series=series
+            max_y=Some(8.0)
             data=data
         />
     }

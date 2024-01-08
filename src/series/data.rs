@@ -18,10 +18,6 @@ pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
     series: Vec<Rc<dyn PrepareSeries<T, X, Y>>>,
     colours: ColourScheme,
-    min_x: Signal<Option<X>>,
-    min_y: Signal<Option<Y>>,
-    max_x: Signal<Option<X>>,
-    max_y: Signal<Option<Y>>,
 }
 
 #[derive(Clone)]
@@ -47,10 +43,6 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
             get_x: Rc::new(get_x),
             series: Vec::new(),
             colours: colours::ARBITRARY.as_ref().into(),
-            min_x: Signal::default(),
-            max_x: Signal::default(),
-            min_y: Signal::default(),
-            max_y: Signal::default(),
         }
     }
 
@@ -59,72 +51,19 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         self
     }
 
-    pub fn set_x_min<Opt>(mut self, lower: impl Into<MaybeSignal<Opt>>) -> Self
-    where
-        Opt: Clone + Into<Option<X>> + 'static,
-    {
-        let lower = lower.into();
-        self.min_x = Signal::derive(move || lower.get().into());
-        self
-    }
-
-    pub fn set_x_max<Opt>(mut self, upper: impl Into<MaybeSignal<Opt>>) -> Self
-    where
-        Opt: Clone + Into<Option<X>> + 'static,
-    {
-        let upper = upper.into();
-        self.max_x = Signal::derive(move || upper.get().into());
-        self
-    }
-
-    pub fn set_x_range<Lower, Upper>(
-        self,
-        lower: impl Into<MaybeSignal<Lower>>,
-        upper: impl Into<MaybeSignal<Upper>>,
-    ) -> Self
-    where
-        Lower: Clone + Into<Option<X>> + 'static,
-        Upper: Clone + Into<Option<X>> + 'static,
-    {
-        self.set_x_min(lower).set_x_max(upper)
-    }
-
-    pub fn set_y_min<Opt>(mut self, lower: impl Into<MaybeSignal<Opt>>) -> Self
-    where
-        Opt: Clone + Into<Option<Y>> + 'static,
-    {
-        let lower = lower.into();
-        self.min_y = Signal::derive(move || lower.get().into());
-        self
-    }
-
-    pub fn set_y_max<Opt>(mut self, upper: impl Into<MaybeSignal<Opt>>) -> Self
-    where
-        Opt: Clone + Into<Option<Y>> + 'static,
-    {
-        let upper = upper.into();
-        self.max_y = Signal::derive(move || upper.get().into());
-        self
-    }
-
-    pub fn set_y_range<LowerOpt, UpperOpt>(
-        self,
-        lower: impl Into<MaybeSignal<LowerOpt>>,
-        upper: impl Into<MaybeSignal<UpperOpt>>,
-    ) -> Self
-    where
-        LowerOpt: Clone + Into<Option<Y>> + 'static,
-        UpperOpt: Clone + Into<Option<Y>> + 'static,
-    {
-        self.set_y_min(lower).set_y_max(upper)
-    }
-
     pub fn add_series(mut self, series: impl PrepareSeries<T, X, Y> + 'static) -> Self {
         self.series.push(Rc::new(series));
         self
     }
 
-    pub(crate) fn use_data(self, data: Signal<Vec<T>>) -> UseData<X, Y>
+    pub(crate) fn use_data(
+        self,
+        min_x: MaybeSignal<Option<X>>,
+        max_x: MaybeSignal<Option<X>>,
+        min_y: MaybeSignal<Option<Y>>,
+        max_y: MaybeSignal<Option<Y>>,
+        data: Signal<Vec<T>>,
+    ) -> UseData<X, Y>
     where
         X: PartialOrd + Position,
         Y: PartialOrd + Position,
@@ -195,7 +134,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
                 with!(|positions_x, data_x| Self::data_range(positions_x, data_x));
 
             // Expand specified range to single Option
-            let specified: Option<(X, X)> = match (self.min_x.get(), self.max_x.get()) {
+            let specified: Option<(X, X)> = match (min_x.get(), max_x.get()) {
                 (Some(min_x), Some(max_x)) => Some((min_x.clone(), max_x.clone())),
                 (Some(min_x), None) => Some((min_x.clone(), min_x.clone())),
                 (None, Some(max_x)) => Some((max_x.clone(), max_x.clone())),
@@ -245,13 +184,13 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
                 let min = ranges
                     .clone()
                     .map(|r| r.map(|(min, _)| min))
-                    .chain([self.min_y.get()]) // Specified min
+                    .chain([min_y.get()]) // Specified min
                     .flatten()
                     // Note: ranges are all is_finite
                     .min_by(|a, b| a.position().total_cmp(&b.position()));
                 let max = ranges
                     .map(|r| r.map(|(_, max)| max))
-                    .chain([self.max_y.get()]) // Specified max
+                    .chain([max_y.get()]) // Specified max
                     .flatten()
                     .max_by(|a, b| a.position().total_cmp(&b.position()));
                 min.zip(max).map(|(min, max)| (min.clone(), max.clone()))
