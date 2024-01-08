@@ -5,42 +5,36 @@ use crate::{
     layout::{HorizontalLayout, HorizontalVec, Layout, VerticalLayout, VerticalVec},
     overlay::tooltip::Tooltip,
     projection::Projection,
-    series::{RenderData, UseData},
+    series::RenderData,
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
-    AspectRatio, Font, Padding,
+    AspectRatio, Font, Padding, Position, Series, UseData,
 };
 use leptos::{html::Div, *};
 
-#[derive(Clone)]
-pub struct Chart<X: 'static, Y: 'static> {
-    series: UseData<X, Y>,
-}
-
-impl<X, Y> Chart<X, Y> {
-    pub fn new(series: UseData<X, Y>) -> Self {
-        Self { series }
-    }
-}
-
 #[component]
-pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
-    chart: Chart<X, Y>,
+pub fn Chart<X, Y, T>(
     #[prop(into)] aspect_ratio: MaybeSignal<AspectRatio>,
     #[prop(into)] font: MaybeSignal<Font>,
     #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
-    //#[prop(into, optional)] mut top: Vec<HorizontalLayout<X>>,
+
     #[prop(into, optional)] mut top: HorizontalVec<X>,
-    //#[prop(into, optional)] right: Vec<VerticalLayout<Y>>,
     #[prop(into, optional)] right: VerticalVec<Y>,
-    //#[prop(into, optional)] bottom: Vec<HorizontalLayout<X>>,
     #[prop(into, optional)] bottom: HorizontalVec<X>,
-    //#[prop(into, optional)] mut left: Vec<VerticalLayout<Y>>,
     #[prop(into, optional)] mut left: VerticalVec<Y>,
-    #[prop(optional)] inner: Vec<InnerLayout<X, Y>>,
+
+    #[prop(into, optional)] inner: Vec<InnerLayout<X, Y>>,
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
-) -> impl IntoView {
+
+    #[prop(into)] series: Series<X, Y, T>,
+    #[prop(into)] data: Signal<Vec<T>>,
+) -> impl IntoView
+where
+    X: Clone + PartialEq + PartialOrd + Position + 'static,
+    Y: Clone + PartialEq + PartialOrd + Position + 'static,
+    T: 'static,
+{
     let root = create_node_ref::<Div>();
     let watch = use_watched_node(root);
 
@@ -64,12 +58,14 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     top.reverse();
     left.reverse();
 
+    // Build data
+    let data = series.use_data(data);
+
     view! {
         <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
             <DebugRect label="Chart" debug=debug />
             <Show when=move || have_dimensions.get() fallback=|| view!(<p>"Loading..."</p>)>
                 <RenderChart
-                    chart=chart.clone()
                     watch=watch.clone()
                     debug=debug
                     aspect_ratio=calc
@@ -81,6 +77,7 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                     left=left.as_slice()
                     inner=inner.clone()
                     tooltip=tooltip.clone()
+                    data=data.clone()
                 />
             </Show>
         </div>
@@ -88,8 +85,7 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
 }
 
 #[component]
-fn RenderChart<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
-    chart: Chart<X, Y>,
+fn RenderChart<'a, X, Y>(
     watch: UseWatchedNode,
     #[prop(into)] debug: Signal<bool>,
     aspect_ratio: Memo<AspectRatioCalc>,
@@ -101,8 +97,13 @@ fn RenderChart<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'stati
     left: &'a [VerticalLayout<Y>],
     inner: Vec<InnerLayout<X, Y>>,
     tooltip: Option<Tooltip<X, Y>>,
-) -> impl IntoView {
-    let Chart { series: data } = chart;
+    data: UseData<X, Y>,
+) -> impl IntoView
+where
+    X: Clone + PartialEq + 'static,
+    Y: Clone + PartialEq + 'static,
+{
+    //let Chart { series: data } = chart;
 
     // Compose edges
     let pre = PreState::new(debug, font, padding, data.clone());

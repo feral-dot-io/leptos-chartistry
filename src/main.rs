@@ -57,8 +57,7 @@ pub fn App() -> impl IntoView {
             Line::new(&|w: &Wave| w.sine).set_name("Stack-A"),
             Line::new(&|w: &Wave| w.cosine).set_name("Stack-B"),
             //Line::new(&|_: &Wave| f64::NAN),
-        ]))
-        .use_data(data);
+        ]));
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
@@ -96,7 +95,6 @@ pub fn App() -> impl IntoView {
         </form>
 
         <Chart
-            chart=Chart::new(series)
             aspect_ratio=AspectRatio::outer_width(1100.0, 0.6)
             font=font
             debug=debug
@@ -116,6 +114,8 @@ pub fn App() -> impl IntoView {
                 InsetLegend::top_right()
             ]
             tooltip=Tooltip::left_cursor(bottom_ticks, left_ticks).sort_by_f64_descending()
+            series=series
+            data=data
         />
     }
 }
