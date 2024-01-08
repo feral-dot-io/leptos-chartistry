@@ -26,7 +26,7 @@ impl From<(u8, u8, u8)> for Colour {
 
 impl Default for ColourScheme {
     fn default() -> Self {
-        BATLOW.as_ref().into()
+        ARBITRARY.as_ref().into()
     }
 }
 

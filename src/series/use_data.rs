@@ -1,6 +1,6 @@
 use crate::{
     bounds::Bounds,
-    colours::{self, ColourScheme},
+    colours::ColourScheme,
     series::{prepare_series, Series, UseLine},
     state::State,
 };
@@ -14,7 +14,6 @@ type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
 pub struct SeriesVec<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
     series: Vec<Rc<dyn Series<T, Y>>>,
-    colours: ColourScheme,
 }
 
 #[derive(Clone)]
@@ -41,13 +40,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         Self {
             get_x: Rc::new(get_x),
             series: Vec::new(),
-            colours: colours::ARBITRARY.as_ref().into(),
         }
-    }
-
-    pub fn set_colours(mut self, colours: impl Into<ColourScheme>) -> Self {
-        self.colours = colours.into();
-        self
     }
 
     pub fn push(mut self, series: impl Series<T, Y> + 'static) -> Self {
@@ -57,6 +50,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
 
     pub(crate) fn use_data(
         self,
+        colours: ColourScheme,
         min_x: MaybeSignal<Option<X>>,
         max_x: MaybeSignal<Option<X>>,
         min_y: MaybeSignal<Option<Y>>,
@@ -68,7 +62,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         Y: PartialOrd + Position,
     {
         // Build list of series
-        let (series_by_id, get_ys) = prepare_series(self.series, self.colours);
+        let (series_by_id, get_ys) = prepare_series(self.series, colours);
 
         // Sort series by name
         let series = {

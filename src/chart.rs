@@ -1,5 +1,6 @@
 use crate::{
     aspect_ratio::{AspectRatioCalc, CalcUsing},
+    colours::ColourScheme,
     debug::DebugRect,
     inner::InnerLayout,
     layout::{HorizontalLayout, HorizontalVec, Layout, VerticalLayout, VerticalVec},
@@ -28,6 +29,7 @@ pub fn Chart<T, X, Y>(
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 
     #[prop(into)] series: SeriesVec<T, X, Y>,
+    #[prop(into, optional)] colours: ColourScheme,
     #[prop(into, optional)] min_x: MaybeSignal<Option<X>>,
     #[prop(into, optional)] max_x: MaybeSignal<Option<X>>,
     #[prop(into, optional)] min_y: MaybeSignal<Option<Y>>,
@@ -63,7 +65,7 @@ where
     left.reverse();
 
     // Build data
-    let data = series.use_data(min_x, max_x, min_y, max_y, data);
+    let data = series.use_data(colours, min_x, max_x, min_y, max_y, data);
 
     view! {
         <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
