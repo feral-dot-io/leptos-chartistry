@@ -5,10 +5,10 @@ use crate::{
     layout::{HorizontalLayout, HorizontalVec, Layout, VerticalLayout, VerticalVec},
     overlay::tooltip::Tooltip,
     projection::Projection,
-    series::RenderData,
+    series::{RenderData, UseData},
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
-    AspectRatio, Font, Padding, Position, Series, UseData,
+    AspectRatio, Font, Padding, Position, Series,
 };
 use leptos::{html::Div, *};
 

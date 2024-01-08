@@ -1,6 +1,10 @@
 use crate::{
-    bounds::Bounds, layout::Layout, projection::Projection, series::UseLine,
-    use_watched_node::UseWatchedNode, Font, Padding, UseData,
+    bounds::Bounds,
+    layout::Layout,
+    projection::Projection,
+    series::{UseData, UseLine},
+    use_watched_node::UseWatchedNode,
+    Font, Padding,
 };
 use leptos::signal_prelude::*;
 
