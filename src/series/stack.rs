@@ -1,5 +1,6 @@
 use super::{line::UseLine, GetYValue, Series, SeriesAcc, ToUseLine};
 use crate::{colours::Colour, Line};
+use leptos::signal_prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 
@@ -43,7 +44,7 @@ impl<T: 'static, Y: Add<Output = Y> + 'static> Series<T, Y> for Stack<T, Y> {
 }
 
 impl<T: 'static, Y: Add<Output = Y> + 'static> ToUseLine<T, Y> for StackLine<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Colour) -> (Rc<dyn GetYValue<T, Y>>, UseLine) {
+    fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (Rc<dyn GetYValue<T, Y>>, UseLine) {
         let (get_y, line) = self.line.to_use_line(id, colour);
         let get_y = Rc::new(UseStackLine {
             current: get_y,

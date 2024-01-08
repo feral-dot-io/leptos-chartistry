@@ -30,6 +30,14 @@ impl Default for ColourScheme {
     }
 }
 
+impl From<[(u8, u8, u8); 10]> for ColourScheme {
+    fn from(colours: [(u8, u8, u8); 10]) -> Self {
+        Self {
+            colours: colours.iter().map(|&c| c.into()).collect(),
+        }
+    }
+}
+
 impl From<&[(u8, u8, u8)]> for ColourScheme {
     fn from(colours: &[(u8, u8, u8)]) -> Self {
         Self {

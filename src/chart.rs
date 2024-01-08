@@ -29,7 +29,7 @@ pub fn Chart<T, X, Y>(
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 
     #[prop(into)] series: SeriesVec<T, X, Y>,
-    #[prop(into, optional)] colours: ColourScheme,
+    #[prop(into, optional)] colours: MaybeSignal<ColourScheme>,
     #[prop(into, optional)] min_x: MaybeSignal<Option<X>>,
     #[prop(into, optional)] max_x: MaybeSignal<Option<X>>,
     #[prop(into, optional)] min_y: MaybeSignal<Option<Y>>,
@@ -65,6 +65,7 @@ where
     left.reverse();
 
     // Build data
+    let colours = Signal::derive(move || colours.get());
     let data = UseData::new(series, colours, min_x, max_x, min_y, max_y, data);
 
     view! {

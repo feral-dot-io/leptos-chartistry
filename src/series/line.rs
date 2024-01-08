@@ -15,7 +15,7 @@ pub struct Line<T, Y> {
 pub struct UseLine {
     pub id: usize,
     pub name: MaybeSignal<String>,
-    pub colour: MaybeSignal<Colour>,
+    pub colour: Signal<Colour>,
     width: MaybeSignal<f64>,
 }
 
@@ -66,11 +66,11 @@ impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
 }
 
 impl<T, Y> ToUseLine<T, Y> for Line<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Colour) -> (Rc<dyn GetYValue<T, Y>>, UseLine) {
+    fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (Rc<dyn GetYValue<T, Y>>, UseLine) {
         let line = UseLine {
             id,
             name: self.name.clone(),
-            colour: colour.into(),
+            colour,
             width: self.width,
         };
         (self.get_y.clone(), line)

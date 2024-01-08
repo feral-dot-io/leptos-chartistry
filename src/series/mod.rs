@@ -7,6 +7,7 @@ pub use stack::Stack;
 pub use use_data::{Position, RenderData, UseData};
 
 use crate::colours::{Colour, ColourScheme};
+use leptos::signal_prelude::*;
 use std::{collections::HashMap, rc::Rc};
 
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
@@ -28,14 +29,14 @@ pub trait Series<T, Y> {
 }
 
 trait ToUseLine<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Colour) -> (GetY<T, Y>, UseLine);
+    fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (GetY<T, Y>, UseLine);
 }
 
 /// Accumulator that prepares the next series. i.e., holds lines in a legend.
 #[derive(Clone)]
 pub struct SeriesAcc<T, Y> {
     next_id: usize,
-    colours: ColourScheme,
+    colours: Signal<ColourScheme>,
     lines: HashMap<usize, UseLine>,
     get_ys: HashMap<usize, GetY<T, Y>>,
 }
@@ -61,7 +62,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         self
     }
 
-    fn prepare(self, colours: ColourScheme) -> PreparedSeries<T, X, Y> {
+    fn prepare(self, colours: Signal<ColourScheme>) -> PreparedSeries<T, X, Y> {
         let mut acc = SeriesAcc::new(colours);
         for series in self.series {
             series.prepare(&mut acc);
@@ -75,7 +76,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
 }
 
 impl<T, Y> SeriesAcc<T, Y> {
-    fn new(colours: ColourScheme) -> Self {
+    fn new(colours: Signal<ColourScheme>) -> Self {
         Self {
             next_id: 0,
             colours,
@@ -86,8 +87,9 @@ impl<T, Y> SeriesAcc<T, Y> {
 
     fn add_line(&mut self, line: &dyn ToUseLine<T, Y>) -> GetY<T, Y> {
         let id = self.next_id;
-        let colour = self.colours.by_index(id);
-        let (get_y, line) = line.to_use_line(id, colour);
+        let colours = self.colours;
+        let colour = create_memo(move |_| colours.get().by_index(id));
+        let (get_y, line) = line.to_use_line(id, colour.into());
         self.next_id += 1;
         self.lines.insert(id, line);
         self.get_ys.insert(id, get_y.clone());

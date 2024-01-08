@@ -1,9 +1,13 @@
-use crate::{bounds::Bounds, colours::ColourScheme, series::UseLine, state::State, SeriesVec};
+use crate::{
+    bounds::Bounds,
+    colours::ColourScheme,
+    series::{PreparedSeries, UseLine},
+    state::State,
+    SeriesVec,
+};
 use chrono::prelude::*;
 use leptos::*;
 use std::collections::HashMap;
-
-use super::PreparedSeries;
 
 #[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {
@@ -25,7 +29,7 @@ pub struct UseData<X: 'static, Y: 'static> {
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, Y> {
     pub fn new<T: 'static>(
         series: SeriesVec<T, X, Y>,
-        colours: ColourScheme,
+        colours: Signal<ColourScheme>,
         min_x: MaybeSignal<Option<X>>,
         max_x: MaybeSignal<Option<X>>,
         min_y: MaybeSignal<Option<Y>>,

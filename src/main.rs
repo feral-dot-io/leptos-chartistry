@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 use leptos::*;
-use leptos_chartistry::*;
+use leptos_chartistry::{colours::ColourScheme, *};
 
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
@@ -117,6 +117,7 @@ pub fn App() -> impl IntoView {
             tooltip=Tooltip::left_cursor(bottom_ticks, left_ticks).sort_by_f64_descending()
 
             series=series
+            colours=ColourScheme::default()
             data=data
         />
     }
