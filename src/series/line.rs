@@ -1,5 +1,7 @@
-use super::use_series::{NextSeries, PrepareSeries, ToUseLine};
-use crate::{bounds::Bounds, colours::Colour, series::GetYValue, Font};
+use super::{Series, SeriesAcc, ToUseLine};
+use crate::{
+    bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State, Font,
+};
 use leptos::*;
 use std::rc::Rc;
 
@@ -37,6 +39,12 @@ impl<T, Y> Line<T, Y> {
     }
 }
 
+impl<T: 'static, Y: 'static> Series<T, Y> for Line<T, Y> {
+    fn prepare(self: Rc<Self>, acc: &mut SeriesAcc<T, Y>) {
+        acc.add_line(&*self);
+    }
+}
+
 impl<T, Y> Clone for Line<T, Y> {
     fn clone(&self) -> Self {
         Self {
@@ -54,12 +62,6 @@ impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
 
     fn position(&self, t: &T) -> Y {
         self(t)
-    }
-}
-
-impl<T: 'static, X, Y: 'static> PrepareSeries<T, X, Y> for Line<T, Y> {
-    fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) {
-        acc.add_line(&*self);
     }
 }
 
@@ -92,7 +94,7 @@ impl UseLine {
         view!( <LineTaster line=self.clone() bounds=bounds /> )
     }
 
-    pub(super) fn render(&self, positions: Signal<Vec<(f64, f64)>>) -> View {
+    pub(crate) fn render(&self, positions: Signal<Vec<(f64, f64)>>) -> View {
         view!( <RenderLine line=self.clone() positions=positions /> )
     }
 }
@@ -143,5 +145,36 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                 stroke-width=line.width
             />
         </g>
+    }
+}
+
+#[component]
+pub fn Snippet<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
+    let debug = state.pre.debug;
+    let name = series.name.clone();
+    view! {
+        <div class="_chartistry_snippet" style="white-space: nowrap;">
+            <DebugRect label="snippet" debug=debug />
+            <Taster series=series state=state />
+            {name}
+        </div>
+    }
+}
+
+#[component]
+pub fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
+    let debug = state.pre.debug;
+    let font = state.pre.font;
+    let bounds = UseLine::taster_bounds(font);
+    view! {
+        <svg
+            class="_chartistry_taster"
+            width=move || bounds.get().width()
+            height=move || bounds.get().height()
+            viewBox=move || format!("0 0 {} {}", bounds.get().width(), bounds.get().height())
+            style:padding-right=move || format!("{}px", font.get().width())>
+            <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
+            {series.taster(bounds)}
+        </svg>
     }
 }

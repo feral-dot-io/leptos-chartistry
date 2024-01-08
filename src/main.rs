@@ -49,11 +49,11 @@ pub fn App() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-    let series = Series::new(|w: &Wave| f64_to_dt(w.x))
-        .add_series(Line::new(&|w: &Wave| w.sine).set_name("A").set_width(5.0))
-        .add_series(Line::new(&|w: &Wave| w.cosine).set_name("B").set_width(5.0))
+    let series = SeriesVec::new(|w: &Wave| f64_to_dt(w.x))
+        .push(Line::new(&|w: &Wave| w.sine).set_name("A").set_width(5.0))
+        .push(Line::new(&|w: &Wave| w.cosine).set_name("B").set_width(5.0))
         //.add_series(Line::new(&|_: &Wave| f64::NAN))
-        .add_series(Stack::new(vec![
+        .push(Stack::new(vec![
             Line::new(&|w: &Wave| w.sine).set_name("Stack-A"),
             Line::new(&|w: &Wave| w.cosine).set_name("Stack-B"),
             //Line::new(&|_: &Wave| f64::NAN),

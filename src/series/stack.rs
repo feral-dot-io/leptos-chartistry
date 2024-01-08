@@ -1,8 +1,5 @@
-use super::line::UseLine;
-use super::use_series::{NextSeries, PrepareSeries, ToUseLine};
-use super::GetYValue;
-use crate::colours::Colour;
-use crate::Line;
+use super::{line::UseLine, GetYValue, Series, SeriesAcc, ToUseLine};
+use crate::{colours::Colour, Line};
 use std::ops::Add;
 use std::rc::Rc;
 
@@ -29,8 +26,8 @@ impl<T, Y> Stack<T, Y> {
     }
 }
 
-impl<T: 'static, X, Y: Add<Output = Y> + 'static> PrepareSeries<T, X, Y> for Stack<T, Y> {
-    fn prepare(self: Rc<Self>, acc: &mut NextSeries<T, Y>) {
+impl<T: 'static, Y: Add<Output = Y> + 'static> Series<T, Y> for Stack<T, Y> {
+    fn prepare(self: Rc<Self>, acc: &mut SeriesAcc<T, Y>) {
         let mut previous = None;
         for line in self.lines.clone() {
             // Add stacked line to acc

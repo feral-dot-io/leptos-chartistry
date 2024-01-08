@@ -1,10 +1,7 @@
-use super::{
-    use_series::{self, PrepareSeries},
-    UseLine,
-};
 use crate::{
     bounds::Bounds,
     colours::{self, ColourScheme},
+    series::{prepare_series, Series, UseLine},
     state::State,
 };
 use chrono::prelude::*;
@@ -14,9 +11,9 @@ use std::{collections::HashMap, rc::Rc};
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
 
 #[derive(Clone)]
-pub struct Series<T: 'static, X: 'static, Y: 'static> {
+pub struct SeriesVec<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
-    series: Vec<Rc<dyn PrepareSeries<T, X, Y>>>,
+    series: Vec<Rc<dyn Series<T, Y>>>,
     colours: ColourScheme,
 }
 
@@ -37,7 +34,9 @@ pub struct UseData<X: 'static, Y: 'static> {
     pub position_range: Memo<Bounds>,
 }
 
-impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T, X, Y> {
+impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
+    SeriesVec<T, X, Y>
+{
     pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
         Self {
             get_x: Rc::new(get_x),
@@ -51,7 +50,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         self
     }
 
-    pub fn add_series(mut self, series: impl PrepareSeries<T, X, Y> + 'static) -> Self {
+    pub fn push(mut self, series: impl Series<T, Y> + 'static) -> Self {
         self.series.push(Rc::new(series));
         self
     }
@@ -69,7 +68,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         Y: PartialOrd + Position,
     {
         // Build list of series
-        let (series_by_id, get_ys) = use_series::prepare(self.series, self.colours);
+        let (series_by_id, get_ys) = prepare_series(self.series, self.colours);
 
         // Sort series by name
         let series = {

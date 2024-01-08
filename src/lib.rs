@@ -30,5 +30,5 @@ pub use layout::{
 };
 pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;
-pub use series::{Line, Position, Series, Stack};
+pub use series::{Line, Position, SeriesVec, Stack};
 pub use ticks::{Period, TickState};

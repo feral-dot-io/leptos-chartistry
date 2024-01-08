@@ -8,7 +8,7 @@ use crate::{
     series::{RenderData, UseData},
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
-    AspectRatio, Font, Padding, Position, Series,
+    AspectRatio, Font, Padding, Position, SeriesVec,
 };
 use leptos::{html::Div, *};
 
@@ -27,7 +27,7 @@ pub fn Chart<T, X, Y>(
     #[prop(into, optional)] inner: Vec<InnerLayout<X, Y>>,
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 
-    #[prop(into)] series: Series<T, X, Y>,
+    #[prop(into)] series: SeriesVec<T, X, Y>,
     #[prop(into, optional)] min_x: MaybeSignal<Option<X>>,
     #[prop(into, optional)] max_x: MaybeSignal<Option<X>>,
     #[prop(into, optional)] min_y: MaybeSignal<Option<Y>>,
