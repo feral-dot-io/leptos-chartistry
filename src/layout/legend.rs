@@ -73,7 +73,6 @@ pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     state: State<X, Y>,
 ) -> impl IntoView {
     let anchor = legend.anchor;
-    //TODO let Legend { anchor } = legend;
     let PreState {
         debug,
         padding,
