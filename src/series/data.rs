@@ -14,7 +14,7 @@ use std::{collections::HashMap, rc::Rc};
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
 
 #[derive(Clone)]
-pub struct Series<X: 'static, Y: 'static, T: 'static> {
+pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
     series: Vec<Rc<dyn PrepareSeries<T, X, Y>>>,
     colours: ColourScheme,
@@ -41,7 +41,7 @@ pub struct UseData<X: 'static, Y: 'static> {
     pub position_range: Memo<Bounds>,
 }
 
-impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static, T: 'static> Series<X, Y, T> {
+impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> Series<T, X, Y> {
     pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
         Self {
             get_x: Rc::new(get_x),

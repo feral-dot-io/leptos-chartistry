@@ -13,7 +13,7 @@ use crate::{
 use leptos::{html::Div, *};
 
 #[component]
-pub fn Chart<X, Y, T>(
+pub fn Chart<T, X, Y>(
     #[prop(into)] aspect_ratio: MaybeSignal<AspectRatio>,
     #[prop(into)] font: MaybeSignal<Font>,
     #[prop(into, optional)] debug: MaybeSignal<bool>,
@@ -27,13 +27,13 @@ pub fn Chart<X, Y, T>(
     #[prop(into, optional)] inner: Vec<InnerLayout<X, Y>>,
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 
-    #[prop(into)] series: Series<X, Y, T>,
+    #[prop(into)] series: Series<T, X, Y>,
     #[prop(into)] data: Signal<Vec<T>>,
 ) -> impl IntoView
 where
+    T: 'static,
     X: Clone + PartialEq + PartialOrd + Position + 'static,
     Y: Clone + PartialEq + PartialOrd + Position + 'static,
-    T: 'static,
 {
     let root = create_node_ref::<Div>();
     let watch = use_watched_node(root);

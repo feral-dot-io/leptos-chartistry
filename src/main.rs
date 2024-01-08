@@ -49,7 +49,7 @@ pub fn App() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-    let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
+    let series = Series::new(|w: &Wave| f64_to_dt(w.x))
         .add_series(Line::new(&|w: &Wave| w.sine).set_name("A").set_width(5.0))
         .add_series(Line::new(&|w: &Wave| w.cosine).set_name("B").set_width(5.0))
         //.add_series(Line::new(&|_: &Wave| f64::NAN))
@@ -99,6 +99,7 @@ pub fn App() -> impl IntoView {
             font=font
             debug=debug
             padding=padding
+
             //top=vec![top_label.to_horizontal(), Legend::end().to_horizontal()]
             top=HorizontalVec::default().push(top_label).push(Legend::end())
             right=vec![Legend::middle()]
@@ -114,6 +115,7 @@ pub fn App() -> impl IntoView {
                 InsetLegend::top_right()
             ]
             tooltip=Tooltip::left_cursor(bottom_ticks, left_ticks).sort_by_f64_descending()
+
             series=series
             data=data
         />
