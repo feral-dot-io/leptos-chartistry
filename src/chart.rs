@@ -65,7 +65,7 @@ where
     left.reverse();
 
     // Build data
-    let data = series.use_data(colours, min_x, max_x, min_y, max_y, data);
+    let data = UseData::new(series, colours, min_x, max_x, min_y, max_y, data);
 
     view! {
         <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">

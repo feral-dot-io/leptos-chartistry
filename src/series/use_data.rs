@@ -1,20 +1,9 @@
-use crate::{
-    bounds::Bounds,
-    colours::ColourScheme,
-    series::{prepare_series, Series, UseLine},
-    state::State,
-};
+use crate::{bounds::Bounds, colours::ColourScheme, series::UseLine, state::State, SeriesVec};
 use chrono::prelude::*;
 use leptos::*;
-use std::{collections::HashMap, rc::Rc};
+use std::collections::HashMap;
 
-type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
-
-#[derive(Clone)]
-pub struct SeriesVec<T: 'static, X: 'static, Y: 'static> {
-    get_x: GetX<T, X>,
-    series: Vec<Rc<dyn Series<T, Y>>>,
-}
+use super::PreparedSeries;
 
 #[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {
@@ -33,23 +22,9 @@ pub struct UseData<X: 'static, Y: 'static> {
     pub position_range: Memo<Bounds>,
 }
 
-impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
-    SeriesVec<T, X, Y>
-{
-    pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
-        Self {
-            get_x: Rc::new(get_x),
-            series: Vec::new(),
-        }
-    }
-
-    pub fn push(mut self, series: impl Series<T, Y> + 'static) -> Self {
-        self.series.push(Rc::new(series));
-        self
-    }
-
-    pub(crate) fn use_data(
-        self,
+impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, Y> {
+    pub fn new<T: 'static>(
+        series: SeriesVec<T, X, Y>,
         colours: ColourScheme,
         min_x: MaybeSignal<Option<X>>,
         max_x: MaybeSignal<Option<X>>,
@@ -62,11 +37,15 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         Y: PartialOrd + Position,
     {
         // Build list of series
-        let (series_by_id, get_ys) = prepare_series(self.series, colours);
+        let PreparedSeries {
+            get_x,
+            lines,
+            get_ys,
+        } = series.prepare(colours);
 
         // Sort series by name
         let series = {
-            let series = series_by_id.clone().into_values().collect::<Vec<_>>();
+            let series = lines.clone().into_values().collect::<Vec<_>>();
             create_memo(move |_| {
                 let mut series = series.clone();
                 series.sort_by_key(|series| series.name.get());
@@ -76,7 +55,6 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
 
         // Data signals
         let data_x = create_memo(move |_| {
-            let get_x = self.get_x.clone();
             data.with(|data| data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>())
         });
         let y_maker = |value: bool| {
@@ -157,7 +135,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
                 )),
             }
         });
-        let range_y_lines = series_by_id
+        let range_y_lines = lines
             .values()
             .map(|line| {
                 let positions_y = positions_y_lines[&line.id];
@@ -204,7 +182,7 @@ impl<T: 'static, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>
         });
 
         UseData {
-            series_by_id,
+            series_by_id: lines,
             series,
             data_x,
             data_y_lines,
