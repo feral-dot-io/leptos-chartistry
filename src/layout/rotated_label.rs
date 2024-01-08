@@ -1,4 +1,4 @@
-use super::{compose::UseLayout, HorizontalLayout, VerticalLayout};
+use super::{UseLayout, UseVerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
@@ -6,7 +6,6 @@ use crate::{
     state::{PreState, State},
 };
 use leptos::*;
-use std::rc::Rc;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum Anchor {
@@ -54,26 +53,21 @@ impl RotatedLabel {
             }
         })
     }
-}
 
-impl<X, Y> HorizontalLayout<X, Y> for RotatedLabel {
-    fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    pub(super) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         self.size(state)
     }
 
-    fn into_use(self: Rc<Self>, _: &PreState<X, Y>, _: Memo<f64>) -> Rc<dyn UseLayout<X, Y>> {
-        self
+    pub(super) fn to_horizontal_use(&self) -> UseLayout {
+        UseLayout::RotatedLabel(self.clone())
     }
-}
 
-impl<X, Y> VerticalLayout<X, Y> for RotatedLabel {
-    fn into_use(
-        self: Rc<Self>,
-        state: &PreState<X, Y>,
-        _: Memo<f64>,
-    ) -> (Signal<f64>, Rc<dyn UseLayout<X, Y>>) {
+    pub(super) fn to_vertical_use<X, Y>(&self, state: &PreState<X, Y>) -> UseVerticalLayout {
         // Note: width is height because it's rotated
-        (self.size(state), self)
+        UseVerticalLayout {
+            width: self.size(state),
+            layout: UseLayout::RotatedLabel(self.clone()),
+        }
     }
 }
 
@@ -114,14 +108,8 @@ impl From<String> for Anchor {
     }
 }
 
-impl<X, Y> UseLayout<X, Y> for RotatedLabel {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: State<X, Y>) -> View {
-        view! { <RotatedLabel label=self.clone() edge=edge bounds=bounds state=state /> }
-    }
-}
-
 #[component]
-fn RotatedLabel<X: 'static, Y: 'static>(
+pub fn RotatedLabel<X: 'static, Y: 'static>(
     label: RotatedLabel,
     edge: Edge,
     bounds: Memo<Bounds>,

@@ -26,7 +26,7 @@ pub use layout::{
     legend::Legend,
     rotated_label::{Anchor, RotatedLabel},
     tick_labels::TickLabels,
-    HorizontalLayout, VerticalLayout,
+    HorizontalVec, ToHorizontal, ToVertical, VerticalVec,
 };
 pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;

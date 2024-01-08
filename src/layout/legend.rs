@@ -1,4 +1,4 @@
-use super::{compose::UseLayout, rotated_label::Anchor, HorizontalLayout, VerticalLayout};
+use super::{rotated_label::Anchor, UseLayout, UseVerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
@@ -8,7 +8,6 @@ use crate::{
     Padding,
 };
 use leptos::*;
-use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct Legend {
@@ -22,20 +21,14 @@ impl Legend {
         }
     }
 
-    pub fn start() -> Self {
+    pub fn start() -> Legend {
         Self::new(Anchor::Start)
     }
-    pub fn middle() -> Self {
+    pub fn middle() -> Legend {
         Self::new(Anchor::Middle)
     }
-    pub fn end() -> Self {
+    pub fn end() -> Legend {
         Self::new(Anchor::End)
-    }
-
-    pub(crate) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
-        let font = state.font;
-        let padding = state.padding;
-        Signal::derive(move || font.get().height() + padding.get().height())
     }
 
     pub(crate) fn width<X, Y>(state: &PreState<X, Y>) -> Signal<f64> {
@@ -53,31 +46,22 @@ impl Legend {
             snippet_bounds.get() + max_chars + padding.get().width()
         })
     }
-}
 
-impl<X: Clone, Y: Clone> HorizontalLayout<X, Y> for Legend {
-    fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64> {
-        self.fixed_height(state)
+    pub(crate) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+        let font = state.font;
+        let padding = state.padding;
+        Signal::derive(move || font.get().height() + padding.get().height())
     }
 
-    fn into_use(self: Rc<Self>, _: &PreState<X, Y>, _: Memo<f64>) -> Rc<dyn UseLayout<X, Y>> {
-        self
+    pub(super) fn to_horizontal_use(&self) -> UseLayout {
+        UseLayout::Legend(self.clone())
     }
-}
 
-impl<X: Clone, Y: Clone> VerticalLayout<X, Y> for Legend {
-    fn into_use(
-        self: Rc<Self>,
-        state: &PreState<X, Y>,
-        _: Memo<f64>,
-    ) -> (Signal<f64>, Rc<dyn UseLayout<X, Y>>) {
-        (Self::width(state), self)
-    }
-}
-
-impl<X: Clone, Y: Clone> UseLayout<X, Y> for Legend {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: State<X, Y>) -> View {
-        view! { <Legend legend=self.clone() edge=edge bounds=bounds state=state /> }
+    pub(super) fn to_vertical_use<X, Y>(&self, state: &PreState<X, Y>) -> UseVerticalLayout {
+        UseVerticalLayout {
+            width: Self::width(state),
+            layout: UseLayout::Legend(self.clone()),
+        }
     }
 }
 
@@ -88,7 +72,8 @@ pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     bounds: Memo<Bounds>,
     state: State<X, Y>,
 ) -> impl IntoView {
-    let Legend { anchor } = legend;
+    let anchor = legend.anchor;
+    //TODO let Legend { anchor } = legend;
     let PreState {
         debug,
         padding,

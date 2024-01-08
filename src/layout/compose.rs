@@ -1,3 +1,4 @@
+use super::{HorizontalLayout, UseLayout, VerticalLayout};
 use crate::{
     aspect_ratio::AspectRatioCalc,
     bounds::Bounds,
@@ -5,7 +6,6 @@ use crate::{
     state::{PreState, State},
 };
 use leptos::*;
-use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct Layout {
@@ -21,45 +21,15 @@ pub struct Layout {
     pub inner: Memo<Bounds>,
 }
 
-pub trait HorizontalLayout<X, Y>: private::Sealed {
-    fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64>;
-    fn into_use(
-        self: Rc<Self>,
-        state: &PreState<X, Y>,
-        inner_width: Memo<f64>,
-    ) -> UseLayoutResult<X, Y>;
-}
-
-pub trait VerticalLayout<X, Y>: private::Sealed {
-    fn into_use(
-        self: Rc<Self>,
-        state: &PreState<X, Y>,
-        inner_height: Memo<f64>,
-    ) -> (Signal<f64>, UseLayoutResult<X, Y>);
-}
-
-mod private {
-    pub trait Sealed {}
-    impl Sealed for super::super::legend::Legend {}
-    impl Sealed for super::super::rotated_label::RotatedLabel {}
-    impl<Tick> Sealed for super::super::tick_labels::TickLabels<Tick> {}
-}
-
-type UseLayoutResult<X, Y> = Rc<dyn UseLayout<X, Y>>;
-
-pub trait UseLayout<X, Y> {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: State<X, Y>) -> View;
-}
-
 #[derive(Clone)]
-pub struct DeferredRender<X, Y> {
+pub struct DeferredRender {
     edge: Edge,
     bounds: Memo<Bounds>,
-    layout: Rc<dyn UseLayout<X, Y>>,
+    layout: UseLayout,
 }
 
-impl<X, Y> DeferredRender<X, Y> {
-    pub fn render(self, state: State<X, Y>) -> View {
+impl DeferredRender {
+    pub fn render<X: Clone, Y: Clone>(self, state: State<X, Y>) -> View {
         self.layout.render(self.edge, self.bounds, state)
     }
 }
@@ -80,34 +50,34 @@ impl Layout {
     ///  - Calculate the bounds: outer, inner, edges, edge components. Adhere to aspect ratio.
     ///  - Return state (Layout) and a deferred renderer (ComposedLayout).
     ///
-    pub fn compose<X, Y>(
-        top: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
-        right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
-        bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
-        left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
+    pub fn compose<X: Clone + PartialEq, Y: Clone + PartialEq>(
+        top: &[HorizontalLayout<X>],
+        right: &[VerticalLayout<Y>],
+        bottom: &[HorizontalLayout<X>],
+        left: &[VerticalLayout<Y>],
         aspect_ratio: Memo<AspectRatioCalc>,
         state: &PreState<X, Y>,
-    ) -> (Layout, Vec<DeferredRender<X, Y>>) {
+    ) -> (Layout, Vec<DeferredRender>) {
         // Horizontal options
-        let top_heights = collect_heights(&top, state);
+        let top_heights = collect_heights(top, state);
         let top_height = sum_sizes(top_heights.clone());
-        let bottom_heights = collect_heights(&bottom, state);
+        let bottom_heights = collect_heights(bottom, state);
         let bottom_height = sum_sizes(bottom_heights.clone());
         let inner_height =
             AspectRatioCalc::inner_height_signal(aspect_ratio, top_height, bottom_height);
 
         // Vertical options
-        let (left_widths, left) = use_vertical(&left, state, inner_height);
+        let (left_widths, left) = use_vertical(left, state, inner_height);
         let left_width = sum_sizes(left_widths.clone());
-        let (right_widths, right) = use_vertical(&right, state, inner_height);
+        let (right_widths, right) = use_vertical(right, state, inner_height);
         let right_width = sum_sizes(right_widths.clone());
-        let inner_width =
+        let avail_width =
             AspectRatioCalc::inner_width_signal(aspect_ratio, left_width, right_width);
 
         // Bounds
         let outer = create_memo(move |_| {
             Bounds::new(
-                left_width.get() + inner_width.get() + right_width.get(),
+                left_width.get() + avail_width.get() + right_width.get(),
                 top_height.get() + inner_height.get() + bottom_height.get(),
             )
         });
@@ -160,14 +130,13 @@ impl Layout {
                 .map(move |(index, opt)| (edge, bounds[index], opt))
                 .collect::<Vec<_>>()
         };
-        let horizontal =
-            |edge: Edge, bounds: &[Memo<Bounds>], items: Vec<Rc<dyn HorizontalLayout<X, Y>>>| {
-                items
-                    .into_iter()
-                    .enumerate()
-                    .map(|(index, opt)| (edge, bounds[index], opt.into_use(state, inner_width)))
-                    .collect::<Vec<_>>()
-            };
+        let horizontal = |edge: Edge, bounds: &[Memo<Bounds>], items: &[HorizontalLayout<X>]| {
+            items
+                .iter()
+                .enumerate()
+                .map(|(index, opt)| (edge, bounds[index], opt.to_use(state, avail_width)))
+                .collect::<Vec<_>>()
+        };
 
         // Chain edges together for a deferred render
         let deferred = vertical(Edge::Left, &layout.left, left)
@@ -186,8 +155,8 @@ impl Layout {
     }
 }
 
-fn collect_heights<X, Y>(
-    items: &[Rc<dyn HorizontalLayout<X, Y>>],
+fn collect_heights<X: PartialEq, Y>(
+    items: &[HorizontalLayout<X>],
     state: &PreState<X, Y>,
 ) -> Vec<Signal<f64>> {
     items
@@ -196,14 +165,14 @@ fn collect_heights<X, Y>(
         .collect::<Vec<_>>()
 }
 
-fn use_vertical<X, Y>(
-    items: &[Rc<dyn VerticalLayout<X, Y>>],
+fn use_vertical<X: PartialEq, Y: PartialEq>(
+    items: &[VerticalLayout<Y>],
     state: &PreState<X, Y>,
-    inner_height: Memo<f64>,
-) -> (Vec<Signal<f64>>, Vec<UseLayoutResult<X, Y>>) {
+    avail_height: Memo<f64>,
+) -> (Vec<Signal<f64>>, Vec<UseLayout>) {
     items
         .iter()
-        .map(|c| c.clone().into_use(state, inner_height))
+        .map(|c| c.to_use(state, avail_height).unzip())
         .unzip()
 }
 

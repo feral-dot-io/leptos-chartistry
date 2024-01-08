@@ -1,4 +1,4 @@
-use super::{compose::UseLayout, HorizontalLayout, VerticalLayout};
+use super::{UseLayout, UseVerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
@@ -72,6 +72,18 @@ impl<Tick> TickLabels<Tick> {
         self.format = Rc::new(format);
         self
     }
+
+    fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
+        let format = self.format.clone();
+        Signal::derive(move || {
+            gen.with(|GeneratedTicks { ticks, state }| {
+                ticks
+                    .iter()
+                    .map(|tick| (state.position(tick), (format)(&**state, tick)))
+                    .collect()
+            })
+        })
+    }
 }
 
 impl<X: PartialEq> TickLabels<X> {
@@ -104,6 +116,21 @@ impl<X: PartialEq> TickLabels<X> {
         })
         .into()
     }
+
+    pub(super) fn fixed_height<Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+        let PreState { font, padding, .. } = *state;
+        Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
+    }
+
+    pub(super) fn to_horizontal_use<Y>(
+        &self,
+        state: &PreState<X, Y>,
+        avail_width: Memo<f64>,
+    ) -> UseLayout {
+        UseLayout::TickLabels(UseTickLabels {
+            ticks: self.map_ticks(self.generate_x(state, avail_width.into())),
+        })
+    }
 }
 
 impl<Y: PartialEq> TickLabels<Y> {
@@ -129,34 +156,17 @@ impl<Y: PartialEq> TickLabels<Y> {
         })
         .into()
     }
-}
 
-impl<X: Clone + PartialEq, Y: Clone> HorizontalLayout<X, Y> for TickLabels<X> {
-    fn fixed_height(&self, state: &PreState<X, Y>) -> Signal<f64> {
-        let PreState { font, padding, .. } = *state;
-        Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
-    }
-
-    fn into_use(
-        self: Rc<Self>,
-        state: &PreState<X, Y>,
-        avail_width: Memo<f64>,
-    ) -> Rc<dyn UseLayout<X, Y>> {
-        Rc::new(UseTickLabels {
-            ticks: self.map_ticks((*self).clone().generate_x(state, avail_width.into())),
-        })
-    }
-}
-
-impl<X: Clone, Y: Clone + PartialEq> VerticalLayout<X, Y> for TickLabels<Y> {
-    fn into_use(
-        self: Rc<Self>,
+    pub(super) fn to_vertical_use<X>(
+        &self,
         state: &PreState<X, Y>,
         avail_height: Memo<f64>,
-    ) -> (Signal<f64>, Rc<dyn UseLayout<X, Y>>) {
-        let ticks = self.map_ticks((*self).clone().generate_y(state, avail_height.into()));
-        let width: Signal<f64> = mk_width(self.min_chars, state, ticks);
-        (width, Rc::new(UseTickLabels { ticks }))
+    ) -> UseVerticalLayout {
+        let ticks = self.map_ticks(self.generate_y(state, avail_height.into()));
+        UseVerticalLayout {
+            width: mk_width(self.min_chars, state, ticks),
+            layout: UseLayout::TickLabels(UseTickLabels { ticks }),
+        }
     }
 }
 
@@ -177,26 +187,6 @@ fn mk_width<X, Y>(
         }) as f64;
         font.get().width() * longest_chars + padding.get().width()
     })
-}
-
-impl<Tick: Clone> TickLabels<Tick> {
-    fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
-        let format = self.format.clone();
-        Signal::derive(move || {
-            gen.with(|GeneratedTicks { ticks, state }| {
-                ticks
-                    .iter()
-                    .map(|tick| (state.position(tick), (format)(&**state, tick)))
-                    .collect()
-            })
-        })
-    }
-}
-
-impl<X: Clone, Y: Clone> UseLayout<X, Y> for UseTickLabels {
-    fn render(&self, edge: Edge, bounds: Memo<Bounds>, state: State<X, Y>) -> View {
-        view! { <TickLabels ticks=self.clone() edge=edge bounds=bounds state=state /> }
-    }
 }
 
 pub fn align_tick_labels(labels: Vec<String>) -> Vec<String> {

@@ -2,7 +2,7 @@ use crate::{
     aspect_ratio::{AspectRatioCalc, CalcUsing},
     debug::DebugRect,
     inner::InnerLayout,
-    layout::{HorizontalLayout, Layout, VerticalLayout},
+    layout::{HorizontalLayout, HorizontalVec, Layout, VerticalLayout, VerticalVec},
     overlay::tooltip::Tooltip,
     projection::Projection,
     series::{RenderData, UseData},
@@ -11,46 +11,15 @@ use crate::{
     AspectRatio, Font, Padding,
 };
 use leptos::{html::Div, *};
-use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Chart<X: 'static, Y: 'static> {
-    top: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
-    right: Vec<Rc<dyn VerticalLayout<X, Y>>>,
-    bottom: Vec<Rc<dyn HorizontalLayout<X, Y>>>,
-    left: Vec<Rc<dyn VerticalLayout<X, Y>>>,
     series: UseData<X, Y>,
 }
 
 impl<X, Y> Chart<X, Y> {
     pub fn new(series: UseData<X, Y>) -> Self {
-        Self {
-            top: vec![],
-            right: vec![],
-            bottom: vec![],
-            left: vec![],
-            series,
-        }
-    }
-
-    pub fn top(mut self, opt: impl HorizontalLayout<X, Y> + 'static) -> Self {
-        self.top.push(Rc::new(opt));
-        self
-    }
-
-    pub fn right(mut self, opt: impl VerticalLayout<X, Y> + 'static) -> Self {
-        self.right.push(Rc::new(opt));
-        self
-    }
-
-    pub fn bottom(mut self, opt: impl HorizontalLayout<X, Y> + 'static) -> Self {
-        self.bottom.push(Rc::new(opt));
-        self
-    }
-
-    pub fn left(mut self, opt: impl VerticalLayout<X, Y> + 'static) -> Self {
-        self.left.push(Rc::new(opt));
-        self
+        Self { series }
     }
 }
 
@@ -61,6 +30,14 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     #[prop(into)] font: MaybeSignal<Font>,
     #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
+    //#[prop(into, optional)] mut top: Vec<HorizontalLayout<X>>,
+    #[prop(into, optional)] mut top: HorizontalVec<X>,
+    //#[prop(into, optional)] right: Vec<VerticalLayout<Y>>,
+    #[prop(into, optional)] right: VerticalVec<Y>,
+    //#[prop(into, optional)] bottom: Vec<HorizontalLayout<X>>,
+    #[prop(into, optional)] bottom: HorizontalVec<X>,
+    //#[prop(into, optional)] mut left: Vec<VerticalLayout<Y>>,
+    #[prop(into, optional)] mut left: VerticalVec<Y>,
     #[prop(optional)] inner: Vec<InnerLayout<X, Y>>,
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 ) -> impl IntoView {
@@ -83,6 +60,10 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
             .unwrap_or_else(move || Padding::from(font.get().width()))
     });
 
+    // Edges are added top to bottom, left to right. Layout compoeses inside out:
+    top.reverse();
+    left.reverse();
+
     view! {
         <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
             <DebugRect label="Chart" debug=debug />
@@ -94,6 +75,10 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                     aspect_ratio=calc
                     font=move || font.get()
                     padding=move || padding.get()
+                    top=top.as_slice()
+                    right=right.as_slice()
+                    bottom=bottom.as_slice()
+                    left=left.as_slice()
                     inner=inner.clone()
                     tooltip=tooltip.clone()
                 />
@@ -103,27 +88,21 @@ pub fn Chart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
 }
 
 #[component]
-fn RenderChart<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
+fn RenderChart<'a, X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     chart: Chart<X, Y>,
     watch: UseWatchedNode,
     #[prop(into)] debug: Signal<bool>,
     aspect_ratio: Memo<AspectRatioCalc>,
     #[prop(into)] font: Signal<Font>,
     #[prop(into)] padding: Signal<Padding>,
+    top: &'a [HorizontalLayout<X>],
+    right: &'a [VerticalLayout<Y>],
+    bottom: &'a [HorizontalLayout<X>],
+    left: &'a [VerticalLayout<Y>],
     inner: Vec<InnerLayout<X, Y>>,
     tooltip: Option<Tooltip<X, Y>>,
 ) -> impl IntoView {
-    let Chart {
-        mut top,
-        right,
-        bottom,
-        mut left,
-        series: data,
-    } = chart;
-
-    // Edges are added top to bottom, left to right. Layout compoeses inside out:
-    top.reverse();
-    left.reverse();
+    let Chart { series: data } = chart;
 
     // Compose edges
     let pre = PreState::new(debug, font, padding, data.clone());

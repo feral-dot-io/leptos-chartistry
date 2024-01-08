@@ -66,16 +66,6 @@ pub fn App() -> impl IntoView {
     let left_ticks = TickLabels::aligned_floats().set_min_chars(20);
     let bottom_ticks = TickLabels::timestamps();
 
-    let chart = Chart::new(series)
-        // Labels
-        .top(top_label)
-        // Ticks
-        .left(left_ticks.clone())
-        .bottom(bottom_ticks.clone())
-        // Legend
-        .top(Legend::end())
-        .right(Legend::middle());
-
     view! {
         <h1>"Chartistry"</h1>
         <form>
@@ -106,21 +96,26 @@ pub fn App() -> impl IntoView {
         </form>
 
         <Chart
-            chart=chart
+            chart=Chart::new(series)
             aspect_ratio=AspectRatio::outer_width(1100.0, 0.6)
             font=font
             debug=debug
             padding=padding
+            //top=vec![top_label.to_horizontal(), Legend::end().to_horizontal()]
+            top=HorizontalVec::default().push(top_label).push(Legend::end())
+            right=vec![Legend::middle()]
+            bottom=vec![&bottom_ticks]
+            left=vec![&left_ticks]
             inner=vec![
                 AxisMarker::left_edge(),
                 AxisMarker::horizontal_zero(),
-                GridLine::horizontal(left_ticks.clone()),
-                GridLine::vertical(bottom_ticks.clone()),
+                GridLine::horizontal(&left_ticks),
+                GridLine::vertical(&bottom_ticks),
                 GuideLine::x_axis_over_data(),
                 GuideLine::y_axis(),
                 InsetLegend::top_right()
             ]
-            tooltip=Tooltip::left_cursor(&bottom_ticks, &left_ticks).sort_by_f64_descending()
+            tooltip=Tooltip::left_cursor(bottom_ticks, left_ticks).sort_by_f64_descending()
         />
     }
 }
