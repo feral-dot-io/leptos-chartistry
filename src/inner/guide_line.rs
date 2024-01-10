@@ -1,9 +1,5 @@
 use super::{InnerLayout, UseInner};
-use crate::{
-    colours::{Colour, LIGHT_GREY},
-    debug::DebugRect,
-    state::State,
-};
+use crate::{colours::Colour, debug::DebugRect, state::State};
 use leptos::*;
 use std::rc::Rc;
 
@@ -17,7 +13,7 @@ enum AlignOver {
 pub struct GuideLine {
     align: AlignOver,
     width: MaybeSignal<f64>,
-    colour: MaybeSignal<Colour>,
+    colour: MaybeSignal<Option<Colour>>,
 }
 
 #[derive(Clone)]
@@ -30,7 +26,7 @@ impl GuideLine {
         Self {
             align,
             width: 1.0.into(),
-            colour: Into::<Colour>::into(LIGHT_GREY).into(),
+            colour: MaybeSignal::default(),
         }
     }
 
@@ -59,13 +55,11 @@ impl GuideLine {
         self
     }
 
-    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Colour>>) -> Self {
+    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
         self.colour = colour.into();
         self
     }
-}
 
-impl GuideLine {
     pub(crate) fn use_x<X, Y>(self) -> Rc<dyn UseInner<X, Y>> {
         Rc::new(UseXGuideLine(self))
     }
@@ -143,6 +137,11 @@ fn GuideLine<X: 'static, Y: 'static>(
         !(x1.get().is_nan() || y1.get().is_nan() || x2.get().is_nan() || y2.get().is_nan())
     });
 
+    let colour = Colour::signal_option(
+        line.colour,
+        state.pre.layout_colours,
+        super::LAYOUT_GUIDE_LINE,
+    );
     view! {
         <g class=format!("_chartistry_{}_guide_line", id)>
             <Show when=move || hover_inner.get() && have_data.get() >
@@ -152,7 +151,7 @@ fn GuideLine<X: 'static, Y: 'static>(
                     y1=y1
                     x2=x2
                     y2=y2
-                    stroke=move || line.colour.get().to_string()
+                    stroke=move || colour.get().to_string()
                     stroke-width=line.width
                 />
             </Show>

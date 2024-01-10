@@ -7,6 +7,11 @@ use crate::state::State;
 use leptos::*;
 use std::rc::Rc;
 
+// The colours for our layout can be specified (overridden) on each individual component. If no colour is specified then we fall back to the layout colour scheme. This default three palette scheme from darker to lighter grey. Below are the indexes for each colour in the scheme giving that hierarchy to the component.
+const LAYOUT_GUIDE_LINE: usize = 0;
+const LAYOUT_AXIS_MARKER: usize = 1;
+const LAYOUT_GRID_LINE: usize = 2;
+
 #[derive(Clone)]
 pub enum InnerLayout<X: Clone, Y: Clone> {
     AxisMarker(axis_marker::AxisMarker),

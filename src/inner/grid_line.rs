@@ -1,10 +1,6 @@
 use super::{InnerLayout, UseInner};
 use crate::{
-    colours::{Colour, LIGHTER_GREY},
-    debug::DebugRect,
-    projection::Projection,
-    state::State,
-    ticks::GeneratedTicks,
+    colours::Colour, debug::DebugRect, projection::Projection, state::State, ticks::GeneratedTicks,
     TickLabels,
 };
 use leptos::*;
@@ -13,14 +9,14 @@ use std::{borrow::Borrow, rc::Rc};
 #[derive(Clone)]
 pub struct GridLine<Tick: Clone> {
     width: MaybeSignal<f64>,
-    colour: MaybeSignal<Colour>,
+    colour: MaybeSignal<Option<Colour>>,
     ticks: TickLabels<Tick>,
 }
 
 #[derive(Clone)]
 struct UseGridLine<Tick: 'static> {
     width: MaybeSignal<f64>,
-    colour: MaybeSignal<Colour>,
+    colour: MaybeSignal<Option<Colour>>,
     ticks: Signal<GeneratedTicks<Tick>>,
 }
 
@@ -33,7 +29,7 @@ impl<Tick: Clone> GridLine<Tick> {
     fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
         Self {
             width: 1.0.into(),
-            colour: Into::<Colour>::into(LIGHTER_GREY).into(),
+            colour: MaybeSignal::default(),
             ticks: ticks.borrow().clone(),
         }
     }
@@ -97,6 +93,12 @@ fn ViewHorizontalGridLine<X: 'static, Y: 'static>(
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
+
+    let colour = Colour::signal_option(
+        line.colour,
+        state.pre.layout_colours,
+        super::LAYOUT_GRID_LINE,
+    );
     view! {
         <g class="_chartistry_grid_line_x">
             <DebugRect label="grid_line_x" debug=debug />
@@ -111,7 +113,7 @@ fn ViewHorizontalGridLine<X: 'static, Y: 'static>(
                     y1=move || inner.get().top_y()
                     x2=tick.0
                     y2=move || inner.get().bottom_y()
-                    stroke=move || line.colour.get().to_string()
+                    stroke=move || colour.get().to_string()
                     stroke-width=line.width
                 />
             </For>
@@ -127,6 +129,12 @@ fn ViewVerticalGridLine<X: 'static, Y: 'static>(
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
+
+    let colour = Colour::signal_option(
+        line.colour,
+        state.pre.layout_colours,
+        super::LAYOUT_GRID_LINE,
+    );
     view! {
         <g class="_chartistry_grid_line_y">
             <DebugRect label="grid_line_y" debug=debug />
@@ -141,7 +149,7 @@ fn ViewVerticalGridLine<X: 'static, Y: 'static>(
                     y1=tick.0
                     x2=move || inner.get().right_x()
                     y2=tick.0
-                    stroke=move || line.colour.get().to_string()
+                    stroke=move || colour.get().to_string()
                     stroke-width=line.width
                 />
             </For>

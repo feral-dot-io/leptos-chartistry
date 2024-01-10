@@ -1,6 +1,6 @@
 use crate::{
     aspect_ratio::{AspectRatioCalc, CalcUsing},
-    colours::ColourScheme,
+    colours::{self, ColourScheme},
     debug::DebugRect,
     inner::InnerLayout,
     layout::{HorizontalLayout, HorizontalVec, Layout, VerticalLayout, VerticalVec},
@@ -19,6 +19,7 @@ pub fn Chart<T, X, Y>(
     #[prop(into)] font: MaybeSignal<Font>,
     #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
+    #[prop(into, optional)] layout_colours: MaybeSignal<Option<ColourScheme>>,
 
     #[prop(into, optional)] mut top: HorizontalVec<X>,
     #[prop(into, optional)] right: VerticalVec<Y>,
@@ -68,16 +69,22 @@ where
     let colours = Signal::derive(move || colours.get());
     let data = UseData::new(series, colours, min_x, max_x, min_y, max_y, data);
 
+    let pre = PreState::new(
+        debug.into(),
+        Signal::derive(move || font.get()),
+        padding.into(),
+        create_memo(move |_| layout_colours.get().unwrap_or(colours::GREY_LAYOUT.into())),
+        data.clone(),
+    );
+
     view! {
         <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">
             <DebugRect label="Chart" debug=debug />
             <Show when=move || have_dimensions.get() fallback=|| view!(<p>"Loading..."</p>)>
                 <RenderChart
                     watch=watch.clone()
-                    debug=debug
+                    pre_state=pre.clone()
                     aspect_ratio=calc
-                    font=move || font.get()
-                    padding=move || padding.get()
                     top=top.as_slice()
                     right=right.as_slice()
                     bottom=bottom.as_slice()
@@ -94,10 +101,8 @@ where
 #[component]
 fn RenderChart<'a, X, Y>(
     watch: UseWatchedNode,
-    #[prop(into)] debug: Signal<bool>,
+    pre_state: PreState<X, Y>,
     aspect_ratio: Memo<AspectRatioCalc>,
-    #[prop(into)] font: Signal<Font>,
-    #[prop(into)] padding: Signal<Padding>,
     top: &'a [HorizontalLayout<X>],
     right: &'a [VerticalLayout<Y>],
     bottom: &'a [HorizontalLayout<X>],
@@ -110,11 +115,10 @@ where
     X: Clone + PartialEq + 'static,
     Y: Clone + PartialEq + 'static,
 {
-    //let Chart { series: data } = chart;
+    let debug = pre_state.debug;
 
     // Compose edges
-    let pre = PreState::new(debug, font, padding, data.clone());
-    let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre);
+    let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre_state);
 
     // Finalise state
     let projection = {
@@ -122,7 +126,7 @@ where
         let position_range = data.position_range;
         create_memo(move |_| Projection::new(inner.get(), position_range.get())).into()
     };
-    let state = State::new(pre, &watch, layout, projection);
+    let state = State::new(pre_state, &watch, layout, projection);
 
     // Render edges
     let edges = edges

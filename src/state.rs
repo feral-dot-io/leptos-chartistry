@@ -1,5 +1,6 @@
 use crate::{
     bounds::Bounds,
+    colours::ColourScheme,
     layout::Layout,
     projection::Projection,
     series::{UseData, UseLine},
@@ -13,6 +14,7 @@ pub struct PreState<X: 'static, Y: 'static> {
     pub debug: Signal<bool>,
     pub font: Signal<Font>,
     pub padding: Signal<Padding>,
+    pub layout_colours: Memo<ColourScheme>,
     pub data: UseData<X, Y>,
 }
 
@@ -49,12 +51,14 @@ impl<X, Y> PreState<X, Y> {
         debug: Signal<bool>,
         font: Signal<Font>,
         padding: Signal<Padding>,
+        layout_colours: Memo<ColourScheme>,
         data: UseData<X, Y>,
     ) -> Self {
         Self {
             debug,
             font,
             padding,
+            layout_colours,
             data,
         }
     }

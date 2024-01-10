@@ -2,6 +2,8 @@ mod colourmaps;
 
 pub use colourmaps::*;
 
+use leptos::signal_prelude::*;
+
 /*
 Colours are an important part of charts. Our aim is to avoid less readable and misleading colour schemes. So we rely on the scientific colour maps developed by Fabio Crameri. These are perceptually uniform, colour blind friendly, and monochrome friendly.
 
@@ -36,8 +38,12 @@ impl Colour {
         Self { red, green, blue }
     }
 
-    const fn new_tuple((red, green, blue): (u8, u8, u8)) -> Self {
-        Self::new(red, green, blue)
+    pub fn signal_option(
+        colour: MaybeSignal<Option<Colour>>,
+        layout: Memo<ColourScheme>,
+        index: usize,
+    ) -> Signal<Colour> {
+        Signal::derive(move || colour.get().unwrap_or_else(|| layout.get().by_index(index)))
     }
 }
 
@@ -54,6 +60,12 @@ impl From<&[(u8, u8, u8)]> for ColourScheme {
             .map(|&(red, green, blue)| Colour::new(red, green, blue))
             .collect();
         Self { colours }
+    }
+}
+
+impl From<[(u8, u8, u8); 3]> for ColourScheme {
+    fn from(colours: [(u8, u8, u8); 3]) -> Self {
+        colours.as_ref().into()
     }
 }
 
@@ -77,9 +89,11 @@ impl std::fmt::Display for Colour {
     }
 }
 
-pub static LIGHTISH_GREY: Colour = Colour::new(0xD2, 0xD2, 0xD2);
-pub static LIGHTER_GREY: Colour = Colour::new(0xEF, 0xF2, 0xFA);
-pub static LIGHT_GREY: Colour = Colour::new_tuple(colourmaps::GRAYC[6]);
+pub const GREY_LAYOUT: [(u8, u8, u8); 3] = [
+    colourmaps::GRAYC[6], // Light grey
+    (0xD2, 0xD2, 0xD2),   // Lighter grey
+    (0xEF, 0xF2, 0xFA),   // Lightest grey
+];
 
 /// Arbitrary colours for a brighter palette
 pub const ARBITRARY: [(u8, u8, u8); 10] = [

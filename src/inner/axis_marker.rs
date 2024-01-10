@@ -1,10 +1,5 @@
 use super::{InnerLayout, UseInner};
-use crate::{
-    colours::{Colour, LIGHTISH_GREY},
-    debug::DebugRect,
-    edge::Edge,
-    state::State,
-};
+use crate::{colours::Colour, debug::DebugRect, edge::Edge, state::State};
 use leptos::*;
 use std::rc::Rc;
 
@@ -12,7 +7,7 @@ use std::rc::Rc;
 pub struct AxisMarker {
     edge: MaybeSignal<Edge>,
     placement: MaybeSignal<Placement>,
-    colour: MaybeSignal<Colour>,
+    colour: MaybeSignal<Option<Colour>>,
     arrow: MaybeSignal<bool>,
     width: MaybeSignal<f64>,
 }
@@ -31,7 +26,7 @@ impl AxisMarker {
         InnerLayout::AxisMarker(Self {
             edge: edge.into(),
             placement: placement.into(),
-            colour: Into::<Colour>::into(LIGHTISH_GREY).into(),
+            colour: MaybeSignal::default(),
             arrow: true.into(),
             width: 1.0.into(),
         })
@@ -55,10 +50,8 @@ impl AxisMarker {
     pub fn vertical_zero<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
         Self::layout(Edge::Left, Placement::Zero)
     }
-}
 
-impl AxisMarker {
-    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Colour>>) -> Self {
+    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
         self.colour = colour.into();
         self
     }
@@ -130,7 +123,12 @@ pub fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>
         }
     };
 
-    let colour = move || marker.colour.get().to_string();
+    let colour = Colour::signal_option(
+        marker.colour,
+        state.pre.layout_colours,
+        super::LAYOUT_AXIS_MARKER,
+    );
+    let colour = move || colour.get().to_string();
     view! {
         <g class="_chartistry_axis_marker">
             <defs>
