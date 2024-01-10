@@ -47,12 +47,6 @@ impl Colour {
     }
 }
 
-impl Default for ColourScheme {
-    fn default() -> Self {
-        ARBITRARY.as_ref().into()
-    }
-}
-
 impl From<&[(u8, u8, u8)]> for ColourScheme {
     fn from(colours: &[(u8, u8, u8)]) -> Self {
         let colours = colours

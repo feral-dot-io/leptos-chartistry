@@ -29,7 +29,7 @@ pub struct UseData<X: 'static, Y: 'static> {
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, Y> {
     pub fn new<T: 'static>(
         series: SeriesVec<T, X, Y>,
-        colours: Signal<ColourScheme>,
+        colours: Memo<ColourScheme>,
         min_x: MaybeSignal<Option<X>>,
         max_x: MaybeSignal<Option<X>>,
         min_y: MaybeSignal<Option<Y>>,
@@ -45,7 +45,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
             get_x,
             lines,
             get_ys,
-        } = series.prepare(colours);
+        } = series.prepare(colours.into());
 
         // Sort series by name
         let series = {
