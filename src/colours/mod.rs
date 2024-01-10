@@ -90,7 +90,7 @@ impl std::fmt::Display for Colour {
 }
 
 pub const GREY_LAYOUT: [(u8, u8, u8); 3] = [
-    colourmaps::GRAYC[6], // Light grey
+    colourmaps::GREYC[6], // Light grey
     (0xD2, 0xD2, 0xD2),   // Lighter grey
     (0xEF, 0xF2, 0xFA),   // Lightest grey
 ];
