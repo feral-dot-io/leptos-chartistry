@@ -334,10 +334,8 @@ impl<Tz: TimeZone> Position for DateTime<Tz> {
 }
 
 #[component]
-pub fn RenderData<X: Clone + 'static, Y: Clone + 'static>(
-    data: UseData<X, Y>,
-    state: State<X, Y>,
-) -> impl IntoView {
+pub fn RenderData<X: Clone + 'static, Y: Clone + 'static>(state: State<X, Y>) -> impl IntoView {
+    let data = state.pre.data;
     let proj = state.projection;
     let pos_x = data.positions_x;
     let svg_coords = data

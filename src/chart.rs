@@ -91,7 +91,6 @@ where
                     left=left.as_slice()
                     inner=inner.clone()
                     tooltip=tooltip.clone()
-                    data=data.clone()
                 />
             </Show>
         </div>
@@ -109,7 +108,6 @@ fn RenderChart<'a, X, Y>(
     left: &'a [VerticalLayout<Y>],
     inner: Vec<InnerLayout<X, Y>>,
     tooltip: Option<Tooltip<X, Y>>,
-    data: UseData<X, Y>,
 ) -> impl IntoView
 where
     X: Clone + PartialEq + 'static,
@@ -123,7 +121,7 @@ where
     // Finalise state
     let projection = {
         let inner = layout.inner;
-        let position_range = data.position_range;
+        let position_range = pre_state.data.position_range;
         create_memo(move |_| Projection::new(inner.get(), position_range.get())).into()
     };
     let state = State::new(pre_state, &watch, layout, projection);
@@ -150,7 +148,7 @@ where
             <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
             {inner}
             {edges}
-            <RenderData data=data state=state.clone() />
+            <RenderData state=state.clone() />
         </svg>
         {tooltip.map(|tooltip| view! {
             <Tooltip tooltip=tooltip state=state />
