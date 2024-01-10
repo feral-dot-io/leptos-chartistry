@@ -33,6 +33,16 @@ impl<Tick: Clone> GridLine<Tick> {
             ticks: ticks.borrow().clone(),
         }
     }
+
+    pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
+        self.width = width.into();
+        self
+    }
+
+    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
+        self.colour = colour.into();
+        self
+    }
 }
 
 impl<X: Clone> GridLine<X> {
