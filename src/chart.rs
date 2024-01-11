@@ -74,7 +74,7 @@ where
         Signal::derive(move || font.get()),
         padding.into(),
         create_memo(move |_| layout_colours.get().unwrap_or(colours::GREY_LAYOUT.into())),
-        data.clone(),
+        data,
     );
 
     view! {
