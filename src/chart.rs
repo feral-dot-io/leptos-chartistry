@@ -1,6 +1,5 @@
 use crate::{
     aspect_ratio::{AspectRatioCalc, CalcUsing},
-    colours::{self, ColourScheme},
     debug::DebugRect,
     inner::InnerLayout,
     layout::{HorizontalLayout, HorizontalVec, Layout, VerticalLayout, VerticalVec},
@@ -19,7 +18,6 @@ pub fn Chart<T, X, Y>(
     #[prop(into)] font: MaybeSignal<Font>,
     #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
-    #[prop(into, optional)] layout_colours: MaybeSignal<Option<ColourScheme>>,
 
     #[prop(into, optional)] mut top: HorizontalVec<X>,
     #[prop(into, optional)] right: VerticalVec<Y>,
@@ -70,7 +68,6 @@ where
         debug.into(),
         Signal::derive(move || font.get()),
         padding.into(),
-        create_memo(move |_| layout_colours.get().unwrap_or(colours::GREY_LAYOUT.into())),
         data,
     );
 

@@ -137,11 +137,7 @@ fn GuideLine<X: 'static, Y: 'static>(
         !(x1.get().is_nan() || y1.get().is_nan() || x2.get().is_nan() || y2.get().is_nan())
     });
 
-    let colour = Colour::signal_option(
-        line.colour,
-        state.pre.layout_colours,
-        super::LAYOUT_GUIDE_LINE,
-    );
+    let colour = Colour::signal_option(line.colour, super::DEFAULT_COLOUR_GUIDE_LINE);
     view! {
         <g class=format!("_chartistry_{}_guide_line", id)>
             <Show when=move || hover_inner.get() && have_data.get() >

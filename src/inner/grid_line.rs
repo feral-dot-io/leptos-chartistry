@@ -104,11 +104,7 @@ fn ViewHorizontalGridLine<X: 'static, Y: 'static>(
     let inner = state.layout.inner;
     let proj = state.projection;
 
-    let colour = Colour::signal_option(
-        line.colour,
-        state.pre.layout_colours,
-        super::LAYOUT_GRID_LINE,
-    );
+    let colour = Colour::signal_option(line.colour, super::DEFAULT_COLOUR_GRID_LINE);
     view! {
         <g class="_chartistry_grid_line_x">
             <DebugRect label="grid_line_x" debug=debug />
@@ -140,11 +136,7 @@ fn ViewVerticalGridLine<X: 'static, Y: 'static>(
     let inner = state.layout.inner;
     let proj = state.projection;
 
-    let colour = Colour::signal_option(
-        line.colour,
-        state.pre.layout_colours,
-        super::LAYOUT_GRID_LINE,
-    );
+    let colour = Colour::signal_option(line.colour, super::DEFAULT_COLOUR_GRID_LINE);
     view! {
         <g class="_chartistry_grid_line_y">
             <DebugRect label="grid_line_y" debug=debug />

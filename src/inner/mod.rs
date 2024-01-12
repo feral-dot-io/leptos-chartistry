@@ -3,14 +3,14 @@ pub mod grid_line;
 pub mod guide_line;
 pub mod legend;
 
-use crate::state::State;
+use crate::{colours::Colour, state::State};
 use leptos::*;
 use std::rc::Rc;
 
-// The colours for our layout can be specified (overridden) on each individual component. If no colour is specified then we fall back to the layout colour scheme. This default three palette scheme from darker to lighter grey. Below are the indexes for each colour in the scheme giving that hierarchy to the component.
-const LAYOUT_GUIDE_LINE: usize = 0;
-const LAYOUT_AXIS_MARKER: usize = 1;
-const LAYOUT_GRID_LINE: usize = 2;
+// Fall back colours used if nothing is specified directly on the component. These are from darker to lighter grey.
+const DEFAULT_COLOUR_GUIDE_LINE: Colour = Colour::new(0x9A, 0x9A, 0x9A); // Light grey
+const DEFAULT_COLOUR_AXIS_MARKER: Colour = Colour::new(0xD2, 0xD2, 0xD2); // Lighter grey
+const DEFAULT_COLOUR_GRID_LINE: Colour = Colour::new(0xEF, 0xF2, 0xFA); // Lightest grey
 
 #[derive(Clone)]
 pub enum InnerLayout<X: Clone, Y: Clone> {

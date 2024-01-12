@@ -15,12 +15,6 @@ Reading material:
 - Available colour schemes: https://s-ink.org/scientific-colour-maps
 */
 
-pub const GREY_LAYOUT: [Colour; 3] = [
-    Colour::new(0x9A, 0x9A, 0x9A), // Light grey
-    Colour::new(0xD2, 0xD2, 0xD2), // Lighter grey
-    Colour::new(0xEF, 0xF2, 0xFA), // Lightest grey
-];
-
 /// Arbitrary colours for a brighter palette
 pub const ARBITRARY: [Colour; 10] = [
     Colour::new(0x12, 0xA5, 0xED), // Blue
@@ -79,16 +73,15 @@ impl ColourScheme {
 }
 
 impl Colour {
-    const fn new(red: u8, green: u8, blue: u8) -> Self {
+    pub(crate) const fn new(red: u8, green: u8, blue: u8) -> Self {
         Self { red, green, blue }
     }
 
-    pub fn signal_option(
+    pub(crate) fn signal_option(
         colour: MaybeSignal<Option<Colour>>,
-        layout: Memo<ColourScheme>,
-        index: usize,
+        fallback: Colour,
     ) -> Signal<Colour> {
-        Signal::derive(move || colour.get().unwrap_or_else(|| layout.get().by_index(index)))
+        Signal::derive(move || colour.get().unwrap_or(fallback))
     }
 }
 

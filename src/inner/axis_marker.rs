@@ -123,11 +123,7 @@ pub fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>
         }
     };
 
-    let colour = Colour::signal_option(
-        marker.colour,
-        state.pre.layout_colours,
-        super::LAYOUT_AXIS_MARKER,
-    );
+    let colour = Colour::signal_option(marker.colour, super::DEFAULT_COLOUR_AXIS_MARKER);
     let colour = move || colour.get().to_string();
     view! {
         <g class="_chartistry_axis_marker">
