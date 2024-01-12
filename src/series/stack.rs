@@ -7,7 +7,7 @@ use leptos::signal_prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 
-const DEFAULT_COLOUR_SCHEME: [Colour; 10] = colours::LAJOLLA;
+const DEFAULT_COLOUR_SCHEME: [Colour; 10] = colours::BATLOW;
 
 #[derive(Clone)]
 pub struct Stack<T, Y> {
