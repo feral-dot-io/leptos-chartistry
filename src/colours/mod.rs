@@ -35,6 +35,19 @@ pub const ARBITRARY: [Colour; 10] = [
     Colour::new(0xea, 0x60, 0xdf), // Pink
 ];
 
+pub const VIK_BLUE_RED: [Colour; 10] = [
+    VIK[2], // Lighter blue
+    VIK[7], // Lighter red
+    VIK[3], // Light blue
+    VIK[6], // Light red
+    VIK[4], // Lightest blue
+    VIK[5], // Lightest red
+    VIK[1], // Blue
+    VIK[8], // Red
+    VIK[0], // Dark blue
+    VIK[9], // Dark red
+];
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColourScheme {
     swatches: Vec<Colour>,
