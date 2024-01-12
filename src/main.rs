@@ -52,7 +52,7 @@ pub fn App() -> impl IntoView {
     let series = Series::new(|w: &Wave| f64_to_dt(w.x))
         .line(Line::new(&|w: &Wave| w.sine).set_name("A").set_width(2.0))
         .line(Line::new(&|w: &Wave| w.cosine).set_name("B").set_width(2.0))
-        //.line(Line::new(&|_: &Wave| f64::NAN))
+        .line(|_: &Wave| f64::NAN)
         .stack(vec![
             Line::new(&|w: &Wave| w.sine)
                 .set_name("Stack-A")

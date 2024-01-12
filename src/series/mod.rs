@@ -61,8 +61,8 @@ impl<T, X, Y> Series<T, X, Y> {
         get_y
     }
 
-    pub fn line(mut self, line: Line<T, Y>) -> Self {
-        _ = self.push(line);
+    pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
+        _ = self.push(line.into());
         self
     }
 }

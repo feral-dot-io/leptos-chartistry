@@ -57,6 +57,12 @@ impl<T, Y> Clone for Line<T, Y> {
     }
 }
 
+impl<T, Y, F: Fn(&T) -> Y + 'static> From<F> for Line<T, Y> {
+    fn from(f: F) -> Self {
+        Self::new(f)
+    }
+}
+
 impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
     fn value(&self, t: &T) -> Y {
         self(t)
