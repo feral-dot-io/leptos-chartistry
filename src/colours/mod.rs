@@ -14,9 +14,29 @@ Reading material:
 - Picking a colour scheme: https://s-ink.org/colour-map-guideline
 */
 
+pub const GREY_LAYOUT: [Colour; 3] = [
+    Colour::new(0x9A, 0x9A, 0x9A), // Light grey
+    Colour::new(0xD2, 0xD2, 0xD2), // Lighter grey
+    Colour::new(0xEF, 0xF2, 0xFA), // Lightest grey
+];
+
+/// Arbitrary colours for a brighter palette
+pub const ARBITRARY: [Colour; 10] = [
+    Colour::new(0x12, 0xA5, 0xED), // Blue
+    Colour::new(0xF5, 0x32, 0x5B), // Red
+    Colour::new(0x71, 0xc6, 0x14), // Green
+    Colour::new(0xFF, 0x84, 0x00), // Orange
+    Colour::new(0x7b, 0x4d, 0xff), // Purple
+    Colour::new(0xdb, 0x4c, 0xb2), // Magenta
+    Colour::new(0x92, 0xb4, 0x2c), // Darker green
+    Colour::new(0xFF, 0xCA, 0x00), // Yellow
+    Colour::new(0x22, 0xd2, 0xba), // Turquoise
+    Colour::new(0xea, 0x60, 0xdf), // Pink
+];
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColourScheme {
-    colours: Vec<Colour>,
+    swatches: Vec<Colour>,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -27,9 +47,13 @@ pub struct Colour {
 }
 
 impl ColourScheme {
+    fn new(swatches: Vec<Colour>) -> Self {
+        Self { swatches }
+    }
+
     pub fn by_index(&self, index: usize) -> Colour {
-        let index = index.rem_euclid(self.colours.len());
-        self.colours[index]
+        let index = index.rem_euclid(self.swatches.len());
+        self.swatches[index]
     }
 }
 
@@ -47,33 +71,21 @@ impl Colour {
     }
 }
 
-impl From<&[(u8, u8, u8)]> for ColourScheme {
-    fn from(colours: &[(u8, u8, u8)]) -> Self {
-        let colours = colours
-            .iter()
-            .map(|&(red, green, blue)| Colour::new(red, green, blue))
-            .collect();
-        Self { colours }
-    }
-}
-
-impl From<[(u8, u8, u8); 3]> for ColourScheme {
-    fn from(colours: [(u8, u8, u8); 3]) -> Self {
-        colours.as_ref().into()
-    }
-}
-
-impl From<[(u8, u8, u8); 10]> for ColourScheme {
-    fn from(colours: [(u8, u8, u8); 10]) -> Self {
-        colours.as_ref().into()
-    }
-}
-
 impl From<&[Colour]> for ColourScheme {
     fn from(colours: &[Colour]) -> Self {
-        Self {
-            colours: colours.to_vec(),
-        }
+        Self::new(colours.to_vec())
+    }
+}
+
+impl From<[Colour; 3]> for ColourScheme {
+    fn from(colours: [Colour; 3]) -> Self {
+        colours.as_ref().into()
+    }
+}
+
+impl From<[Colour; 10]> for ColourScheme {
+    fn from(colours: [Colour; 10]) -> Self {
+        colours.as_ref().into()
     }
 }
 
@@ -82,23 +94,3 @@ impl std::fmt::Display for Colour {
         write!(f, "#{:02X}{:02X}{:02X}", self.red, self.green, self.blue)
     }
 }
-
-pub const GREY_LAYOUT: [(u8, u8, u8); 3] = [
-    colourmaps::GREYC[6], // Light grey
-    (0xD2, 0xD2, 0xD2),   // Lighter grey
-    (0xEF, 0xF2, 0xFA),   // Lightest grey
-];
-
-/// Arbitrary colours for a brighter palette
-pub const ARBITRARY: [(u8, u8, u8); 10] = [
-    (0x12, 0xA5, 0xED), // Blue
-    (0xF5, 0x32, 0x5B), // Red
-    (0x71, 0xc6, 0x14), // Green
-    (0xFF, 0x84, 0x00), // Orange
-    (0x7b, 0x4d, 0xff), // Purple
-    (0xdb, 0x4c, 0xb2), // Magenta
-    (0x92, 0xb4, 0x2c), // Darker green
-    (0xFF, 0xCA, 0x00), // Yellow
-    (0x22, 0xd2, 0xba), // Turquoise
-    (0xea, 0x60, 0xdf), // Pink
-];
