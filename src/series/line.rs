@@ -1,4 +1,4 @@
-use super::ToUseLine;
+use super::{ApplyUseSeries, ToUseLine, UseSeries};
 use crate::{
     bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State, Font,
 };
@@ -70,6 +70,12 @@ impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
 
     fn position(&self, t: &T) -> Y {
         self(t)
+    }
+}
+
+impl<T, X, Y> ApplyUseSeries<T, X, Y> for Line<T, Y> {
+    fn apply_use_series(self: Rc<Self>, series: &mut UseSeries<T, X, Y>) {
+        _ = series.push((*self).clone());
     }
 }
 

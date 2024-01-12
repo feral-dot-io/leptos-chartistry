@@ -1,3 +1,4 @@
+use super::UseSeries;
 use crate::{bounds::Bounds, series::UseLine, state::State, Series};
 use chrono::prelude::*;
 use leptos::*;
@@ -33,12 +34,12 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
         X: PartialOrd + Position,
         Y: PartialOrd + Position,
     {
-        let Series {
+        let UseSeries {
             get_x,
             lines,
             get_ys,
             ..
-        } = series;
+        } = series.into_use();
 
         // Sort series by name
         let series = {

@@ -1,11 +1,65 @@
-use super::{line::UseLine, GetYValue, ToUseLine};
-use crate::{colours::Colour, Line};
+use super::{line::UseLine, ApplyUseSeries, GetYValue, ToUseLine, UseSeries};
+use crate::{
+    colours::{Colour, ColourScheme},
+    Line,
+};
 use leptos::signal_prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 
 #[derive(Clone)]
-pub(super) struct StackedLine<T, Y> {
+pub struct Stack<T, Y> {
+    // TODO: apply colours
+    colours: MaybeSignal<Option<ColourScheme>>,
+    lines: Vec<Line<T, Y>>,
+}
+
+impl<T, Y> Stack<T, Y> {
+    pub fn set_colours(mut self, colours: impl Into<MaybeSignal<Option<ColourScheme>>>) -> Self {
+        self.colours = colours.into();
+        self
+    }
+
+    pub fn push(mut self, line: impl Into<Line<T, Y>>) -> Self {
+        self.lines.push(line.into());
+        self
+    }
+}
+
+impl<T, Y> Default for Stack<T, Y> {
+    fn default() -> Self {
+        Self {
+            colours: MaybeSignal::default(),
+            lines: Vec::new(),
+        }
+    }
+}
+
+impl<T, Y, I: IntoIterator<Item = Line<T, Y>>> From<I> for Stack<T, Y> {
+    fn from(lines: I) -> Self {
+        Self {
+            colours: MaybeSignal::default(),
+            lines: lines.into_iter().collect(),
+        }
+    }
+}
+
+impl<T: 'static, X, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, X, Y>
+    for Stack<T, Y>
+{
+    fn apply_use_series(self: Rc<Self>, series: &mut UseSeries<T, X, Y>) {
+        let mut previous = None;
+        for line in self.lines.clone() {
+            let line = StackedLine::new(line, previous.clone());
+            let get_y = series.push(line);
+            // Sum next line with this one
+            previous = Some(get_y);
+        }
+    }
+}
+
+#[derive(Clone)]
+struct StackedLine<T, Y> {
     line: Line<T, Y>,
     previous: Option<Rc<dyn GetYValue<T, Y>>>,
 }

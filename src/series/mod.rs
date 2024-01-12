@@ -3,9 +3,9 @@ mod stack;
 mod use_data;
 
 pub use line::{Line, Snippet, UseLine};
+pub use stack::Stack;
 pub use use_data::{Position, RenderData, UseData};
 
-use self::stack::StackedLine;
 use crate::colours::{self, Colour, ColourScheme};
 use leptos::signal_prelude::*;
 use std::{collections::HashMap, rc::Rc};
@@ -21,34 +21,71 @@ trait GetYValue<T, Y> {
 #[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
-    colours: Signal<ColourScheme>,
-    lines: HashMap<usize, UseLine>,
-    get_ys: HashMap<usize, GetY<T, Y>>,
+    colours: MaybeSignal<Option<ColourScheme>>,
+    lines: Vec<Rc<dyn ApplyUseSeries<T, X, Y>>>,
+}
+
+trait ApplyUseSeries<T, X, Y> {
+    fn apply_use_series(self: Rc<Self>, _: &mut UseSeries<T, X, Y>);
 }
 
 trait ToUseLine<T, Y> {
     fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (UseLine, GetY<T, Y>);
 }
 
+struct UseSeries<T, X, Y> {
+    get_x: GetX<T, X>,
+    colours: Memo<ColourScheme>,
+    lines: HashMap<usize, UseLine>,
+    get_ys: HashMap<usize, GetY<T, Y>>,
+}
+
 impl<T, X, Y> Series<T, X, Y> {
     pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
-        Self::new_with_colours(get_x, MaybeSignal::Static(colours::ARBITRARY.into()))
-    }
-
-    pub fn new_with_colours(
-        get_x: impl Fn(&T) -> X + 'static,
-        colours: MaybeSignal<ColourScheme>,
-    ) -> Self {
-        let colours = Signal::derive(move || colours.get());
         Self {
             get_x: Rc::new(get_x),
+            colours: MaybeSignal::default(),
+            lines: Vec::new(),
+        }
+    }
+
+    pub fn set_colours(mut self, colours: impl Into<MaybeSignal<Option<ColourScheme>>>) -> Self {
+        self.colours = colours.into();
+        self
+    }
+
+    pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
+        self.lines.push(Rc::new(line.into()));
+        self
+    }
+
+    fn into_use(self) -> UseSeries<T, X, Y> {
+        let mut series = UseSeries::new(self.get_x, self.colours);
+        for line in self.lines {
+            line.apply_use_series(&mut series);
+        }
+        series
+    }
+}
+
+impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
+    pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
+        self.lines.push(Rc::new(stack.into()));
+        self
+    }
+}
+
+impl<T, X, Y> UseSeries<T, X, Y> {
+    fn new(get_x: GetX<T, X>, colours: MaybeSignal<Option<ColourScheme>>) -> Self {
+        let colours = create_memo(move |_| colours.get().unwrap_or(colours::ARBITRARY.into()));
+        Self {
+            get_x,
             colours,
             lines: HashMap::new(),
             get_ys: HashMap::new(),
         }
     }
 
-    /// Pushes a new line to the series accumulator.
     fn push(&mut self, line: impl ToUseLine<T, Y>) -> GetY<T, Y> {
         // Create line
         let id = self.lines.len();
@@ -59,26 +96,5 @@ impl<T, X, Y> Series<T, X, Y> {
         self.lines.insert(id, line);
         self.get_ys.insert(id, get_y.clone());
         get_y
-    }
-
-    pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
-        _ = self.push(line.into());
-        self
-    }
-}
-
-impl<T, X, Y> Series<T, X, Y> {
-    pub fn stack(mut self, lines: Vec<Line<T, Y>>) -> Self
-    where
-        Y: std::ops::Add<Output = Y>,
-    {
-        let mut previous = None;
-        for line in lines {
-            let line = StackedLine::new(line, previous.clone());
-            let get_y = self.push(line);
-            // Sum next line with this one
-            previous = Some(get_y.clone());
-        }
-        self
     }
 }
