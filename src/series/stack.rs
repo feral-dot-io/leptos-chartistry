@@ -1,4 +1,4 @@
-use super::{line::UseLine, ApplyUseSeries, GetYValue, ToUseLine, UseSeries};
+use super::{line::UseLine, ApplyUseSeries, GetYValue, IntoUseLine, UseSeries};
 use crate::{
     colours::{Colour, ColourScheme},
     Line,
@@ -76,9 +76,13 @@ impl<T, Y> StackedLine<T, Y> {
     }
 }
 
-impl<T: 'static, Y: Add<Output = Y> + 'static> ToUseLine<T, Y> for StackedLine<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
-        let (line, get_y) = self.line.to_use_line(id, colour);
+impl<T: 'static, Y: Add<Output = Y> + 'static> IntoUseLine<T, Y> for StackedLine<T, Y> {
+    fn into_use_line(
+        self,
+        id: usize,
+        colour: Signal<Colour>,
+    ) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
+        let (line, get_y) = self.line.into_use_line(id, colour);
         let get_y = Rc::new(UseStackLine {
             current: get_y,
             previous: self.previous.clone(),

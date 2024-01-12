@@ -1,4 +1,4 @@
-use super::{ApplyUseSeries, ToUseLine, UseSeries};
+use super::{ApplyUseSeries, IntoUseLine, UseSeries};
 use crate::{
     bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State, Font,
 };
@@ -79,8 +79,12 @@ impl<T, X, Y> ApplyUseSeries<T, X, Y> for Line<T, Y> {
     }
 }
 
-impl<T, Y> ToUseLine<T, Y> for Line<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
+impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
+    fn into_use_line(
+        self,
+        id: usize,
+        colour: Signal<Colour>,
+    ) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
         let override_colour = self.colour;
         let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
         let line = UseLine {

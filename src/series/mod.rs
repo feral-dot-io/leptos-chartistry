@@ -29,8 +29,8 @@ trait ApplyUseSeries<T, X, Y> {
     fn apply_use_series(self: Rc<Self>, _: &mut UseSeries<T, X, Y>);
 }
 
-trait ToUseLine<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (UseLine, GetY<T, Y>);
+trait IntoUseLine<T, Y> {
+    fn into_use_line(self, id: usize, colour: Signal<Colour>) -> (UseLine, GetY<T, Y>);
 }
 
 struct UseSeries<T, X, Y> {
@@ -86,12 +86,12 @@ impl<T, X, Y> UseSeries<T, X, Y> {
         }
     }
 
-    fn push(&mut self, line: impl ToUseLine<T, Y>) -> GetY<T, Y> {
+    fn push(&mut self, line: impl IntoUseLine<T, Y>) -> GetY<T, Y> {
         // Create line
         let id = self.lines.len();
         let colours = self.colours;
         let colour = create_memo(move |_| colours.get().by_index(id));
-        let (line, get_y) = line.to_use_line(id, colour.into());
+        let (line, get_y) = line.into_use_line(id, colour.into());
         // Insert line
         self.lines.insert(id, line);
         self.get_ys.insert(id, get_y.clone());
