@@ -10,6 +10,8 @@ use crate::colours::{self, Colour, ColourScheme};
 use leptos::signal_prelude::*;
 use std::{collections::HashMap, rc::Rc};
 
+const DEFAULT_COLOUR_SCHEME: [Colour; 10] = colours::ARBITRARY;
+
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
 type GetY<T, Y> = Rc<dyn GetYValue<T, Y>>;
 
@@ -30,11 +32,12 @@ trait ApplyUseSeries<T, X, Y> {
 }
 
 trait IntoUseLine<T, Y> {
-    fn into_use_line(self, id: usize, colour: Signal<Colour>) -> (UseLine, GetY<T, Y>);
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseLine, GetY<T, Y>);
 }
 
 struct UseSeries<T, X, Y> {
     get_x: GetX<T, X>,
+    colour_id: usize,
     colours: Memo<ColourScheme>,
     lines: HashMap<usize, UseLine>,
     get_ys: HashMap<usize, GetY<T, Y>>,
@@ -60,7 +63,8 @@ impl<T, X, Y> Series<T, X, Y> {
     }
 
     fn into_use(self) -> UseSeries<T, X, Y> {
-        let mut series = UseSeries::new(self.get_x, self.colours);
+        let colours = ColourScheme::signal_default(self.colours, DEFAULT_COLOUR_SCHEME.into());
+        let mut series = UseSeries::new(self.get_x, colours);
         for line in self.lines {
             line.apply_use_series(&mut series);
         }
@@ -76,22 +80,27 @@ impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
 }
 
 impl<T, X, Y> UseSeries<T, X, Y> {
-    fn new(get_x: GetX<T, X>, colours: MaybeSignal<Option<ColourScheme>>) -> Self {
-        let colours = create_memo(move |_| colours.get().unwrap_or(colours::ARBITRARY.into()));
+    fn new(get_x: GetX<T, X>, colours: Memo<ColourScheme>) -> Self {
         Self {
             get_x,
+            colour_id: 0,
             colours,
             lines: HashMap::new(),
             get_ys: HashMap::new(),
         }
     }
 
-    fn push(&mut self, line: impl IntoUseLine<T, Y>) -> GetY<T, Y> {
+    fn next_colour(&mut self) -> Memo<Colour> {
+        let id = self.colour_id;
+        self.colour_id += 1;
+        let colours = self.colours;
+        create_memo(move |_| colours.get().by_index(id))
+    }
+
+    fn push(&mut self, colour: Memo<Colour>, line: impl IntoUseLine<T, Y>) -> GetY<T, Y> {
         // Create line
         let id = self.lines.len();
-        let colours = self.colours;
-        let colour = create_memo(move |_| colours.get().by_index(id));
-        let (line, get_y) = line.into_use_line(id, colour.into());
+        let (line, get_y) = line.into_use_line(id, colour);
         // Insert line
         self.lines.insert(id, line);
         self.get_ys.insert(id, get_y.clone());

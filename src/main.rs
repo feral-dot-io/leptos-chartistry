@@ -13,17 +13,24 @@ fn main() {
 
 pub struct Wave {
     x: f64,
-    sine: f64,
-    cosine: f64,
+    sine: Vec<f64>,
+    cosine: Vec<f64>,
 }
 
 fn load_data() -> Vec<Wave> {
-    const SCALE: f64 = 1.0;
+    use std::f64::consts::PI;
     let mut data = Vec::new();
     for i in 0..1000 {
-        let x = i as f64 / 1000.0 * std::f64::consts::PI * 2.0 * 2.0;
-        let sine = x.sin() * SCALE + 1.0;
-        let cosine = x.cos() * SCALE + 1.0;
+        let x = i as f64 / 1000.0 * PI * 2.0 * 2.0;
+        let (sine, cosine): (Vec<_>, Vec<_>) = (0..10)
+            .map(|j| {
+                let v = x + 2.0 * PI * j as f64 / 10.0;
+                let sin = v.sin() * 0.5 + 0.5;
+                let cos = (v.cos() + PI) * (PI / 100.0);
+                (sin, cos)
+            })
+            .unzip();
+        log::info!("{x} = {cosine:?}");
         data.push(Wave { x, sine, cosine });
     }
     data
@@ -49,18 +56,23 @@ pub fn App() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-    let series = Series::new(|w: &Wave| f64_to_dt(w.x))
-        .line(Line::new(&|w: &Wave| w.sine).set_name("A").set_width(2.0))
-        .line(Line::new(&|w: &Wave| w.cosine).set_name("B").set_width(2.0))
-        .line(|_: &Wave| f64::NAN)
-        .stack(vec![
-            Line::new(&|w: &Wave| w.sine)
-                .set_name("Stack-A")
+    let mut series = Series::new(|w: &Wave| f64_to_dt(w.x));
+
+    // Sine lines
+    for i in 0..10 {
+        series = series.line(
+            Line::new(move |w: &Wave| w.sine[i])
+                .set_name(format!("Sine{}", i))
                 .set_width(4.0),
-            Line::new(&|w: &Wave| w.cosine)
-                .set_name("Stack-B")
-                .set_width(4.0),
-        ]);
+        );
+    }
+
+    // Cosine stack
+    series = series.stack((0..10).map(|i| {
+        Line::new(move |w: &Wave| w.cosine[i])
+            .set_name(format!("Cosine{}", i))
+            .set_width(4.0)
+    }));
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
@@ -115,7 +127,6 @@ pub fn App() -> impl IntoView {
                 GridLine::vertical(&bottom_ticks),
                 GuideLine::x_axis_over_data(),
                 GuideLine::y_axis(),
-                InsetLegend::top_right()
             ]
             tooltip=Tooltip::left_cursor(bottom_ticks, left_ticks).sort_by_f64_descending()
 

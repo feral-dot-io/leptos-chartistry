@@ -75,16 +75,13 @@ impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
 
 impl<T, X, Y> ApplyUseSeries<T, X, Y> for Line<T, Y> {
     fn apply_use_series(self: Rc<Self>, series: &mut UseSeries<T, X, Y>) {
-        _ = series.push((*self).clone());
+        let colour = series.next_colour();
+        _ = series.push(colour, (*self).clone());
     }
 }
 
 impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
-    fn into_use_line(
-        self,
-        id: usize,
-        colour: Signal<Colour>,
-    ) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
         let override_colour = self.colour;
         let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
         let line = UseLine {

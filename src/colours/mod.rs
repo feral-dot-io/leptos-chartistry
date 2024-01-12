@@ -11,7 +11,8 @@ Reading material:
 - Summary poster: https://www.fabiocrameri.ch/ws/media-library/a17d02961b3a4544961416de2d7900a4/posterscientificcolourmaps_crameri.pdf
 - Article "The misuse of colour in science communication" https://www.nature.com/articles/s41467-020-19160-7
 - Homepage https://www.fabiocrameri.ch/colourmaps/
-- Picking a colour scheme: https://s-ink.org/colour-map-guideline
+- Flow chart on picking a scheme: https://s-ink.org/colour-map-guideline
+- Available colour schemes: https://s-ink.org/scientific-colour-maps
 */
 
 pub const GREY_LAYOUT: [Colour; 3] = [
@@ -54,6 +55,13 @@ impl ColourScheme {
     pub fn by_index(&self, index: usize) -> Colour {
         let index = index.rem_euclid(self.swatches.len());
         self.swatches[index]
+    }
+
+    pub fn signal_default(
+        colours: MaybeSignal<Option<ColourScheme>>,
+        default: ColourScheme,
+    ) -> Memo<ColourScheme> {
+        create_memo(move |_| colours.get().unwrap_or_else(|| default.clone()))
     }
 }
 

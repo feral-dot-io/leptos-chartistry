@@ -1,20 +1,25 @@
 use super::{line::UseLine, ApplyUseSeries, GetYValue, IntoUseLine, UseSeries};
 use crate::{
-    colours::{Colour, ColourScheme},
+    colours::{self, Colour, ColourScheme},
     Line,
 };
 use leptos::signal_prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 
+const DEFAULT_COLOUR_SCHEME: [Colour; 10] = colours::LAJOLLA;
+
 #[derive(Clone)]
 pub struct Stack<T, Y> {
-    // TODO: apply colours
     colours: MaybeSignal<Option<ColourScheme>>,
     lines: Vec<Line<T, Y>>,
 }
 
 impl<T, Y> Stack<T, Y> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn set_colours(mut self, colours: impl Into<MaybeSignal<Option<ColourScheme>>>) -> Self {
         self.colours = colours.into();
         self
@@ -48,10 +53,13 @@ impl<T: 'static, X, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, X,
     for Stack<T, Y>
 {
     fn apply_use_series(self: Rc<Self>, series: &mut UseSeries<T, X, Y>) {
+        let colours =
+            ColourScheme::signal_default(self.colours.clone(), DEFAULT_COLOUR_SCHEME.into());
         let mut previous = None;
-        for line in self.lines.clone() {
+        for (id, line) in self.lines.clone().into_iter().enumerate() {
+            let colour = create_memo(move |_| colours.get().by_index(id));
             let line = StackedLine::new(line, previous.clone());
-            let get_y = series.push(line);
+            let get_y = series.push(colour, line);
             // Sum next line with this one
             previous = Some(get_y);
         }
@@ -77,11 +85,7 @@ impl<T, Y> StackedLine<T, Y> {
 }
 
 impl<T: 'static, Y: Add<Output = Y> + 'static> IntoUseLine<T, Y> for StackedLine<T, Y> {
-    fn into_use_line(
-        self,
-        id: usize,
-        colour: Signal<Colour>,
-    ) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
         let (line, get_y) = self.line.into_use_line(id, colour);
         let get_y = Rc::new(UseStackLine {
             current: get_y,
