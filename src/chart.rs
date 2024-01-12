@@ -9,7 +9,7 @@ use crate::{
     series::{RenderData, UseData},
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
-    AspectRatio, Font, Padding, Position, SeriesVec,
+    AspectRatio, Font, Padding, Position, Series,
 };
 use leptos::{html::Div, *};
 
@@ -29,8 +29,7 @@ pub fn Chart<T, X, Y>(
     #[prop(into, optional)] inner: Vec<InnerLayout<X, Y>>,
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 
-    #[prop(into)] series: SeriesVec<T, X, Y>,
-    #[prop(into, optional)] colours: MaybeSignal<Option<ColourScheme>>,
+    #[prop(into)] series: Series<T, X, Y>,
     #[prop(into, optional)] min_x: MaybeSignal<Option<X>>,
     #[prop(into, optional)] max_x: MaybeSignal<Option<X>>,
     #[prop(into, optional)] min_y: MaybeSignal<Option<Y>>,
@@ -66,9 +65,7 @@ where
     left.reverse();
 
     // Build data
-    let colours = create_memo(move |_| colours.get().unwrap_or(colours::ARBITRARY.into()));
-    let data = UseData::new(series, colours, min_x, max_x, min_y, max_y, data);
-
+    let data = UseData::new(series, min_x, max_x, min_y, max_y, data);
     let pre = PreState::new(
         debug.into(),
         Signal::derive(move || font.get()),

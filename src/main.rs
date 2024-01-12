@@ -49,19 +49,18 @@ pub fn App() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-    let series = SeriesVec::new(|w: &Wave| f64_to_dt(w.x))
-        .push(Line::new(&|w: &Wave| w.sine).set_name("A").set_width(2.0))
-        .push(Line::new(&|w: &Wave| w.cosine).set_name("B").set_width(2.0))
-        //.push(Line::new(&|_: &Wave| f64::NAN))
-        .push(Stack::new(vec![
+    let series = Series::new(|w: &Wave| f64_to_dt(w.x))
+        .line(Line::new(&|w: &Wave| w.sine).set_name("A").set_width(2.0))
+        .line(Line::new(&|w: &Wave| w.cosine).set_name("B").set_width(2.0))
+        //.line(Line::new(&|_: &Wave| f64::NAN))
+        .stack(vec![
             Line::new(&|w: &Wave| w.sine)
                 .set_name("Stack-A")
-                .set_width(2.0),
+                .set_width(4.0),
             Line::new(&|w: &Wave| w.cosine)
                 .set_name("Stack-B")
-                .set_width(2.0),
-            //Line::new(&|_: &Wave| f64::NAN),
-        ]));
+                .set_width(4.0),
+        ]);
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());

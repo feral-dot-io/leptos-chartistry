@@ -1,10 +1,4 @@
-use crate::{
-    bounds::Bounds,
-    colours::ColourScheme,
-    series::{PreparedSeries, UseLine},
-    state::State,
-    SeriesVec,
-};
+use crate::{bounds::Bounds, series::UseLine, state::State, Series};
 use chrono::prelude::*;
 use leptos::*;
 use std::collections::HashMap;
@@ -28,8 +22,7 @@ pub struct UseData<X: 'static, Y: 'static> {
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, Y> {
     pub fn new<T: 'static>(
-        series: SeriesVec<T, X, Y>,
-        colours: Memo<ColourScheme>,
+        series: Series<T, X, Y>,
         min_x: MaybeSignal<Option<X>>,
         max_x: MaybeSignal<Option<X>>,
         min_y: MaybeSignal<Option<Y>>,
@@ -40,16 +33,16 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
         X: PartialOrd + Position,
         Y: PartialOrd + Position,
     {
-        // Build list of series
-        let PreparedSeries {
+        let Series {
             get_x,
             lines,
             get_ys,
-        } = series.prepare(colours.into());
+            ..
+        } = series;
 
         // Sort series by name
         let series = {
-            let series = lines.clone().into_values().collect::<Vec<_>>();
+            let series = lines.values().cloned().collect::<Vec<_>>();
             create_memo(move |_| {
                 let mut series = series.clone();
                 series.sort_by_key(|series| series.name.get());
@@ -140,14 +133,14 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
             }
         });
         let range_y_lines = lines
-            .values()
-            .map(|line| {
-                let positions_y = positions_y_lines[&line.id];
-                let data_y = data_y_positions[&line.id];
+            .keys()
+            .map(|&id| {
+                let positions_y = positions_y_lines[&id];
+                let data_y = data_y_positions[&id];
                 let ranges = create_memo(move |_| {
                     with!(|positions_y, data_y| Self::data_range(positions_y, data_y))
                 });
-                (line.id, ranges)
+                (id, ranges)
             })
             .collect::<HashMap<_, _>>();
 

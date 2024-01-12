@@ -1,4 +1,4 @@
-use super::{Series, SeriesAcc, ToUseLine};
+use super::ToUseLine;
 use crate::{
     bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State, Font,
 };
@@ -46,12 +46,6 @@ impl<T, Y> Line<T, Y> {
     }
 }
 
-impl<T: 'static, Y: 'static> Series<T, Y> for Line<T, Y> {
-    fn prepare(self: Rc<Self>, acc: &mut SeriesAcc<T, Y>) {
-        acc.add_line(&*self);
-    }
-}
-
 impl<T, Y> Clone for Line<T, Y> {
     fn clone(&self) -> Self {
         Self {
@@ -74,7 +68,7 @@ impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
 }
 
 impl<T, Y> ToUseLine<T, Y> for Line<T, Y> {
-    fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (Rc<dyn GetYValue<T, Y>>, UseLine) {
+    fn to_use_line(&self, id: usize, colour: Signal<Colour>) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
         let override_colour = self.colour;
         let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
         let line = UseLine {
@@ -83,7 +77,7 @@ impl<T, Y> ToUseLine<T, Y> for Line<T, Y> {
             colour,
             width: self.width,
         };
-        (self.get_y.clone(), line)
+        (line, self.get_y.clone())
     }
 }
 
