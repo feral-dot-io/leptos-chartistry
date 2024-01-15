@@ -115,8 +115,7 @@ pub fn App() -> impl IntoView {
             debug=debug
             padding=padding
 
-            //top=vec![top_label.to_horizontal(), Legend::end().to_horizontal()]
-            top=HorizontalVec::default().push(top_label).push(Legend::end())
+            top=vec![top_label.to_horizontal(), Legend::end().to_horizontal()]
             right=vec![Legend::middle()]
             bottom=vec![&bottom_ticks]
             left=vec![&left_ticks]
