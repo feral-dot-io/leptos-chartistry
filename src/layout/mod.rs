@@ -204,12 +204,16 @@ pub struct HorizontalVec<X>(Vec<HorizontalLayout<X>>);
 
 impl<X> Default for HorizontalVec<X> {
     fn default() -> Self {
-        Self(Vec::new())
+        Self::new()
     }
 }
 
 // Note: this interface is minimised to avoid exposing the `Vec` API
 impl<X> HorizontalVec<X> {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
     pub fn push(mut self, item: impl ToHorizontal<X>) -> Self {
         self.0.push(item.to_horizontal());
         self
@@ -249,12 +253,16 @@ pub struct VerticalVec<Y>(Vec<VerticalLayout<Y>>);
 /// Start with an empty vector
 impl<Y> Default for VerticalVec<Y> {
     fn default() -> Self {
-        Self(Vec::new())
+        Self::new()
     }
 }
 
 /// Add items to the vector. Could use `vec![item.to_vertical()]` instead.
 impl<Y> VerticalVec<Y> {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
     pub fn push(mut self, item: impl ToVertical<Y>) -> Self {
         self.0.push(item.to_vertical());
         self
