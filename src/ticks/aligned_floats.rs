@@ -59,8 +59,8 @@ impl AlignedFloatsGen {
 
     fn generate_count(first: f64, last: f64, scale: isize, count: usize) -> (isize, Vec<f64>) {
         let range = last - first;
-        // If count is too small, return a single tick in the middle
-        if count <= 1 {
+        // If count is too small or no range, return a single tick in the middle
+        if count <= 1 || first == last {
             return (scale, vec![first + range / 2.0]);
         }
         // Determine step size: use one count fewer so that we include from and to
@@ -183,6 +183,11 @@ mod tests {
         assert_precision(123.0, 133.0, 3.0, 0, 1);
         assert_precision(0.0, 100_000.0, 6.0, 4, 1);
         assert_precision(1.234_567, 2.987_654, 3.0, -1, 1);
+    }
+
+    #[test]
+    fn test_no_range() {
+        assert_ticks(0.0, 0.0, -1, 5, vec!["0.0"]);
     }
 
     #[test]
