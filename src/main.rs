@@ -30,7 +30,6 @@ fn load_data() -> Vec<Wave> {
                 (sin, cos)
             })
             .unzip();
-        log::info!("{x} = {cosine:?}");
         data.push(Wave { x, sine, cosine });
     }
     data
@@ -44,6 +43,7 @@ pub fn f64_to_dt(at: f64) -> DateTime<Utc> {
 #[component]
 pub fn App() -> impl IntoView {
     let (debug, set_debug) = create_signal(false);
+    let (percent, set_percent) = create_signal(false);
 
     // Font
     let (font_height, set_font_height) = create_signal(DEFAULT_FONT_HEIGHT);
@@ -59,20 +59,22 @@ pub fn App() -> impl IntoView {
     let mut series = Series::new(|w: &Wave| f64_to_dt(w.x));
 
     // Sine lines
+    let mut lines = Vec::new();
     for i in 0..10 {
-        series = series.line(
-            Line::new(move |w: &Wave| w.sine[i])
-                .set_name(format!("Sine{}", i))
-                .set_width(4.0),
+        lines.push(
+            Line::new(move |w: &Wave| {
+                if percent.get() {
+                    let total = w.sine.iter().sum::<f64>();
+                    w.sine[i] / total
+                } else {
+                    w.sine[i]
+                }
+            })
+            .set_name(format!("Sine{}", i))
+            .set_width(2.0),
         );
     }
-
-    // Cosine stack
-    series = series.stack((0..10).map(|i| {
-        Line::new(move |w: &Wave| w.cosine[i])
-            .set_name(format!("Cosine{}", i))
-            .set_width(4.0)
-    }));
+    series = series.lines(lines);
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());
@@ -83,6 +85,12 @@ pub fn App() -> impl IntoView {
     view! {
         <h1>"Chartistry"</h1>
         <form>
+            <p>
+                <label>
+                    <input type="checkbox" checked=percent on:input=move |ev| set_percent.set(event_target_checked(&ev)) />
+                    "Percent"
+                </label>
+            </p>
             <p>
                 <label>
                     <input type="checkbox" checked=debug on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
@@ -130,6 +138,8 @@ pub fn App() -> impl IntoView {
             tooltip=Tooltip::left_cursor(bottom_ticks, left_ticks).sort_by_f64_descending()
 
             series=series
+            min_y=Some(-1.0)
+            max_y=Some(2.0)
             data=data
         />
     }

@@ -8,6 +8,7 @@ An extensible charting library for Leptos.
 
 ## TODO
 
+- Usecases that involve wrapping `<Chart>` in a Signal
 - Should min/max range for x and y axis be on Series or Chart?
 - Remove <T> in favour of data being an Iterator?
 - API: `Stack::push` has `mut Self -> Self` builder pattern.
@@ -16,4 +17,3 @@ An extensible charting library for Leptos.
     - Need a general write up on difficulties
     - Stacked colours iterate but should use sequential colours with "min step by" fn
     - Default stacked colours is not one colour
-

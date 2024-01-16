@@ -181,15 +181,9 @@ pub fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     };
 
     let nearest_y_values = {
-        let nearest_data_y = state.nearest_data_y.clone();
+        let nearest_data_y = state.nearest_data_y;
         create_memo(move |_| {
-            // Fetch Y values
-            let mut y_values = nearest_data_y
-                .clone()
-                .into_iter()
-                .map(|(line, y_value)| (line, y_value.get()))
-                .collect::<Vec<_>>();
-
+            let mut y_values = nearest_data_y.get();
             // Skip missing?
             if skip_missing.get() {
                 y_values = y_values
@@ -197,7 +191,6 @@ pub fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                     .filter(|(_, y_value)| y_value.is_some())
                     .collect::<Vec<_>>()
             }
-
             // Sort values
             (sort_by)(&mut y_values);
             y_values

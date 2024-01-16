@@ -6,18 +6,16 @@ use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {
-    series_by_id: HashMap<usize, UseLine>,
     pub series: Memo<Vec<UseLine>>,
 
     pub data_x: Memo<Vec<X>>,
-    pub data_y_lines: HashMap<usize, Memo<Vec<Y>>>,
+    data_y: Memo<Vec<HashMap<usize, Y>>>,
 
     pub range_x: Memo<Option<(X, X)>>,
     pub range_y: Memo<Option<(Y, Y)>>,
-    pub range_y_lines: HashMap<usize, Memo<Option<(Y, Y)>>>,
 
     pub positions_x: Memo<Vec<f64>>,
-    pub positions_y_lines: HashMap<usize, Memo<Vec<f64>>>,
+    positions_y: Memo<Vec<HashMap<usize, f64>>>,
     pub position_range: Memo<Bounds>,
 }
 
@@ -55,47 +53,41 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
         let data_x = create_memo(move |_| {
             data.with(|data| data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>())
         });
-        let y_maker = |value: bool| {
-            get_ys
-                .clone()
-                .into_iter()
-                .map(|(id, get_y)| {
-                    let values = create_memo(move |_| {
-                        data.with(|data| {
-                            data.iter()
-                                .map(|datum| {
-                                    // This is ick yet practical
-                                    if value {
-                                        get_y.value(datum)
-                                    } else {
-                                        get_y.position(datum)
-                                    }
-                                })
-                                .collect::<Vec<_>>()
+        let data_y = {
+            let get_ys = get_ys.clone();
+            create_memo(move |_| {
+                data.with(|data| {
+                    data.iter()
+                        .map(|datum| {
+                            get_ys
+                                .iter()
+                                .map(|(&id, get_y)| (id, get_y.value(datum)))
+                                .collect::<HashMap<_, _>>()
                         })
-                    });
-                    (id, values)
+                        .collect::<Vec<_>>()
                 })
-                .collect::<HashMap<_, _>>()
+            })
         };
-        // Generate two sets of Ys: original and chart position. They can differ when stacked
-        let data_y_lines = y_maker(true);
-        let data_y_positions = y_maker(false);
 
         // Position signals
         let positions_x = create_memo(move |_| {
             data_x.with(move |data_x| data_x.iter().map(|x| x.position()).collect::<Vec<_>>())
         });
-        let positions_y_lines = data_y_positions
-            .iter()
-            .map(|(id, &data_y)| {
-                let positions = create_memo(move |_| {
-                    data_y
-                        .with(move |data_y| data_y.iter().map(|y| y.position()).collect::<Vec<_>>())
-                });
-                (*id, positions)
+        let positions_y = {
+            let get_ys = get_ys.clone();
+            create_memo(move |_| {
+                data.with(|data| {
+                    data.iter()
+                        .map(|datum| {
+                            get_ys
+                                .iter()
+                                .map(|(&id, get_y)| (id, get_y.position(datum).position()))
+                                .collect::<HashMap<_, _>>()
+                        })
+                        .collect::<Vec<_>>()
+                })
             })
-            .collect::<HashMap<_, _>>();
+        };
 
         // Range signals
         let range_x: Memo<Option<(X, X)>> = create_memo(move |_| {
@@ -133,38 +125,26 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
                 )),
             }
         });
-        let range_y_lines = lines
-            .keys()
-            .map(|&id| {
-                let positions_y = positions_y_lines[&id];
-                let data_y = data_y_positions[&id];
-                let ranges = create_memo(move |_| {
-                    with!(|positions_y, data_y| Self::data_range(positions_y, data_y))
-                });
-                (id, ranges)
-            })
-            .collect::<HashMap<_, _>>();
 
-        let range_y = {
-            let range_y = range_y_lines.clone().into_values().collect::<Vec<_>>();
-            create_memo(move |_| {
-                // Fetch min / max from each range
-                let ranges = range_y.iter().map(|r| r.get());
-                let min = ranges
-                    .clone()
-                    .map(|r| r.map(|(min, _)| min))
-                    .chain([min_y.get()]) // Specified min
-                    .flatten()
-                    // Note: ranges are all is_finite
-                    .min_by(|a, b| a.position().total_cmp(&b.position()));
-                let max = ranges
-                    .map(|r| r.map(|(_, max)| max))
-                    .chain([max_y.get()]) // Specified max
-                    .flatten()
-                    .max_by(|a, b| a.position().total_cmp(&b.position()));
-                min.zip(max).map(|(min, max)| (min.clone(), max.clone()))
-            })
-        };
+        // TODO: consider trying to minimise iterations over data
+        let range_y = create_memo(move |_| {
+            data_y
+                .get()
+                .into_iter()
+                .flat_map(|ys| ys.into_values())
+                .chain(min_y.get())
+                .chain(max_y.get())
+                .fold(None, |acc, y| {
+                    acc.map(|(min, max)| {
+                        (
+                            if y < min { y.clone() } else { min },
+                            if y > max { y.clone() } else { max },
+                        )
+                    })
+                    .or(Some((y.clone(), y)))
+                })
+                .map(|(min, max)| (min.clone(), max.clone()))
+        });
 
         // Position range signal
         let position_range = create_memo(move |_| {
@@ -180,15 +160,13 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
         });
 
         UseData {
-            series_by_id: lines,
             series,
             data_x,
-            data_y_lines,
+            data_y,
             range_x,
             range_y,
-            range_y_lines,
             positions_x,
-            positions_y_lines,
+            positions_y,
             position_range,
         }
     }
@@ -271,43 +249,25 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
         })
     }
 
-    pub fn nearest_position_y(&self, pos_x: Signal<f64>) -> Vec<(UseLine, Memo<f64>)>
+    pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Memo<Vec<(UseLine, Option<Y>)>>
     where
         Y: Clone + PartialEq,
     {
+        let series = self.series;
+        let data_y = self.data_y;
         let index_x = self.nearest_index(pos_x);
-        self.positions_y_lines
-            .iter()
-            .map(|(id, &pos_y)| {
-                let line = self.series_by_id[&id].clone();
-                let value = create_memo(move |_| {
-                    index_x
-                        .get()
-                        .map(|index_x| with!(|pos_y| pos_y[index_x]))
-                        .unwrap_or(f64::NAN)
-                });
-                (line, value)
-            })
-            .collect::<Vec<_>>()
-    }
-
-    pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Vec<(UseLine, Memo<Option<Y>>)>
-    where
-        Y: Clone + PartialEq,
-    {
-        let index_x = self.nearest_index(pos_x);
-        self.data_y_lines
-            .iter()
-            .map(|(id, &data_y)| {
-                let line = self.series_by_id[&id].clone();
-                let values = create_memo(move |_| {
-                    index_x
-                        .get()
-                        .map(|index_x| with!(|data_y| data_y[index_x].clone()))
-                });
-                (line, values)
-            })
-            .collect::<Vec<_>>()
+        create_memo(move |_| {
+            let index_x = index_x.get();
+            series
+                .get()
+                .into_iter()
+                .map(|line| {
+                    let y_value = index_x
+                        .and_then(|index_x| with!(|data_y| data_y[index_x].get(&line.id).cloned()));
+                    (line, y_value)
+                })
+                .collect::<Vec<_>>()
+        })
     }
 }
 
@@ -330,32 +290,31 @@ impl<Tz: TimeZone> Position for DateTime<Tz> {
 #[component]
 pub fn RenderData<X: Clone + 'static, Y: Clone + 'static>(state: State<X, Y>) -> impl IntoView {
     let data = state.pre.data;
-    let proj = state.projection;
     let pos_x = data.positions_x;
-    let svg_coords = data
-        .positions_y_lines
-        .iter()
-        .map(|(&id, &pos_y)| {
-            let coords = Signal::derive(move || {
-                let proj = proj.get();
-                with!(|pos_x, pos_y| {
-                    pos_x
-                        .iter()
-                        .zip(pos_y.iter())
-                        .map(|(x, y)| proj.position_to_svg(*x, *y))
-                        .collect::<Vec<_>>()
+    let pos_y = data.positions_y;
+    let proj = state.projection;
+    let mk_svg_coords = move |id| {
+        Signal::derive(move || {
+            let proj = proj.get();
+            pos_x
+                .get()
+                .into_iter()
+                .enumerate()
+                .map(|(i, x)| {
+                    // TODO: our data model guarantees unwrap always succeeds but this doesn't hold true if we move to separated data iterators
+                    let y = pos_y.with(|pos_y| *pos_y[i].get(&id).unwrap());
+                    proj.position_to_svg(x, y)
                 })
-            });
-            (id, coords)
+                .collect::<Vec<_>>()
         })
-        .collect::<HashMap<_, _>>();
+    };
 
     view! {
         <g class="_chartistry_series">
             <For
                 each=move || data.series.get()
                 key=|line| line.id
-                children=move |line| line.render(svg_coords[&line.id])
+                children=move |line| line.render(mk_svg_coords(line.id))
             />
         </g>
     }

@@ -27,6 +27,8 @@ pub fn Chart<T, X, Y>(
     #[prop(into, optional)] inner: Vec<InnerLayout<X, Y>>,
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
 
+    //#[prop(into)] get_x: MaybeSignal<GetX>,
+    //#[prop(into)] lines: MaybeSignal<Vec<Series<T, X, Y>>>,
     #[prop(into)] series: Series<T, X, Y>,
     #[prop(into, optional)] min_x: MaybeSignal<Option<X>>,
     #[prop(into, optional)] max_x: MaybeSignal<Option<X>>,
