@@ -62,6 +62,13 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
+    pub fn lines(mut self, lines: impl IntoIterator<Item = impl Into<Line<T, Y>>>) -> Self {
+        for line in lines {
+            self = self.line(line.into());
+        }
+        self
+    }
+
     fn into_use(self) -> UseSeries<T, X, Y> {
         let colours = ColourScheme::signal_default(self.colours, DEFAULT_COLOUR_SCHEME.into());
         let mut series = UseSeries::new(self.get_x, colours);
