@@ -100,10 +100,10 @@ impl<T, Y: Add<Output = Y>> GetYValue<T, Y> for UseStackLine<T, Y> {
         self.current.value(t)
     }
 
-    fn position(&self, t: &T) -> Y {
+    fn cumulative_value(&self, t: &T) -> Y {
         self.previous.as_ref().map_or_else(
-            || self.current.position(t),
-            |prev| self.current.position(t) + prev.position(t),
+            || self.current.cumulative_value(t),
+            |prev| self.current.cumulative_value(t) + prev.cumulative_value(t),
         )
     }
 }

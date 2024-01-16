@@ -54,7 +54,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
         let data_x = create_memo(move |_| {
             data.with(|data| data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>())
         });
-        let data_y = {
+        let y_maker = |which: bool| {
             let get_ys = get_ys.clone();
             create_memo(move |_| {
                 data.with(|data| {
@@ -62,33 +62,39 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
                         .map(|datum| {
                             get_ys
                                 .iter()
-                                .map(|(&id, get_y)| (id, get_y.value(datum)))
+                                .map(|(&id, get_y)| {
+                                    let y = if which {
+                                        get_y.value(datum)
+                                    } else {
+                                        get_y.cumulative_value(datum)
+                                    };
+                                    (id, y)
+                                })
                                 .collect::<HashMap<_, _>>()
                         })
                         .collect::<Vec<_>>()
                 })
             })
         };
+        // Generate two sets of Ys: original and cumulative value. They can differ when stacked
+        let data_y = y_maker(true);
+        let data_y_cumulative = y_maker(false);
 
         // Position signals
         let positions_x = create_memo(move |_| {
             data_x.with(move |data_x| data_x.iter().map(|x| x.position()).collect::<Vec<_>>())
         });
-        let positions_y = {
-            let get_ys = get_ys.clone();
-            create_memo(move |_| {
-                data.with(|data| {
-                    data.iter()
-                        .map(|datum| {
-                            get_ys
-                                .iter()
-                                .map(|(&id, get_y)| (id, get_y.position(datum).position()))
-                                .collect::<HashMap<_, _>>()
-                        })
-                        .collect::<Vec<_>>()
+        let positions_y = create_memo(move |_| {
+            data_y_cumulative
+                .get()
+                .into_iter()
+                .map(|ys| {
+                    ys.into_iter()
+                        .map(|(id, y)| (id, y.position()))
+                        .collect::<HashMap<_, _>>()
                 })
-            })
-        };
+                .collect::<Vec<_>>()
+        });
 
         // Range signals
         let range_x: Memo<Option<(X, X)>> = create_memo(move |_| {
@@ -129,7 +135,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
 
         // TODO: consider trying to minimise iterations over data
         let range_y = create_memo(move |_| {
-            data_y
+            data_y_cumulative
                 .get()
                 .into_iter()
                 .flat_map(|ys| ys.into_values())

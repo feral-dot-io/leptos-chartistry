@@ -17,7 +17,7 @@ type GetY<T, Y> = Rc<dyn GetYValue<T, Y>>;
 
 trait GetYValue<T, Y> {
     fn value(&self, t: &T) -> Y;
-    fn position(&self, t: &T) -> Y;
+    fn cumulative_value(&self, t: &T) -> Y;
 }
 
 #[derive(Clone)]

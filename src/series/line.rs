@@ -68,7 +68,7 @@ impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
         self(t)
     }
 
-    fn position(&self, t: &T) -> Y {
+    fn cumulative_value(&self, t: &T) -> Y {
         self(t)
     }
 }
