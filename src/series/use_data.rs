@@ -12,6 +12,7 @@ pub struct UseData<X: 'static, Y: 'static> {
     data_y: Memo<Vec<HashMap<usize, Y>>>,
 
     pub range_x: Memo<Option<(X, X)>>,
+    /// Yields the min / max Y values. Still returns a range if min / max are set and no data.
     pub range_y: Memo<Option<(Y, Y)>>,
 
     pub positions_x: Memo<Vec<f64>>,
@@ -30,7 +31,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
     ) -> UseData<X, Y>
     where
         X: PartialOrd + Position,
-        Y: PartialOrd + Position + std::fmt::Debug,
+        Y: PartialOrd + Position,
     {
         let UseSeries {
             get_x,
