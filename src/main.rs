@@ -75,6 +75,14 @@ pub fn App() -> impl IntoView {
         );
     }
     series = series.lines(lines);
+    series = series.line(|_: &_| f64::NAN);
+
+    // Cosine stack
+    series = series.stack((0..10).map(|i| {
+        Line::new(move |w: &Wave| w.cosine[i])
+            .set_name(format!("Cosine{}", i))
+            .set_width(4.0)
+    }));
 
     let (anchor, _) = create_signal(Anchor::Middle);
     let (text, _) = create_signal("Hello and welcome to Chartistry!".to_string());

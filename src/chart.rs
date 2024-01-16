@@ -39,7 +39,7 @@ pub fn Chart<T, X, Y>(
 where
     T: 'static,
     X: Clone + PartialEq + PartialOrd + Position + 'static,
-    Y: Clone + PartialEq + PartialOrd + Position + 'static,
+    Y: Clone + PartialEq + PartialOrd + Position + 'static + std::fmt::Debug,
 {
     let root = create_node_ref::<Div>();
     let watch = use_watched_node(root);

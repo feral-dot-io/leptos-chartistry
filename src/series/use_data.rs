@@ -30,7 +30,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
     ) -> UseData<X, Y>
     where
         X: PartialOrd + Position,
-        Y: PartialOrd + Position,
+        Y: PartialOrd + Position + std::fmt::Debug,
     {
         let UseSeries {
             get_x,
@@ -134,16 +134,25 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
                 .flat_map(|ys| ys.into_values())
                 .chain(min_y.get())
                 .chain(max_y.get())
-                .fold(None, |acc, y| {
-                    acc.map(|(min, max)| {
-                        (
-                            if y < min { y.clone() } else { min },
-                            if y > max { y.clone() } else { max },
-                        )
-                    })
-                    .or(Some((y.clone(), y)))
+                .map(|y| {
+                    let pos = y.position();
+                    (y, pos)
                 })
-                .map(|(min, max)| (min.clone(), max.clone()))
+                .fold(None, |acc, y @ (_, pos)| {
+                    // Note this logic is duplicated in data_range
+                    if pos.is_finite() {
+                        acc.map(|(min, max): ((Y, f64), (Y, f64))| {
+                            (
+                                if pos < min.1 { y.clone() } else { min },
+                                if pos > max.1 { y.clone() } else { max },
+                            )
+                        })
+                        .or(Some((y.clone(), y)))
+                    } else {
+                        acc
+                    }
+                })
+                .map(|((min, _), (max, _))| (min, max))
         });
 
         // Position range signal
