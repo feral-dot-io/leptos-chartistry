@@ -11,11 +11,16 @@ pub struct Projection {
 
 impl Projection {
     pub fn new(bounds: Bounds, range: Bounds) -> Self {
+        // If the range is zero, skip projection
+        let width = range.width();
+        let x_mult = bounds.width() / if width == 0.0 { 1.0 } else { width };
+        let height = range.height();
+        let y_mult = bounds.height() / if height == 0.0 { 1.0 } else { height };
         Projection {
             bounds,
             range,
-            x_mult: bounds.width() / range.width(),
-            y_mult: bounds.height() / range.height(),
+            x_mult,
+            y_mult,
         }
     }
 
