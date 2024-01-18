@@ -8,7 +8,7 @@ pub use use_data::{Position, RenderData, UseData};
 
 use crate::colours::{self, Colour, ColourScheme};
 use leptos::signal_prelude::*;
-use std::{collections::HashMap, rc::Rc};
+use std::rc::Rc;
 
 const DEFAULT_COLOUR_SCHEME: &[Colour] = colours::ARBITRARY;
 
@@ -28,19 +28,18 @@ pub struct Series<T: 'static, X: 'static, Y: 'static> {
 }
 
 trait ApplyUseSeries<T, X, Y> {
-    fn apply_use_series(self: Rc<Self>, _: &mut UseSeries<T, X, Y>);
+    fn apply_use_series(self: Rc<Self>, _: &mut SeriesAcc<T, X, Y>);
 }
 
 trait IntoUseLine<T, Y> {
     fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseLine, GetY<T, Y>);
 }
 
-struct UseSeries<T, X, Y> {
+struct SeriesAcc<T, X, Y> {
     get_x: GetX<T, X>,
     colour_id: usize,
     colours: Memo<ColourScheme>,
-    lines: HashMap<usize, UseLine>,
-    get_ys: HashMap<usize, GetY<T, Y>>,
+    lines: Vec<(UseLine, GetY<T, Y>)>,
 }
 
 impl<T, X, Y> Series<T, X, Y> {
@@ -69,9 +68,9 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    fn into_use(self) -> UseSeries<T, X, Y> {
+    fn into_use(self) -> SeriesAcc<T, X, Y> {
         let colours = ColourScheme::signal_default(self.colours, DEFAULT_COLOUR_SCHEME.into());
-        let mut series = UseSeries::new(self.get_x, colours);
+        let mut series = SeriesAcc::new(self.get_x, colours);
         for line in self.lines {
             line.apply_use_series(&mut series);
         }
@@ -86,14 +85,13 @@ impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
     }
 }
 
-impl<T, X, Y> UseSeries<T, X, Y> {
+impl<T, X, Y> SeriesAcc<T, X, Y> {
     fn new(get_x: GetX<T, X>, colours: Memo<ColourScheme>) -> Self {
         Self {
             get_x,
             colour_id: 0,
             colours,
-            lines: HashMap::new(),
-            get_ys: HashMap::new(),
+            lines: Vec::new(),
         }
     }
 
@@ -109,8 +107,7 @@ impl<T, X, Y> UseSeries<T, X, Y> {
         let id = self.lines.len();
         let (line, get_y) = line.into_use_line(id, colour);
         // Insert line
-        self.lines.insert(id, line);
-        self.get_ys.insert(id, get_y.clone());
+        self.lines.push((line, get_y.clone()));
         get_y
     }
 }

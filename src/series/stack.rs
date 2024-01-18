@@ -1,4 +1,4 @@
-use super::{line::UseLine, ApplyUseSeries, GetYValue, IntoUseLine, UseSeries};
+use super::{line::UseLine, ApplyUseSeries, GetYValue, IntoUseLine, SeriesAcc};
 use crate::{
     colours::{self, Colour, ColourScheme},
     Line,
@@ -52,7 +52,7 @@ impl<T, Y, I: IntoIterator<Item = Line<T, Y>>> From<I> for Stack<T, Y> {
 impl<T: 'static, X, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, X, Y>
     for Stack<T, Y>
 {
-    fn apply_use_series(self: Rc<Self>, series: &mut UseSeries<T, X, Y>) {
+    fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, X, Y>) {
         let colours =
             ColourScheme::signal_default(self.colours.clone(), DEFAULT_COLOUR_SCHEME.into());
         let mut previous = None;

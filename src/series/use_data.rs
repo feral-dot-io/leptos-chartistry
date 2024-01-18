@@ -1,4 +1,4 @@
-use super::UseSeries;
+use super::SeriesAcc;
 use crate::{bounds::Bounds, series::UseLine, state::State, Series};
 use chrono::prelude::*;
 use leptos::*;
@@ -33,20 +33,15 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
         X: PartialOrd + Position,
         Y: PartialOrd + Position,
     {
-        let UseSeries {
-            get_x,
-            lines,
-            get_ys,
-            ..
-        } = series.into_use();
+        let SeriesAcc { get_x, lines, .. } = series.into_use();
 
         // Sort series by name
         let series = {
-            let series = lines.values().cloned().collect::<Vec<_>>();
+            let (lines, _): (Vec<_>, Vec<_>) = lines.clone().into_iter().unzip();
             create_memo(move |_| {
-                let mut series = series.clone();
-                series.sort_by_key(|series| series.name.get());
-                series
+                let mut lines = lines.clone();
+                lines.sort_by_key(|line| line.name.get());
+                lines
             })
         };
 
@@ -55,20 +50,20 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
             data.with(|data| data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>())
         });
         let y_maker = |which: bool| {
-            let get_ys = get_ys.clone();
+            let lines = lines.clone();
             create_memo(move |_| {
                 data.with(|data| {
                     data.iter()
                         .map(|datum| {
-                            get_ys
+                            lines
                                 .iter()
-                                .map(|(&id, get_y)| {
+                                .map(|(line, get_y)| {
                                     let y = if which {
                                         get_y.value(datum)
                                     } else {
                                         get_y.cumulative_value(datum)
                                     };
-                                    (id, y)
+                                    (line.id, y)
                                 })
                                 .collect::<HashMap<_, _>>()
                         })
