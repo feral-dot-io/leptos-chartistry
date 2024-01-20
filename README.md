@@ -8,8 +8,6 @@ An extensible charting library for Leptos.
 
 ## TODO
 
-- Usecases that involve wrapping `<Chart>` in a Signal
-- API: `Stack::push` has `mut Self -> Self` builder pattern.
 - Panic if colour scheme with zero colours is used.
 - Colours
     - Need a general write up on difficulties

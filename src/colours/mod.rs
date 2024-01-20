@@ -16,7 +16,7 @@ Reading material:
 */
 
 /// Arbitrary colours for a brighter palette
-pub const ARBITRARY: &[Colour] = &[
+pub const ARBITRARY: [Colour; 10] = [
     Colour::new(0x12, 0xA5, 0xED), // Blue
     Colour::new(0xF5, 0x32, 0x5B), // Red
     Colour::new(0x71, 0xc6, 0x14), // Green
@@ -31,6 +31,7 @@ pub const ARBITRARY: &[Colour] = &[
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColourScheme {
+    // Must have at least one colour
     swatches: Vec<Colour>,
 }
 
@@ -42,11 +43,14 @@ pub struct Colour {
 }
 
 impl ColourScheme {
-    fn new(swatches: Vec<Colour>) -> Self {
-        Self { swatches }
+    pub(crate) fn new(first: Colour, rest: &[Colour]) -> Self {
+        Self {
+            swatches: std::iter::once(first).chain(rest.iter().copied()).collect(),
+        }
     }
 
     pub fn by_index(&self, index: usize) -> Colour {
+        // Note: not using checked_rem_euclid as we're guaranteed to have at least one colour
         let index = index.rem_euclid(self.swatches.len());
         self.swatches[index]
     }
@@ -72,21 +76,15 @@ impl Colour {
     }
 }
 
-impl From<&[Colour]> for ColourScheme {
-    fn from(colours: &[Colour]) -> Self {
-        Self::new(colours.to_vec())
-    }
-}
-
 impl From<[Colour; 3]> for ColourScheme {
     fn from(colours: [Colour; 3]) -> Self {
-        colours.as_ref().into()
+        Self::new(colours[0], &colours[1..])
     }
 }
 
 impl From<[Colour; 10]> for ColourScheme {
     fn from(colours: [Colour; 10]) -> Self {
-        colours.as_ref().into()
+        Self::new(colours[0], &colours[1..])
     }
 }
 

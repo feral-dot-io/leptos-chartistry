@@ -10,7 +10,7 @@ use crate::colours::{self, Colour, ColourScheme};
 use leptos::signal_prelude::*;
 use std::rc::Rc;
 
-const DEFAULT_COLOUR_SCHEME: &[Colour] = colours::ARBITRARY;
+const DEFAULT_COLOUR_SCHEME: [Colour; 10] = colours::ARBITRARY;
 
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
 type GetY<T, Y> = Rc<dyn GetYValue<T, Y>>;
