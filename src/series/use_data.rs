@@ -25,7 +25,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, 
         X: PartialOrd + Position,
         Y: PartialOrd + Position,
     {
-        let lines = series.to_lines();
+        let lines = series.to_use_lines();
         let Series {
             get_x,
             min_x,

@@ -139,7 +139,7 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    fn to_lines(&self) -> Vec<(UseLine, GetY<T, Y>)> {
+    fn to_use_lines(&self) -> Vec<(UseLine, GetY<T, Y>)> {
         let colours = ColourScheme::signal_default(self.colours, DEFAULT_COLOUR_SCHEME.into());
         let mut series = SeriesAcc::new(colours);
         for line in self.lines.clone() {
