@@ -197,9 +197,6 @@ impl<Y> From<tick_labels::TickLabels<Y>> for VerticalLayout<Y> {
     }
 }
 
-/// Wrapper around `Vec<HorizontalLayout<X>>` to facilitate API conversion.
-///
-/// Use `Default` to create an empty vector, then `push` items to it, and finally convert to a `Vec<VerticalLayout<Y>>` with `Into`.
 pub struct HorizontalVec<X>(Vec<HorizontalLayout<X>>);
 
 impl<X> Default for HorizontalVec<X> {
@@ -236,9 +233,6 @@ impl<T: ToHorizontal<X>, X> From<Vec<T>> for HorizontalVec<X> {
     }
 }
 
-/// Wrapper around `Vec<VerticalLayout<Y>>` to facilitate API conversion.
-///
-/// Use `Default` to create an empty vector, then `push` items to it, and finally convert to a `Vec<VerticalLayout<Y>>` with `Into`.
 pub struct VerticalVec<Y>(Vec<VerticalLayout<Y>>);
 
 /// Start with an empty vector
