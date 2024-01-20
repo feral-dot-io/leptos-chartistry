@@ -59,9 +59,8 @@ pub fn App() -> impl IntoView {
     let mut series = Series::new(|w: &Wave| f64_to_dt(w.x));
 
     // Sine lines
-    let mut lines = Vec::new();
     for i in 0..10 {
-        lines.push(
+        series = series.line(
             Line::new(move |w: &Wave| {
                 if percent.get() {
                     let total = w.sine.iter().sum::<f64>();
@@ -74,7 +73,6 @@ pub fn App() -> impl IntoView {
             .set_width(2.0),
         );
     }
-    series = series.lines(lines);
     series = series.line(|_: &_| f64::NAN);
 
     // Cosine stack

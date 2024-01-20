@@ -29,7 +29,7 @@ impl<T, Y> Stack<T, Y> {
         self
     }
 
-    pub fn push(mut self, line: impl Into<Line<T, Y>>) -> Self {
+    pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
         self.lines.push(line.into());
         self
     }
@@ -48,7 +48,7 @@ impl<T, Y, I: IntoIterator<Item = Line<T, Y>>> From<I> for Stack<T, Y> {
     fn from(lines: I) -> Self {
         let mut stack = Self::default();
         for line in lines {
-            stack = stack.push(line);
+            stack = stack.line(line);
         }
         stack
     }
