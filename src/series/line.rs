@@ -73,8 +73,8 @@ impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
     }
 }
 
-impl<T, X, Y> ApplyUseSeries<T, X, Y> for Line<T, Y> {
-    fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, X, Y>) {
+impl<T, Y> ApplyUseSeries<T, Y> for Line<T, Y> {
+    fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
         let colour = series.next_colour();
         _ = series.push(colour, (*self).clone());
     }

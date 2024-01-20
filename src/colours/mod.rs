@@ -52,7 +52,7 @@ impl ColourScheme {
     }
 
     pub fn signal_default(
-        colours: MaybeSignal<Option<ColourScheme>>,
+        colours: Signal<Option<ColourScheme>>,
         default: ColourScheme,
     ) -> Memo<ColourScheme> {
         create_memo(move |_| colours.get().unwrap_or_else(|| default.clone()))

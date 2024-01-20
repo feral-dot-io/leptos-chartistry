@@ -1,4 +1,3 @@
-use super::SeriesAcc;
 use crate::{bounds::Bounds, series::UseLine, state::State, Series};
 use chrono::prelude::*;
 use leptos::*;
@@ -21,19 +20,20 @@ pub struct UseData<X: 'static, Y: 'static> {
 }
 
 impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, Y> {
-    pub fn new<T: 'static>(
-        series: Series<T, X, Y>,
-        min_x: MaybeSignal<Option<X>>,
-        max_x: MaybeSignal<Option<X>>,
-        min_y: MaybeSignal<Option<Y>>,
-        max_y: MaybeSignal<Option<Y>>,
-        data: Signal<Vec<T>>,
-    ) -> UseData<X, Y>
+    pub fn new<T: 'static>(series: Series<T, X, Y>, data: Signal<Vec<T>>) -> UseData<X, Y>
     where
         X: PartialOrd + Position,
         Y: PartialOrd + Position,
     {
-        let SeriesAcc { get_x, lines, .. } = series.into_use();
+        let lines = series.to_lines();
+        let Series {
+            get_x,
+            min_x,
+            max_x,
+            min_y,
+            max_y,
+            ..
+        } = series;
 
         // Sort series by name
         let series = {

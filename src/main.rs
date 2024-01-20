@@ -145,9 +145,7 @@ pub fn App() -> impl IntoView {
             ]
             tooltip=Tooltip::left_cursor(bottom_ticks, left_ticks).sort_by_f64_descending()
 
-            series=series
-            min_y=Some(-1.0)
-            max_y=Some(2.0)
+            series=series.set_min_y(-1.0).set_max_y(2.0)
             data=data
         />
     }

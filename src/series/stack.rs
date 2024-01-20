@@ -11,7 +11,7 @@ const DEFAULT_COLOUR_SCHEME: [Colour; 10] = colours::BATLOW;
 
 #[derive(Clone)]
 pub struct Stack<T, Y> {
-    colours: MaybeSignal<Option<ColourScheme>>,
+    colours: Signal<Option<ColourScheme>>,
     lines: Vec<Line<T, Y>>,
 }
 
@@ -20,8 +20,12 @@ impl<T, Y> Stack<T, Y> {
         Self::default()
     }
 
-    pub fn set_colours(mut self, colours: impl Into<MaybeSignal<Option<ColourScheme>>>) -> Self {
-        self.colours = colours.into();
+    pub fn set_colours<Opt>(mut self, colours: impl Into<MaybeSignal<Opt>>) -> Self
+    where
+        Opt: Clone + Into<Option<ColourScheme>> + 'static,
+    {
+        let colours = colours.into();
+        self.colours = Signal::derive(move || colours.get().into());
         self
     }
 
@@ -34,7 +38,7 @@ impl<T, Y> Stack<T, Y> {
 impl<T, Y> Default for Stack<T, Y> {
     fn default() -> Self {
         Self {
-            colours: MaybeSignal::default(),
+            colours: Signal::default(),
             lines: Vec::new(),
         }
     }
@@ -42,19 +46,17 @@ impl<T, Y> Default for Stack<T, Y> {
 
 impl<T, Y, I: IntoIterator<Item = Line<T, Y>>> From<I> for Stack<T, Y> {
     fn from(lines: I) -> Self {
-        Self {
-            colours: MaybeSignal::default(),
-            lines: lines.into_iter().collect(),
+        let mut stack = Self::default();
+        for line in lines {
+            stack = stack.push(line);
         }
+        stack
     }
 }
 
-impl<T: 'static, X, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, X, Y>
-    for Stack<T, Y>
-{
-    fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, X, Y>) {
-        let colours =
-            ColourScheme::signal_default(self.colours.clone(), DEFAULT_COLOUR_SCHEME.into());
+impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> for Stack<T, Y> {
+    fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
+        let colours = ColourScheme::signal_default(self.colours, DEFAULT_COLOUR_SCHEME.into());
         let mut previous = None;
         for (id, line) in self.lines.clone().into_iter().enumerate() {
             let colour = create_memo(move |_| colours.get().by_index(id));
