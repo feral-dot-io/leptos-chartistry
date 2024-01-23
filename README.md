@@ -8,7 +8,6 @@ An extensible charting library for Leptos.
 
 ## TODO
 
-- Panic if colour scheme with zero colours is used.
 - Colours
     - Need a general write up on difficulties
     - Stacked colours iterate but should use sequential colours with "min step by" fn
