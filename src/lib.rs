@@ -17,6 +17,7 @@ mod use_watched_node;
 
 pub use aspect_ratio::AspectRatio;
 pub use chart::Chart;
+pub use edge::Edge;
 pub use font::Font;
 pub use inner::{
     axis_marker::AxisMarker, grid_line::GridLine, guide_line::GuideLine, legend::InsetLegend,
@@ -26,7 +27,7 @@ pub use layout::{
     legend::Legend,
     rotated_label::{Anchor, RotatedLabel},
     tick_labels::TickLabels,
-    HorizontalVec, ToHorizontal, ToVertical, VerticalVec,
+    HorizontalLayout, HorizontalVec, ToHorizontal, ToVertical, VerticalLayout, VerticalVec,
 };
 pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;

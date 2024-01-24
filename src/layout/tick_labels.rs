@@ -189,7 +189,7 @@ fn mk_width<X, Y>(
     })
 }
 
-pub fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
+fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
     // Find longest label length
     let min_label = labels
         .iter()
