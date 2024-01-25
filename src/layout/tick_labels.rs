@@ -61,7 +61,7 @@ impl<Tick> TickLabels<Tick> {
     }
 
     pub fn default_tick_format() -> TickFormatFn<Tick> {
-        Rc::new(|s, t| s.short_format(t))
+        Rc::new(|s, t| s.format(t))
     }
 
     fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {

@@ -1,4 +1,4 @@
-use super::gen::{GeneratedTicks, Span, TickGen, TickState};
+use super::gen::{GenState, GeneratedTicks, Generator, Span};
 
 /// Generates a vector of aligned, "nice" floats. The vector will contain `count` values between `from` and `to` inclusive. Returned ticks will be aligned to "nice" values in powers of 10. e.g., gen_nice_floats(0.1, 0.3, 3) -> [0.1, 0.2, 0.3].
 ///
@@ -9,11 +9,11 @@ use super::gen::{GeneratedTicks, Span, TickGen, TickState};
 pub struct AlignedFloatsGen;
 
 #[derive(Clone, Debug, PartialEq)]
-struct State {
+struct AlignedState {
     scale: isize,
 }
 
-impl TickGen for AlignedFloatsGen {
+impl Generator for AlignedFloatsGen {
     type Tick = f64;
 
     fn generate(
@@ -24,7 +24,7 @@ impl TickGen for AlignedFloatsGen {
     ) -> GeneratedTicks<Self::Tick> {
         let (scale, count) = Self::find_precision(first, last, span.as_ref());
         let (scale, ticks) = Self::generate_count(first, last, scale, count);
-        let state = State::new(scale);
+        let state = AlignedState::new(scale);
         GeneratedTicks::new(ticks, state)
     }
 }
@@ -50,7 +50,7 @@ impl AlignedFloatsGen {
 
     /// Finds the longest string that could be displayed between first and last inclusive
     fn mock_value_count(first: f64, last: f64, scale: isize, span: &dyn Span<f64>) -> usize {
-        let state = State::new(scale);
+        let state = AlignedState::new(scale);
         let first_consumed = span.consumed(&state, &[first]);
         let last_consumed = span.consumed(&state, &[last]);
         let consumed = first_consumed.max(last_consumed);
@@ -75,28 +75,20 @@ impl AlignedFloatsGen {
     }
 }
 
-impl State {
-    pub fn new(scale: isize) -> State {
+impl AlignedState {
+    pub fn new(scale: isize) -> AlignedState {
         Self { scale }
     }
 }
 
-impl TickState for State {
+impl GenState for AlignedState {
     type Tick = f64;
 
     fn position(&self, value: &Self::Tick) -> f64 {
         *value
     }
 
-    fn short_format(&self, value: &Self::Tick) -> String {
-        if value.is_nan() {
-            "-".to_string()
-        } else {
-            self.long_format(value)
-        }
-    }
-
-    fn long_format(&self, &value: &Self::Tick) -> String {
+    fn format(&self, value: &Self::Tick) -> String {
         if value.is_nan() {
             return "-".to_string();
         }
@@ -136,7 +128,7 @@ mod tests {
 
     fn mk_span(width: f64) -> Box<dyn Span<f64>> {
         Box::new(HorizontalSpan::new(
-            Rc::new(|s, t| s.short_format(t)),
+            Rc::new(|s, t| s.format(t)),
             1.0,
             0.0,
             width + 0.1,
@@ -157,9 +149,9 @@ mod tests {
         expected: Vec<&'static str>,
     ) {
         let (scale, ticks) = AlignedFloatsGen::generate_count(first, last, scale, count);
-        let state = State::new(scale);
+        let state = AlignedState::new(scale);
         let ticks = (ticks.into_iter())
-            .map(|tick| state.short_format(&tick))
+            .map(|tick| state.format(&tick))
             .collect::<Vec<_>>();
         assert_eq!(ticks, expected);
     }
@@ -262,7 +254,7 @@ mod tests {
 
     #[test]
     fn test_format() {
-        let format = |scale: isize, value: f64| State::new(scale).long_format(&value);
+        let format = |scale: isize, value: f64| AlignedState::new(scale).format(&value);
 
         // Significant digits
         assert_eq!(format(0, 1.0), "1");

@@ -34,8 +34,8 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
             skip_missing: false.into(),
             table_margin: None.into(),
             sort_by: Rc::new(|_| ()),
-            x_format: Rc::new(|s, t| s.long_format(t)),
-            y_format: Rc::new(|s, t| s.long_format(t)),
+            x_format: Rc::new(|s, t| s.format(t)),
+            y_format: Rc::new(|s, t| s.format(t)),
             x_ticks: x_ticks.borrow().clone(),
             y_ticks: y_ticks.borrow().clone(),
         }

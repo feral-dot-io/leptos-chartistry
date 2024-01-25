@@ -1,4 +1,4 @@
-use super::gen::{GeneratedTicks, Span, TickGen, TickState};
+use super::gen::{GenState, GeneratedTicks, Generator, Span};
 use chrono::{prelude::*, Duration, DurationRound, Months};
 use std::{borrow::Borrow, fmt::Display, ops::Add};
 
@@ -17,7 +17,7 @@ pub enum Period {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct TimestampGen<Tz> {
+pub struct Gen<Tz> {
     periods: Vec<Period>,
     tz: std::marker::PhantomData<Tz>,
 }
@@ -29,7 +29,7 @@ struct State<Tz> {
     tz: std::marker::PhantomData<Tz>,
 }
 
-impl<Tz> TimestampGen<Tz> {
+impl<Tz> Gen<Tz> {
     pub fn new(periods: impl Borrow<[Period]>) -> Self {
         let mut periods = periods.borrow().to_vec();
         periods.sort_unstable();
@@ -42,7 +42,7 @@ impl<Tz> TimestampGen<Tz> {
     }
 }
 
-impl<Tz: 'static> TickGen for TimestampGen<Tz>
+impl<Tz: 'static> Generator for Gen<Tz>
 where
     Tz: TimeZone,
     Tz::Offset: Display,
@@ -97,7 +97,7 @@ where
     }
 }
 
-impl<Tz: TimeZone> TimestampGen<Tz> {
+impl<Tz: TimeZone> Gen<Tz> {
     fn merge_ticks<T: Clone + Ord>(existing: &[T], candidate: &[T], sample: usize) -> Vec<T> {
         assert!(sample > 0);
         let candidate = candidate.to_owned();
@@ -138,7 +138,7 @@ impl<Tz: TimeZone> TimestampGen<Tz> {
 
 impl<Tz> State<Tz> {
     fn new(period: Period, periods: &[Period]) -> Self {
-        State {
+        Self {
             period,
             all_periods: periods.to_vec(),
             tz: std::marker::PhantomData,
@@ -146,7 +146,7 @@ impl<Tz> State<Tz> {
     }
 }
 
-impl<Tz: TimeZone> TickState for State<Tz>
+impl<Tz: TimeZone> GenState for State<Tz>
 where
     Tz::Offset: Display,
 {
@@ -156,7 +156,7 @@ where
         at.timestamp() as f64 + (at.timestamp_subsec_nanos() as f64 / 1e9_f64)
     }
 
-    fn short_format(&self, at: &Self::Tick) -> String {
+    fn format(&self, at: &Self::Tick) -> String {
         let mut period = self.period;
         // If tick falls exactly on an earlier period, use that representation instead
         for earlier in &self.all_periods {
@@ -169,9 +169,11 @@ where
         at.format(period.short_format()).to_string()
     }
 
+    /* TODO
     fn long_format(&self, at: &Self::Tick) -> String {
         at.format(self.period.long_format()).to_string()
     }
+    */
 }
 
 impl Period {
@@ -319,14 +321,14 @@ mod tests {
     fn assert_ticks<Tick>(ticks: GeneratedTicks<Tick>, expected: Vec<&'static str>) {
         let GeneratedTicks { ticks, state } = ticks;
         let check = (ticks.into_iter())
-            .map(|tick| state.short_format(&tick))
+            .map(|tick| state.format(&tick))
             .collect::<Vec<_>>();
         assert_eq!(check, expected);
     }
 
     fn mk_span<Tick: 'static>(width: f64) -> Box<dyn Span<Tick>> {
         Box::new(HorizontalSpan::new(
-            Rc::new(|s, t| s.short_format(t)),
+            Rc::new(|s, t| s.format(t)),
             6.0,
             2.0,
             width,
@@ -335,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_timestamp_generator() {
-        let gen = TimestampGen::new(Period::all());
+        let gen = Gen::new(Period::all());
         let first = Utc.with_ymd_and_hms(2014, 3, 1, 0, 0, 0).unwrap();
         let last = Utc.with_ymd_and_hms(2018, 7, 5, 0, 0, 0).unwrap();
         // Just years
@@ -384,7 +386,7 @@ mod tests {
 
     #[test]
     fn test_timestamp_generator_zero() {
-        let gen = TimestampGen::new(Period::all());
+        let gen = Gen::new(Period::all());
         let first = DateTime::<Utc>::from_timestamp(0, 0).unwrap();
         let last = DateTime::<Utc>::from_timestamp(12, 6_000_000).unwrap();
         assert_ticks(
@@ -398,14 +400,14 @@ mod tests {
 
     #[test]
     fn test_timestamp_generator_no_range() {
-        let gen = TimestampGen::new(Period::all());
+        let gen = Gen::new(Period::all());
         let dt = Utc.with_ymd_and_hms(2015, 1, 1, 0, 0, 0).unwrap();
         assert_ticks(gen.generate(&dt, &dt, mk_span(1000.0)), vec![])
     }
 
     #[test]
     fn test_gen_small_space() {
-        let gen = TimestampGen::new(Period::all());
+        let gen = Gen::new(Period::all());
         let first = DateTime::<Utc>::from_timestamp(0, 0).unwrap();
         let last = DateTime::<Utc>::from_timestamp(0, 3_000_000).unwrap();
         assert_ticks(gen.generate(&first, &last, mk_span(10.0)), vec![]);
@@ -413,7 +415,7 @@ mod tests {
 
     #[test]
     fn test_timestamps_empty_periods() {
-        let gen = TimestampGen::new([]);
+        let gen = Gen::new([]);
         let first = Utc.with_ymd_and_hms(2014, 3, 1, 0, 0, 0).unwrap();
         let last = Utc.with_ymd_and_hms(2018, 7, 5, 0, 0, 0).unwrap();
         assert_ticks(gen.generate(&first, &last, mk_span(1000.0)), vec![]);
@@ -421,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_sample_ticks() {
-        let f = TimestampGen::<Utc>::sample_ticks::<u32>;
+        let f = Gen::<Utc>::sample_ticks::<u32>;
         assert_eq!(f(vec![0, 1, 2, 3, 4, 5], 0, 1), vec![0, 1, 2, 3, 4, 5]);
         assert_eq!(f(vec![0, 1, 2, 3, 4, 5], 1, 2), vec![1, 3, 5]);
         assert_eq!(f(vec![0, 1, 2, 3, 4, 5], 2, 3), vec![2, 5]);

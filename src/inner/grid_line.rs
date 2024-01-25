@@ -170,7 +170,7 @@ fn for_ticks<Tick>(
             .ticks
             .iter()
             .map(|tick| {
-                let label = ticks.state.long_format(tick);
+                let label = ticks.state.format(tick);
                 let tick = ticks.state.position(tick);
                 let tick = if is_x {
                     proj.position_to_svg(tick, 0.0).0

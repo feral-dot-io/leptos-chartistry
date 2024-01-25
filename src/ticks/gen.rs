@@ -1,6 +1,7 @@
+use crate::TickFormatFn;
 use std::rc::Rc;
 
-pub trait TickGen {
+pub trait Generator {
     type Tick;
 
     fn generate(
@@ -13,31 +14,26 @@ pub trait TickGen {
 
 pub trait Span<Tick> {
     fn length(&self) -> f64;
-    fn consumed(&self, state: &dyn TickState<Tick = Tick>, ticks: &[Tick]) -> f64;
+    fn consumed(&self, state: &dyn GenState<Tick = Tick>, ticks: &[Tick]) -> f64;
 }
 
-pub trait TickState {
+pub trait GenState {
     type Tick;
 
     fn position(&self, value: &Self::Tick) -> f64;
-    fn short_format(&self, value: &Self::Tick) -> String;
-    fn long_format(&self, value: &Self::Tick) -> String;
+    fn format(&self, value: &Self::Tick) -> String;
 }
-
-pub type TickFormatFn<Tick> = Rc<dyn Fn(&dyn TickState<Tick = Tick>, &Tick) -> String>;
 
 #[derive(Clone)]
 pub struct GeneratedTicks<Tick> {
+    pub state: Rc<dyn GenState<Tick = Tick>>,
     pub ticks: Vec<Tick>,
-    pub state: Rc<dyn TickState<Tick = Tick>>,
 }
 
 impl<Tick: 'static> GeneratedTicks<Tick> {
-    pub fn new(ticks: Vec<Tick>, state: impl TickState<Tick = Tick> + 'static) -> Self {
-        GeneratedTicks {
-            ticks,
-            state: Rc::new(state),
-        }
+    pub fn new(ticks: Vec<Tick>, state: impl GenState<Tick = Tick> + 'static) -> Self {
+        let state = Rc::new(state);
+        GeneratedTicks { state, ticks }
     }
 
     pub fn none() -> GeneratedTicks<Tick> {
@@ -48,18 +44,14 @@ impl<Tick: 'static> GeneratedTicks<Tick> {
 // Dummy TickState that should never be called. Used with no ticks.
 struct NilState<Tick>(std::marker::PhantomData<Tick>);
 
-impl<Tick> TickState for NilState<Tick> {
+impl<Tick> GenState for NilState<Tick> {
     type Tick = Tick;
 
     fn position(&self, _: &Self::Tick) -> f64 {
         0.0
     }
 
-    fn short_format(&self, _: &Self::Tick) -> String {
-        "-".to_string()
-    }
-
-    fn long_format(&self, _: &Self::Tick) -> String {
+    fn format(&self, _: &Self::Tick) -> String {
         "-".to_string()
     }
 }
@@ -90,7 +82,7 @@ impl<Tick> Span<Tick> for VerticalSpan {
         self.avail_height
     }
 
-    fn consumed(&self, _: &dyn TickState<Tick = Tick>, ticks: &[Tick]) -> f64 {
+    fn consumed(&self, _: &dyn GenState<Tick = Tick>, ticks: &[Tick]) -> f64 {
         self.line_height * ticks.len() as f64
     }
 }
@@ -123,7 +115,7 @@ impl<Tick> Span<Tick> for HorizontalSpan<Tick> {
         self.avail_width
     }
 
-    fn consumed(&self, state: &dyn TickState<Tick = Tick>, ticks: &[Tick]) -> f64 {
+    fn consumed(&self, state: &dyn GenState<Tick = Tick>, ticks: &[Tick]) -> f64 {
         let max_chars = ticks
             .iter()
             .map(|tick| (self.format)(state, tick).len())

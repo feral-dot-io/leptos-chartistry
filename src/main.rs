@@ -1,7 +1,6 @@
 use chrono::prelude::*;
 use leptos::*;
 use leptos_chartistry::*;
-use std::rc::Rc;
 
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
@@ -11,13 +10,6 @@ struct Options<Opt>(Vec<Opt>);
 
 #[derive(Clone)]
 struct EdgeLayout<Tick: 'static>(leptos_chartistry::EdgeLayout<Tick>);
-
-#[derive(Clone, Default, PartialEq, Eq, Hash)]
-enum TickFormat {
-    #[default]
-    Short,
-    Long,
-}
 
 fn main() {
     _ = console_log::init_with_level(log::Level::Debug);
@@ -299,7 +291,7 @@ impl<Tick> TryFrom<String> for EdgeLayout<Tick> {
         match s.to_lowercase().as_str() {
             "label" => Ok(EdgeLayout(RotatedLabel::middle("").into())),
             "legend" => Ok(EdgeLayout(Legend::middle().into())),
-            //"ticks" => Ok(LayoutOption::TickLabels(TickLabels::default())), TODO
+            //"ticks" => Ok(EdgeLayout(TickLabels::aligned_floats().into())), TODO
             _ => Err("unknown layout option"),
         }
     }
@@ -329,24 +321,11 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 
 #[component]
 fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
-    let format = ticks.format;
-    let on_format = move |ev| {
-        let formatter: TickFormat = event_target_value(&ev).try_into().unwrap_or_default();
-        format.set(formatter.into());
-    };
     let on_min_chars = move |ev| {
         let min = event_target_value(&ev).parse().unwrap_or(0);
         ticks.min_chars.set(min)
     };
     view! {
-        <select on:change=on_format>
-            <optgroup label="Format">
-                // Note: short is the default so let it be selected first
-                <option>"Short"</option>
-                <option>"Long"</option>
-            </optgroup>
-        </select>
-        " "
         <label>
             "Min chars: "
             <input type="number" step="1" min="0" value=ticks.min_chars style="width: 8ch;" on:input=on_min_chars />
@@ -365,27 +344,6 @@ fn SelectAnchor(anchor: RwSignal<Anchor>) -> impl IntoView {
                 <option selected=move || anchor.get() == Anchor::End>"End"</option>
             </optgroup>
         </select>
-    }
-}
-
-impl TryFrom<String> for TickFormat {
-    type Error = &'static str;
-
-    fn try_from(s: String) -> Result<Self, Self::Error> {
-        match s.to_lowercase().as_str() {
-            "short" => Ok(Self::Short),
-            "long" => Ok(Self::Long),
-            _ => Err("unknown tick format"),
-        }
-    }
-}
-
-impl<Tick> From<TickFormat> for TickFormatFn<Tick> {
-    fn from(format: TickFormat) -> Self {
-        match format {
-            TickFormat::Short => Rc::new(move |s, t| s.short_format(t)),
-            TickFormat::Long => Rc::new(move |s, t| s.long_format(t)),
-        }
     }
 }
 
