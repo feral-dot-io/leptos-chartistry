@@ -1,36 +1,16 @@
 use chrono::prelude::*;
 use leptos::*;
 use leptos_chartistry::*;
+use std::rc::Rc;
 
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
 
 #[derive(Clone)]
-struct LayoutOptions(Vec<LayoutOption>);
+struct Options<Opt>(Vec<Opt>);
 
 #[derive(Clone)]
-enum LayoutOption {
-    Legend(Legend),
-    RotatedLabel(RotatedLabel),
-    TickLabels(TickLabels),
-}
-
-#[derive(Clone)]
-struct Legend {
-    anchor: RwSignal<Anchor>,
-}
-
-#[derive(Clone)]
-struct RotatedLabel {
-    anchor: RwSignal<Anchor>,
-    text: RwSignal<String>,
-}
-
-#[derive(Clone)]
-struct TickLabels {
-    min_chars: RwSignal<usize>,
-    format: RwSignal<TickFormat>,
-}
+struct EdgeLayout<Tick: 'static>(leptos_chartistry::EdgeLayout<Tick>);
 
 #[derive(Clone, Default, PartialEq, Eq, Hash)]
 enum TickFormat {
@@ -101,13 +81,12 @@ pub fn App() -> impl IntoView {
         );
 
     // Layout options
-    let top = LayoutOptions::create_signal(vec![LayoutOption::rotated_label(
+    let top = Options::create_signal(vec![RotatedLabel::middle(
         "Hello and welcome to Chartistry!",
     )]);
-    let right = LayoutOptions::create_signal(vec![LayoutOption::Legend(Legend::default())]);
-    let bottom =
-        LayoutOptions::create_signal(vec![LayoutOption::TickLabels(TickLabels::default())]);
-    let left = LayoutOptions::create_signal(vec![LayoutOption::TickLabels(TickLabels::default())]);
+    let right = Options::create_signal(vec![Legend::middle()]);
+    let bottom = Options::create_signal(vec![TickLabels::timestamps()]);
+    let left = Options::create_signal(vec![TickLabels::aligned_floats()]);
 
     view! {
         <h1>"Chartistry"</h1>
@@ -187,8 +166,11 @@ pub fn App() -> impl IntoView {
 }
 
 #[component]
-fn ViewLayoutOptions(title: &'static str, options: RwSignal<LayoutOptions>) -> impl IntoView {
-    let (option, set_option) = create_signal(LayoutOption::default().as_label().to_string());
+fn ViewLayoutOptions<Tick: Clone + 'static>(
+    title: &'static str,
+    options: RwSignal<Options<EdgeLayout<Tick>>>,
+) -> impl IntoView {
+    let (option, set_option) = create_signal(EdgeLayout::<Tick>::default().as_label().to_string());
     let on_label_change = move |ev| set_option.set(event_target_value(&ev));
 
     let on_move_up = move |index| move |_| options.set(options.get().move_up(index));
@@ -239,19 +221,16 @@ fn ViewLayoutOptions(title: &'static str, options: RwSignal<LayoutOptions>) -> i
     }
 }
 
-impl LayoutOptions {
-    pub fn new(mut opts: Vec<LayoutOption>) -> Self {
-        if opts.is_empty() {
-            opts.push(LayoutOption::default());
-        }
-        Self(opts)
+impl<Opt> Options<Opt> {
+    fn create_signal<IO>(opts: impl IntoIterator<Item = IO>) -> RwSignal<Self>
+    where
+        IO: Into<Opt>,
+    {
+        let opts = opts.into_iter().map(Into::into).collect();
+        create_rw_signal(Self(opts))
     }
 
-    pub fn create_signal(opts: Vec<LayoutOption>) -> RwSignal<LayoutOptions> {
-        create_rw_signal(Self::new(opts))
-    }
-
-    pub fn add(mut self, opt: LayoutOption) -> Self {
+    pub fn add(mut self, opt: Opt) -> Self {
         self.0.push(opt);
         self
     }
@@ -277,41 +256,59 @@ impl LayoutOptions {
         self
     }
 
-    pub fn into_inner(self) -> Vec<LayoutOption> {
+    pub fn into_inner(self) -> Vec<Opt> {
         self.0
     }
 }
 
-impl LayoutOption {
-    fn rotated_label(text: &'static str) -> Self {
-        let label = RotatedLabel::default();
-        label.text.set(text.to_string());
-        Self::RotatedLabel(label)
-    }
-
+impl<Tick: Clone> EdgeLayout<Tick> {
     fn as_label(&self) -> &'static str {
-        match self {
-            Self::RotatedLabel(_) => "Label",
-            Self::Legend(_) => "Legend",
-            Self::TickLabels(_) => "Ticks",
+        use leptos_chartistry::EdgeLayout as L;
+        match self.0 {
+            L::RotatedLabel(_) => "Label",
+            L::Legend(_) => "Legend",
+            L::TickLabels(_) => "Ticks",
+            _ => "unknown",
         }
     }
 
-    fn render_options(self) -> impl IntoView {
-        match self {
-            Self::RotatedLabel(label) => view! {
+    fn render_options(&self) -> impl IntoView {
+        use leptos_chartistry::EdgeLayout as L;
+        match self.0.clone() {
+            L::RotatedLabel(label) => view! {
                 <RotatedLabelOpts label=label />
             }
             .into_view(),
-            Self::Legend(legend) => view! {
+            L::Legend(legend) => view! {
                 <LegendOpts legend=legend />
             }
             .into_view(),
-            Self::TickLabels(labels) => view! {
-                <TickLabelsOpts labels=labels />
+            L::TickLabels(ticks) => view! {
+                <TickLabelsOpts ticks=ticks />
             }
             .into_view(),
+            _ => ().into_view(),
         }
+    }
+}
+
+impl<Tick> TryFrom<String> for EdgeLayout<Tick> {
+    type Error = &'static str;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        match s.to_lowercase().as_str() {
+            "label" => Ok(EdgeLayout(RotatedLabel::middle("").into())),
+            "legend" => Ok(EdgeLayout(Legend::middle().into())),
+            //"ticks" => Ok(LayoutOption::TickLabels(TickLabels::default())), TODO
+            _ => Err("unknown layout option"),
+        }
+    }
+}
+
+impl<Tick> Default for EdgeLayout<Tick> {
+    fn default() -> Self {
+        // Empty label has zero size so suitable for default
+        EdgeLayout(RotatedLabel::middle("").into())
     }
 }
 
@@ -331,27 +328,28 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 }
 
 #[component]
-fn TickLabelsOpts(labels: TickLabels) -> impl IntoView {
-    let format = labels.format;
-    let on_change = move |ev| {
-        let new_value = event_target_value(&ev).try_into().unwrap_or_default();
-        format.set(new_value);
+fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
+    let format = ticks.format;
+    let on_format = move |ev| {
+        let formatter: TickFormat = event_target_value(&ev).try_into().unwrap_or_default();
+        format.set(formatter.into());
+    };
+    let on_min_chars = move |ev| {
+        let min = event_target_value(&ev).parse().unwrap_or(0);
+        ticks.min_chars.set(min)
     };
     view! {
-        <select on:change=on_change>
+        <select on:change=on_format>
             <optgroup label="Format">
-                <option selected=move || format.get() == TickFormat::Short>"Short"</option>
-                <option selected=move || format.get() == TickFormat::Long>"Long"</option>
+                // Note: short is the default so let it be selected first
+                <option>"Short"</option>
+                <option>"Long"</option>
             </optgroup>
         </select>
         " "
         <label>
             "Min chars: "
-            <input
-                type="number" step="1" min="0" value=labels.min_chars
-                style="width: 8ch;"
-                on:input=move |ev| labels.min_chars.set(event_target_value(&ev).parse().unwrap_or(0))
-            />
+            <input type="number" step="1" min="0" value=ticks.min_chars style="width: 8ch;" on:input=on_min_chars />
         </label>
     }
 }
@@ -370,52 +368,6 @@ fn SelectAnchor(anchor: RwSignal<Anchor>) -> impl IntoView {
     }
 }
 
-impl TryFrom<String> for LayoutOption {
-    type Error = &'static str;
-
-    fn try_from(s: String) -> Result<Self, Self::Error> {
-        match s.to_lowercase().as_str() {
-            "label" => Ok(LayoutOption::RotatedLabel(RotatedLabel::default())),
-            "legend" => Ok(LayoutOption::Legend(Legend::default())),
-            "ticks" => Ok(LayoutOption::TickLabels(TickLabels::default())),
-            _ => Err("unknown layout option"),
-        }
-    }
-}
-
-impl Default for LayoutOption {
-    fn default() -> Self {
-        // Empty label has zero size so suitable for default
-        Self::RotatedLabel(RotatedLabel::default())
-    }
-}
-
-impl Default for Legend {
-    fn default() -> Self {
-        Self {
-            anchor: create_rw_signal(Anchor::Middle),
-        }
-    }
-}
-
-impl Default for RotatedLabel {
-    fn default() -> Self {
-        Self {
-            anchor: create_rw_signal(Anchor::Middle),
-            text: create_rw_signal(String::new()),
-        }
-    }
-}
-
-impl Default for TickLabels {
-    fn default() -> Self {
-        Self {
-            min_chars: create_rw_signal(0),
-            format: create_rw_signal(TickFormat::Short),
-        }
-    }
-}
-
 impl TryFrom<String> for TickFormat {
     type Error = &'static str;
 
@@ -428,49 +380,35 @@ impl TryFrom<String> for TickFormat {
     }
 }
 
-macro_rules! impl_to_axis {
-    ($trait:ty, $fn:ident, $result:ty, $ticks:ident) => {
-        impl $trait for LayoutOption {
-            fn $fn(&self) -> $result {
-                match self.clone() {
-                    Self::Legend(legend) => leptos_chartistry::Legend::new(legend.anchor).into(),
-                    Self::RotatedLabel(label) => {
-                        leptos_chartistry::RotatedLabel::new(label.anchor, label.text).into()
-                    }
-                    Self::TickLabels(ticks) => leptos_chartistry::TickLabels::$ticks()
-                        .set_min_chars(ticks.min_chars)
-                        .set_format(move |s, t| match ticks.format.get() {
-                            TickFormat::Short => s.short_format(t),
-                            TickFormat::Long => s.long_format(t),
-                        })
-                        .into(),
-                }
-            }
+impl<Tick> From<TickFormat> for TickFormatFn<Tick> {
+    fn from(format: TickFormat) -> Self {
+        match format {
+            TickFormat::Short => Rc::new(move |s, t| s.short_format(t)),
+            TickFormat::Long => Rc::new(move |s, t| s.long_format(t)),
         }
-    };
+    }
 }
 
-impl_to_axis!(
-    ToHorizontal<f64>,
-    to_horizontal,
-    HorizontalLayout<f64>,
-    aligned_floats
-);
-impl_to_axis!(
-    ToHorizontal<DateTime<Utc>>,
-    to_horizontal,
-    HorizontalLayout<DateTime<Utc>>,
-    timestamps
-);
-impl_to_axis!(
-    ToVertical<f64>,
-    to_vertical,
-    VerticalLayout<f64>,
-    aligned_floats
-);
-impl_to_axis!(
-    ToVertical<DateTime<Utc>>,
-    to_vertical,
-    VerticalLayout<DateTime<Utc>>,
-    timestamps
-);
+impl<X: Clone> ToEdgeLayout<X> for EdgeLayout<X> {
+    fn to_edge_layout(&self) -> leptos_chartistry::EdgeLayout<X> {
+        self.0.clone()
+    }
+}
+
+impl<Tick> From<leptos_chartistry::Legend> for EdgeLayout<Tick> {
+    fn from(legend: leptos_chartistry::Legend) -> Self {
+        Self(leptos_chartistry::EdgeLayout::Legend(legend))
+    }
+}
+
+impl<Tick> From<leptos_chartistry::RotatedLabel> for EdgeLayout<Tick> {
+    fn from(label: leptos_chartistry::RotatedLabel) -> Self {
+        Self(leptos_chartistry::EdgeLayout::RotatedLabel(label))
+    }
+}
+
+impl<Tick> From<leptos_chartistry::TickLabels<Tick>> for EdgeLayout<Tick> {
+    fn from(ticks: leptos_chartistry::TickLabels<Tick>) -> Self {
+        Self(leptos_chartistry::EdgeLayout::TickLabels(ticks))
+    }
+}
