@@ -1,4 +1,4 @@
-use super::{HorizontalLayout, UseLayout, VerticalLayout};
+use super::{EdgeLayout, UseLayout};
 use crate::{
     aspect_ratio::AspectRatioCalc,
     bounds::Bounds,
@@ -51,10 +51,10 @@ impl Layout {
     ///  - Return state (Layout) and a deferred renderer (ComposedLayout).
     ///
     pub fn compose<X: Clone + PartialEq, Y: Clone + PartialEq>(
-        top: &[HorizontalLayout<X>],
-        right: &[VerticalLayout<Y>],
-        bottom: &[HorizontalLayout<X>],
-        left: &[VerticalLayout<Y>],
+        top: &[EdgeLayout<X>],
+        right: &[EdgeLayout<Y>],
+        bottom: &[EdgeLayout<X>],
+        left: &[EdgeLayout<Y>],
         aspect_ratio: Memo<AspectRatioCalc>,
         state: &PreState<X, Y>,
     ) -> (Layout, Vec<DeferredRender>) {
@@ -130,11 +130,17 @@ impl Layout {
                 .map(move |(index, opt)| (edge, bounds[index], opt))
                 .collect::<Vec<_>>()
         };
-        let horizontal = |edge: Edge, bounds: &[Memo<Bounds>], items: &[HorizontalLayout<X>]| {
+        let horizontal = |edge: Edge, bounds: &[Memo<Bounds>], items: &[EdgeLayout<X>]| {
             items
                 .iter()
                 .enumerate()
-                .map(|(index, opt)| (edge, bounds[index], opt.to_use(state, avail_width)))
+                .map(|(index, opt)| {
+                    (
+                        edge,
+                        bounds[index],
+                        opt.to_horizontal_use(state, avail_width),
+                    )
+                })
                 .collect::<Vec<_>>()
         };
 
@@ -156,7 +162,7 @@ impl Layout {
 }
 
 fn collect_heights<X: PartialEq, Y>(
-    items: &[HorizontalLayout<X>],
+    items: &[EdgeLayout<X>],
     state: &PreState<X, Y>,
 ) -> Vec<Signal<f64>> {
     items
@@ -166,14 +172,14 @@ fn collect_heights<X: PartialEq, Y>(
 }
 
 fn use_vertical<X: PartialEq, Y: PartialEq>(
-    items: &[VerticalLayout<Y>],
+    items: &[EdgeLayout<Y>],
     state: &PreState<X, Y>,
     avail_height: Memo<f64>,
 ) -> (Vec<Signal<f64>>, Vec<UseLayout>) {
     items
         .iter()
         .map(|c| {
-            let vert = c.to_use(state, avail_height);
+            let vert = c.to_vertical_use(state, avail_height);
             (vert.width, vert.layout)
         })
         .unzip()

@@ -21,6 +21,20 @@ impl Edge {
     }
 }
 
+impl TryFrom<String> for Edge {
+    type Error = String;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        match s.as_str() {
+            "top" => Ok(Self::Top),
+            "right" => Ok(Self::Right),
+            "bottom" => Ok(Self::Bottom),
+            "left" => Ok(Self::Left),
+            _ => Err(s),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct EdgeBoundsIter<I> {
     iter: I,

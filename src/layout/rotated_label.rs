@@ -17,33 +17,30 @@ pub enum Anchor {
 
 #[derive(Clone, Debug)]
 pub struct RotatedLabel {
-    text: MaybeSignal<String>,
-    anchor: MaybeSignal<Anchor>,
+    pub text: RwSignal<String>,
+    pub anchor: RwSignal<Anchor>,
 }
 
 impl RotatedLabel {
-    pub fn new(
-        anchor: impl Into<MaybeSignal<Anchor>>,
-        text: impl Into<MaybeSignal<String>>,
-    ) -> Self {
+    pub fn new(anchor: impl Into<RwSignal<Anchor>>, text: impl Into<RwSignal<String>>) -> Self {
         Self {
             text: text.into(),
             anchor: anchor.into(),
         }
     }
 
-    pub fn start(text: impl Into<MaybeSignal<String>>) -> Self {
-        Self::new(Anchor::Start, text)
+    pub fn start(text: impl Into<String>) -> Self {
+        Self::new(Anchor::Start, create_rw_signal(text.into()))
     }
-    pub fn middle(text: impl Into<MaybeSignal<String>>) -> Self {
-        Self::new(Anchor::Middle, text)
+    pub fn middle(text: impl Into<String>) -> Self {
+        Self::new(Anchor::Middle, create_rw_signal(text.into()))
     }
-    pub fn end(text: impl Into<MaybeSignal<String>>) -> Self {
-        Self::new(Anchor::End, text)
+    pub fn end(text: impl Into<String>) -> Self {
+        Self::new(Anchor::End, create_rw_signal(text.into()))
     }
 
     fn size<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
-        let text = self.text.clone();
+        let text = self.text;
         let PreState { font, padding, .. } = *state;
         Signal::derive(move || {
             if text.with(|t| t.is_empty()) {

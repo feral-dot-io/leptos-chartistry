@@ -5,8 +5,8 @@ use crate::{
     edge::Edge,
     state::{PreState, State},
     ticks::{
-        AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, TickState,
-        TimestampGen, VerticalSpan,
+        AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, TimestampGen,
+        VerticalSpan,
     },
     Period,
 };
@@ -16,9 +16,9 @@ use std::borrow::Borrow;
 use std::rc::Rc;
 
 #[derive(Clone)]
-pub struct TickLabels<Tick> {
-    min_chars: MaybeSignal<usize>,
-    format: TickFormatFn<Tick>,
+pub struct TickLabels<Tick: 'static> {
+    pub min_chars: RwSignal<usize>,
+    pub format: RwSignal<TickFormatFn<Tick>>,
     generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
@@ -55,31 +55,22 @@ impl<Tick> TickLabels<Tick> {
     fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
             min_chars: 0.into(),
-            format: Rc::new(|s, t| s.short_format(t)),
+            format: create_rw_signal(Self::default_tick_format()),
             generator: Rc::new(gen),
         }
     }
 
-    pub fn set_min_chars(mut self, min_chars: impl Into<MaybeSignal<usize>>) -> Self {
-        self.min_chars = min_chars.into();
-        self
-    }
-
-    pub fn set_format(
-        mut self,
-        format: impl Fn(&dyn TickState<Tick = Tick>, &Tick) -> String + 'static,
-    ) -> Self {
-        self.format = Rc::new(format);
-        self
+    pub fn default_tick_format() -> TickFormatFn<Tick> {
+        Rc::new(|s, t| s.short_format(t))
     }
 
     fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
-        let format = self.format.clone();
+        let format = self.format;
         Signal::derive(move || {
             gen.with(|GeneratedTicks { ticks, state }| {
                 ticks
                     .iter()
-                    .map(|tick| (state.position(tick), (format)(&**state, tick)))
+                    .map(|tick| (state.position(tick), (format.get())(&**state, tick)))
                     .collect()
             })
         })
@@ -94,7 +85,7 @@ impl<X: PartialEq> TickLabels<X> {
     ) -> Signal<GeneratedTicks<X>> {
         let PreState { font, padding, .. } = *state;
         let range_x = state.data.range_x;
-        let format = self.format.clone();
+        let format = self.format;
         let gen = self.generator.clone();
         create_memo(move |_| {
             range_x.with(|range_x| {
@@ -104,7 +95,7 @@ impl<X: PartialEq> TickLabels<X> {
                         let font_width = font.get().width();
                         let padding_width = padding.get().width();
                         let span = HorizontalSpan::new(
-                            format.clone(),
+                            format.get().clone(),
                             font_width,
                             padding_width,
                             avail_width.get(),
@@ -171,7 +162,7 @@ impl<Y: PartialEq> TickLabels<Y> {
 }
 
 fn mk_width<X, Y>(
-    min_chars: MaybeSignal<usize>,
+    min_chars: RwSignal<usize>,
     state: &PreState<X, Y>,
     ticks: Signal<Vec<(f64, String)>>,
 ) -> Signal<f64> {

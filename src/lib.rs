@@ -27,9 +27,9 @@ pub use layout::{
     legend::Legend,
     rotated_label::{Anchor, RotatedLabel},
     tick_labels::TickLabels,
-    HorizontalLayout, HorizontalVec, ToHorizontal, ToVertical, VerticalLayout, VerticalVec,
+    EdgeLayout, HorizontalVec, ToEdgeLayout, VerticalVec,
 };
 pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;
 pub use series::{Line, Position, Series, Stack};
-pub use ticks::{Period, TickState};
+pub use ticks::{Period, TickFormatFn, TickState};

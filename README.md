@@ -12,6 +12,7 @@ An extensible charting library for Leptos.
     - Need a general write up on difficulties
     - Stacked colours iterate but should use sequential colours with "min step by" fn
     - Default stacked colours is not one colour
+- Replace From<String> for Anchor with TryFrom
 
 ## Design experiments and notes:
 

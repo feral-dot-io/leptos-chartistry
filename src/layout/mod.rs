@@ -14,18 +14,10 @@ use leptos::*;
 
 #[derive(Clone)]
 #[non_exhaustive]
-pub enum HorizontalLayout<X> {
+pub enum EdgeLayout<Tick: 'static> {
     Legend(legend::Legend),
     RotatedLabel(rotated_label::RotatedLabel),
-    TickLabels(tick_labels::TickLabels<X>),
-}
-
-#[derive(Clone)]
-#[non_exhaustive]
-pub enum VerticalLayout<Y> {
-    Legend(legend::Legend),
-    RotatedLabel(rotated_label::RotatedLabel),
-    TickLabels(tick_labels::TickLabels<Y>),
+    TickLabels(tick_labels::TickLabels<Tick>),
 }
 
 struct UseVerticalLayout {
@@ -61,16 +53,18 @@ impl UseLayout {
     }
 }
 
-impl<X: PartialEq> HorizontalLayout<X> {
-    fn fixed_height<Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+impl<Tick: PartialEq> EdgeLayout<Tick> {
+    fn fixed_height<Y>(&self, state: &PreState<Tick, Y>) -> Signal<f64> {
         match self {
             Self::Legend(inner) => inner.fixed_height(state),
             Self::RotatedLabel(inner) => inner.fixed_height(state),
             Self::TickLabels(inner) => inner.fixed_height(state),
         }
     }
+}
 
-    fn to_use<Y>(&self, state: &PreState<X, Y>, avail_width: Memo<f64>) -> UseLayout {
+impl<X: PartialEq> EdgeLayout<X> {
+    fn to_horizontal_use<Y>(&self, state: &PreState<X, Y>, avail_width: Memo<f64>) -> UseLayout {
         match self {
             Self::Legend(inner) => inner.to_horizontal_use(),
             Self::RotatedLabel(inner) => inner.to_horizontal_use(),
@@ -79,8 +73,12 @@ impl<X: PartialEq> HorizontalLayout<X> {
     }
 }
 
-impl<Y: PartialEq> VerticalLayout<Y> {
-    fn to_use<X>(&self, state: &PreState<X, Y>, avail_height: Memo<f64>) -> UseVerticalLayout {
+impl<Y: PartialEq> EdgeLayout<Y> {
+    fn to_vertical_use<X>(
+        &self,
+        state: &PreState<X, Y>,
+        avail_height: Memo<f64>,
+    ) -> UseVerticalLayout {
         match self {
             Self::Legend(inner) => inner.to_vertical_use(state),
             Self::RotatedLabel(inner) => inner.to_vertical_use(state),
@@ -92,112 +90,60 @@ impl<Y: PartialEq> VerticalLayout<Y> {
 // TODO: use macros to reduce boilerplate
 
 /// Conversion to a HorizontalLayout
-pub trait ToHorizontal<X> {
-    fn to_horizontal(&self) -> HorizontalLayout<X>;
+pub trait ToEdgeLayout<X> {
+    fn to_edge_layout(&self) -> EdgeLayout<X>;
 }
 
-impl<X> ToHorizontal<X> for legend::Legend {
-    fn to_horizontal(&self) -> HorizontalLayout<X> {
-        HorizontalLayout::Legend(self.clone())
+impl<X> ToEdgeLayout<X> for legend::Legend {
+    fn to_edge_layout(&self) -> EdgeLayout<X> {
+        EdgeLayout::Legend(self.clone())
     }
 }
 
-impl<X> ToHorizontal<X> for rotated_label::RotatedLabel {
-    fn to_horizontal(&self) -> HorizontalLayout<X> {
-        HorizontalLayout::RotatedLabel(self.clone())
+impl<X> ToEdgeLayout<X> for rotated_label::RotatedLabel {
+    fn to_edge_layout(&self) -> EdgeLayout<X> {
+        EdgeLayout::RotatedLabel(self.clone())
     }
 }
 
-impl<X: Clone> ToHorizontal<X> for tick_labels::TickLabels<X> {
-    fn to_horizontal(&self) -> HorizontalLayout<X> {
-        HorizontalLayout::TickLabels(self.clone())
+impl<X: Clone> ToEdgeLayout<X> for tick_labels::TickLabels<X> {
+    fn to_edge_layout(&self) -> EdgeLayout<X> {
+        EdgeLayout::TickLabels(self.clone())
     }
 }
 
-impl<T: Clone + ToHorizontal<X>, X> ToHorizontal<X> for &T {
-    fn to_horizontal(&self) -> HorizontalLayout<X> {
-        (*self).clone().to_horizontal()
+impl<T: Clone + ToEdgeLayout<X>, X> ToEdgeLayout<X> for &T {
+    fn to_edge_layout(&self) -> EdgeLayout<X> {
+        (*self).clone().to_edge_layout()
     }
 }
 
-impl<X: Clone> ToHorizontal<X> for HorizontalLayout<X> {
-    fn to_horizontal(&self) -> HorizontalLayout<X> {
+impl<X: Clone> ToEdgeLayout<X> for EdgeLayout<X> {
+    fn to_edge_layout(&self) -> EdgeLayout<X> {
         self.clone()
     }
 }
 
-/// Conversion to a VerticalLayout
-pub trait ToVertical<Y> {
-    fn to_vertical(&self) -> VerticalLayout<Y>;
-}
-
-impl<Y> ToVertical<Y> for legend::Legend {
-    fn to_vertical(&self) -> VerticalLayout<Y> {
-        VerticalLayout::Legend(self.clone())
-    }
-}
-
-impl<Y> ToVertical<Y> for rotated_label::RotatedLabel {
-    fn to_vertical(&self) -> VerticalLayout<Y> {
-        VerticalLayout::RotatedLabel(self.clone())
-    }
-}
-
-impl<Y: Clone> ToVertical<Y> for tick_labels::TickLabels<Y> {
-    fn to_vertical(&self) -> VerticalLayout<Y> {
-        VerticalLayout::TickLabels(self.clone())
-    }
-}
-
-impl<T: Clone + ToVertical<Y>, Y> ToVertical<Y> for &T {
-    fn to_vertical(&self) -> VerticalLayout<Y> {
-        (*self).clone().to_vertical()
-    }
-}
-
-impl<Y: Clone> ToVertical<Y> for VerticalLayout<Y> {
-    fn to_vertical(&self) -> VerticalLayout<Y> {
-        self.clone()
-    }
-}
-
-impl<X> From<legend::Legend> for HorizontalLayout<X> {
+impl<X> From<legend::Legend> for EdgeLayout<X> {
     fn from(legend: legend::Legend) -> Self {
         Self::Legend(legend)
     }
 }
 
-impl<X> From<rotated_label::RotatedLabel> for HorizontalLayout<X> {
+impl<X> From<rotated_label::RotatedLabel> for EdgeLayout<X> {
     fn from(label: rotated_label::RotatedLabel) -> Self {
         Self::RotatedLabel(label)
     }
 }
 
-impl<X> From<tick_labels::TickLabels<X>> for HorizontalLayout<X> {
+impl<X> From<tick_labels::TickLabels<X>> for EdgeLayout<X> {
     fn from(ticks: tick_labels::TickLabels<X>) -> Self {
         Self::TickLabels(ticks)
     }
 }
 
-impl<Y> From<legend::Legend> for VerticalLayout<Y> {
-    fn from(legend: legend::Legend) -> Self {
-        Self::Legend(legend)
-    }
-}
-
-impl<Y> From<rotated_label::RotatedLabel> for VerticalLayout<Y> {
-    fn from(label: rotated_label::RotatedLabel) -> Self {
-        Self::RotatedLabel(label)
-    }
-}
-
-impl<Y> From<tick_labels::TickLabels<Y>> for VerticalLayout<Y> {
-    fn from(ticks: tick_labels::TickLabels<Y>) -> Self {
-        Self::TickLabels(ticks)
-    }
-}
-
-pub struct HorizontalVec<X>(Vec<HorizontalLayout<X>>);
+#[derive(Clone)]
+pub struct HorizontalVec<X: 'static>(Vec<EdgeLayout<X>>);
 
 impl<X> Default for HorizontalVec<X> {
     fn default() -> Self {
@@ -211,29 +157,30 @@ impl<X> HorizontalVec<X> {
         self.0.reverse();
     }
 
-    pub(crate) fn as_slice(&self) -> &[HorizontalLayout<X>] {
+    pub(crate) fn as_slice(&self) -> &[EdgeLayout<X>] {
         &self.0
     }
 }
 
-impl<X> From<HorizontalVec<X>> for Vec<HorizontalLayout<X>> {
+impl<X> From<HorizontalVec<X>> for Vec<EdgeLayout<X>> {
     fn from(vec: HorizontalVec<X>) -> Self {
         vec.0
     }
 }
 
-impl<T: ToHorizontal<X>, X> From<Vec<T>> for HorizontalVec<X> {
+impl<T: ToEdgeLayout<X>, X> From<Vec<T>> for HorizontalVec<X> {
     fn from(items: Vec<T>) -> Self {
         Self(
             items
                 .into_iter()
-                .map(|i| i.to_horizontal())
+                .map(|i| i.to_edge_layout())
                 .collect::<Vec<_>>(),
         )
     }
 }
 
-pub struct VerticalVec<Y>(Vec<VerticalLayout<Y>>);
+#[derive(Clone)]
+pub struct VerticalVec<Y: 'static>(Vec<EdgeLayout<Y>>);
 
 /// Start with an empty vector
 impl<Y> Default for VerticalVec<Y> {
@@ -248,24 +195,24 @@ impl<Y> VerticalVec<Y> {
         self.0.reverse();
     }
 
-    pub(crate) fn as_slice(&self) -> &[VerticalLayout<Y>] {
+    pub(crate) fn as_slice(&self) -> &[EdgeLayout<Y>] {
         &self.0
     }
 }
 
 /// End result. Convert to a `Vec<VerticalLayout<Y>>`
-impl<Y> From<VerticalVec<Y>> for Vec<VerticalLayout<Y>> {
+impl<Y> From<VerticalVec<Y>> for Vec<EdgeLayout<Y>> {
     fn from(vec: VerticalVec<Y>) -> Self {
         vec.0
     }
 }
 
-impl<T: ToVertical<Y>, Y> From<Vec<T>> for VerticalVec<Y> {
+impl<T: ToEdgeLayout<Y>, Y> From<Vec<T>> for VerticalVec<Y> {
     fn from(items: Vec<T>) -> Self {
         Self(
             items
                 .into_iter()
-                .map(|i| i.to_vertical())
+                .map(|i| i.to_edge_layout())
                 .collect::<Vec<_>>(),
         )
     }

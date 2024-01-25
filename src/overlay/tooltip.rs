@@ -16,7 +16,7 @@ use std::{
 type SortByFn<Y> = dyn Fn(&mut [(UseLine, Option<Y>)]);
 
 #[derive(Clone)]
-pub struct Tooltip<X, Y> {
+pub struct Tooltip<X: 'static, Y: 'static> {
     skip_missing: MaybeSignal<bool>,
     table_margin: MaybeSignal<Option<f64>>,
     sort_by: Rc<SortByFn<Y>>,

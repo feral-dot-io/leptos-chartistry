@@ -7,7 +7,7 @@ use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
 
 #[derive(Clone)]
-pub struct GridLine<Tick: Clone> {
+pub struct GridLine<Tick: Clone + 'static> {
     width: MaybeSignal<f64>,
     colour: MaybeSignal<Option<Colour>>,
     ticks: TickLabels<Tick>,

@@ -11,11 +11,11 @@ use leptos::*;
 
 #[derive(Clone, Debug)]
 pub struct Legend {
-    anchor: MaybeSignal<Anchor>,
+    pub anchor: RwSignal<Anchor>,
 }
 
 impl Legend {
-    pub fn new(anchor: impl Into<MaybeSignal<Anchor>>) -> Self {
+    pub fn new(anchor: impl Into<RwSignal<Anchor>>) -> Self {
         Self {
             anchor: anchor.into(),
         }
