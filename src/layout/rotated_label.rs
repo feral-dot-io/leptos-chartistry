@@ -7,10 +7,9 @@ use crate::{
 };
 use leptos::*;
 
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Anchor {
     Start,
-    #[default]
     Middle,
     End,
 }
@@ -94,13 +93,15 @@ impl Anchor {
     }
 }
 
-impl From<String> for Anchor {
-    fn from(s: String) -> Self {
-        match s.to_lowercase().as_str() {
-            "start" => Anchor::Start,
-            "middle" => Anchor::Middle,
-            "end" => Anchor::End,
-            _ => Anchor::default(),
+impl TryFrom<String> for Anchor {
+    type Error = &'static str;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "start" => Ok(Anchor::Start),
+            "middle" => Ok(Anchor::Middle),
+            "end" => Ok(Anchor::End),
+            _ => Err("invalid anchor label"),
         }
     }
 }

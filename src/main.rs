@@ -335,7 +335,8 @@ fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
 
 #[component]
 fn SelectAnchor(anchor: RwSignal<Anchor>) -> impl IntoView {
-    let on_change = move |ev| anchor.set(event_target_value(&ev).into());
+    let on_change =
+        move |ev| anchor.set(event_target_value(&ev).try_into().unwrap_or(Anchor::Middle));
     view! {
         <select on:change=on_change>
             <optgroup label="Anchor">
