@@ -1,103 +1,107 @@
-use super::{InnerLayout, UseInner};
+use super::UseInner;
 use crate::{
     colours::Colour, debug::DebugRect, projection::Projection, state::State, ticks::GeneratedTicks,
-    TickLabels,
+    Tick, TickLabels,
 };
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
 
-#[derive(Clone)]
-pub struct GridLine<Tick: Clone + 'static> {
-    width: MaybeSignal<f64>,
-    colour: MaybeSignal<Option<Colour>>,
-    ticks: TickLabels<Tick>,
-}
-
-#[derive(Clone)]
-struct UseGridLine<Tick: 'static> {
-    width: MaybeSignal<f64>,
-    colour: MaybeSignal<Option<Colour>>,
-    ticks: Signal<GeneratedTicks<Tick>>,
-}
-
-#[derive(Clone)]
-struct UseHorizontalGridLine<X: 'static>(UseGridLine<X>);
-#[derive(Clone)]
-struct UseVerticalGridLine<Y: 'static>(UseGridLine<Y>);
-
-impl<Tick: Clone> GridLine<Tick> {
-    fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
-        Self {
-            width: 1.0.into(),
-            colour: MaybeSignal::default(),
-            ticks: ticks.borrow().clone(),
+macro_rules! impl_grid_line {
+    ($name:ident) => {
+        #[derive(Clone)]
+        pub struct $name<Tick: 'static> {
+            width: MaybeSignal<f64>,
+            colour: MaybeSignal<Option<Colour>>,
+            ticks: TickLabels<Tick>,
         }
-    }
 
-    pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
-        self.width = width.into();
-        self
-    }
+        impl<Tick> $name<Tick> {
+            pub fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
+                Self {
+                    width: 1.0.into(),
+                    colour: MaybeSignal::default(),
+                    ticks: ticks.borrow().clone(),
+                }
+            }
 
-    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
-        self.colour = colour.into();
-        self
-    }
+            pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
+                self.width = width.into();
+                self
+            }
+
+            pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
+                self.colour = colour.into();
+                self
+            }
+        }
+    };
 }
 
-impl<X: Clone> GridLine<X> {
-    /// Vertical grid lines running parallel to the y-axis. These run from top to bottom at each tick.
-    pub fn vertical<Y: Clone>(ticks: impl Borrow<TickLabels<X>>) -> InnerLayout<X, Y> {
-        InnerLayout::HorizontalGridLine(Self::new(ticks))
-    }
+impl_grid_line!(HorizontalGridLine);
+impl_grid_line!(VerticalGridLine);
+
+macro_rules! impl_use_grid_line {
+    ($name:ident) => {
+        struct $name<Tick: 'static> {
+            width: MaybeSignal<f64>,
+            colour: MaybeSignal<Option<Colour>>,
+            ticks: Signal<GeneratedTicks<Tick>>,
+        }
+
+        impl<Tick> Clone for $name<Tick> {
+            fn clone(&self) -> Self {
+                Self {
+                    width: self.width.clone(),
+                    colour: self.colour.clone(),
+                    ticks: self.ticks,
+                }
+            }
+        }
+    };
 }
 
-impl<Y: Clone> GridLine<Y> {
-    /// Horizontal grid lines running parallel to the x-axis. These run from left to right at each tick.
-    pub fn horizontal<X: Clone>(ticks: impl Borrow<TickLabels<Y>>) -> InnerLayout<X, Y> {
-        InnerLayout::VerticalGridLine(Self::new(ticks))
-    }
-}
+impl_use_grid_line!(UseHorizontalGridLine);
+impl_use_grid_line!(UseVerticalGridLine);
 
-impl<X: Clone + PartialEq> GridLine<X> {
+impl<X: Tick> HorizontalGridLine<X> {
     pub(crate) fn use_horizontal<Y>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_width = Signal::derive(move || with!(|inner| inner.width()));
-        Rc::new(UseHorizontalGridLine(UseGridLine {
+        Rc::new(UseHorizontalGridLine {
             width: self.width,
             colour: self.colour,
-            ticks: self.ticks.clone().generate_x(&state.pre, avail_width),
-        }))
+            ticks: self.ticks.generate_x(&state.pre, avail_width),
+        })
     }
 }
 
-impl<Y: Clone + PartialEq> GridLine<Y> {
+impl<Y: Tick> VerticalGridLine<Y> {
     pub(crate) fn use_vertical<X>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_height = Signal::derive(move || with!(|inner| inner.height()));
-        Rc::new(UseVerticalGridLine(UseGridLine {
+        Rc::new(UseVerticalGridLine {
             width: self.width,
             colour: self.colour,
-            ticks: self.ticks.clone().generate_y(&state.pre, avail_height),
-        }))
+            ticks: self.ticks.generate_y(&state.pre, avail_height),
+        })
     }
 }
 
-impl<X: Clone, Y> UseInner<X, Y> for UseHorizontalGridLine<X> {
+impl<X, Y> UseInner<X, Y> for UseHorizontalGridLine<X> {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <ViewHorizontalGridLine line=self.0.clone() state=state /> )
+        view!( <ViewHorizontalGridLine line=(*self).clone() state=state /> )
     }
 }
 
-impl<X, Y: Clone> UseInner<X, Y> for UseVerticalGridLine<Y> {
+impl<X, Y> UseInner<X, Y> for UseVerticalGridLine<Y> {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <ViewVerticalGridLine line=self.0.clone() state=state /> )
+        view!( <ViewVerticalGridLine line=(*self).clone() state=state /> )
     }
 }
 
 #[component]
 fn ViewHorizontalGridLine<X: 'static, Y: 'static>(
-    line: UseGridLine<X>,
+    line: UseHorizontalGridLine<X>,
     state: State<X, Y>,
 ) -> impl IntoView {
     let debug = state.pre.debug;
@@ -129,7 +133,7 @@ fn ViewHorizontalGridLine<X: 'static, Y: 'static>(
 
 #[component]
 fn ViewVerticalGridLine<X: 'static, Y: 'static>(
-    line: UseGridLine<Y>,
+    line: UseVerticalGridLine<Y>,
     state: State<X, Y>,
 ) -> impl IntoView {
     let debug = state.pre.debug;

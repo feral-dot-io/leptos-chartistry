@@ -6,6 +6,18 @@ use std::str::FromStr;
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
 
+const ALL_EDGE_OPTIONS: &[EdgeOption] = &[
+    EdgeOption::RotatedLabel,
+    EdgeOption::Legend,
+    EdgeOption::TickLabels,
+];
+const ALL_INNER_OPTIONS: &[InnerOption] = &[
+    InnerOption::AxisMarker,
+    InnerOption::HorizontalGridLine,
+    InnerOption::VerticalGridLine,
+    InnerOption::Legend,
+];
+
 const ALL_ANCHORS: &[Anchor] = &[Anchor::Start, Anchor::Middle, Anchor::End];
 const ALL_EDGES: &[Edge] = &[Edge::Top, Edge::Right, Edge::Bottom, Edge::Left];
 const ALL_AXIS_PLACEMENTS: &[AxisPlacement] = &[
@@ -32,8 +44,8 @@ enum EdgeOption {
 enum InnerOption {
     #[default]
     AxisMarker,
-    //HorizontalGridLine,
-    //VerticalGridLine,
+    HorizontalGridLine,
+    VerticalGridLine,
     //XGuideLine,
     //YGuideLine,
     Legend,
@@ -232,7 +244,7 @@ fn ViewEdgeLayoutOpts<Tick: crate::Tick>(
                 <tr>
                     <td>
                         <select on:change=on_label_change>
-                            <For each=EdgeOption::all key=|opt| opt.to_string() let:opt>
+                            <For each=|| ALL_EDGE_OPTIONS key=|opt| opt.to_string() let:opt>
                                 <option selected=move || option.get() == *opt>{opt.to_string()}</option>
                             </For>
                         </select>
@@ -285,7 +297,7 @@ fn ViewInnerOpts<X: Tick, Y: Tick>(options: RwSignal<Options<InnerLayout<X, Y>>>
                 <tr>
                     <td>
                         <select on:change=on_label_change>
-                            <For each=InnerOption::all key=|opt| opt.to_string() let:opt>
+                            <For each=|| ALL_INNER_OPTIONS key=|opt| opt.to_string() let:opt>
                                 <option selected=move || option.get() == *opt>{opt.to_string()}</option>
                             </For>
                         </select>
@@ -337,33 +349,12 @@ impl<Opt> Options<Opt> {
     }
 }
 
-impl EdgeOption {
-    pub fn all() -> &'static [Self] {
-        &[Self::RotatedLabel, Self::Legend, Self::TickLabels]
-    }
-}
-
-impl InnerOption {
-    pub fn all() -> &'static [Self] {
-        &[Self::AxisMarker, Self::Legend]
-    }
-}
-
 impl std::fmt::Display for EdgeOption {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             EdgeOption::RotatedLabel => write!(f, "Label"),
             EdgeOption::Legend => write!(f, "Legend"),
             EdgeOption::TickLabels => write!(f, "Ticks"),
-        }
-    }
-}
-
-impl std::fmt::Display for InnerOption {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            InnerOption::AxisMarker => write!(f, "Axis marker"),
-            InnerOption::Legend => write!(f, "Legend"),
         }
     }
 }
@@ -381,18 +372,6 @@ impl FromStr for EdgeOption {
     }
 }
 
-impl FromStr for InnerOption {
-    type Err = &'static str;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "axis marker" => Ok(InnerOption::AxisMarker),
-            "legend" => Ok(InnerOption::Legend),
-            _ => Err("unknown inner option"),
-        }
-    }
-}
-
 impl<Tick> From<&EdgeLayout<Tick>> for EdgeOption {
     fn from(layout: &EdgeLayout<Tick>) -> Self {
         match layout {
@@ -400,16 +379,6 @@ impl<Tick> From<&EdgeLayout<Tick>> for EdgeOption {
             EdgeLayout::Legend(_) => Self::Legend,
             EdgeLayout::TickLabels(_) => Self::TickLabels,
             _ => EdgeOption::default(),
-        }
-    }
-}
-
-impl<X: Tick, Y: Tick> From<&InnerLayout<X, Y>> for InnerOption {
-    fn from(layout: &InnerLayout<X, Y>) -> Self {
-        match layout {
-            InnerLayout::AxisMarker(_) => Self::AxisMarker,
-            InnerLayout::Legend(_) => Self::Legend,
-            _ => InnerOption::default(),
         }
     }
 }
@@ -424,10 +393,51 @@ impl<Tick: crate::Tick> From<EdgeOption> for EdgeLayout<Tick> {
     }
 }
 
+impl std::fmt::Display for InnerOption {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InnerOption::AxisMarker => write!(f, "Axis marker"),
+            InnerOption::HorizontalGridLine => write!(f, "Horizontal grid line"),
+            InnerOption::VerticalGridLine => write!(f, "Vertical grid line"),
+            InnerOption::Legend => write!(f, "Legend"),
+        }
+    }
+}
+
+impl FromStr for InnerOption {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "axis marker" => Ok(InnerOption::AxisMarker),
+            "horizontal grid line" => Ok(InnerOption::HorizontalGridLine),
+            "vertical grid line" => Ok(InnerOption::VerticalGridLine),
+            "legend" => Ok(InnerOption::Legend),
+            _ => Err("unknown inner option"),
+        }
+    }
+}
+
+impl<X: Tick, Y: Tick> From<&InnerLayout<X, Y>> for InnerOption {
+    fn from(layout: &InnerLayout<X, Y>) -> Self {
+        match layout {
+            InnerLayout::AxisMarker(_) => Self::AxisMarker,
+            InnerLayout::HorizontalGridLine(_) => Self::HorizontalGridLine,
+            InnerLayout::VerticalGridLine(_) => Self::VerticalGridLine,
+            InnerLayout::Legend(_) => Self::Legend,
+            _ => InnerOption::default(),
+        }
+    }
+}
+
 impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     fn from(option: InnerOption) -> Self {
         match option {
             InnerOption::AxisMarker => AxisMarker::top_edge().into(),
+            InnerOption::HorizontalGridLine => {
+                HorizontalGridLine::new(TickLabels::default()).into()
+            }
+            InnerOption::VerticalGridLine => VerticalGridLine::new(TickLabels::default()).into(),
             InnerOption::Legend => InsetLegend::top_left().into(),
         }
     }

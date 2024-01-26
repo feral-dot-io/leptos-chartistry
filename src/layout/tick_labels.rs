@@ -13,7 +13,6 @@ use chrono::prelude::*;
 use leptos::*;
 use std::rc::Rc;
 
-#[derive(Clone)]
 pub struct TickLabels<Tick: 'static> {
     pub min_chars: RwSignal<usize>,
     pub generator: RwSignal<Rc<dyn TickGen<Tick = Tick>>>,
@@ -68,6 +67,15 @@ impl<Tick> TickLabels<Tick> {
                     .collect()
             })
         })
+    }
+}
+
+impl<Tick> Clone for TickLabels<Tick> {
+    fn clone(&self) -> Self {
+        Self {
+            min_chars: self.min_chars,
+            generator: self.generator,
+        }
     }
 }
 
