@@ -1,3 +1,9 @@
+mod aligned_floats;
+mod timestamps;
+
+pub use aligned_floats::AlignedFloatsGen;
+pub use timestamps::{Gen as TimestampGen, Period};
+
 use crate::TickFormatFn;
 use std::rc::Rc;
 

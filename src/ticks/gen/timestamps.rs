@@ -1,4 +1,4 @@
-use super::gen::{GenState, GeneratedTicks, Generator, Span};
+use super::{GenState, GeneratedTicks, Generator, Span};
 use chrono::{prelude::*, Duration, DurationRound, Months};
 use std::{borrow::Borrow, fmt::Display, ops::Add};
 

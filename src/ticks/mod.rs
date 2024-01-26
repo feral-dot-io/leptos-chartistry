@@ -1,12 +1,9 @@
-mod aligned_floats;
 mod gen;
-mod timestamps;
 
-pub use aligned_floats::AlignedFloatsGen;
 pub use gen::{
-    GenState as TickState, GeneratedTicks, Generator as TickGen, HorizontalSpan, VerticalSpan,
+    AlignedFloatsGen, GenState as TickState, GeneratedTicks, Generator as TickGen, HorizontalSpan,
+    Period, TimestampGen, VerticalSpan,
 };
-pub use timestamps::{Gen as TimestampGen, Period};
 
 pub type TickFormatFn<Tick> = std::rc::Rc<dyn Fn(&dyn gen::GenState<Tick = Tick>, &Tick) -> String>;
 
@@ -22,7 +19,11 @@ impl Tick for f64 {
     }
 }
 
-impl<Tz: TimeZone + 'static> Tick for DateTime<Tz> {
+impl<Tz> Tick for DateTime<Tz>
+where
+    Tz: TimeZone + 'static,
+    Tz::Offset: std::fmt::Display,
+{
     fn position(&self) -> f64 {
         self.timestamp() as f64 + (self.timestamp_subsec_nanos() as f64 / 1e9)
     }

@@ -1,4 +1,4 @@
-use super::gen::{GenState, GeneratedTicks, Generator, Span};
+use super::{GenState, GeneratedTicks, Generator, Span};
 
 /// Generates a vector of aligned, "nice" floats. The vector will contain `count` values between `from` and `to` inclusive. Returned ticks will be aligned to "nice" values in powers of 10. e.g., gen_nice_floats(0.1, 0.3, 3) -> [0.1, 0.2, 0.3].
 ///
