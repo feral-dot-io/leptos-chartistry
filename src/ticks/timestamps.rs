@@ -16,29 +16,45 @@ pub enum Period {
     Year,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Gen<Tz> {
+    format: Format,
     periods: Vec<Period>,
     tz: std::marker::PhantomData<Tz>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 struct State<Tz> {
-    period: Period,
+    format: Format,
     all_periods: Vec<Period>,
+    period: Period,
     tz: std::marker::PhantomData<Tz>,
 }
 
-impl<Tz> Gen<Tz> {
+#[derive(Clone, Debug, Default)]
+pub enum Format {
+    #[default]
+    Short,
+    Long,
+    Strftime(String),
+}
+
+impl<F> Gen<F> {
     pub fn new(periods: impl Borrow<[Period]>) -> Self {
         let mut periods = periods.borrow().to_vec();
         periods.sort_unstable();
         periods.dedup();
         periods.reverse();
         Self {
+            format: Format::default(),
             periods,
             tz: std::marker::PhantomData,
         }
+    }
+
+    pub fn set_format(mut self, format: impl Into<Format>) -> Self {
+        self.format = format.into();
+        self
     }
 }
 
@@ -61,7 +77,7 @@ where
         }
 
         let mut ticks = Vec::new();
-        let mut state = State::<Tz>::new(self.periods[0], &self.periods);
+        let mut state = State::from_period(self, self.periods[0]);
 
         'outer: for &period in &self.periods {
             // Fetch all ticks for this period
@@ -71,7 +87,7 @@ where
             // Try to fit candidate ticks into previous ticks, sampling if necessary
             for sample in 1..(candidate.len() + 1) {
                 let sampled = Self::merge_ticks(&ticks, &candidate, sample);
-                state = State::new(period, &self.periods);
+                state = State::from_period(self, period);
                 let used_width = span.consumed(&state, &sampled);
                 // Our sampled ticks fit
                 if used_width <= span.length() {
@@ -97,7 +113,7 @@ where
     }
 }
 
-impl<Tz: TimeZone> Gen<Tz> {
+impl<Format> Gen<Format> {
     fn merge_ticks<T: Clone + Ord>(existing: &[T], candidate: &[T], sample: usize) -> Vec<T> {
         assert!(sample > 0);
         let candidate = candidate.to_owned();
@@ -137,10 +153,11 @@ impl<Tz: TimeZone> Gen<Tz> {
 }
 
 impl<Tz> State<Tz> {
-    fn new(period: Period, periods: &[Period]) -> Self {
+    fn from_period(gen: &Gen<Tz>, period: Period) -> Self {
         Self {
+            format: gen.format.clone(),
+            all_periods: gen.periods.clone(),
             period,
-            all_periods: periods.to_vec(),
             tz: std::marker::PhantomData,
         }
     }
@@ -157,23 +174,24 @@ where
     }
 
     fn format(&self, at: &Self::Tick) -> String {
-        let mut period = self.period;
-        // If tick falls exactly on an earlier period, use that representation instead
-        for earlier in &self.all_periods {
-            if earlier.truncate_at(at.clone()) == Some(at.clone()) {
-                period = *earlier;
-                break;
+        let fmt = match &self.format {
+            Format::Short => {
+                let mut period = self.period;
+                // If tick falls exactly on an earlier period, use that representation instead
+                for earlier in &self.all_periods {
+                    if earlier.truncate_at(at.clone()) == Some(at.clone()) {
+                        period = *earlier;
+                        break;
+                    }
+                }
+                period.short_format()
             }
-        }
-        // Format tick according to period
-        at.format(period.short_format()).to_string()
+            Format::Long => self.period.long_format(),
+            Format::Strftime(fmt) => fmt,
+        };
+        // Use given tick format
+        at.format(fmt).to_string()
     }
-
-    /* TODO
-    fn long_format(&self, at: &Self::Tick) -> String {
-        at.format(self.period.long_format()).to_string()
-    }
-    */
 }
 
 impl Period {
