@@ -6,18 +6,6 @@ use std::str::FromStr;
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
 
-const ALL_EDGE_OPTIONS: &[EdgeOption] = &[
-    EdgeOption::RotatedLabel,
-    EdgeOption::Legend,
-    EdgeOption::TickLabels,
-];
-const ALL_INNER_OPTIONS: &[InnerOption] = &[
-    InnerOption::AxisMarker,
-    InnerOption::HorizontalGridLine,
-    InnerOption::VerticalGridLine,
-    InnerOption::Legend,
-];
-
 const ALL_ANCHORS: &[Anchor] = &[Anchor::Start, Anchor::Middle, Anchor::End];
 const ALL_EDGES: &[Edge] = &[Edge::Top, Edge::Right, Edge::Bottom, Edge::Left];
 const ALL_AXIS_PLACEMENTS: &[AxisPlacement] = &[
@@ -349,6 +337,12 @@ impl<Opt> Options<Opt> {
     }
 }
 
+const ALL_EDGE_OPTIONS: &[EdgeOption] = &[
+    EdgeOption::RotatedLabel,
+    EdgeOption::Legend,
+    EdgeOption::TickLabels,
+];
+
 impl std::fmt::Display for EdgeOption {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -392,6 +386,13 @@ impl<Tick: crate::Tick> From<EdgeOption> for EdgeLayout<Tick> {
         }
     }
 }
+
+const ALL_INNER_OPTIONS: &[InnerOption] = &[
+    InnerOption::AxisMarker,
+    InnerOption::HorizontalGridLine,
+    InnerOption::VerticalGridLine,
+    InnerOption::Legend,
+];
 
 impl std::fmt::Display for InnerOption {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -561,7 +562,8 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 #[component]
 fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
     view! {
-        <StepLabel value=ticks.min_chars step="1" min="0">"Min chars:"</StepLabel>
+        // TODO
+        <StepLabel value=ticks.min_chars step="1" min="0">"min chars:"</StepLabel>
     }
 }
 
