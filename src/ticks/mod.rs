@@ -1,8 +1,8 @@
 mod gen;
 
 pub use gen::{
-    AlignedFloatsGen, GenState as TickState, GeneratedTicks, Generator as TickGen, HorizontalSpan,
-    Period, TimestampGen, VerticalSpan,
+    AlignedFloats, GenState as TickState, GeneratedTicks, Generator as TickGen, HorizontalSpan,
+    Period, PeriodicTimestamps, VerticalSpan,
 };
 
 pub type TickFormatFn<Tick> = std::rc::Rc<dyn Fn(&dyn gen::GenState<Tick = Tick>, &Tick) -> String>;

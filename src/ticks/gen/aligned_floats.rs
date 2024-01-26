@@ -6,14 +6,14 @@ use super::{GenState, GeneratedTicks, Generator, Span};
 ///
 /// Given a range (from - to), produce a series of evenly spaced ticks whose steps are the smallest values possible that are still distinguishable from each other. This results in "nice" rounded values that are easy to read. This is done by determining the scale (powers of 10) of the range and count to calculate a step size. The step size is then used to produce a series of evenly spaced ticks which get formatted to our desired precision.
 #[derive(Clone, Debug, PartialEq)]
-pub struct AlignedFloatsGen;
+pub struct AlignedFloats;
 
 #[derive(Clone, Debug, PartialEq)]
 struct AlignedState {
     scale: isize,
 }
 
-impl Generator for AlignedFloatsGen {
+impl Generator for AlignedFloats {
     type Tick = f64;
 
     fn generate(
@@ -29,7 +29,7 @@ impl Generator for AlignedFloatsGen {
     }
 }
 
-impl AlignedFloatsGen {
+impl AlignedFloats {
     pub fn new() -> Self {
         Self
     }
@@ -137,7 +137,7 @@ mod tests {
 
     fn assert_precision(first: f64, last: f64, width: f64, scale: isize, count: usize) {
         let span = mk_span(width + 1.0);
-        let precision = AlignedFloatsGen::find_precision(first, last, span.as_ref());
+        let precision = AlignedFloats::find_precision(first, last, span.as_ref());
         assert_eq!(precision, (scale, count));
     }
 
@@ -148,7 +148,7 @@ mod tests {
         count: usize,
         expected: Vec<&'static str>,
     ) {
-        let (scale, ticks) = AlignedFloatsGen::generate_count(first, last, scale, count);
+        let (scale, ticks) = AlignedFloats::generate_count(first, last, scale, count);
         let state = AlignedState::new(scale);
         let ticks = (ticks.into_iter())
             .map(|tick| state.format(&tick))

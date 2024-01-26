@@ -5,7 +5,7 @@ use crate::{
     edge::Edge,
     state::{PreState, State},
     ticks::{
-        AlignedFloatsGen, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, TimestampGen,
+        AlignedFloats, GeneratedTicks, HorizontalSpan, PeriodicTimestamps, TickFormatFn, TickGen,
         VerticalSpan,
     },
     Period,
@@ -29,7 +29,7 @@ pub struct UseTickLabels {
 
 impl TickLabels<f64> {
     pub fn aligned_floats() -> Self {
-        Self::new(AlignedFloatsGen::new())
+        Self::new(AlignedFloats::new())
     }
 }
 
@@ -39,15 +39,15 @@ where
     Tz::Offset: std::fmt::Display,
 {
     pub fn timestamps() -> Self {
-        Self::new(TimestampGen::new(Period::all()))
+        Self::new(PeriodicTimestamps::from_periods(Period::all()))
     }
 
     pub fn timestamp_periods(periods: impl Borrow<[Period]>) -> Self {
-        Self::new(TimestampGen::new(periods))
+        Self::new(PeriodicTimestamps::from_periods(periods))
     }
 
     pub fn timestamp_period(period: Period) -> Self {
-        Self::new(TimestampGen::new([period]))
+        Self::new(PeriodicTimestamps::from_period(period))
     }
 }
 
