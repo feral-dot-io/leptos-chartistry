@@ -434,10 +434,8 @@ impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     fn from(option: InnerOption) -> Self {
         match option {
             InnerOption::AxisMarker => AxisMarker::top_edge().into(),
-            InnerOption::HorizontalGridLine => {
-                HorizontalGridLine::new(TickLabels::default()).into()
-            }
-            InnerOption::VerticalGridLine => VerticalGridLine::new(TickLabels::default()).into(),
+            InnerOption::HorizontalGridLine => HorizontalGridLine::default().into(),
+            InnerOption::VerticalGridLine => VerticalGridLine::default().into(),
             InnerOption::Legend => InsetLegend::top_left().into(),
         }
     }

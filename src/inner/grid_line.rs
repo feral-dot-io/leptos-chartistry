@@ -10,28 +10,27 @@ macro_rules! impl_grid_line {
     ($name:ident) => {
         #[derive(Clone)]
         pub struct $name<Tick: 'static> {
-            width: MaybeSignal<f64>,
-            colour: MaybeSignal<Option<Colour>>,
+            width: RwSignal<f64>,
+            colour: RwSignal<Option<Colour>>,
             ticks: TickLabels<Tick>,
         }
 
-        impl<Tick> $name<Tick> {
+        impl<Tick: crate::Tick> $name<Tick> {
             pub fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
                 Self {
-                    width: 1.0.into(),
-                    colour: MaybeSignal::default(),
                     ticks: ticks.borrow().clone(),
+                    ..Default::default()
                 }
             }
+        }
 
-            pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
-                self.width = width.into();
-                self
-            }
-
-            pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
-                self.colour = colour.into();
-                self
+        impl<Tick: crate::Tick> Default for $name<Tick> {
+            fn default() -> Self {
+                Self {
+                    width: 1.0.into(),
+                    colour: RwSignal::default(),
+                    ticks: TickLabels::default(),
+                }
             }
         }
     };
@@ -43,8 +42,8 @@ impl_grid_line!(VerticalGridLine);
 macro_rules! impl_use_grid_line {
     ($name:ident) => {
         struct $name<Tick: 'static> {
-            width: MaybeSignal<f64>,
-            colour: MaybeSignal<Option<Colour>>,
+            width: RwSignal<f64>,
+            colour: RwSignal<Option<Colour>>,
             ticks: Signal<GeneratedTicks<Tick>>,
         }
 
