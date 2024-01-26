@@ -6,6 +6,17 @@ use std::str::FromStr;
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
 
+const ALL_ANCHORS: &[Anchor] = &[Anchor::Start, Anchor::Middle, Anchor::End];
+const ALL_EDGES: &[Edge] = &[Edge::Top, Edge::Right, Edge::Bottom, Edge::Left];
+const ALL_AXIS_PLACEMENTS: &[AxisPlacement] = &[
+    AxisPlacement::Top,
+    AxisPlacement::Right,
+    AxisPlacement::Bottom,
+    AxisPlacement::Left,
+    AxisPlacement::HorizontalZero,
+    AxisPlacement::VerticalZero,
+];
+
 #[derive(Clone)]
 struct Options<Opt>(Vec<Opt>);
 
@@ -416,9 +427,8 @@ impl<Tick: crate::Tick> From<EdgeOption> for EdgeLayout<Tick> {
 impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     fn from(option: InnerOption) -> Self {
         match option {
-            // TODO
-            InnerOption::AxisMarker => AxisMarker::top_edge(),
-            InnerOption::Legend => InsetLegend::top_left(),
+            InnerOption::AxisMarker => AxisMarker::top_edge().into(),
+            InnerOption::Legend => InsetLegend::top_left().into(),
         }
     }
 }
@@ -458,28 +468,6 @@ fn InnerLayoutOpts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoView
 }
 
 #[component]
-fn RotatedLabelOpts(label: RotatedLabel) -> impl IntoView {
-    view! {
-        <SelectAnchor anchor=label.anchor />
-        <input type="text" value=label.text on:input=move |ev| label.text.set(event_target_value(&ev)) />
-    }
-}
-
-#[component]
-fn LegendOpts(legend: Legend) -> impl IntoView {
-    view! {
-        <SelectAnchor anchor=legend.anchor />
-    }
-}
-
-#[component]
-fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
-    view! {
-        <StepLabel value=ticks.min_chars step="1" min="0">"Min chars:"</StepLabel>
-    }
-}
-
-#[component]
 fn StepLabel<T: Clone + Default + IntoAttribute + FromStr + 'static>(
     value: RwSignal<T>,
     #[prop(into)] step: String,
@@ -508,17 +496,64 @@ fn StepLabel<T: Clone + Default + IntoAttribute + FromStr + 'static>(
 }
 
 #[component]
-fn SelectAnchor(anchor: RwSignal<Anchor>) -> impl IntoView {
-    let on_change =
-        move |ev| anchor.set(event_target_value(&ev).try_into().unwrap_or(Anchor::Middle));
+fn SelectOption<Opt>(
+    #[prop(into)] label: String,
+    value: RwSignal<Opt>,
+    all: &'static [Opt],
+) -> impl IntoView
+where
+    Opt: Copy + FromStr + PartialEq + ToString + 'static,
+{
+    let on_change = move |ev| value.set(event_target_value(&ev).parse().unwrap_or(all[0]));
     view! {
         <select on:change=on_change>
-            <optgroup label="Anchor">
-                <option selected=move || anchor.get() == Anchor::Start>"Start"</option>
-                <option selected=move || anchor.get() == Anchor::Middle>"Middle"</option>
-                <option selected=move || anchor.get() == Anchor::End>"End"</option>
+            <optgroup label=label>
+                <For each=move || all key=|opt| opt.to_string() let:opt>
+                    <option selected=move || value.get() == *opt>{opt.to_string()}</option>
+                </For>
             </optgroup>
         </select>
+    }
+}
+
+macro_rules! select_impl {
+    ($fn:ident, $label:literal, $input:ident, $signal:ty, $all:ident) => {
+        #[component]
+        fn $fn($input: RwSignal<$signal>) -> impl IntoView {
+            view!(<SelectOption label=$label value=$input all=$all />)
+        }
+    };
+}
+
+select_impl!(SelectAnchor, "Anchor", anchor, Anchor, ALL_ANCHORS);
+select_impl!(SelectEdge, "Edge", edge, Edge, ALL_EDGES);
+select_impl!(
+    SelectAxisPlacement,
+    "Placement",
+    placement,
+    AxisPlacement,
+    ALL_AXIS_PLACEMENTS
+);
+
+#[component]
+fn RotatedLabelOpts(label: RotatedLabel) -> impl IntoView {
+    view! {
+        <SelectAnchor anchor=label.anchor />
+        <input type="text" value=label.text on:input=move |ev| label.text.set(event_target_value(&ev)) />
+    }
+}
+
+#[component]
+fn LegendOpts(legend: Legend) -> impl IntoView {
+    view! {
+        <SelectAnchor anchor=legend.anchor />
+    }
+}
+
+#[component]
+fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
+    view! {
+        <StepLabel value=ticks.min_chars step="1" min="0">"Min chars:"</StepLabel>
     }
 }
 
@@ -539,31 +574,9 @@ fn AxisMarkerOpts(marker: AxisMarker) -> impl IntoView {
 }
 
 #[component]
-fn SelectAxisPlacement(placement: RwSignal<AxisPlacement>) -> impl IntoView {
-    let on_change = move |ev| {
-        placement.set(
-            event_target_value(&ev)
-                .parse()
-                .unwrap_or(AxisPlacement::Top),
-        )
-    };
-    view! {
-        <select on:change=on_change>
-            <optgroup label="Placement">
-                <option selected=move || placement.get() == AxisPlacement::Top>"Top"</option>
-                <option selected=move || placement.get() == AxisPlacement::Right>"Right"</option>
-                <option selected=move || placement.get() == AxisPlacement::Bottom>"Bottom"</option>
-                <option selected=move || placement.get() == AxisPlacement::Left>"Left"</option>
-                <option selected=move || placement.get() == AxisPlacement::HorizontalZero>"Horizontal zero"</option>
-                <option selected=move || placement.get() == AxisPlacement::VerticalZero>"Vertical zero"</option>
-            </optgroup>
-        </select>
-    }
-}
-
-#[component]
 fn InsetLegendOpts(legend: InsetLegend) -> impl IntoView {
     view! {
-        "todo"
+        <SelectOption label="Edge" value=legend.edge all=ALL_EDGES />
+        <LegendOpts legend=legend.legend />
     }
 }

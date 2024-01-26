@@ -1,45 +1,48 @@
-use super::{InnerLayout, UseInner};
+use super::UseInner;
 use crate::{edge::Edge, state::State, Anchor, Legend};
 use leptos::*;
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct InsetLegend {
-    edge: Edge,
-    legend: Legend,
+    pub edge: RwSignal<Edge>,
+    pub legend: Legend,
 }
 
 impl InsetLegend {
-    fn layout<X: Clone, Y: Clone>(edge: Edge, anchor: Anchor) -> InnerLayout<X, Y> {
-        InnerLayout::Legend(Self {
-            edge,
-            legend: Legend::new(anchor),
-        })
+    pub fn new(edge: impl Into<RwSignal<Edge>>, legend: impl Into<Legend>) -> Self {
+        Self {
+            edge: edge.into(),
+            legend: legend.into(),
+        }
     }
 
-    pub fn top_left<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Top, Anchor::Start)
+    fn new_static(edge: Edge, anchor: Anchor) -> Self {
+        Self::new(edge, Legend::new(anchor))
     }
-    pub fn top<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Top, Anchor::Middle)
+    pub fn top_left() -> Self {
+        Self::new_static(Edge::Top, Anchor::Start)
     }
-    pub fn top_right<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Top, Anchor::End)
+    pub fn top() -> Self {
+        Self::new_static(Edge::Top, Anchor::Middle)
     }
-    pub fn bottom_left<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Bottom, Anchor::Start)
+    pub fn top_right() -> Self {
+        Self::new_static(Edge::Top, Anchor::End)
     }
-    pub fn bottom<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Bottom, Anchor::Middle)
+    pub fn bottom_left() -> Self {
+        Self::new_static(Edge::Bottom, Anchor::Start)
     }
-    pub fn bottom_right<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Bottom, Anchor::End)
+    pub fn bottom() -> Self {
+        Self::new_static(Edge::Bottom, Anchor::Middle)
     }
-    pub fn left<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Left, Anchor::Middle)
+    pub fn bottom_right() -> Self {
+        Self::new_static(Edge::Bottom, Anchor::End)
     }
-    pub fn right<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Right, Anchor::Middle)
+    pub fn left() -> Self {
+        Self::new_static(Edge::Left, Anchor::Middle)
+    }
+    pub fn right() -> Self {
+        Self::new_static(Edge::Right, Anchor::Middle)
     }
 }
 
@@ -63,7 +66,7 @@ fn InsetLegend<X: Clone + 'static, Y: Clone + 'static>(
         let height = height.get();
         let width = width.get();
         // Build legend bounds as an inset of the chart bounds
-        let (top, right, bottom, left) = match edge {
+        let (top, right, bottom, left) = match edge.get() {
             Edge::Top => (0.0, 0.0, inner.height() - height, 0.0),
             Edge::Bottom => (inner.height() - height, 0.0, 0.0, 0.0),
             Edge::Left => (0.0, inner.width() - width, 0.0, 0.0),

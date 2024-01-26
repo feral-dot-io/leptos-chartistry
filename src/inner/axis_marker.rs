@@ -1,4 +1,4 @@
-use super::{InnerLayout, UseInner};
+use super::UseInner;
 use crate::{colours::Colour, debug::DebugRect, state::State};
 use leptos::*;
 use std::{rc::Rc, str::FromStr};
@@ -22,34 +22,32 @@ pub enum AxisPlacement {
 }
 
 impl AxisMarker {
-    fn layout<X: Clone, Y: Clone>(
-        placement: impl Into<RwSignal<AxisPlacement>>,
-    ) -> InnerLayout<X, Y> {
-        InnerLayout::AxisMarker(Self {
+    pub fn new(placement: impl Into<RwSignal<AxisPlacement>>) -> Self {
+        Self {
             placement: placement.into(),
             colour: RwSignal::default(),
             arrow: true.into(),
             width: 1.0.into(),
-        })
+        }
     }
 
-    pub fn top_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(AxisPlacement::Top)
+    pub fn top_edge() -> Self {
+        Self::new(AxisPlacement::Top)
     }
-    pub fn right_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(AxisPlacement::Right)
+    pub fn right_edge() -> Self {
+        Self::new(AxisPlacement::Right)
     }
-    pub fn bottom_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(AxisPlacement::Bottom)
+    pub fn bottom_edge() -> Self {
+        Self::new(AxisPlacement::Bottom)
     }
-    pub fn left_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(AxisPlacement::Left)
+    pub fn left_edge() -> Self {
+        Self::new(AxisPlacement::Left)
     }
-    pub fn horizontal_zero<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(AxisPlacement::HorizontalZero)
+    pub fn horizontal_zero() -> Self {
+        Self::new(AxisPlacement::HorizontalZero)
     }
-    pub fn vertical_zero<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(AxisPlacement::VerticalZero)
+    pub fn vertical_zero() -> Self {
+        Self::new(AxisPlacement::VerticalZero)
     }
 }
 

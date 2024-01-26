@@ -68,7 +68,7 @@ impl Legend {
 #[component]
 pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     legend: Legend,
-    edge: Edge,
+    #[prop(into)] edge: MaybeSignal<Edge>,
     bounds: Memo<Bounds>,
     state: State<X, Y>,
 ) -> impl IntoView {
@@ -84,7 +84,7 @@ pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     // Don't apply padding on the edges of our axis i.e., maximise the space we extend over
     let padding = create_memo(move |_| {
         let padding = padding.get();
-        if edge.is_horizontal() {
+        if edge.get().is_horizontal() {
             Padding::sides(padding.top, 0.0, padding.bottom, 0.0)
         } else {
             Padding::sides(0.0, padding.right, 0.0, padding.left)
@@ -92,10 +92,27 @@ pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     });
     let inner = Signal::derive(move || padding.get().apply(bounds.get()));
 
-    let (body, anchor_dir) = if edge.is_horizontal() {
-        (view!(<HorizontalBody series=series state=state />), "row")
-    } else {
-        (view!(<VerticalBody series=series state=state />), "column")
+    let html = move || {
+        let edge = edge.get();
+        let body = if edge.is_horizontal() {
+            view!(<HorizontalBody series=series state=state.clone() />)
+        } else {
+            view!(<VerticalBody series=series state=state.clone() />)
+        };
+        view! {
+            <div
+                style="display: flex; height: 100%; overflow: auto;"
+                style:flex-direction={if edge.is_horizontal() { "row" } else { "column" }}
+                style:justify-content=move || anchor.get().css_justify_content()>
+                <table
+                    style="border-collapse: collapse; border-spacing: 0; margin: 0;"
+                    style:font-size=move || format!("{}px", font.get().height())>
+                    <tbody>
+                        {body}
+                    </tbody>
+                </table>
+            </div>
+        }
     };
 
     view! {
@@ -107,18 +124,7 @@ pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
                 width=move || bounds.get().width()
                 height=move || bounds.get().height()
                 style="overflow: visible;">
-                <div
-                    style="display: flex; height: 100%; overflow: auto;"
-                    style:flex-direction=anchor_dir
-                    style:justify-content=move || anchor.get().css_justify_content()>
-                    <table
-                        style="border-collapse: collapse; border-spacing: 0; margin: 0;"
-                        style:font-size=move || format!("{}px", font.get().height())>
-                        <tbody>
-                            {body}
-                        </tbody>
-                    </table>
-                </div>
+                {html}
             </foreignObject>
         </g>
     }

@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::bounds::Bounds;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -21,16 +23,27 @@ impl Edge {
     }
 }
 
-impl TryFrom<String> for Edge {
-    type Error = String;
+impl std::fmt::Display for Edge {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Top => write!(f, "top"),
+            Self::Right => write!(f, "right"),
+            Self::Bottom => write!(f, "bottom"),
+            Self::Left => write!(f, "left"),
+        }
+    }
+}
 
-    fn try_from(s: String) -> Result<Self, Self::Error> {
-        match s.as_str() {
+impl FromStr for Edge {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
             "top" => Ok(Self::Top),
             "right" => Ok(Self::Right),
             "bottom" => Ok(Self::Bottom),
             "left" => Ok(Self::Left),
-            _ => Err(s),
+            _ => Err(format!("unknown edge: `{}`", s)),
         }
     }
 }

@@ -3,7 +3,7 @@ pub mod grid_line;
 pub mod guide_line;
 pub mod legend;
 
-use crate::{colours::Colour, state::State};
+use crate::{colours::Colour, state::State, Tick};
 use leptos::*;
 use std::rc::Rc;
 
@@ -38,3 +38,19 @@ impl<X: Clone + PartialEq, Y: Clone + PartialEq> InnerLayout<X, Y> {
 pub trait UseInner<X, Y> {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View;
 }
+
+macro_rules! impl_into_inner_layout {
+    ($ty:ty, $enum:ident) => {
+        impl<X: Tick, Y: Tick> From<$ty> for InnerLayout<X, Y> {
+            fn from(inner: $ty) -> Self {
+                Self::$enum(inner)
+            }
+        }
+    };
+}
+impl_into_inner_layout!(axis_marker::AxisMarker, AxisMarker);
+//impl_into_inner_layout!(grid_line::GridLine<X>, HorizontalGridLine);
+//impl_into_inner_layout!(grid_line::GridLine<Y>, VerticalGridLine);
+//impl_into_inner_layout!(guide_line::GuideLine, XGuideLine);
+//impl_into_inner_layout!(guide_line::GuideLine, YGuideLine);
+impl_into_inner_layout!(legend::InsetLegend, Legend);

@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use super::{UseLayout, UseVerticalLayout};
 use crate::{
     bounds::Bounds,
@@ -68,12 +70,8 @@ impl RotatedLabel {
 }
 
 impl Anchor {
-    fn as_svg_attr(&self) -> &'static str {
-        match self {
-            Anchor::Start => "start",
-            Anchor::Middle => "middle",
-            Anchor::End => "end",
-        }
+    fn to_svg_attr(self) -> String {
+        self.to_string()
     }
 
     fn map_points(&self, left: f64, middle: f64, right: f64) -> f64 {
@@ -93,15 +91,25 @@ impl Anchor {
     }
 }
 
-impl TryFrom<String> for Anchor {
-    type Error = &'static str;
+impl FromStr for Anchor {
+    type Err = String;
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        match value.as_str() {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
             "start" => Ok(Anchor::Start),
             "middle" => Ok(Anchor::Middle),
             "end" => Ok(Anchor::End),
-            _ => Err("invalid anchor label"),
+            _ => Err(format!("unknown anchor: `{}`", s)),
+        }
+    }
+}
+
+impl std::fmt::Display for Anchor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Anchor::Start => write!(f, "start"),
+            Anchor::Middle => write!(f, "middle"),
+            Anchor::End => write!(f, "end"),
         }
     }
 }
@@ -144,7 +152,7 @@ pub fn RotatedLabel<X: 'static, Y: 'static>(
                 y=move || position.with(|(_, _, y)| y.to_string())
                 transform=move || position.with(|(rotate, x, y)| format!("rotate({rotate}, {x}, {y})"))
                 dominant-baseline="middle"
-                text-anchor=move || anchor.get().as_svg_attr()
+                text-anchor=move || anchor.get().to_svg_attr()
                 font-family=move || font.get().svg_family()
                 font-size=move || font.get().svg_size()>
                 {text}
