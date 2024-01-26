@@ -4,7 +4,6 @@ mod timestamps;
 pub use aligned_floats::AlignedFloats;
 pub use timestamps::{Period, PeriodicTimestamps};
 
-use crate::TickFormatFn;
 use std::rc::Rc;
 
 pub trait Generator {
@@ -93,22 +92,15 @@ impl<Tick> Span<Tick> for VerticalSpan {
     }
 }
 
-pub struct HorizontalSpan<Tick> {
-    format: TickFormatFn<Tick>,
+pub struct HorizontalSpan {
     avail_width: f64,
     font_width: f64,
     padding_width: f64,
 }
 
-impl<Tick> HorizontalSpan<Tick> {
-    pub fn new(
-        format: TickFormatFn<Tick>,
-        font_width: f64,
-        padding_width: f64,
-        avail_width: f64,
-    ) -> Self {
+impl HorizontalSpan {
+    pub fn new(font_width: f64, padding_width: f64, avail_width: f64) -> Self {
         Self {
-            format,
             avail_width,
             font_width,
             padding_width,
@@ -116,7 +108,7 @@ impl<Tick> HorizontalSpan<Tick> {
     }
 }
 
-impl<Tick> Span<Tick> for HorizontalSpan<Tick> {
+impl<Tick> Span<Tick> for HorizontalSpan {
     fn length(&self) -> f64 {
         self.avail_width
     }
@@ -124,7 +116,7 @@ impl<Tick> Span<Tick> for HorizontalSpan<Tick> {
     fn consumed(&self, state: &dyn GenState<Tick = Tick>, ticks: &[Tick]) -> f64 {
         let max_chars = ticks
             .iter()
-            .map(|tick| (self.format)(state, tick).len())
+            .map(|tick| state.format(tick).len())
             .max()
             .unwrap_or_default();
         let max_label_width = max_chars as f64 * self.font_width + self.padding_width * 2.0;

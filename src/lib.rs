@@ -32,4 +32,4 @@ pub use layout::{
 pub use overlay::tooltip::Tooltip;
 pub use padding::Padding;
 pub use series::{Line, Series, Stack};
-pub use ticks::{Period, Tick, TickFormatFn, TickState};
+pub use ticks::{Period, Tick, TickState};

@@ -3,7 +3,6 @@ use crate::{
     layout::Layout,
     series::{Snippet, UseLine},
     state::{PreState, State},
-    ticks::TickFormatFn,
     TickLabels, TickState,
 };
 use leptos::*;
@@ -13,6 +12,7 @@ use std::{
     rc::Rc,
 };
 
+type TickFormatFn<Tick> = std::rc::Rc<dyn Fn(&dyn TickState<Tick = Tick>, &Tick) -> String>;
 type SortByFn<Y> = dyn Fn(&mut [(UseLine, Option<Y>)]);
 
 #[derive(Clone)]

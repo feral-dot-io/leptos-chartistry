@@ -124,15 +124,9 @@ fn scale10(range: f64) -> isize {
 mod tests {
     use super::super::HorizontalSpan;
     use super::*;
-    use std::rc::Rc;
 
     fn mk_span(width: f64) -> Box<dyn Span<f64>> {
-        Box::new(HorizontalSpan::new(
-            Rc::new(|s, t| s.format(t)),
-            1.0,
-            0.0,
-            width + 0.1,
-        ))
+        Box::new(HorizontalSpan::new(1.0, 0.0, width + 0.1))
     }
 
     fn assert_precision(first: f64, last: f64, width: f64, scale: isize, count: usize) {

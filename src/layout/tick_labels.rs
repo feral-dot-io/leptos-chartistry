@@ -5,8 +5,7 @@ use crate::{
     edge::Edge,
     state::{PreState, State},
     ticks::{
-        AlignedFloats, GeneratedTicks, HorizontalSpan, PeriodicTimestamps, TickFormatFn, TickGen,
-        VerticalSpan,
+        AlignedFloats, GeneratedTicks, HorizontalSpan, PeriodicTimestamps, TickGen, VerticalSpan,
     },
     Period,
 };
@@ -18,7 +17,6 @@ use std::rc::Rc;
 #[derive(Clone)]
 pub struct TickLabels<Tick: 'static> {
     pub min_chars: RwSignal<usize>,
-    pub format: RwSignal<TickFormatFn<Tick>>,
     generator: Rc<dyn TickGen<Tick = Tick>>,
 }
 
@@ -55,22 +53,16 @@ impl<Tick> TickLabels<Tick> {
     fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
             min_chars: 0.into(),
-            format: create_rw_signal(Self::default_tick_format()),
             generator: Rc::new(gen),
         }
     }
 
-    pub fn default_tick_format() -> TickFormatFn<Tick> {
-        Rc::new(|s, t| s.format(t))
-    }
-
     fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
-        let format = self.format;
         Signal::derive(move || {
             gen.with(|GeneratedTicks { ticks, state }| {
                 ticks
                     .iter()
-                    .map(|tick| (state.position(tick), (format.get())(&**state, tick)))
+                    .map(|tick| (state.position(tick), (state.format(tick))))
                     .collect()
             })
         })
@@ -85,7 +77,6 @@ impl<X: PartialEq> TickLabels<X> {
     ) -> Signal<GeneratedTicks<X>> {
         let PreState { font, padding, .. } = *state;
         let range_x = state.data.range_x;
-        let format = self.format;
         let gen = self.generator.clone();
         create_memo(move |_| {
             range_x.with(|range_x| {
@@ -94,12 +85,8 @@ impl<X: PartialEq> TickLabels<X> {
                     .map(|(first, last)| {
                         let font_width = font.get().width();
                         let padding_width = padding.get().width();
-                        let span = HorizontalSpan::new(
-                            format.get().clone(),
-                            font_width,
-                            padding_width,
-                            avail_width.get(),
-                        );
+                        let span =
+                            HorizontalSpan::new(font_width, padding_width, avail_width.get());
                         gen.generate(first, last, Box::new(span))
                     })
                     .unwrap_or_else(GeneratedTicks::none)

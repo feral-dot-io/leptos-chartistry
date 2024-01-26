@@ -5,8 +5,6 @@ pub use gen::{
     Period, PeriodicTimestamps, VerticalSpan,
 };
 
-pub type TickFormatFn<Tick> = std::rc::Rc<dyn Fn(&dyn gen::GenState<Tick = Tick>, &Tick) -> String>;
-
 use chrono::prelude::*;
 
 pub trait Tick: Clone + PartialEq + PartialOrd + 'static {
