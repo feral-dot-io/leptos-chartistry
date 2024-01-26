@@ -17,6 +17,17 @@ enum EdgeOption {
     TickLabels,
 }
 
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+enum InnerOption {
+    #[default]
+    AxisMarker,
+    //HorizontalGridLine,
+    //VerticalGridLine,
+    //XGuideLine,
+    //YGuideLine,
+    Legend,
+}
+
 fn main() {
     _ = console_log::init_with_level(log::Level::Debug);
     console_error_panic_hook::set_once();
@@ -85,6 +96,8 @@ pub fn App() -> impl IntoView {
     let right = Options::create_signal(vec![Legend::middle()]);
     let bottom = Options::create_signal(vec![TickLabels::timestamps()]);
     let left = Options::create_signal(vec![TickLabels::aligned_floats()]);
+    let inner: RwSignal<Options<InnerLayout<DateTime<Utc>, f64>>> =
+        Options::create_signal(vec![AxisMarker::top_edge()]);
 
     view! {
         <h1>"Chartistry"</h1>
@@ -143,6 +156,7 @@ pub fn App() -> impl IntoView {
         <ViewEdgeLayoutOpts title="Right" options=right />
         <ViewEdgeLayoutOpts title="Bottom" options=bottom />
         <ViewEdgeLayoutOpts title="Left" options=left />
+        <ViewInnerOpts options=inner />
 
         {move || view!{
             <Chart
@@ -154,7 +168,7 @@ pub fn App() -> impl IntoView {
                 right=right.get().into_inner()
                 bottom=bottom.get().into_inner()
                 left=left.get().into_inner()
-                //inner=inner
+                inner=inner.get().into_inner()
                 //tooltip=tooltip
                 series=series.clone()
                 data=data
@@ -169,13 +183,8 @@ fn ViewEdgeLayoutOpts<Tick: crate::Tick>(
     options: RwSignal<Options<EdgeLayout<Tick>>>,
 ) -> impl IntoView {
     let (option, set_option) = create_signal(EdgeOption::default());
-    let on_label_change = move |ev| {
-        set_option.set(
-            event_target_value(&ev)
-                .parse::<EdgeOption>()
-                .unwrap_or_default(),
-        )
-    };
+    let on_label_change =
+        move |ev| set_option.set(event_target_value(&ev).parse().unwrap_or_default());
 
     let on_move_up = move |index| move |_| options.set(options.get().move_up(index));
     let on_move_down = move |index| move |_| options.set(options.get().move_down(index));
@@ -205,7 +214,7 @@ fn ViewEdgeLayoutOpts<Tick: crate::Tick>(
     });
 
     view! {
-        <h2>{title}</h2>
+        <h2>{title}" options"</h2>
         <table>
             <tbody>
                 {move || existing_tr}
@@ -213,6 +222,59 @@ fn ViewEdgeLayoutOpts<Tick: crate::Tick>(
                     <td>
                         <select on:change=on_label_change>
                             <For each=EdgeOption::all key=|opt| opt.to_string() let:opt>
+                                <option selected=move || option.get() == *opt>{opt.to_string()}</option>
+                            </For>
+                        </select>
+                    </td>
+                    <td colspan="4"><button on:click=on_new_line>"Add option"</button></td>
+                </tr>
+            </tbody>
+        </table>
+    }
+}
+
+#[component]
+fn ViewInnerOpts<X: Tick, Y: Tick>(options: RwSignal<Options<InnerLayout<X, Y>>>) -> impl IntoView {
+    let (option, set_option) = create_signal(InnerOption::default());
+    let on_label_change =
+        move |ev| set_option.set(event_target_value(&ev).parse().unwrap_or_default());
+
+    let on_move_up = move |index| move |_| options.set(options.get().move_up(index));
+    let on_move_down = move |index| move |_| options.set(options.get().move_down(index));
+    let on_remove = move |index| move |_| options.set(options.get().remove(index));
+    let on_new_line = move |_| {
+        options.set(options.get().add(option.get()));
+    };
+
+    let existing_tr = Signal::derive(move || {
+        let options = options.get().into_inner();
+        let last = options.len().saturating_sub(1);
+        options
+            .into_iter()
+            .enumerate()
+            .map(|(i, opt)| {
+                view! {
+                    <tr>
+                        <td>{InnerOption::from(&opt).to_string()}</td>
+                        <td><InnerLayoutOpts option=opt /></td>
+                        <td>{(i != 0).then_some(view!(<button on:click=on_move_up(i)>"↑"</button>))}</td>
+                        <td>{(i != last).then_some(view!(<button on:click=on_move_down(i)>"↓"</button>))}</td>
+                        <td><button on:click=on_remove(i)>"x"</button></td>
+                    </tr>
+                }
+            })
+            .collect_view()
+    });
+
+    view! {
+        <h2>"Inner options"</h2>
+        <table>
+            <tbody>
+                {move || existing_tr}
+                <tr>
+                    <td>
+                        <select on:change=on_label_change>
+                            <For each=InnerOption::all key=|opt| opt.to_string() let:opt>
                                 <option selected=move || option.get() == *opt>{opt.to_string()}</option>
                             </For>
                         </select>
@@ -270,12 +332,27 @@ impl EdgeOption {
     }
 }
 
+impl InnerOption {
+    pub fn all() -> &'static [Self] {
+        &[Self::AxisMarker, Self::Legend]
+    }
+}
+
 impl std::fmt::Display for EdgeOption {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             EdgeOption::RotatedLabel => write!(f, "Label"),
             EdgeOption::Legend => write!(f, "Legend"),
             EdgeOption::TickLabels => write!(f, "Ticks"),
+        }
+    }
+}
+
+impl std::fmt::Display for InnerOption {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InnerOption::AxisMarker => write!(f, "Axis marker"),
+            InnerOption::Legend => write!(f, "Legend"),
         }
     }
 }
@@ -288,7 +365,19 @@ impl FromStr for EdgeOption {
             "label" => Ok(EdgeOption::RotatedLabel),
             "legend" => Ok(EdgeOption::Legend),
             "ticks" => Ok(EdgeOption::TickLabels),
-            _ => Err("unknown layout option"),
+            _ => Err("unknown edge layout option"),
+        }
+    }
+}
+
+impl FromStr for InnerOption {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "axis marker" => Ok(InnerOption::AxisMarker),
+            "legend" => Ok(InnerOption::Legend),
+            _ => Err("unknown inner option"),
         }
     }
 }
@@ -304,12 +393,32 @@ impl<Tick> From<&EdgeLayout<Tick>> for EdgeOption {
     }
 }
 
+impl<X: Tick, Y: Tick> From<&InnerLayout<X, Y>> for InnerOption {
+    fn from(layout: &InnerLayout<X, Y>) -> Self {
+        match layout {
+            InnerLayout::AxisMarker(_) => Self::AxisMarker,
+            InnerLayout::Legend(_) => Self::Legend,
+            _ => InnerOption::default(),
+        }
+    }
+}
+
 impl<Tick: crate::Tick> From<EdgeOption> for EdgeLayout<Tick> {
     fn from(option: EdgeOption) -> Self {
         match option {
             EdgeOption::RotatedLabel => Self::RotatedLabel(RotatedLabel::middle("")),
             EdgeOption::Legend => Self::Legend(Legend::middle()),
             EdgeOption::TickLabels => Self::TickLabels(TickLabels::default()),
+        }
+    }
+}
+
+impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
+    fn from(option: InnerOption) -> Self {
+        match option {
+            // TODO
+            InnerOption::AxisMarker => AxisMarker::top_edge(),
+            InnerOption::Legend => InsetLegend::top_left(),
         }
     }
 }
@@ -334,6 +443,21 @@ fn EdgeLayoutOpts<Tick: 'static>(option: EdgeLayout<Tick>) -> impl IntoView {
 }
 
 #[component]
+fn InnerLayoutOpts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoView {
+    match option {
+        InnerLayout::AxisMarker(marker) => view! {
+            <AxisMarkerOpts marker=marker />
+        }
+        .into_view(),
+        InnerLayout::Legend(legend) => view! {
+            <InsetLegendOpts legend=legend />
+        }
+        .into_view(),
+        _ => ().into_view(),
+    }
+}
+
+#[component]
 fn RotatedLabelOpts(label: RotatedLabel) -> impl IntoView {
     view! {
         <SelectAnchor anchor=label.anchor />
@@ -350,14 +474,35 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 
 #[component]
 fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
-    let on_min_chars = move |ev| {
-        let min = event_target_value(&ev).parse().unwrap_or(0);
-        ticks.min_chars.set(min)
+    view! {
+        <StepLabel value=ticks.min_chars step="1" min="0">"Min chars:"</StepLabel>
+    }
+}
+
+#[component]
+fn StepLabel<T: Clone + Default + IntoAttribute + FromStr + 'static>(
+    value: RwSignal<T>,
+    #[prop(into)] step: String,
+    #[prop(into, optional)] min: Option<String>,
+    #[prop(into, optional)] max: Option<String>,
+    children: Children,
+) -> impl IntoView {
+    let on_input = move |ev| {
+        let min = event_target_value(&ev).parse().unwrap_or_default();
+        value.set(min)
     };
     view! {
         <label>
-            "Min chars: "
-            <input type="number" step="1" min="0" value=ticks.min_chars style="width: 8ch;" on:input=on_min_chars />
+            {children()}
+            ", "
+            <input
+                type="number"
+                style="width: 8ch;"
+                step=step
+                min=min
+                max=max
+                value=value
+                on:input=on_input />
         </label>
     }
 }
@@ -374,5 +519,51 @@ fn SelectAnchor(anchor: RwSignal<Anchor>) -> impl IntoView {
                 <option selected=move || anchor.get() == Anchor::End>"End"</option>
             </optgroup>
         </select>
+    }
+}
+
+#[component]
+fn AxisMarkerOpts(marker: AxisMarker) -> impl IntoView {
+    let on_arrow = move |ev| marker.arrow.set(event_target_checked(&ev));
+    view! {
+        <SelectAxisPlacement placement=marker.placement />
+        "colour: TODO"
+        ", "
+        <label>
+            <input type="checkbox" checked=marker.arrow on:input=on_arrow />
+            "arrow"
+        </label>
+        ", "
+        <StepLabel value=marker.width step="0.1" min="0.1">"width:"</StepLabel>
+    }
+}
+
+#[component]
+fn SelectAxisPlacement(placement: RwSignal<AxisPlacement>) -> impl IntoView {
+    let on_change = move |ev| {
+        placement.set(
+            event_target_value(&ev)
+                .parse()
+                .unwrap_or(AxisPlacement::Top),
+        )
+    };
+    view! {
+        <select on:change=on_change>
+            <optgroup label="Placement">
+                <option selected=move || placement.get() == AxisPlacement::Top>"Top"</option>
+                <option selected=move || placement.get() == AxisPlacement::Right>"Right"</option>
+                <option selected=move || placement.get() == AxisPlacement::Bottom>"Bottom"</option>
+                <option selected=move || placement.get() == AxisPlacement::Left>"Left"</option>
+                <option selected=move || placement.get() == AxisPlacement::HorizontalZero>"Horizontal zero"</option>
+                <option selected=move || placement.get() == AxisPlacement::VerticalZero>"Vertical zero"</option>
+            </optgroup>
+        </select>
+    }
+}
+
+#[component]
+fn InsetLegendOpts(legend: InsetLegend) -> impl IntoView {
+    view! {
+        "todo"
     }
 }

@@ -69,7 +69,7 @@ impl Colour {
     }
 
     pub(crate) fn signal_option(
-        colour: MaybeSignal<Option<Colour>>,
+        colour: impl SignalGet<Value = Option<Colour>> + 'static,
         fallback: Colour,
     ) -> Signal<Colour> {
         Signal::derive(move || colour.get().unwrap_or(fallback))

@@ -1,69 +1,86 @@
 use super::{InnerLayout, UseInner};
-use crate::{colours::Colour, debug::DebugRect, edge::Edge, state::State};
+use crate::{colours::Colour, debug::DebugRect, state::State};
 use leptos::*;
-use std::rc::Rc;
+use std::{rc::Rc, str::FromStr};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AxisMarker {
-    edge: MaybeSignal<Edge>,
-    placement: MaybeSignal<Placement>,
-    colour: MaybeSignal<Option<Colour>>,
-    arrow: MaybeSignal<bool>,
-    width: MaybeSignal<f64>,
+    pub placement: RwSignal<AxisPlacement>,
+    pub colour: RwSignal<Option<Colour>>,
+    pub arrow: RwSignal<bool>,
+    pub width: RwSignal<f64>,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-enum Placement {
-    Edge,
-    Zero,
+pub enum AxisPlacement {
+    Top,
+    Right,
+    Bottom,
+    Left,
+    HorizontalZero,
+    VerticalZero,
 }
 
 impl AxisMarker {
     fn layout<X: Clone, Y: Clone>(
-        edge: impl Into<MaybeSignal<Edge>>,
-        placement: impl Into<MaybeSignal<Placement>>,
+        placement: impl Into<RwSignal<AxisPlacement>>,
     ) -> InnerLayout<X, Y> {
         InnerLayout::AxisMarker(Self {
-            edge: edge.into(),
             placement: placement.into(),
-            colour: MaybeSignal::default(),
+            colour: RwSignal::default(),
             arrow: true.into(),
             width: 1.0.into(),
         })
     }
 
     pub fn top_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Top, Placement::Edge)
+        Self::layout(AxisPlacement::Top)
     }
     pub fn right_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Right, Placement::Edge)
+        Self::layout(AxisPlacement::Right)
     }
     pub fn bottom_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Bottom, Placement::Edge)
+        Self::layout(AxisPlacement::Bottom)
     }
     pub fn left_edge<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Left, Placement::Edge)
+        Self::layout(AxisPlacement::Left)
     }
     pub fn horizontal_zero<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Bottom, Placement::Zero)
+        Self::layout(AxisPlacement::HorizontalZero)
     }
     pub fn vertical_zero<X: Clone, Y: Clone>() -> InnerLayout<X, Y> {
-        Self::layout(Edge::Left, Placement::Zero)
+        Self::layout(AxisPlacement::VerticalZero)
     }
+}
 
-    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
-        self.colour = colour.into();
-        self
+impl std::fmt::Display for AxisPlacement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use AxisPlacement::*;
+        match self {
+            Top => write!(f, "top"),
+            Right => write!(f, "right"),
+            Bottom => write!(f, "bottom"),
+            Left => write!(f, "left"),
+            HorizontalZero => write!(f, "horizontal zero"),
+            VerticalZero => write!(f, "vertical zero"),
+        }
     }
+}
 
-    pub fn set_arrow(mut self, arrow: impl Into<MaybeSignal<bool>>) -> Self {
-        self.arrow = arrow.into();
-        self
-    }
+impl FromStr for AxisPlacement {
+    type Err = String;
 
-    pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
-        self.width = width.into();
-        self
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use AxisPlacement::*;
+        match s.to_lowercase().as_str() {
+            "top" => Ok(Top),
+            "right" => Ok(Right),
+            "bottom" => Ok(Bottom),
+            "left" => Ok(Left),
+            "horizontal zero" => Ok(HorizontalZero),
+            "vertical zero" => Ok(VerticalZero),
+            _ => Err(format!("unknown axis placement: `{}`", s)),
+        }
     }
 }
 
@@ -87,23 +104,14 @@ pub fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>
             inner.bottom_y(),
             inner.left_x(),
         );
+        let (zero_x, zero_y) = zero.get();
         let coords @ (x1, y1, x2, y2) = match marker.placement.get() {
-            Placement::Edge => match marker.edge.get() {
-                Edge::Top => (left, top, right, top),
-                Edge::Bottom => (left, bottom, right, bottom),
-                Edge::Left => (left, bottom, left, top),
-                Edge::Right => (right, bottom, right, top),
-            },
-
-            Placement::Zero => {
-                let (zero_x, zero_y) = zero.get();
-                match marker.edge.get() {
-                    Edge::Top => (left, zero_y, right, zero_y),
-                    Edge::Bottom => (left, zero_y, right, zero_y),
-                    Edge::Left => (zero_x, bottom, zero_x, top),
-                    Edge::Right => (zero_x, bottom, zero_x, top),
-                }
-            }
+            AxisPlacement::Top => (left, top, right, top),
+            AxisPlacement::Bottom => (left, bottom, right, bottom),
+            AxisPlacement::Left => (left, bottom, left, top),
+            AxisPlacement::Right => (right, bottom, right, top),
+            AxisPlacement::HorizontalZero => (left, zero_y, right, zero_y),
+            AxisPlacement::VerticalZero => (zero_x, bottom, zero_x, top),
         };
         let in_bounds = inner.contains(x1, y1) && inner.contains(x2, y2);
         (in_bounds, coords)
