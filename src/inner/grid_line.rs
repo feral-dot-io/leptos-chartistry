@@ -36,8 +36,8 @@ macro_rules! impl_grid_line {
     };
 }
 
-impl_grid_line!(HorizontalGridLine);
-impl_grid_line!(VerticalGridLine);
+impl_grid_line!(XGridLine);
+impl_grid_line!(YGridLine);
 
 macro_rules! impl_use_grid_line {
     ($name:ident) => {
@@ -59,14 +59,14 @@ macro_rules! impl_use_grid_line {
     };
 }
 
-impl_use_grid_line!(UseHorizontalGridLine);
-impl_use_grid_line!(UseVerticalGridLine);
+impl_use_grid_line!(UseXGridLine);
+impl_use_grid_line!(UseYGridLine);
 
-impl<X: Tick> HorizontalGridLine<X> {
+impl<X: Tick> XGridLine<X> {
     pub(crate) fn use_horizontal<Y>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_width = Signal::derive(move || with!(|inner| inner.width()));
-        Rc::new(UseHorizontalGridLine {
+        Rc::new(UseXGridLine {
             width: self.width,
             colour: self.colour,
             ticks: self.ticks.generate_x(&state.pre, avail_width),
@@ -74,11 +74,11 @@ impl<X: Tick> HorizontalGridLine<X> {
     }
 }
 
-impl<Y: Tick> VerticalGridLine<Y> {
+impl<Y: Tick> YGridLine<Y> {
     pub(crate) fn use_vertical<X>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         let inner = state.layout.inner;
         let avail_height = Signal::derive(move || with!(|inner| inner.height()));
-        Rc::new(UseVerticalGridLine {
+        Rc::new(UseYGridLine {
             width: self.width,
             colour: self.colour,
             ticks: self.ticks.generate_y(&state.pre, avail_height),
@@ -86,21 +86,21 @@ impl<Y: Tick> VerticalGridLine<Y> {
     }
 }
 
-impl<X, Y> UseInner<X, Y> for UseHorizontalGridLine<X> {
+impl<X, Y> UseInner<X, Y> for UseXGridLine<X> {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <ViewHorizontalGridLine line=(*self).clone() state=state /> )
+        view!( <ViewXGridLine line=(*self).clone() state=state /> )
     }
 }
 
-impl<X, Y> UseInner<X, Y> for UseVerticalGridLine<Y> {
+impl<X, Y> UseInner<X, Y> for UseYGridLine<Y> {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <ViewVerticalGridLine line=(*self).clone() state=state /> )
+        view!( <ViewYGridLine line=(*self).clone() state=state /> )
     }
 }
 
 #[component]
-fn ViewHorizontalGridLine<X: 'static, Y: 'static>(
-    line: UseHorizontalGridLine<X>,
+fn ViewXGridLine<X: 'static, Y: 'static>(
+    line: UseXGridLine<X>,
     state: State<X, Y>,
 ) -> impl IntoView {
     let debug = state.pre.debug;
@@ -131,8 +131,8 @@ fn ViewHorizontalGridLine<X: 'static, Y: 'static>(
 }
 
 #[component]
-fn ViewVerticalGridLine<X: 'static, Y: 'static>(
-    line: UseVerticalGridLine<Y>,
+fn ViewYGridLine<X: 'static, Y: 'static>(
+    line: UseYGridLine<Y>,
     state: State<X, Y>,
 ) -> impl IntoView {
     let debug = state.pre.debug;

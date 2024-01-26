@@ -385,8 +385,8 @@ impl<X: Tick, Y: Tick> From<&InnerLayout<X, Y>> for InnerOption {
     fn from(layout: &InnerLayout<X, Y>) -> Self {
         match layout {
             InnerLayout::AxisMarker(_) => Self::AxisMarker,
-            InnerLayout::HorizontalGridLine(_) => Self::HorizontalGridLine,
-            InnerLayout::VerticalGridLine(_) => Self::VerticalGridLine,
+            InnerLayout::XGridLine(_) => Self::HorizontalGridLine,
+            InnerLayout::YGridLine(_) => Self::VerticalGridLine,
             InnerLayout::Legend(_) => Self::Legend,
             _ => InnerOption::default(),
         }
@@ -404,8 +404,8 @@ impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     fn from(option: InnerOption) -> Self {
         match option {
             InnerOption::AxisMarker => AxisMarker::top_edge().into(),
-            InnerOption::HorizontalGridLine => HorizontalGridLine::default().into(),
-            InnerOption::VerticalGridLine => VerticalGridLine::default().into(),
+            InnerOption::HorizontalGridLine => XGridLine::default().into(),
+            InnerOption::VerticalGridLine => YGridLine::default().into(),
             InnerOption::Legend => InsetLegend::top_left().into(),
         }
     }

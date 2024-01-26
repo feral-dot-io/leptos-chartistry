@@ -15,8 +15,8 @@ pub const DEFAULT_COLOUR_GRID_LINE: Colour = Colour::new(0xEF, 0xF2, 0xFA); // L
 #[derive(Clone)]
 pub enum InnerLayout<X: Clone + 'static, Y: Clone + 'static> {
     AxisMarker(axis_marker::AxisMarker),
-    HorizontalGridLine(grid_line::HorizontalGridLine<X>),
-    VerticalGridLine(grid_line::VerticalGridLine<Y>),
+    XGridLine(grid_line::XGridLine<X>),
+    YGridLine(grid_line::YGridLine<Y>),
     XGuideLine(guide_line::GuideLine),
     YGuideLine(guide_line::GuideLine),
     Legend(legend::InsetLegend),
@@ -26,8 +26,8 @@ impl<X: Tick, Y: Tick> InnerLayout<X, Y> {
     pub fn into_use(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         match self {
             Self::AxisMarker(inner) => Rc::new(inner),
-            Self::HorizontalGridLine(inner) => inner.use_horizontal(state),
-            Self::VerticalGridLine(inner) => inner.use_vertical(state),
+            Self::XGridLine(inner) => inner.use_horizontal(state),
+            Self::YGridLine(inner) => inner.use_vertical(state),
             Self::XGuideLine(inner) => inner.use_x(),
             Self::YGuideLine(inner) => inner.use_y(),
             Self::Legend(inner) => Rc::new(inner),
@@ -49,8 +49,8 @@ macro_rules! impl_into_inner_layout {
     };
 }
 impl_into_inner_layout!(axis_marker::AxisMarker, AxisMarker);
-impl_into_inner_layout!(grid_line::HorizontalGridLine<X>, HorizontalGridLine);
-impl_into_inner_layout!(grid_line::VerticalGridLine<Y>, VerticalGridLine);
+impl_into_inner_layout!(grid_line::XGridLine<X>, XGridLine);
+impl_into_inner_layout!(grid_line::YGridLine<Y>, YGridLine);
 //impl_into_inner_layout!(guide_line::GuideLine, XGuideLine);
 //impl_into_inner_layout!(guide_line::GuideLine, YGuideLine);
 impl_into_inner_layout!(legend::InsetLegend, Legend);
