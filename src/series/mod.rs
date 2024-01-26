@@ -4,7 +4,7 @@ mod use_data;
 
 pub use line::{Line, Snippet, UseLine};
 pub use stack::Stack;
-pub use use_data::{Position, RenderData, UseData};
+pub use use_data::{RenderData, UseData};
 
 use crate::colours::{self, Colour, ColourScheme};
 use leptos::signal_prelude::*;

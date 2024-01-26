@@ -8,12 +8,12 @@ use crate::{
     series::{RenderData, UseData},
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
-    AspectRatio, Font, Padding, Position, Series,
+    AspectRatio, Font, Padding, Series, Tick,
 };
 use leptos::{html::Div, *};
 
 #[component]
-pub fn Chart<T, X, Y>(
+pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     #[prop(into)] aspect_ratio: MaybeSignal<AspectRatio>,
     #[prop(into)] font: MaybeSignal<Font>,
     #[prop(into, optional)] debug: MaybeSignal<bool>,
@@ -29,12 +29,7 @@ pub fn Chart<T, X, Y>(
 
     #[prop(into)] series: Series<T, X, Y>,
     #[prop(into)] data: Signal<Vec<T>>,
-) -> impl IntoView
-where
-    T: 'static,
-    X: Clone + PartialEq + PartialOrd + Position + 'static,
-    Y: Clone + PartialEq + PartialOrd + Position + 'static,
-{
+) -> impl IntoView {
     let root = create_node_ref::<Div>();
     let watch = use_watched_node(root);
 
@@ -88,7 +83,7 @@ where
 }
 
 #[component]
-fn RenderChart<'a, X, Y>(
+fn RenderChart<'a, X: Tick, Y: Tick>(
     watch: UseWatchedNode,
     pre_state: PreState<X, Y>,
     aspect_ratio: Memo<AspectRatioCalc>,
@@ -98,11 +93,7 @@ fn RenderChart<'a, X, Y>(
     left: &'a [EdgeLayout<Y>],
     inner: Vec<InnerLayout<X, Y>>,
     tooltip: Option<Tooltip<X, Y>>,
-) -> impl IntoView
-where
-    X: Clone + PartialEq + 'static,
-    Y: Clone + PartialEq + 'static,
-{
+) -> impl IntoView {
     let debug = pre_state.debug;
 
     // Compose edges

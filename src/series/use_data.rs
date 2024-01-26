@@ -1,5 +1,4 @@
-use crate::{bounds::Bounds, series::UseLine, state::State, Series};
-use chrono::prelude::*;
+use crate::{bounds::Bounds, series::UseLine, state::State, Series, Tick};
 use leptos::*;
 use std::collections::HashMap;
 
@@ -19,12 +18,8 @@ pub struct UseData<X: 'static, Y: 'static> {
     pub position_range: Memo<Bounds>,
 }
 
-impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> UseData<X, Y> {
-    pub fn new<T: 'static>(series: Series<T, X, Y>, data: Signal<Vec<T>>) -> UseData<X, Y>
-    where
-        X: PartialOrd + Position,
-        Y: PartialOrd + Position,
-    {
+impl<X: Tick, Y: Tick> UseData<X, Y> {
+    pub fn new<T: 'static>(series: Series<T, X, Y>, data: Signal<Vec<T>>) -> UseData<X, Y> {
         let lines = series.to_use_lines();
         let Series {
             get_x,
@@ -279,22 +274,6 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
                 })
                 .collect::<Vec<_>>()
         })
-    }
-}
-
-pub trait Position {
-    fn position(&self) -> f64;
-}
-
-impl Position for f64 {
-    fn position(&self) -> f64 {
-        *self
-    }
-}
-
-impl<Tz: TimeZone> Position for DateTime<Tz> {
-    fn position(&self) -> f64 {
-        self.timestamp() as f64 + (self.timestamp_subsec_nanos() as f64 / 1e9)
     }
 }
 
