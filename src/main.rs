@@ -158,7 +158,7 @@ pub fn App() -> impl IntoView {
 }
 
 #[component]
-fn ViewLayoutOptions<Tick: Clone + 'static>(
+fn ViewLayoutOptions<Tick: crate::Tick>(
     title: &'static str,
     options: RwSignal<Options<EdgeLayout<Tick>>>,
 ) -> impl IntoView {
@@ -284,14 +284,14 @@ impl<Tick: Clone> EdgeLayout<Tick> {
     }
 }
 
-impl<Tick> TryFrom<String> for EdgeLayout<Tick> {
+impl<Tick: crate::Tick> TryFrom<String> for EdgeLayout<Tick> {
     type Error = &'static str;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
         match s.to_lowercase().as_str() {
             "label" => Ok(EdgeLayout(RotatedLabel::middle("").into())),
             "legend" => Ok(EdgeLayout(Legend::middle().into())),
-            //"ticks" => Ok(EdgeLayout(TickLabels::aligned_floats().into())), TODO
+            "ticks" => Ok(EdgeLayout(TickLabels::default().into())),
             _ => Err("unknown layout option"),
         }
     }

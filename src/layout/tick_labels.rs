@@ -24,6 +24,12 @@ pub struct UseTickLabels {
     ticks: Signal<Vec<(f64, String)>>,
 }
 
+impl<Tick: crate::Tick> Default for TickLabels<Tick> {
+    fn default() -> Self {
+        Self::from_generator(Tick::default_generator())
+    }
+}
+
 impl TickLabels<f64> {
     pub fn aligned_floats() -> Self {
         Self::from_generator(AlignedFloats::default())
