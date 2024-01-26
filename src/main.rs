@@ -1,6 +1,7 @@
 use chrono::prelude::*;
 use leptos::*;
 use leptos_chartistry::*;
+use std::str::FromStr;
 
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
@@ -8,8 +9,13 @@ const DEFAULT_FONT_WIDTH: f64 = 10.0;
 #[derive(Clone)]
 struct Options<Opt>(Vec<Opt>);
 
-#[derive(Clone)]
-struct EdgeLayout<Tick: 'static>(leptos_chartistry::EdgeLayout<Tick>);
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+enum EdgeOption {
+    #[default]
+    RotatedLabel,
+    Legend,
+    TickLabels,
+}
 
 fn main() {
     _ = console_log::init_with_level(log::Level::Debug);
@@ -133,10 +139,10 @@ pub fn App() -> impl IntoView {
             </p>
         </form>
 
-        <ViewLayoutOptions title="Top" options=top />
-        <ViewLayoutOptions title="Right" options=right />
-        <ViewLayoutOptions title="Bottom" options=bottom />
-        <ViewLayoutOptions title="Left" options=left />
+        <ViewEdgeLayoutOpts title="Top" options=top />
+        <ViewEdgeLayoutOpts title="Right" options=right />
+        <ViewEdgeLayoutOpts title="Bottom" options=bottom />
+        <ViewEdgeLayoutOpts title="Left" options=left />
 
         {move || view!{
             <Chart
@@ -158,19 +164,24 @@ pub fn App() -> impl IntoView {
 }
 
 #[component]
-fn ViewLayoutOptions<Tick: crate::Tick>(
+fn ViewEdgeLayoutOpts<Tick: crate::Tick>(
     title: &'static str,
     options: RwSignal<Options<EdgeLayout<Tick>>>,
 ) -> impl IntoView {
-    let (option, set_option) = create_signal(EdgeLayout::<Tick>::default().as_label().to_string());
-    let on_label_change = move |ev| set_option.set(event_target_value(&ev));
+    let (option, set_option) = create_signal(EdgeOption::default());
+    let on_label_change = move |ev| {
+        set_option.set(
+            event_target_value(&ev)
+                .parse::<EdgeOption>()
+                .unwrap_or_default(),
+        )
+    };
 
     let on_move_up = move |index| move |_| options.set(options.get().move_up(index));
     let on_move_down = move |index| move |_| options.set(options.get().move_down(index));
     let on_remove = move |index| move |_| options.set(options.get().remove(index));
     let on_new_line = move |_| {
-        let opt = option.get().try_into().unwrap_or_default();
-        options.set(options.get().add(opt));
+        options.set(options.get().add(option.get()));
     };
 
     let existing_tr = Signal::derive(move || {
@@ -182,8 +193,8 @@ fn ViewLayoutOptions<Tick: crate::Tick>(
             .map(|(i, opt)| {
                 view! {
                     <tr>
-                        <td>{opt.as_label()}</td>
-                        <td>{opt.render_options()}</td>
+                        <td>{EdgeOption::from(&opt).to_string()}</td>
+                        <td><EdgeLayoutOpts option=opt /></td>
                         <td>{(i != 0).then_some(view!(<button on:click=on_move_up(i)>"↑"</button>))}</td>
                         <td>{(i != last).then_some(view!(<button on:click=on_move_down(i)>"↓"</button>))}</td>
                         <td><button on:click=on_remove(i)>"x"</button></td>
@@ -201,9 +212,9 @@ fn ViewLayoutOptions<Tick: crate::Tick>(
                 <tr>
                     <td>
                         <select on:change=on_label_change>
-                            <option>"Label"</option>
-                            <option>"Legend"</option>
-                            <option>"Ticks"</option>
+                            <For each=EdgeOption::all key=|opt| opt.to_string() let:opt>
+                                <option selected=move || option.get() == *opt>{opt.to_string()}</option>
+                            </For>
                         </select>
                     </td>
                     <td colspan="4"><button on:click=on_new_line>"Add option"</button></td>
@@ -222,8 +233,8 @@ impl<Opt> Options<Opt> {
         create_rw_signal(Self(opts))
     }
 
-    pub fn add(mut self, opt: Opt) -> Self {
-        self.0.push(opt);
+    pub fn add(mut self, opt: impl Into<Opt>) -> Self {
+        self.0.push(opt.into());
         self
     }
 
@@ -253,54 +264,72 @@ impl<Opt> Options<Opt> {
     }
 }
 
-impl<Tick: Clone> EdgeLayout<Tick> {
-    fn as_label(&self) -> &'static str {
-        use leptos_chartistry::EdgeLayout as L;
-        match self.0 {
-            L::RotatedLabel(_) => "Label",
-            L::Legend(_) => "Legend",
-            L::TickLabels(_) => "Ticks",
-            _ => "unknown",
-        }
+impl EdgeOption {
+    pub fn all() -> &'static [Self] {
+        &[Self::RotatedLabel, Self::Legend, Self::TickLabels]
     }
+}
 
-    fn render_options(&self) -> impl IntoView {
-        use leptos_chartistry::EdgeLayout as L;
-        match self.0.clone() {
-            L::RotatedLabel(label) => view! {
-                <RotatedLabelOpts label=label />
-            }
-            .into_view(),
-            L::Legend(legend) => view! {
-                <LegendOpts legend=legend />
-            }
-            .into_view(),
-            L::TickLabels(ticks) => view! {
-                <TickLabelsOpts ticks=ticks />
-            }
-            .into_view(),
-            _ => ().into_view(),
+impl std::fmt::Display for EdgeOption {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            EdgeOption::RotatedLabel => write!(f, "Label"),
+            EdgeOption::Legend => write!(f, "Legend"),
+            EdgeOption::TickLabels => write!(f, "Ticks"),
         }
     }
 }
 
-impl<Tick: crate::Tick> TryFrom<String> for EdgeLayout<Tick> {
-    type Error = &'static str;
+impl FromStr for EdgeOption {
+    type Err = &'static str;
 
-    fn try_from(s: String) -> Result<Self, Self::Error> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "label" => Ok(EdgeLayout(RotatedLabel::middle("").into())),
-            "legend" => Ok(EdgeLayout(Legend::middle().into())),
-            "ticks" => Ok(EdgeLayout(TickLabels::default().into())),
+            "label" => Ok(EdgeOption::RotatedLabel),
+            "legend" => Ok(EdgeOption::Legend),
+            "ticks" => Ok(EdgeOption::TickLabels),
             _ => Err("unknown layout option"),
         }
     }
 }
 
-impl<Tick> Default for EdgeLayout<Tick> {
-    fn default() -> Self {
-        // Empty label has zero size so suitable for default
-        EdgeLayout(RotatedLabel::middle("").into())
+impl<Tick> From<&EdgeLayout<Tick>> for EdgeOption {
+    fn from(layout: &EdgeLayout<Tick>) -> Self {
+        match layout {
+            EdgeLayout::RotatedLabel(_) => Self::RotatedLabel,
+            EdgeLayout::Legend(_) => Self::Legend,
+            EdgeLayout::TickLabels(_) => Self::TickLabels,
+            _ => EdgeOption::default(),
+        }
+    }
+}
+
+impl<Tick: crate::Tick> From<EdgeOption> for EdgeLayout<Tick> {
+    fn from(option: EdgeOption) -> Self {
+        match option {
+            EdgeOption::RotatedLabel => Self::RotatedLabel(RotatedLabel::middle("")),
+            EdgeOption::Legend => Self::Legend(Legend::middle()),
+            EdgeOption::TickLabels => Self::TickLabels(TickLabels::default()),
+        }
+    }
+}
+
+#[component]
+fn EdgeLayoutOpts<Tick: 'static>(option: EdgeLayout<Tick>) -> impl IntoView {
+    match option {
+        EdgeLayout::RotatedLabel(label) => view! {
+            <RotatedLabelOpts label=label />
+        }
+        .into_view(),
+        EdgeLayout::Legend(legend) => view! {
+            <LegendOpts legend=legend />
+        }
+        .into_view(),
+        EdgeLayout::TickLabels(ticks) => view! {
+            <TickLabelsOpts ticks=ticks />
+        }
+        .into_view(),
+        _ => ().into_view(),
     }
 }
 
@@ -345,29 +374,5 @@ fn SelectAnchor(anchor: RwSignal<Anchor>) -> impl IntoView {
                 <option selected=move || anchor.get() == Anchor::End>"End"</option>
             </optgroup>
         </select>
-    }
-}
-
-impl<X: Clone> ToEdgeLayout<X> for EdgeLayout<X> {
-    fn to_edge_layout(&self) -> leptos_chartistry::EdgeLayout<X> {
-        self.0.clone()
-    }
-}
-
-impl<Tick> From<leptos_chartistry::Legend> for EdgeLayout<Tick> {
-    fn from(legend: leptos_chartistry::Legend) -> Self {
-        Self(leptos_chartistry::EdgeLayout::Legend(legend))
-    }
-}
-
-impl<Tick> From<leptos_chartistry::RotatedLabel> for EdgeLayout<Tick> {
-    fn from(label: leptos_chartistry::RotatedLabel) -> Self {
-        Self(leptos_chartistry::EdgeLayout::RotatedLabel(label))
-    }
-}
-
-impl<Tick> From<leptos_chartistry::TickLabels<Tick>> for EdgeLayout<Tick> {
-    fn from(ticks: leptos_chartistry::TickLabels<Tick>) -> Self {
-        Self(leptos_chartistry::EdgeLayout::TickLabels(ticks))
     }
 }
