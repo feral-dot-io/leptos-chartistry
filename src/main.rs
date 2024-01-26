@@ -101,7 +101,7 @@ pub fn App() -> impl IntoView {
         );
 
     // Layout options
-    let top = Options::create_signal(vec![RotatedLabel::middle(
+    let top: RwSignal<Options<EdgeLayout<_>>> = Options::create_signal(vec![RotatedLabel::middle(
         "Hello and welcome to Chartistry!",
     )]);
     let right = Options::create_signal(vec![Legend::middle()]);
@@ -161,13 +161,13 @@ pub fn App() -> impl IntoView {
                     <input type="number" step="0.1" min="0.1" value=padding_value on:input=move |ev| set_padding.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_WIDTH)) />
                 </label>
             </p>
-        </form>
 
-        <ViewEdgeLayoutOpts title="Top" options=top />
-        <ViewEdgeLayoutOpts title="Right" options=right />
-        <ViewEdgeLayoutOpts title="Bottom" options=bottom />
-        <ViewEdgeLayoutOpts title="Left" options=left />
-        <ViewInnerOpts options=inner />
+            <ViewOptions title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+            <ViewOptions title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+            <ViewOptions title="Bottom" options=bottom labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+            <ViewOptions title="Left" options=left labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+            <ViewOptions title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
+        </form>
 
         {move || view!{
             <Chart
@@ -189,11 +189,19 @@ pub fn App() -> impl IntoView {
 }
 
 #[component]
-fn ViewEdgeLayoutOpts<Tick: crate::Tick>(
+fn ViewOptions<Full, FullView, FullIV, Label>(
     title: &'static str,
-    options: RwSignal<Options<EdgeLayout<Tick>>>,
-) -> impl IntoView {
-    let (option, set_option) = create_signal(EdgeOption::default());
+    options: RwSignal<Options<Full>>,
+    labels: &'static [Label],
+    detail: FullView,
+) -> impl IntoView
+where
+    Full: Clone + From<Label> + 'static,
+    FullView: Fn(Full) -> FullIV + 'static,
+    FullIV: IntoView,
+    Label: Copy + Default + From<Full> + FromStr + PartialEq + ToString + 'static,
+{
+    let (option, set_option) = create_signal(Label::default());
     let on_label_change =
         move |ev| set_option.set(event_target_value(&ev).parse().unwrap_or_default());
 
@@ -213,8 +221,8 @@ fn ViewEdgeLayoutOpts<Tick: crate::Tick>(
             .map(|(i, opt)| {
                 view! {
                     <tr>
-                        <td>{EdgeOption::from(&opt).to_string()}</td>
-                        <td><EdgeLayoutOpts option=opt /></td>
+                        <td>{Label::from(opt.clone()).to_string()}</td>
+                        <td>{detail(opt)}</td>
                         <td>{(i != 0).then_some(view!(<button on:click=on_move_up(i)>"↑"</button>))}</td>
                         <td>{(i != last).then_some(view!(<button on:click=on_move_down(i)>"↓"</button>))}</td>
                         <td><button on:click=on_remove(i)>"x"</button></td>
@@ -225,68 +233,15 @@ fn ViewEdgeLayoutOpts<Tick: crate::Tick>(
     });
 
     view! {
-        <h2>{title}" options"</h2>
+        <h2>{title} " options"</h2>
         <table>
             <tbody>
                 {move || existing_tr}
                 <tr>
                     <td>
                         <select on:change=on_label_change>
-                            <For each=|| ALL_EDGE_OPTIONS key=|opt| opt.to_string() let:opt>
-                                <option selected=move || option.get() == *opt>{opt.to_string()}</option>
-                            </For>
-                        </select>
-                    </td>
-                    <td colspan="4"><button on:click=on_new_line>"Add option"</button></td>
-                </tr>
-            </tbody>
-        </table>
-    }
-}
-
-#[component]
-fn ViewInnerOpts<X: Tick, Y: Tick>(options: RwSignal<Options<InnerLayout<X, Y>>>) -> impl IntoView {
-    let (option, set_option) = create_signal(InnerOption::default());
-    let on_label_change =
-        move |ev| set_option.set(event_target_value(&ev).parse().unwrap_or_default());
-
-    let on_move_up = move |index| move |_| options.set(options.get().move_up(index));
-    let on_move_down = move |index| move |_| options.set(options.get().move_down(index));
-    let on_remove = move |index| move |_| options.set(options.get().remove(index));
-    let on_new_line = move |_| {
-        options.set(options.get().add(option.get()));
-    };
-
-    let existing_tr = Signal::derive(move || {
-        let options = options.get().into_inner();
-        let last = options.len().saturating_sub(1);
-        options
-            .into_iter()
-            .enumerate()
-            .map(|(i, opt)| {
-                view! {
-                    <tr>
-                        <td>{InnerOption::from(&opt).to_string()}</td>
-                        <td><InnerLayoutOpts option=opt /></td>
-                        <td>{(i != 0).then_some(view!(<button on:click=on_move_up(i)>"↑"</button>))}</td>
-                        <td>{(i != last).then_some(view!(<button on:click=on_move_down(i)>"↓"</button>))}</td>
-                        <td><button on:click=on_remove(i)>"x"</button></td>
-                    </tr>
-                }
-            })
-            .collect_view()
-    });
-
-    view! {
-        <h2>"Inner options"</h2>
-        <table>
-            <tbody>
-                {move || existing_tr}
-                <tr>
-                    <td>
-                        <select on:change=on_label_change>
-                            <For each=|| ALL_INNER_OPTIONS key=|opt| opt.to_string() let:opt>
-                                <option selected=move || option.get() == *opt>{opt.to_string()}</option>
+                            <For each=move || labels key=|label| label.to_string() let:label>
+                                <option selected=move || option.get() == *label>{label.to_string()}</option>
                             </For>
                         </select>
                     </td>
@@ -377,6 +332,13 @@ impl<Tick> From<&EdgeLayout<Tick>> for EdgeOption {
     }
 }
 
+impl<Tick> From<EdgeLayout<Tick>> for EdgeOption {
+    fn from(layout: EdgeLayout<Tick>) -> Self {
+        // TODO
+        (&layout).into()
+    }
+}
+
 impl<Tick: crate::Tick> From<EdgeOption> for EdgeLayout<Tick> {
     fn from(option: EdgeOption) -> Self {
         match option {
@@ -431,6 +393,13 @@ impl<X: Tick, Y: Tick> From<&InnerLayout<X, Y>> for InnerOption {
     }
 }
 
+impl<X: Tick, Y: Tick> From<InnerLayout<X, Y>> for InnerOption {
+    fn from(layout: InnerLayout<X, Y>) -> Self {
+        // TODO
+        (&layout).into()
+    }
+}
+
 impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     fn from(option: InnerOption) -> Self {
         match option {
@@ -442,8 +411,7 @@ impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     }
 }
 
-#[component]
-fn EdgeLayoutOpts<Tick: 'static>(option: EdgeLayout<Tick>) -> impl IntoView {
+fn edge_layout_opts<Tick: 'static>(option: EdgeLayout<Tick>) -> impl IntoView {
     match option {
         EdgeLayout::RotatedLabel(label) => view! {
             <RotatedLabelOpts label=label />
@@ -461,8 +429,7 @@ fn EdgeLayoutOpts<Tick: 'static>(option: EdgeLayout<Tick>) -> impl IntoView {
     }
 }
 
-#[component]
-fn InnerLayoutOpts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoView {
+fn inner_layout_opts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoView {
     match option {
         InnerLayout::AxisMarker(marker) => view! {
             <AxisMarkerOpts marker=marker />
