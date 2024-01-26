@@ -1,7 +1,9 @@
 mod aligned_floats;
+mod span;
 mod timestamps;
 
 pub use aligned_floats::AlignedFloats;
+pub use span::{HorizontalSpan, VerticalSpan};
 pub use timestamps::{Period, PeriodicTimestamps};
 
 use std::rc::Rc;
@@ -65,61 +67,5 @@ impl<Tick> GenState for NilState<Tick> {
 impl<Tick: PartialEq> PartialEq for GeneratedTicks<Tick> {
     fn eq(&self, other: &Self) -> bool {
         self.ticks == other.ticks
-    }
-}
-
-pub struct VerticalSpan {
-    avail_height: f64,
-    line_height: f64,
-}
-
-impl VerticalSpan {
-    pub fn new(line_height: f64, avail_height: f64) -> Self {
-        Self {
-            avail_height,
-            line_height,
-        }
-    }
-}
-
-impl<Tick> Span<Tick> for VerticalSpan {
-    fn length(&self) -> f64 {
-        self.avail_height
-    }
-
-    fn consumed(&self, _: &dyn GenState<Tick = Tick>, ticks: &[Tick]) -> f64 {
-        self.line_height * ticks.len() as f64
-    }
-}
-
-pub struct HorizontalSpan {
-    avail_width: f64,
-    font_width: f64,
-    padding_width: f64,
-}
-
-impl HorizontalSpan {
-    pub fn new(font_width: f64, padding_width: f64, avail_width: f64) -> Self {
-        Self {
-            avail_width,
-            font_width,
-            padding_width,
-        }
-    }
-}
-
-impl<Tick> Span<Tick> for HorizontalSpan {
-    fn length(&self) -> f64 {
-        self.avail_width
-    }
-
-    fn consumed(&self, state: &dyn GenState<Tick = Tick>, ticks: &[Tick]) -> f64 {
-        let max_chars = ticks
-            .iter()
-            .map(|tick| state.format(tick).len())
-            .max()
-            .unwrap_or_default();
-        let max_label_width = max_chars as f64 * self.font_width + self.padding_width * 2.0;
-        max_label_width * ticks.len() as f64
     }
 }

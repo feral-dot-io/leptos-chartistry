@@ -11,7 +11,6 @@ use crate::{
 };
 use chrono::prelude::*;
 use leptos::*;
-use std::borrow::Borrow;
 use std::rc::Rc;
 
 #[derive(Clone)]
@@ -27,7 +26,7 @@ pub struct UseTickLabels {
 
 impl TickLabels<f64> {
     pub fn aligned_floats() -> Self {
-        Self::new(AlignedFloats::new())
+        Self::new(AlignedFloats::default())
     }
 }
 
@@ -39,20 +38,12 @@ where
     pub fn timestamps() -> Self {
         Self::new(PeriodicTimestamps::from_periods(Period::all()))
     }
-
-    pub fn timestamp_periods(periods: impl Borrow<[Period]>) -> Self {
-        Self::new(PeriodicTimestamps::from_periods(periods))
-    }
-
-    pub fn timestamp_period(period: Period) -> Self {
-        Self::new(PeriodicTimestamps::from_period(period))
-    }
 }
 
 impl<Tick> TickLabels<Tick> {
-    fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
+    pub fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
-            min_chars: 0.into(),
+            min_chars: RwSignal::default(),
             generator: Rc::new(gen),
         }
     }
@@ -62,7 +53,7 @@ impl<Tick> TickLabels<Tick> {
             gen.with(|GeneratedTicks { ticks, state }| {
                 ticks
                     .iter()
-                    .map(|tick| (state.position(tick), (state.format(tick))))
+                    .map(|tick| (state.position(tick), state.format(tick)))
                     .collect()
             })
         })
@@ -77,16 +68,22 @@ impl<X: PartialEq> TickLabels<X> {
     ) -> Signal<GeneratedTicks<X>> {
         let PreState { font, padding, .. } = *state;
         let range_x = state.data.range_x;
+        let min_chars = self.min_chars;
         let gen = self.generator.clone();
         create_memo(move |_| {
+            let min_chars = min_chars.get();
             range_x.with(|range_x| {
                 range_x
                     .as_ref()
                     .map(|(first, last)| {
                         let font_width = font.get().width();
                         let padding_width = padding.get().width();
-                        let span =
-                            HorizontalSpan::new(font_width, padding_width, avail_width.get());
+                        let span = HorizontalSpan::new(
+                            font_width,
+                            min_chars,
+                            padding_width,
+                            avail_width.get(),
+                        );
                         gen.generate(first, last, Box::new(span))
                     })
                     .unwrap_or_else(GeneratedTicks::none)

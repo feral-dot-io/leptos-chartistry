@@ -5,8 +5,8 @@ use super::{GenState, GeneratedTicks, Generator, Span};
 /// If count is 1 or 0, returns the midpoint of the range.
 ///
 /// Given a range (from - to), produce a series of evenly spaced ticks whose steps are the smallest values possible that are still distinguishable from each other. This results in "nice" rounded values that are easy to read. This is done by determining the scale (powers of 10) of the range and count to calculate a step size. The step size is then used to produce a series of evenly spaced ticks which get formatted to our desired precision.
-#[derive(Clone, Debug, PartialEq)]
-pub struct AlignedFloats;
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct AlignedFloats {}
 
 #[derive(Clone, Debug, PartialEq)]
 struct AlignedState {
@@ -30,10 +30,6 @@ impl Generator for AlignedFloats {
 }
 
 impl AlignedFloats {
-    pub fn new() -> Self {
-        Self
-    }
-
     /// Returns the scale and count to use for the given range and span
     fn find_precision(first: f64, last: f64, span: &dyn Span<f64>) -> (isize, usize) {
         // Determine scale e.g., are we in the 100s, 10s, 0.1s, etc. Then display one more (-1)
@@ -126,7 +122,7 @@ mod tests {
     use super::*;
 
     fn mk_span(width: f64) -> Box<dyn Span<f64>> {
-        Box::new(HorizontalSpan::new(1.0, 0.0, width + 0.1))
+        Box::new(HorizontalSpan::new(1.0, 0, 0.0, width + 0.1))
     }
 
     fn assert_precision(first: f64, last: f64, width: f64, scale: isize, count: usize) {

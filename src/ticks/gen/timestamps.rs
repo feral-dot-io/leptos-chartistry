@@ -46,24 +46,25 @@ impl<Tz> Default for PeriodicTimestamps<Tz> {
 }
 
 impl<Tz> PeriodicTimestamps<Tz> {
-    pub fn new(format: impl Into<Format>, periods: impl Borrow<[Period]>) -> Self {
+    pub fn from_periods(periods: impl Borrow<[Period]>) -> Self {
         let mut periods = periods.borrow().to_vec();
         periods.sort_unstable();
         periods.dedup();
         periods.reverse();
         Self {
-            format: format.into(),
+            format: Format::default(),
             periods,
             tz: std::marker::PhantomData,
         }
     }
 
-    pub fn from_periods(periods: impl Borrow<[Period]>) -> Self {
-        Self::new(Format::default(), periods)
-    }
-
     pub fn from_period(period: impl Into<Period>) -> Self {
         Self::from_periods([period.into()])
+    }
+
+    pub fn with_format(mut self, format: impl Into<Format>) -> Self {
+        self.format = format.into();
+        self
     }
 }
 
@@ -353,7 +354,7 @@ mod tests {
     }
 
     fn mk_span<Tick: 'static>(width: f64) -> Box<dyn Span<Tick>> {
-        Box::new(HorizontalSpan::new(6.0, 2.0, width))
+        Box::new(HorizontalSpan::new(6.0, 0, 2.0, width))
     }
 
     #[test]
