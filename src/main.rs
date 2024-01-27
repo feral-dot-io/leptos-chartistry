@@ -6,8 +6,8 @@ use std::str::FromStr;
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
 
+const ALL_ALIGN_OVER: &[AlignOver] = &[AlignOver::Mouse, AlignOver::Data];
 const ALL_ANCHORS: &[Anchor] = &[Anchor::Start, Anchor::Middle, Anchor::End];
-const ALL_EDGES: &[Edge] = &[Edge::Top, Edge::Right, Edge::Bottom, Edge::Left];
 const ALL_AXIS_PLACEMENTS: &[AxisPlacement] = &[
     AxisPlacement::Top,
     AxisPlacement::Right,
@@ -16,6 +16,7 @@ const ALL_AXIS_PLACEMENTS: &[AxisPlacement] = &[
     AxisPlacement::HorizontalZero,
     AxisPlacement::VerticalZero,
 ];
+const ALL_EDGES: &[Edge] = &[Edge::Top, Edge::Right, Edge::Bottom, Edge::Left];
 
 #[derive(Clone)]
 struct Options<Opt>(Vec<Opt>);
@@ -461,6 +462,14 @@ fn inner_layout_opts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoVi
             <GridLineOpts width=line.width colour=line.colour />
         }
         .into_view(),
+        InnerLayout::XGuideLine(line) => view! {
+            <GuideLineOpts align=line.align width=line.width colour=line.colour />
+        }
+        .into_view(),
+        InnerLayout::YGuideLine(line) => view! {
+            <GuideLineOpts align=line.align width=line.width colour=line.colour />
+        }
+        .into_view(),
         _ => ().into_view(),
     }
 }
@@ -523,8 +532,14 @@ macro_rules! select_impl {
     };
 }
 
+select_impl!(
+    SelectAlignOver,
+    "Align over",
+    align,
+    AlignOver,
+    ALL_ALIGN_OVER
+);
 select_impl!(SelectAnchor, "Anchor", anchor, Anchor, ALL_ANCHORS);
-select_impl!(SelectEdge, "Edge", edge, Edge, ALL_EDGES);
 select_impl!(
     SelectAxisPlacement,
     "Placement",
@@ -532,6 +547,7 @@ select_impl!(
     AxisPlacement,
     ALL_AXIS_PLACEMENTS
 );
+select_impl!(SelectEdge, "Edge", edge, Edge, ALL_EDGES);
 
 #[component]
 fn SelectColour(colour: RwSignal<Option<Colour>>) -> impl IntoView {
@@ -574,7 +590,7 @@ fn AxisMarkerOpts(marker: AxisMarker) -> impl IntoView {
     view! {
         <SelectAxisPlacement placement=marker.placement />
         <SelectColour colour=marker.colour />
-        ", "
+        " "
         <label>
             <input type="checkbox" checked=marker.arrow on:input=on_arrow />
             "arrow"
@@ -595,6 +611,19 @@ fn InsetLegendOpts(legend: InsetLegend) -> impl IntoView {
 #[component]
 fn GridLineOpts(width: RwSignal<f64>, colour: RwSignal<Option<Colour>>) -> impl IntoView {
     view! {
+        <StepLabel value=width step="0.1" min="0.1">"width:"</StepLabel>
+        <SelectColour colour=colour />
+    }
+}
+
+#[component]
+fn GuideLineOpts(
+    align: RwSignal<AlignOver>,
+    width: RwSignal<f64>,
+    colour: RwSignal<Option<Colour>>,
+) -> impl IntoView {
+    view! {
+        <SelectAlignOver align=align />
         <StepLabel value=width step="0.1" min="0.1">"width:"</StepLabel>
         <SelectColour colour=colour />
     }

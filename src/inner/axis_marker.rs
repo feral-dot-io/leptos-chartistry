@@ -54,14 +54,14 @@ impl AxisMarker {
 
 impl std::fmt::Display for AxisPlacement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use AxisPlacement::*;
+        use AxisPlacement as P;
         match self {
-            Top => write!(f, "top"),
-            Right => write!(f, "right"),
-            Bottom => write!(f, "bottom"),
-            Left => write!(f, "left"),
-            HorizontalZero => write!(f, "horizontal zero"),
-            VerticalZero => write!(f, "vertical zero"),
+            P::Top => write!(f, "top"),
+            P::Right => write!(f, "right"),
+            P::Bottom => write!(f, "bottom"),
+            P::Left => write!(f, "left"),
+            P::HorizontalZero => write!(f, "horizontal zero"),
+            P::VerticalZero => write!(f, "vertical zero"),
         }
     }
 }

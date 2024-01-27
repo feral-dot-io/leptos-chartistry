@@ -1,7 +1,7 @@
 use super::UseInner;
 use crate::{colours::Colour, debug::DebugRect, state::State};
 use leptos::*;
-use std::rc::Rc;
+use std::{rc::Rc, str::FromStr};
 
 macro_rules! impl_guide_line {
     ($name:ident) => {
@@ -58,6 +58,26 @@ impl XGuideLine {
 impl YGuideLine {
     pub(crate) fn use_vertical<X, Y>(self) -> Rc<dyn UseInner<X, Y>> {
         Rc::new(UseYGuideLine(self))
+    }
+}
+
+impl std::fmt::Display for AlignOver {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AlignOver::Mouse => write!(f, "mouse"),
+            AlignOver::Data => write!(f, "data"),
+        }
+    }
+}
+
+impl FromStr for AlignOver {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "mouse" => Ok(AlignOver::Mouse),
+            "data" => Ok(AlignOver::Data),
+            _ => Err(format!("invalid align over: `{}`", s)),
+        }
     }
 }
 
