@@ -10,9 +10,9 @@ macro_rules! impl_grid_line {
     ($name:ident) => {
         #[derive(Clone)]
         pub struct $name<Tick: 'static> {
-            width: RwSignal<f64>,
-            colour: RwSignal<Option<Colour>>,
-            ticks: TickLabels<Tick>,
+            pub width: RwSignal<f64>,
+            pub colour: RwSignal<Option<Colour>>,
+            pub ticks: TickLabels<Tick>,
         }
 
         impl<Tick: crate::Tick> $name<Tick> {
