@@ -14,13 +14,17 @@ pub const DEFAULT_COLOUR_GRID_LINE: Colour = Colour::new(0xEF, 0xF2, 0xFA); // L
 
 #[derive(Clone)]
 #[non_exhaustive]
-pub enum InnerLayout<X: Clone + 'static, Y: Clone + 'static> {
+pub enum InnerLayout<X: Tick, Y: Tick> {
     AxisMarker(axis_marker::AxisMarker),
     XGridLine(grid_line::XGridLine<X>),
     YGridLine(grid_line::YGridLine<Y>),
     XGuideLine(guide_line::XGuideLine),
     YGuideLine(guide_line::YGuideLine),
     Legend(legend::InsetLegend),
+}
+
+pub trait IntoInnerLayout<X: Tick, Y: Tick> {
+    fn into_inner_layout(self) -> InnerLayout<X, Y>;
 }
 
 impl<X: Tick, Y: Tick> InnerLayout<X, Y> {
@@ -42,9 +46,15 @@ pub trait UseInner<X, Y> {
 
 macro_rules! impl_into_inner_layout {
     ($ty:ty, $enum:ident) => {
+        impl<X: Tick, Y: Tick> IntoInnerLayout<X, Y> for $ty {
+            fn into_inner_layout(self) -> InnerLayout<X, Y> {
+                InnerLayout::$enum(self)
+            }
+        }
+
         impl<X: Tick, Y: Tick> From<$ty> for InnerLayout<X, Y> {
             fn from(inner: $ty) -> Self {
-                Self::$enum(inner)
+                inner.into_inner_layout()
             }
         }
     };

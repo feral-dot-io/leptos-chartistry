@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 use leptos::*;
-use leptos_chartistry::*;
+use leptos_chartistry::{colours::Colour, *};
 use std::str::FromStr;
 
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
@@ -107,8 +107,13 @@ pub fn App() -> impl IntoView {
     let right = Options::create_signal(vec![Legend::middle()]);
     let bottom = Options::create_signal(vec![TickLabels::timestamps()]);
     let left = Options::create_signal(vec![TickLabels::aligned_floats()]);
-    let inner: RwSignal<Options<InnerLayout<DateTime<Utc>, f64>>> =
-        Options::create_signal(vec![AxisMarker::top_edge()]);
+    let inner: RwSignal<Options<InnerLayout<DateTime<Utc>, f64>>> = Options::create_signal(vec![
+        AxisMarker::top_edge().into_inner_layout(),
+        XGridLine::default().into_inner_layout(),
+        YGridLine::default().into_inner_layout(),
+        XGuideLine::default().into_inner_layout(),
+        YGuideLine::default().into_inner_layout(),
+    ]);
 
     view! {
         <h1>"Chartistry"</h1>
@@ -448,6 +453,14 @@ fn inner_layout_opts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoVi
             <InsetLegendOpts legend=legend />
         }
         .into_view(),
+        InnerLayout::XGridLine(line) => view! {
+            <GridLineOpts width=line.width colour=line.colour />
+        }
+        .into_view(),
+        InnerLayout::YGridLine(line) => view! {
+            <GridLineOpts width=line.width colour=line.colour />
+        }
+        .into_view(),
         _ => ().into_view(),
     }
 }
@@ -467,7 +480,7 @@ fn StepLabel<T: Clone + Default + IntoAttribute + FromStr + 'static>(
     view! {
         <label>
             {children()}
-            ", "
+            " "
             <input
                 type="number"
                 style="width: 8ch;"
@@ -521,6 +534,18 @@ select_impl!(
 );
 
 #[component]
+fn SelectColour(colour: RwSignal<Option<Colour>>) -> impl IntoView {
+    let value = move || colour.get().map(|c| c.to_string()).unwrap_or_default();
+    let on_change = move |ev| {
+        //let new = event_target_value(&ev).parse().ok();
+        //colour.set(new);
+    };
+    view! {
+        <input type="color" value=value on:input=on_change />
+    }
+}
+
+#[component]
 fn RotatedLabelOpts(label: RotatedLabel) -> impl IntoView {
     view! {
         <SelectAnchor anchor=label.anchor />
@@ -548,7 +573,7 @@ fn AxisMarkerOpts(marker: AxisMarker) -> impl IntoView {
     let on_arrow = move |ev| marker.arrow.set(event_target_checked(&ev));
     view! {
         <SelectAxisPlacement placement=marker.placement />
-        "colour: TODO"
+        <SelectColour colour=marker.colour />
         ", "
         <label>
             <input type="checkbox" checked=marker.arrow on:input=on_arrow />
@@ -564,5 +589,13 @@ fn InsetLegendOpts(legend: InsetLegend) -> impl IntoView {
     view! {
         <SelectOption label="Edge" value=legend.edge all=ALL_EDGES />
         <LegendOpts legend=legend.legend />
+    }
+}
+
+#[component]
+fn GridLineOpts(width: RwSignal<f64>, colour: RwSignal<Option<Colour>>) -> impl IntoView {
+    view! {
+        <StepLabel value=width step="0.1" min="0.1">"width:"</StepLabel>
+        <SelectColour colour=colour />
     }
 }
