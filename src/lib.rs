@@ -22,7 +22,7 @@ pub use font::Font;
 pub use inner::{
     axis_marker::{AxisMarker, AxisPlacement},
     grid_line::{XGridLine, YGridLine},
-    guide_line::GuideLine,
+    guide_line::{XGuideLine, YGuideLine},
     legend::InsetLegend,
     InnerLayout, DEFAULT_COLOUR_AXIS_MARKER, DEFAULT_COLOUR_GRID_LINE, DEFAULT_COLOUR_GUIDE_LINE,
 };

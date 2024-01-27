@@ -32,10 +32,10 @@ enum EdgeOption {
 enum InnerOption {
     #[default]
     AxisMarker,
-    HorizontalGridLine,
-    VerticalGridLine,
-    //XGuideLine,
-    //YGuideLine,
+    XGridLine,
+    YGridLine,
+    XGuideLine,
+    YGuideLine,
     Legend,
 }
 
@@ -112,62 +112,60 @@ pub fn App() -> impl IntoView {
 
     view! {
         <h1>"Chartistry"</h1>
-        <form>
-            <p>
-                <label>
-                    <input type="checkbox" checked=debug on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
-                    "Debug"
-                </label>
-            </p>
-            <p>
-                <label>
-                    "Font height"
-                    <input type="number" step="0.1" min="0.1" value=font_height on:input=move |ev| set_font_height.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_HEIGHT)) />
-                </label>
-            </p>
-            <p>
-                <label>
-                    "Font width"
-                    <input type="number" step="0.1" min="0.1" value=font_width on:input=move |ev| set_font_width.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_WIDTH)) />
-                </label>
-            </p>
-            <p>
-                <label>
-                    "Sine"
-                    <input type="text" value=sine_name on:input=move |ev| set_sine_name.set(event_target_value(&ev)) />
-                </label>
-            </p>
-            <p>
-                <label>
-                    "Sine width"
-                    <input type="number" step="0.1" min="0.1" value=sine_width on:input=move |ev| set_sine_width.set(event_target_value(&ev).parse().unwrap_or(1.0)) />
-                </label>
-            </p>
-            <p>
-                <label>
-                    "Cosine"
-                    <input type="text" value=cosine_name on:input=move |ev| set_cosine_name.set(event_target_value(&ev)) />
-                </label>
-            </p>
-            <p>
-                <label>
-                    "Cosine width"
-                    <input type="number" step="0.1" min="0.1" value=cosine_width on:input=move |ev| set_cosine_width.set(event_target_value(&ev).parse().unwrap_or(1.0)) />
-                </label>
-            </p>
-            <p>
-                <label>
-                    "Padding"
-                    <input type="number" step="0.1" min="0.1" value=padding_value on:input=move |ev| set_padding.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_WIDTH)) />
-                </label>
-            </p>
+        <p>
+            <label>
+                <input type="checkbox" checked=debug on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
+                "Debug"
+            </label>
+        </p>
+        <p>
+            <label>
+                "Font height"
+                <input type="number" step="0.1" min="0.1" value=font_height on:input=move |ev| set_font_height.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_HEIGHT)) />
+            </label>
+        </p>
+        <p>
+            <label>
+                "Font width"
+                <input type="number" step="0.1" min="0.1" value=font_width on:input=move |ev| set_font_width.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_WIDTH)) />
+            </label>
+        </p>
+        <p>
+            <label>
+                "Sine"
+                <input type="text" value=sine_name on:input=move |ev| set_sine_name.set(event_target_value(&ev)) />
+            </label>
+        </p>
+        <p>
+            <label>
+                "Sine width"
+                <input type="number" step="0.1" min="0.1" value=sine_width on:input=move |ev| set_sine_width.set(event_target_value(&ev).parse().unwrap_or(1.0)) />
+            </label>
+        </p>
+        <p>
+            <label>
+                "Cosine"
+                <input type="text" value=cosine_name on:input=move |ev| set_cosine_name.set(event_target_value(&ev)) />
+            </label>
+        </p>
+        <p>
+            <label>
+                "Cosine width"
+                <input type="number" step="0.1" min="0.1" value=cosine_width on:input=move |ev| set_cosine_width.set(event_target_value(&ev).parse().unwrap_or(1.0)) />
+            </label>
+        </p>
+        <p>
+            <label>
+                "Padding"
+                <input type="number" step="0.1" min="0.1" value=padding_value on:input=move |ev| set_padding.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_WIDTH)) />
+            </label>
+        </p>
 
-            <ViewOptions title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-            <ViewOptions title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-            <ViewOptions title="Bottom" options=bottom labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-            <ViewOptions title="Left" options=left labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-            <ViewOptions title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
-        </form>
+        <ViewOptions title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+        <ViewOptions title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+        <ViewOptions title="Bottom" options=bottom labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+        <ViewOptions title="Left" options=left labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+        <ViewOptions title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
 
         {move || view!{
             <Chart
@@ -208,7 +206,8 @@ where
     let on_move_up = move |index| move |_| options.set(options.get().move_up(index));
     let on_move_down = move |index| move |_| options.set(options.get().move_down(index));
     let on_remove = move |index| move |_| options.set(options.get().remove(index));
-    let on_new_line = move |_| {
+    let on_new_line = move |ev: ev::MouseEvent| {
+        ev.prevent_default();
         options.set(options.get().add(option.get()));
     };
 
@@ -351,8 +350,10 @@ impl<Tick: crate::Tick> From<EdgeOption> for EdgeLayout<Tick> {
 
 const ALL_INNER_OPTIONS: &[InnerOption] = &[
     InnerOption::AxisMarker,
-    InnerOption::HorizontalGridLine,
-    InnerOption::VerticalGridLine,
+    InnerOption::XGridLine,
+    InnerOption::YGridLine,
+    InnerOption::XGuideLine,
+    InnerOption::YGuideLine,
     InnerOption::Legend,
 ];
 
@@ -360,8 +361,10 @@ impl std::fmt::Display for InnerOption {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             InnerOption::AxisMarker => write!(f, "Axis marker"),
-            InnerOption::HorizontalGridLine => write!(f, "Horizontal grid line"),
-            InnerOption::VerticalGridLine => write!(f, "Vertical grid line"),
+            InnerOption::XGridLine => write!(f, "X grid line"),
+            InnerOption::YGridLine => write!(f, "Y grid line"),
+            InnerOption::XGuideLine => write!(f, "X guide line"),
+            InnerOption::YGuideLine => write!(f, "Y guide line"),
             InnerOption::Legend => write!(f, "Legend"),
         }
     }
@@ -373,8 +376,10 @@ impl FromStr for InnerOption {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "axis marker" => Ok(InnerOption::AxisMarker),
-            "horizontal grid line" => Ok(InnerOption::HorizontalGridLine),
-            "vertical grid line" => Ok(InnerOption::VerticalGridLine),
+            "x grid line" => Ok(InnerOption::XGridLine),
+            "y grid line" => Ok(InnerOption::YGridLine),
+            "x guide line" => Ok(InnerOption::XGuideLine),
+            "y guide line" => Ok(InnerOption::YGuideLine),
             "legend" => Ok(InnerOption::Legend),
             _ => Err("unknown inner option"),
         }
@@ -385,8 +390,10 @@ impl<X: Tick, Y: Tick> From<&InnerLayout<X, Y>> for InnerOption {
     fn from(layout: &InnerLayout<X, Y>) -> Self {
         match layout {
             InnerLayout::AxisMarker(_) => Self::AxisMarker,
-            InnerLayout::XGridLine(_) => Self::HorizontalGridLine,
-            InnerLayout::YGridLine(_) => Self::VerticalGridLine,
+            InnerLayout::XGridLine(_) => Self::XGridLine,
+            InnerLayout::YGridLine(_) => Self::YGridLine,
+            InnerLayout::XGuideLine(_) => Self::XGuideLine,
+            InnerLayout::YGuideLine(_) => Self::YGuideLine,
             InnerLayout::Legend(_) => Self::Legend,
             _ => InnerOption::default(),
         }
@@ -404,8 +411,10 @@ impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     fn from(option: InnerOption) -> Self {
         match option {
             InnerOption::AxisMarker => AxisMarker::top_edge().into(),
-            InnerOption::HorizontalGridLine => XGridLine::default().into(),
-            InnerOption::VerticalGridLine => YGridLine::default().into(),
+            InnerOption::XGridLine => XGridLine::default().into(),
+            InnerOption::YGridLine => YGridLine::default().into(),
+            InnerOption::XGuideLine => XGuideLine::default().into(),
+            InnerOption::YGuideLine => YGuideLine::default().into(),
             InnerOption::Legend => InsetLegend::top_left().into(),
         }
     }

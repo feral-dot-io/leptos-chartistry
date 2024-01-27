@@ -17,8 +17,8 @@ pub enum InnerLayout<X: Clone + 'static, Y: Clone + 'static> {
     AxisMarker(axis_marker::AxisMarker),
     XGridLine(grid_line::XGridLine<X>),
     YGridLine(grid_line::YGridLine<Y>),
-    XGuideLine(guide_line::GuideLine),
-    YGuideLine(guide_line::GuideLine),
+    XGuideLine(guide_line::XGuideLine),
+    YGuideLine(guide_line::YGuideLine),
     Legend(legend::InsetLegend),
 }
 
@@ -28,8 +28,8 @@ impl<X: Tick, Y: Tick> InnerLayout<X, Y> {
             Self::AxisMarker(inner) => Rc::new(inner),
             Self::XGridLine(inner) => inner.use_horizontal(state),
             Self::YGridLine(inner) => inner.use_vertical(state),
-            Self::XGuideLine(inner) => inner.use_x(),
-            Self::YGuideLine(inner) => inner.use_y(),
+            Self::XGuideLine(inner) => inner.use_horizontal(),
+            Self::YGuideLine(inner) => inner.use_vertical(),
             Self::Legend(inner) => Rc::new(inner),
         }
     }
@@ -51,6 +51,6 @@ macro_rules! impl_into_inner_layout {
 impl_into_inner_layout!(axis_marker::AxisMarker, AxisMarker);
 impl_into_inner_layout!(grid_line::XGridLine<X>, XGridLine);
 impl_into_inner_layout!(grid_line::YGridLine<Y>, YGridLine);
-//impl_into_inner_layout!(guide_line::GuideLine, XGuideLine);
-//impl_into_inner_layout!(guide_line::GuideLine, YGuideLine);
+impl_into_inner_layout!(guide_line::XGuideLine, XGuideLine);
+impl_into_inner_layout!(guide_line::YGuideLine, YGuideLine);
 impl_into_inner_layout!(legend::InsetLegend, Legend);
