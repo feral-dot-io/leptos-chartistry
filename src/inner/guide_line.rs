@@ -37,6 +37,7 @@ impl_guide_line!(XGuideLine);
 impl_guide_line!(YGuideLine);
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub enum AlignOver {
     #[default]
     Mouse,

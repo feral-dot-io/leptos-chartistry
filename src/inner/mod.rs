@@ -13,6 +13,7 @@ pub const DEFAULT_COLOUR_AXIS_MARKER: Colour = Colour::new(0xD2, 0xD2, 0xD2); //
 pub const DEFAULT_COLOUR_GRID_LINE: Colour = Colour::new(0xEF, 0xF2, 0xFA); // Lightest grey
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub enum InnerLayout<X: Clone + 'static, Y: Clone + 'static> {
     AxisMarker(axis_marker::AxisMarker),
     XGridLine(grid_line::XGridLine<X>),

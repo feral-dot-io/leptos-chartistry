@@ -10,6 +10,7 @@ use crate::{
 use leptos::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum Anchor {
     Start,
     Middle,

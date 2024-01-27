@@ -12,6 +12,7 @@ pub struct AxisMarker {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum AxisPlacement {
     Top,
     Right,
