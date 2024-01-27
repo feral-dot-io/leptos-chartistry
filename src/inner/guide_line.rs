@@ -1,5 +1,5 @@
 use super::UseInner;
-use crate::{colours::Colour, debug::DebugRect, state::State};
+use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State};
 use leptos::*;
 use std::{rc::Rc, str::FromStr};
 
@@ -104,9 +104,11 @@ fn XGuideLine<X: 'static, Y: 'static>(line: XGuideLine, state: State<X, Y>) -> i
         match line.align.get() {
             AlignOver::Data => {
                 let svg_x = nearest_svg_x.get();
-                (svg_x, inner.top_y(), svg_x, inner.bottom_y())
+                Bounds::from_points(svg_x, inner.top_y(), svg_x, inner.bottom_y())
             }
-            AlignOver::Mouse => (mouse_x, inner.top_y(), mouse_x, inner.bottom_y()),
+            AlignOver::Mouse => {
+                Bounds::from_points(mouse_x, inner.top_y(), mouse_x, inner.bottom_y())
+            }
         }
     });
     view! {
@@ -122,7 +124,7 @@ fn YGuideLine<X: 'static, Y: 'static>(line: YGuideLine, state: State<X, Y>) -> i
     let pos = Signal::derive(move || {
         let (_, mouse_y) = mouse_chart.get();
         let inner = inner.get();
-        (inner.left_x(), mouse_y, inner.right_x(), mouse_y)
+        Bounds::from_points(inner.left_x(), mouse_y, inner.right_x(), mouse_y)
     });
     view! {
         <GuideLine id="y" width=line.width colour=line.colour state=state pos=pos />
@@ -135,15 +137,15 @@ fn GuideLine<X: 'static, Y: 'static>(
     width: RwSignal<f64>,
     colour: RwSignal<Option<Colour>>,
     state: State<X, Y>,
-    pos: Signal<(f64, f64, f64, f64)>,
+    pos: Signal<Bounds>,
 ) -> impl IntoView {
     let debug = state.pre.debug;
     let hover_inner = state.hover_inner;
 
-    let x1 = create_memo(move |_| pos.get().0);
-    let y1 = create_memo(move |_| pos.get().1);
-    let x2 = create_memo(move |_| pos.get().2);
-    let y2 = create_memo(move |_| pos.get().3);
+    let x1 = create_memo(move |_| pos.get().left_x());
+    let y1 = create_memo(move |_| pos.get().top_y());
+    let x2 = create_memo(move |_| pos.get().right_x());
+    let y2 = create_memo(move |_| pos.get().bottom_y());
 
     // Don't render if any of the coordinates are NaN i.e., no data
     let have_data = Signal::derive(move || {

@@ -24,7 +24,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     let bounds: Signal<Option<Bounds>> = bounds.into();
 
     // Mouse position
-    let mouse = use_mouse_with_options(
+    let mouse_page = use_mouse_with_options(
         UseMouseOptions::default()
             .target(node)
             .coord_type(UseMouseCoordType::<UseMouseEventExtractorDefault>::Page)
@@ -32,15 +32,21 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     );
 
     // Mouse absolute coords on page
+    let mouse_page_type = mouse_page.source_type;
     let mouse_page = Signal::derive(move || {
-        let x = mouse.x.get();
-        let y = mouse.y.get();
+        let x = mouse_page.x.get();
+        let y = mouse_page.y.get();
         (x, y)
     });
 
     // Mouse relative to SVG
+    let mouse_client = use_mouse_with_options(
+        UseMouseOptions::default()
+            .target(node)
+            .coord_type(UseMouseCoordType::<UseMouseEventExtractorDefault>::Client)
+            .reset_on_touch_ends(true),
+    );
     let mouse_chart: Signal<_> = create_memo(move |_| {
-        let (x, y) = mouse_page.get();
         let (left, top) = node
             .get()
             .map(|target| {
@@ -48,8 +54,8 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
                 (rect.left(), rect.top())
             })
             .unwrap_or_default();
-        let x = x - left;
-        let y = y - top;
+        let x = mouse_client.x.get() - left;
+        let y: f64 = mouse_client.y.get() - top;
         (x, y)
     })
     .into();
@@ -58,7 +64,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     let el_hover = use_element_hover(node);
     let mouse_chart_hover = create_memo(move |_| {
         let (x, y) = mouse_chart.get();
-        mouse.source_type.get() != UseMouseSourceType::Unset
+        mouse_page_type.get() != UseMouseSourceType::Unset
             && el_hover.get()
             && bounds
                 .get()
