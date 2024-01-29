@@ -788,6 +788,7 @@ dependencies = [
  "console_log",
  "leptos",
  "leptos-use",
+ "leptos_meta",
  "log",
  "web-sys",
 ]
@@ -895,6 +896,20 @@ dependencies = [
  "syn",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "leptos_meta"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "983bbf829598d275b01e96bd9fca71e4739dd7b9fdf69cb8898b30ebfb124332"
+dependencies = [
+ "cfg-if",
+ "indexmap",
+ "leptos",
+ "tracing",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

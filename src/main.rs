@@ -1,8 +1,10 @@
 use chrono::prelude::*;
 use leptos::*;
 use leptos_chartistry::{colours::Colour, *};
+use leptos_meta::Style;
 use std::str::FromStr;
 
+const DEFAULT_ASPECT_RATIO: AspectRatio = AspectRatio::outer(800.0, 600.0);
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
 
@@ -73,22 +75,17 @@ pub fn f64_to_dt(at: f64) -> DateTime<Utc> {
 #[component]
 pub fn App() -> impl IntoView {
     let (debug, set_debug) = create_signal(false);
-
-    // Font
-    let (font_height, set_font_height) = create_signal(DEFAULT_FONT_HEIGHT);
-    let (font_width, set_font_width) = create_signal(DEFAULT_FONT_WIDTH);
-    let font = Signal::derive(move || Font::new(font_height.get(), font_width.get()));
-
-    // Padding
-    let (padding_value, set_padding) = create_signal(DEFAULT_FONT_WIDTH);
-    let padding = Signal::derive(move || Padding::from(padding_value.get()));
+    let aspect = create_rw_signal(DEFAULT_ASPECT_RATIO);
+    let padding = create_rw_signal(DEFAULT_FONT_WIDTH);
+    let font_height = create_rw_signal(DEFAULT_FONT_HEIGHT);
+    let font_width = create_rw_signal(DEFAULT_FONT_WIDTH);
 
     // Data
     let (data, _) = create_signal(load_data());
     let (sine_name, set_sine_name) = create_signal("sine".to_string());
-    let (sine_width, set_sine_width) = create_signal(1.0);
+    let sine_width = create_rw_signal(1.0);
     let (cosine_name, set_cosine_name) = create_signal("cosine".to_string());
-    let (cosine_width, set_cosine_width) = create_signal(1.0);
+    let cosine_width = create_rw_signal(1.0);
     let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
         .line(
             Line::new(&|w: &Wave| w.sine)
@@ -117,68 +114,68 @@ pub fn App() -> impl IntoView {
     ]);
 
     view! {
-        <h1>"Chartistry"</h1>
-        <p>
-            <label>
-                <input type="checkbox" checked=debug on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
-                "Debug"
-            </label>
-        </p>
-        <p>
-            <label>
-                "Font height"
-                <input type="number" step="0.1" min="0.1" value=font_height on:input=move |ev| set_font_height.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_HEIGHT)) />
-            </label>
-        </p>
-        <p>
-            <label>
-                "Font width"
-                <input type="number" step="0.1" min="0.1" value=font_width on:input=move |ev| set_font_width.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_WIDTH)) />
-            </label>
-        </p>
-        <p>
-            <label>
-                "Sine"
-                <input type="text" value=sine_name on:input=move |ev| set_sine_name.set(event_target_value(&ev)) />
-            </label>
-        </p>
-        <p>
-            <label>
-                "Sine width"
-                <input type="number" step="0.1" min="0.1" value=sine_width on:input=move |ev| set_sine_width.set(event_target_value(&ev).parse().unwrap_or(1.0)) />
-            </label>
-        </p>
-        <p>
-            <label>
-                "Cosine"
-                <input type="text" value=cosine_name on:input=move |ev| set_cosine_name.set(event_target_value(&ev)) />
-            </label>
-        </p>
-        <p>
-            <label>
-                "Cosine width"
-                <input type="number" step="0.1" min="0.1" value=cosine_width on:input=move |ev| set_cosine_width.set(event_target_value(&ev).parse().unwrap_or(1.0)) />
-            </label>
-        </p>
-        <p>
-            <label>
-                "Padding"
-                <input type="number" step="0.1" min="0.1" value=padding_value on:input=move |ev| set_padding.set(event_target_value(&ev).parse().unwrap_or(DEFAULT_FONT_WIDTH)) />
-            </label>
-        </p>
+        <Style>"
+            ._chartistry {
+                margin: 2em auto;
+            }
 
-        <ViewOptions title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-        <ViewOptions title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-        <ViewOptions title="Bottom" options=bottom labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-        <ViewOptions title="Left" options=left labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-        <ViewOptions title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
+            .outer {
+                display: flex;
+                gap: 2em;
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+
+            .card {
+                width: 16em;
+                border: 1px solid #333;
+                border-radius: 0.5em;
+                padding: 1em;
+                display: grid;
+                grid-template-columns: max-content 1fr;
+                gap: 0.5em;
+            }
+
+            .card h2 {
+                grid-column: 1 / -1;
+                font-size: 100%;
+                margin: 0 auto;
+            }
+
+            .card h3 {
+                grid-column: 2 / -1;
+                font-size: 100%;
+                margin: 0;
+                align-self: end;
+            }
+
+            .card > p {
+                display: contents;
+            }
+
+            .card > p > :first-child {
+                text-align: right;
+                grid-column: 1;
+            }
+            .card > p > :nth-child(2) {
+                grid-column: 2;
+            }
+
+            .card input[type=number] {
+                width: 8ch;
+            }
+
+            .card input[type=color] {
+                width: 4ch;
+            }
+        "</Style>
 
         {move || view!{
             <Chart
-                aspect_ratio=AspectRatio::outer_width(1100.0, 0.6)
-                font=font
+                aspect_ratio=aspect
+                font=Signal::derive(move || Font::new(font_height.get(), font_width.get()))
                 debug=debug
-                padding=padding
+                padding=Signal::derive(move || Padding::from(padding.get()))
                 top=top.get().into_inner()
                 right=right.get().into_inner()
                 bottom=bottom.get().into_inner()
@@ -189,11 +186,76 @@ pub fn App() -> impl IntoView {
                 data=data
             />
         }}
+
+        <div class="outer">
+            <div class="card options">
+                <h2>"Chart options"</h2>
+                <p>
+                    <span>
+                        <input type="checkbox" id="debug" checked=debug
+                            on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
+                    </span>
+                    <label for="debug">"Debug"</label>
+                </p>
+                <p><label for="aspect">"Aspect"</label><span>"TODO"</span></p>
+                <p>
+                    <label for="padding">"Padding"</label>
+                    <StepInput id="padding" value=padding step="0.1" min="0.1" />
+                </p>
+
+                <p>
+                    <label for="font_height">"Font"</label>
+                    <span style="grid-column: 2 / -1">
+                        <StepInput id="font_width" value=font_width step="0.1" min="0.1" />
+                        <small>" width"</small>
+                        <StepInput id="font_height" value=font_height step="0.1" min="0.1" />
+                        <small>" height"</small>
+                    </span>
+                </p>
+            </div>
+
+            <div class="card data">
+                <h2>"Data options"</h2>
+                <p>
+                    <label for="data">""</label>
+                    <select id="data">
+                        <option>"Sine & cosine"</option>
+                        <option>"TODO"</option>
+                    </select>
+                </p>
+
+                <h3>"Sine"</h3>
+                <p>
+                    <label for="sine_name">"Name"</label>
+                    <input type="text" id="sine_name" value=sine_name
+                        on:input=move |ev| set_sine_name.set(event_target_value(&ev)) />
+                </p>
+                <p><StepLabel id="sine_width" value=sine_width step="0.1" min="0.1">"Width"</StepLabel></p>
+
+                <h3>"Cosine"</h3>
+                <p>
+                    <label for="cosine_name">"Name"</label>
+                    <input type="text" value=cosine_name
+                        on:input=move |ev| set_cosine_name.set(event_target_value(&ev)) />
+                </p>
+                <p><StepLabel id="cosine_width" value=cosine_width step="0.1" min="0.1">"Width"</StepLabel></p>
+            </div>
+
+            <div class="card tooltip">
+                <h2>"Tooltip"</h2>
+            </div>
+
+            <OptionsCard title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
+            <OptionsCard title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+            <OptionsCard title="Bottom" options=bottom labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+            <OptionsCard title="Left" options=left labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+            <OptionsCard title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+        </div>
     }
 }
 
 #[component]
-fn ViewOptions<Full, FullView, FullIV, Label>(
+fn OptionsCard<Full, FullView, FullIV, Label>(
     title: &'static str,
     options: RwSignal<Options<Full>>,
     labels: &'static [Label],
@@ -217,7 +279,7 @@ where
         options.set(options.get().add(option.get()));
     };
 
-    let existing_tr = Signal::derive(move || {
+    let existing_rows = Signal::derive(move || {
         let options = options.get().into_inner();
         let last = options.len().saturating_sub(1);
         options
@@ -225,35 +287,38 @@ where
             .enumerate()
             .map(|(i, opt)| {
                 view! {
-                    <tr>
-                        <td>{Label::from(opt.clone()).to_string()}</td>
-                        <td>{detail(opt)}</td>
-                        <td>{(i != 0).then_some(view!(<button on:click=on_move_up(i)>"↑"</button>))}</td>
-                        <td>{(i != last).then_some(view!(<button on:click=on_move_down(i)>"↓"</button>))}</td>
-                        <td><button on:click=on_remove(i)>"x"</button></td>
-                    </tr>
+                    <p>
+                        <span>{Label::from(opt.clone()).to_string()}</span>
+                        <span>
+                            {detail(opt)}
+                            " "
+                            {(i != 0).then_some(view!(<button on:click=on_move_up(i)>"↑"</button>))}
+                            {(i != last).then_some(view!(<button on:click=on_move_down(i)>"↓"</button>))}
+                            <button on:click=on_remove(i)>"x"</button>
+                        </span>
+                    </p>
                 }
             })
             .collect_view()
     });
 
     view! {
-        <h2>{title} " options"</h2>
-        <table>
-            <tbody>
-                {move || existing_tr}
-                <tr>
-                    <td>
-                        <select on:change=on_label_change>
-                            <For each=move || labels key=|label| label.to_string() let:label>
-                                <option selected=move || option.get() == *label>{label.to_string()}</option>
-                            </For>
-                        </select>
-                    </td>
-                    <td colspan="4"><button on:click=on_new_line>"Add option"</button></td>
-                </tr>
-            </tbody>
-        </table>
+        <div class=format!("card {}", title.to_lowercase())>
+            <h2>{title}</h2>
+            {move || existing_rows}
+            <p>
+                <span></span>
+                <span>
+                    <select on:change=on_label_change>
+                        <For each=move || labels key=|label| label.to_string() let:label>
+                            <option selected=move || option.get() == *label>{label.to_string()}</option>
+                        </For>
+                    </select>
+                    " "
+                    <button on:click=on_new_line>"Add option"</button>
+                </span>
+            </p>
+        </div>
     }
 }
 
@@ -477,6 +542,7 @@ fn inner_layout_opts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoVi
 #[component]
 fn StepLabel<T: Clone + Default + IntoAttribute + FromStr + 'static>(
     value: RwSignal<T>,
+    #[prop(into, optional)] id: String, // TODO
     #[prop(into)] step: String,
     #[prop(into, optional)] min: Option<String>,
     #[prop(into, optional)] max: Option<String>,
@@ -487,18 +553,41 @@ fn StepLabel<T: Clone + Default + IntoAttribute + FromStr + 'static>(
         value.set(min)
     };
     view! {
-        <label>
-            {children()}
-            " "
+        <label for=id.clone()>{children()}</label>
+        <input
+            type="number"
+            id=id
+            step=step
+            min=min
+            max=max
+            value=value
+            on:input=on_input />
+    }
+}
+
+#[component]
+fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
+    value: RwSignal<T>,
+    #[prop(into, optional)] id: Option<AttributeValue>,
+    #[prop(into)] step: String,
+    #[prop(into, optional)] min: Option<String>,
+    #[prop(into, optional)] max: Option<String>,
+) -> impl IntoView {
+    let on_input = move |ev| {
+        let min = event_target_value(&ev).parse().unwrap_or_default();
+        value.set(min)
+    };
+    view! {
+        <span>
             <input
                 type="number"
-                style="width: 8ch;"
+                id=id
                 step=step
                 min=min
                 max=max
                 value=value
                 on:input=on_input />
-        </label>
+        </span>
     }
 }
 
