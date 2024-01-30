@@ -152,50 +152,47 @@ pub fn App() -> impl IntoView {
                 display: flex;
                 gap: 2em;
                 flex-wrap: wrap;
+                justify-content: center;
                 align-items: flex-start;
             }
 
-            .card {
-                width: 16em;
+            fieldset {
                 border: 1px solid #333;
                 border-radius: 0.5em;
                 padding: 1em;
                 display: grid;
-                grid-template-columns: max-content 1fr;
-                gap: 0.5em;
+                grid-template-columns: max-content 1fr repeat(3, min-content);
+                align-items: baseline;
             }
 
-            .card h2 {
-                grid-column: 1 / -1;
-                font-size: 100%;
-                margin: 0 auto;
-            }
-
-            .card h3 {
+            fieldset > h3 {
                 grid-column: 2 / -1;
                 font-size: 100%;
                 margin: 0;
                 align-self: end;
             }
 
-            .card > p {
+            fieldset > p {
                 display: contents;
             }
 
-            .card > p > :first-child {
-                text-align: right;
-                grid-column: 1;
-            }
-            .card > p > :nth-child(2) {
+            fieldset > p > :nth-child(1) { 
+                grid-column: 1; 
+                text-align: right; }
+            fieldset > p > :nth-child(2) { 
                 grid-column: 2;
-            }
+                padding: 0.2em 0.5em; }
+            fieldset > p > :nth-child(3) { grid-column: 3; }
+            fieldset > p > :nth-child(4) { grid-column: 4; }
+            fieldset > p > :nth-child(5) { grid-column: 5; }
 
-            .card input[type=number] {
+            fieldset input[type=number] {
                 width: 8ch;
             }
 
-            .card input[type=color] {
-                width: 4ch;
+            fieldset input[type=color] {
+                width: 6ch;
+                height: 1.6em;
             }
         "</Style>
 
@@ -217,8 +214,8 @@ pub fn App() -> impl IntoView {
         }}
 
         <div class="outer">
-            <div class="card options">
-                <h2>"Chart options"</h2>
+            <fieldset class="options">
+                <legend>"Chart options"</legend>
                 <p>
                     <span>
                         <input type="checkbox" id="debug" checked=debug
@@ -228,11 +225,11 @@ pub fn App() -> impl IntoView {
                 </p>
                 <p>
                     <label for="aspect">"Aspect ratio"</label>
-                    <span><AspectRatio aspect=aspect width=width height=height ratio=ratio /></span>
+                    <AspectRatio aspect=aspect width=width height=height ratio=ratio />
                 </p>
                 <p>
                     <label for="padding">"Padding"</label>
-                    <StepInput id="padding" value=padding step="0.1" min="0.1" />
+                    <span><StepInput id="padding" value=padding step="0.1" min="0.1" /></span>
                 </p>
 
                 <p>
@@ -240,14 +237,15 @@ pub fn App() -> impl IntoView {
                     <span style="grid-column: 2 / -1">
                         <StepInput id="font_width" value=font_width step="0.1" min="0.1" />
                         <small>" width"</small>
+                        <br />
                         <StepInput id="font_height" value=font_height step="0.1" min="0.1" />
                         <small>" height"</small>
                     </span>
                 </p>
-            </div>
+            </fieldset>
 
-            <div class="card data">
-                <h2>"Data options"</h2>
+            <fieldset class="data">
+                <legend>"Data options"</legend>
                 <p>
                     <label for="data">""</label>
                     <select id="data">
@@ -271,11 +269,11 @@ pub fn App() -> impl IntoView {
                         on:input=move |ev| set_cosine_name.set(event_target_value(&ev)) />
                 </p>
                 <p><StepLabel id="cosine_width" value=cosine_width step="0.1" min="0.1">"Width"</StepLabel></p>
-            </div>
+            </fieldset>
 
-            <div class="card tooltip">
-                <h2>"Tooltip"</h2>
-            </div>
+            <fieldset class="tooltip">
+                <legend>"Tooltip"</legend>
+            </fieldset>
 
             <OptionsCard title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
             <OptionsCard title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
@@ -321,13 +319,10 @@ where
                 view! {
                     <p>
                         <span>{Label::from(opt.clone()).to_string()}</span>
-                        <span>
-                            {detail(opt)}
-                            " "
-                            {(i != 0).then_some(view!(<button on:click=on_move_up(i)>"↑"</button>))}
-                            {(i != last).then_some(view!(<button on:click=on_move_down(i)>"↓"</button>))}
-                            <button on:click=on_remove(i)>"x"</button>
-                        </span>
+                        <span>{detail(opt)}</span>
+                        <span>{(i != 0).then_some(view!(<button on:click=on_move_up(i)>"↑"</button>))}</span>
+                        <span>{(i != last).then_some(view!(<button on:click=on_move_down(i)>"↓"</button>))}</span>
+                        <span><button on:click=on_remove(i)>"x"</button></span>
                     </p>
                 }
             })
@@ -335,8 +330,8 @@ where
     });
 
     view! {
-        <div class=format!("card {}", title.to_lowercase())>
-            <h2>{title}</h2>
+        <fieldset class=title.to_lowercase()>
+            <legend>{title}</legend>
             {move || existing_rows}
             <p>
                 <span></span>
@@ -350,7 +345,7 @@ where
                     <button on:click=on_new_line>"Add option"</button>
                 </span>
             </p>
-        </div>
+        </fieldset>
     }
 }
 
@@ -656,14 +651,16 @@ fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
         value.set(min)
     };
     view! {
-        <input
-            type="number"
-            id=Some(id)
-            step=step
-            min=min
-            max=max
-            value=value
-            on:input=on_input />
+        <span>
+            <input
+                type="number"
+                id=Some(id)
+                step=step
+                min=min
+                max=max
+                value=value
+                on:input=on_input />
+        </span>
     }
 }
 
@@ -888,13 +885,16 @@ fn AspectRatio(
     };
 
     view! {
-        <select on:change=on_calc_change>
-            {select_calc}
-        </select>
-        <input type="number" step=1 min=1 value=move || left_value().get() on:change=on_left />
-        {calc_formula}
-        <input type="number" step=0.1 min=0.1 value=move || right_value().get() on:change=on_right />
-        " = " {result_value}
+        <span>
+            <select id="aspect" on:change=on_calc_change>
+                {select_calc}
+            </select>
+            <br />
+            <input type="number" step=1 min=1 value=move || left_value().get() on:change=on_left />
+            {calc_formula}
+            <input type="number" step=0.1 min=0.1 value=move || right_value().get() on:change=on_right />
+            " = " {result_value}
+        </span>
     }
 }
 
