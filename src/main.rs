@@ -149,6 +149,7 @@ pub fn App() -> impl IntoView {
             }
 
             .outer {
+                margin: 2em auto;
                 display: flex;
                 gap: 2em;
                 flex-wrap: wrap;
@@ -170,6 +171,7 @@ pub fn App() -> impl IntoView {
                 font-size: 100%;
                 margin: 0;
                 align-self: end;
+                padding: 0.2em 0.5em;
             }
 
             fieldset > p {
@@ -247,28 +249,40 @@ pub fn App() -> impl IntoView {
             <fieldset class="data">
                 <legend>"Data options"</legend>
                 <p>
-                    <label for="data">""</label>
-                    <select id="data">
-                        <option>"Sine & cosine"</option>
-                        <option>"TODO"</option>
-                    </select>
+                    <label for="data"></label>
+                    <span>
+                        <select id="data">
+                            <option>"Sine & cosine"</option>
+                            <option>"TODO"</option>
+                        </select>
+                    </span>
                 </p>
 
                 <h3>"Sine"</h3>
                 <p>
                     <label for="sine_name">"Name"</label>
-                    <input type="text" id="sine_name" value=sine_name
-                        on:input=move |ev| set_sine_name.set(event_target_value(&ev)) />
+                    <span>
+                        <input type="text" id="sine_name" value=sine_name
+                            on:input=move |ev| set_sine_name.set(event_target_value(&ev)) />
+                    </span>
                 </p>
-                <p><StepLabel id="sine_width" value=sine_width step="0.1" min="0.1">"Width"</StepLabel></p>
+                <p>
+                    <label for="sine_width">"Width:"</label>
+                    <span><StepInput id="sine_width" value=sine_width step="0.1" min="0.1" /></span>
+                </p>
 
                 <h3>"Cosine"</h3>
                 <p>
                     <label for="cosine_name">"Name"</label>
-                    <input type="text" value=cosine_name
-                        on:input=move |ev| set_cosine_name.set(event_target_value(&ev)) />
+                    <span>
+                        <input type="text" value=cosine_name
+                            on:input=move |ev| set_cosine_name.set(event_target_value(&ev)) />
+                    </span>
                 </p>
-                <p><StepLabel id="cosine_width" value=cosine_width step="0.1" min="0.1">"Width"</StepLabel></p>
+                <p>
+                    <label for="cosine_width">"Width:"</label>
+                    <span><StepInput id="cosine_width" value=cosine_width step="0.1" min="0.1" /></span>
+                </p>
             </fieldset>
 
             <fieldset class="tooltip">
@@ -613,20 +627,25 @@ fn inner_layout_opts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoVi
 }
 
 #[component]
-fn StepLabel<T: Clone + Default + IntoAttribute + FromStr + 'static>(
+fn WidthInput(width: RwSignal<f64>) -> impl IntoView {
+    view! {
+        <label>"width:"<StepInput value=width step="0.1" min="0" /></label>
+    }
+}
+
+#[component]
+fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
     value: RwSignal<T>,
-    #[prop(into, optional)] id: String, // TODO
+    #[prop(into, optional)] id: Option<AttributeValue>,
     #[prop(into)] step: String,
     #[prop(into, optional)] min: Option<String>,
     #[prop(into, optional)] max: Option<String>,
-    children: Children,
 ) -> impl IntoView {
     let on_input = move |ev| {
         let min = event_target_value(&ev).parse().unwrap_or_default();
         value.set(min)
     };
     view! {
-        <label for=id.clone()>{children()}</label>
         <input
             type="number"
             id=id
@@ -635,32 +654,6 @@ fn StepLabel<T: Clone + Default + IntoAttribute + FromStr + 'static>(
             max=max
             value=value
             on:input=on_input />
-    }
-}
-
-#[component]
-fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
-    value: RwSignal<T>,
-    #[prop(into)] id: AttributeValue,
-    #[prop(into)] step: String,
-    #[prop(into, optional)] min: Option<String>,
-    #[prop(into, optional)] max: Option<String>,
-) -> impl IntoView {
-    let on_input = move |ev| {
-        let min = event_target_value(&ev).parse().unwrap_or_default();
-        value.set(min)
-    };
-    view! {
-        <span>
-            <input
-                type="number"
-                id=Some(id)
-                step=step
-                min=min
-                max=max
-                value=value
-                on:input=on_input />
-        </span>
     }
 }
 
@@ -727,6 +720,7 @@ fn SelectColour(colour: RwSignal<Option<Colour>>) -> impl IntoView {
 fn RotatedLabelOpts(label: RotatedLabel) -> impl IntoView {
     view! {
         <SelectAnchor anchor=label.anchor />
+        " "
         <input type="text" value=label.text on:input=move |ev| label.text.set(event_target_value(&ev)) />
     }
 }
@@ -742,7 +736,7 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
     view! {
         // TODO
-        <StepLabel value=ticks.min_chars step="1" min="0">"min chars:"</StepLabel>
+        <label>"width:"<StepInput value=ticks.min_chars step="1" min="0" /></label>
     }
 }
 
@@ -750,15 +744,16 @@ fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
 fn AxisMarkerOpts(marker: AxisMarker) -> impl IntoView {
     let on_arrow = move |ev| marker.arrow.set(event_target_checked(&ev));
     view! {
-        <SelectAxisPlacement placement=marker.placement />
         <SelectColour colour=marker.colour />
+        " "
+        <SelectAxisPlacement placement=marker.placement />
+        " "
+        <WidthInput width=marker.width />
         " "
         <label>
             <input type="checkbox" checked=marker.arrow on:input=on_arrow />
             "arrow"
         </label>
-        ", "
-        <StepLabel value=marker.width step="0.1" min="0.1">"width:"</StepLabel>
     }
 }
 
@@ -766,6 +761,7 @@ fn AxisMarkerOpts(marker: AxisMarker) -> impl IntoView {
 fn InsetLegendOpts(legend: InsetLegend) -> impl IntoView {
     view! {
         <SelectOption label="Edge" value=legend.edge all=ALL_EDGES />
+        " "
         <LegendOpts legend=legend.legend />
     }
 }
@@ -773,8 +769,9 @@ fn InsetLegendOpts(legend: InsetLegend) -> impl IntoView {
 #[component]
 fn GridLineOpts(width: RwSignal<f64>, colour: RwSignal<Option<Colour>>) -> impl IntoView {
     view! {
-        <StepLabel value=width step="0.1" min="0.1">"width:"</StepLabel>
         <SelectColour colour=colour />
+        " "
+        <WidthInput width=width />
     }
 }
 
@@ -785,9 +782,11 @@ fn GuideLineOpts(
     colour: RwSignal<Option<Colour>>,
 ) -> impl IntoView {
     view! {
-        <SelectAlignOver align=align />
-        <StepLabel value=width step="0.1" min="0.1">"width:"</StepLabel>
         <SelectColour colour=colour />
+        " "
+        <SelectAlignOver align=align />
+        " "
+        <WidthInput width=width />
     }
 }
 
