@@ -12,7 +12,7 @@ use std::{
     rc::Rc,
 };
 
-type TickFormatFn<Tick> = std::rc::Rc<dyn Fn(&dyn TickState<Tick = Tick>, &Tick) -> String>;
+type TickFormatFn<Tick> = std::rc::Rc<dyn Fn(&Tick, &dyn TickState<Tick = Tick>) -> String>;
 
 #[derive(Clone)]
 pub struct Tooltip<X: 'static, Y: 'static> {
@@ -54,8 +54,8 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
             skip_missing: false.into(),
             table_margin: None.into(),
             sort_by: RwSignal::default(),
-            x_format: Rc::new(|s, t| s.format(t)),
-            y_format: Rc::new(|s, t| s.format(t)),
+            x_format: Rc::new(|t, s| s.format(t)),
+            y_format: Rc::new(|t, s| s.format(t)),
             x_ticks: x_ticks.borrow().clone(),
             y_ticks: y_ticks.borrow().clone(),
         }
@@ -82,7 +82,7 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
 impl<X, Y> Tooltip<X, Y> {
     pub fn set_x_format(
         mut self,
-        format: impl Fn(&dyn TickState<Tick = X>, &X) -> String + 'static,
+        format: impl Fn(&X, &dyn TickState<Tick = X>) -> String + 'static,
     ) -> Self {
         self.x_format = Rc::new(format);
         self
@@ -90,7 +90,7 @@ impl<X, Y> Tooltip<X, Y> {
 
     pub fn set_y_format(
         mut self,
-        format: impl Fn(&dyn TickState<Tick = Y>, &Y) -> String + 'static,
+        format: impl Fn(&Y, &dyn TickState<Tick = Y>) -> String + 'static,
     ) -> Self {
         self.y_format = Rc::new(format);
         self
@@ -207,7 +207,7 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
         with!(|nearest_data_x, x_ticks| {
             nearest_data_x.as_ref().map_or_else(
                 || "no data".to_string(),
-                |x_value| (x_format)(&*x_ticks.state, x_value),
+                |x_value| (x_format)(x_value, &*x_ticks.state),
             )
         })
     };
@@ -216,7 +216,7 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
         y_ticks.with(|y_ticks| {
             y_value.as_ref().map_or_else(
                 || "-".to_string(),
-                |y_value| (y_format)(&*y_ticks.state, y_value),
+                |y_value| (y_format)(y_value, &*y_ticks.state),
             )
         })
     };
