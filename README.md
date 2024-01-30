@@ -12,7 +12,9 @@ An extensible charting library for Leptos.
     - Need a general write up on difficulties
     - Stacked colours iterate but should use sequential colours with "min step by" fn
     - Default stacked colours is not one colour
+- Switch colours to issue a CSS class or raw colour. Try to skip complexity entirely.
 - Aspect ratio misapplies options on calculation. e.g., when determining the width and have height+ratio then width options are applied to the height. This implies the outer+height calculation should be removed from the API.
+- Tooltip needs a custom formatter. Move to Tick trait. `Fn(&Tick, &dyn TickState<Tick = Tick>) -> String>`
 
 ## Design experiments and notes:
 

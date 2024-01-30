@@ -3,16 +3,13 @@ use crate::{
     layout::Layout,
     series::{Snippet, UseLine},
     state::{PreState, State},
-    Tick, TickLabels, TickState,
+    Tick, TickLabels,
 };
 use leptos::*;
 use std::{
     borrow::Borrow,
     cmp::{Ordering, Reverse},
-    rc::Rc,
 };
-
-type TickFormatFn<Tick> = std::rc::Rc<dyn Fn(&Tick, &dyn TickState<Tick = Tick>) -> String>;
 
 #[derive(Clone)]
 pub struct Tooltip<X: 'static, Y: 'static> {
@@ -20,9 +17,6 @@ pub struct Tooltip<X: 'static, Y: 'static> {
     pub skip_missing: RwSignal<bool>,
     pub table_margin: RwSignal<Option<f64>>,
     pub sort_by: RwSignal<SortBy>,
-
-    x_format: TickFormatFn<X>,
-    y_format: TickFormatFn<Y>,
 
     pub x_ticks: TickLabels<X>,
     pub y_ticks: TickLabels<Y>,
@@ -54,8 +48,6 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
             skip_missing: false.into(),
             table_margin: None.into(),
             sort_by: RwSignal::default(),
-            x_format: Rc::new(|t, s| s.format(t)),
-            y_format: Rc::new(|t, s| s.format(t)),
             x_ticks: x_ticks.borrow().clone(),
             y_ticks: y_ticks.borrow().clone(),
         }
@@ -76,24 +68,6 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
             TickLabels::default(),
             TickLabels::default(),
         )
-    }
-}
-
-impl<X, Y> Tooltip<X, Y> {
-    pub fn set_x_format(
-        mut self,
-        format: impl Fn(&X, &dyn TickState<Tick = X>) -> String + 'static,
-    ) -> Self {
-        self.x_format = Rc::new(format);
-        self
-    }
-
-    pub fn set_y_format(
-        mut self,
-        format: impl Fn(&Y, &dyn TickState<Tick = Y>) -> String + 'static,
-    ) -> Self {
-        self.y_format = Rc::new(format);
-        self
     }
 }
 
@@ -179,8 +153,6 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
         sort_by,
         skip_missing,
         table_margin,
-        x_format,
-        y_format,
         x_ticks,
         y_ticks,
     } = tooltip;
@@ -207,17 +179,16 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
         with!(|nearest_data_x, x_ticks| {
             nearest_data_x.as_ref().map_or_else(
                 || "no data".to_string(),
-                |x_value| (x_format)(x_value, &*x_ticks.state),
+                |x_value| x_ticks.state.format(x_value),
             )
         })
     };
 
     let format_y_value = move |y_value: Option<Y>| {
         y_ticks.with(|y_ticks| {
-            y_value.as_ref().map_or_else(
-                || "-".to_string(),
-                |y_value| (y_format)(y_value, &*y_ticks.state),
-            )
+            y_value
+                .as_ref()
+                .map_or_else(|| "-".to_string(), |y_value| y_ticks.state.format(y_value))
         })
     };
 
@@ -279,14 +250,14 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
                 <h2
                     style="margin: 0; text-align: center;"
                     style:font-size=move || format!("{}px", font.get().height())>
-                    {x_body.clone()}
+                    {x_body}
                 </h2>
                 <table
                     style="border-collapse: collapse; border-spacing: 0; margin: 0 auto; padding: 0;"
                     style:font-size=move || format!("{}px", font.get().height())>
                     <tbody>
                         <For
-                            each=nearest_data_y.clone()
+                            each=nearest_data_y
                             key=|(series, y_value)| (series.id, y_value.to_owned())
                             children=series_tr.clone()
                         />
