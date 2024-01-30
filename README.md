@@ -12,6 +12,7 @@ An extensible charting library for Leptos.
     - Need a general write up on difficulties
     - Stacked colours iterate but should use sequential colours with "min step by" fn
     - Default stacked colours is not one colour
+- Aspect ratio misapplies options on calculation. e.g., when determining the width and have height+ratio then width options are applied to the height. This implies the outer+height calculation should be removed from the API.
 
 ## Design experiments and notes:
 
