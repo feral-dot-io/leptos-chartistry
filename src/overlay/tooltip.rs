@@ -3,7 +3,7 @@ use crate::{
     layout::Layout,
     series::{Snippet, UseLine},
     state::{PreState, State},
-    TickLabels, TickState,
+    Tick, TickLabels, TickState,
 };
 use leptos::*;
 use std::{
@@ -13,27 +13,47 @@ use std::{
 };
 
 type TickFormatFn<Tick> = std::rc::Rc<dyn Fn(&dyn TickState<Tick = Tick>, &Tick) -> String>;
-type SortByFn<Y> = dyn Fn(&mut [(UseLine, Option<Y>)]);
 
 #[derive(Clone)]
 pub struct Tooltip<X: 'static, Y: 'static> {
-    skip_missing: MaybeSignal<bool>,
-    table_margin: MaybeSignal<Option<f64>>,
-    sort_by: Rc<SortByFn<Y>>,
+    pub placement: RwSignal<HoverPlacement>,
+    pub skip_missing: RwSignal<bool>,
+    pub table_margin: RwSignal<Option<f64>>,
+    pub sort_by: RwSignal<SortBy>,
 
     x_format: TickFormatFn<X>,
     y_format: TickFormatFn<Y>,
 
-    x_ticks: TickLabels<X>,
-    y_ticks: TickLabels<Y>,
+    pub x_ticks: TickLabels<X>,
+    pub y_ticks: TickLabels<Y>,
 }
 
-impl<X: Clone, Y: Clone> Tooltip<X, Y> {
-    fn new(x_ticks: impl Borrow<TickLabels<X>>, y_ticks: impl Borrow<TickLabels<Y>>) -> Self {
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub enum HoverPlacement {
+    Hide,
+    #[default]
+    LeftCursor,
+}
+
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub enum SortBy {
+    #[default]
+    Lines,
+    Ascending,
+    Descending,
+}
+
+impl<X: Tick, Y: Tick> Tooltip<X, Y> {
+    pub fn new(
+        placement: impl Into<HoverPlacement>,
+        x_ticks: impl Borrow<TickLabels<X>>,
+        y_ticks: impl Borrow<TickLabels<Y>>,
+    ) -> Self {
         Self {
+            placement: RwSignal::new(placement.into()),
             skip_missing: false.into(),
             table_margin: None.into(),
-            sort_by: Rc::new(|_| ()),
+            sort_by: RwSignal::default(),
             x_format: Rc::new(|s, t| s.format(t)),
             y_format: Rc::new(|s, t| s.format(t)),
             x_ticks: x_ticks.borrow().clone(),
@@ -45,21 +65,21 @@ impl<X: Clone, Y: Clone> Tooltip<X, Y> {
         x_ticks: impl Borrow<TickLabels<X>>,
         y_ticks: impl Borrow<TickLabels<Y>>,
     ) -> Self {
-        Self::new(x_ticks, y_ticks)
+        Self::new(HoverPlacement::LeftCursor, x_ticks, y_ticks)
+    }
+}
+
+impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
+    fn default() -> Self {
+        Self::new(
+            HoverPlacement::default(),
+            TickLabels::default(),
+            TickLabels::default(),
+        )
     }
 }
 
 impl<X, Y> Tooltip<X, Y> {
-    pub fn set_skip_missing(mut self, skip_missing: impl Into<MaybeSignal<bool>>) -> Self {
-        self.skip_missing = skip_missing.into();
-        self
-    }
-
-    pub fn set_table_margin(mut self, table_margin: impl Into<MaybeSignal<Option<f64>>>) -> Self {
-        self.table_margin = table_margin.into();
-        self
-    }
-
     pub fn set_x_format(
         mut self,
         format: impl Fn(&dyn TickState<Tick = X>, &X) -> String + 'static,
@@ -75,26 +95,19 @@ impl<X, Y> Tooltip<X, Y> {
         self.y_format = Rc::new(format);
         self
     }
-
-    pub fn sort_by(mut self, f: impl Fn(&mut [(UseLine, Option<Y>)]) + 'static) -> Self {
-        self.sort_by = Rc::new(f);
-        self
-    }
-
-    pub fn sort_by_default(self) -> Self {
-        self.sort_by(|_| ())
-    }
 }
 
-impl<X, Y: Clone + Ord + 'static> Tooltip<X, Y> {
-    pub fn sort_by_ascending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseLine, Option<Y>)]| lines.sort_by_key(|(_, y)| y.clone()))
+impl SortBy {
+    fn to_ord<Y: Tick>(y: &Option<Y>) -> Option<F64Ord> {
+        y.as_ref().map(|y| F64Ord(y.position()))
     }
 
-    pub fn sort_by_descending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseLine, Option<Y>)]| {
-            lines.sort_by_key(|(_, y)| Reverse(y.clone()))
-        })
+    fn sort_values<Y: Tick>(&self, values: &mut [(UseLine, Option<Y>)]) {
+        match self {
+            SortBy::Lines => values.sort_by_key(|(line, _)| line.name.get()),
+            SortBy::Ascending => values.sort_by_key(|(_, y)| Self::to_ord(y)),
+            SortBy::Descending => values.sort_by_key(|(_, y)| Reverse(Self::to_ord(y))),
+        }
     }
 }
 
@@ -115,26 +128,54 @@ impl Ord for F64Ord {
 
 impl Eq for F64Ord {}
 
-impl<X> Tooltip<X, f64> {
-    pub fn sort_by_f64_ascending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseLine, Option<f64>)]| {
-            lines.sort_by_key(|(_, y)| y.map(F64Ord))
-        })
+impl std::fmt::Display for HoverPlacement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HoverPlacement::Hide => write!(f, "Hide"),
+            HoverPlacement::LeftCursor => write!(f, "Left cursor"),
+        }
     }
+}
 
-    pub fn sort_by_f64_descending(self) -> Self {
-        self.sort_by(|lines: &mut [(UseLine, Option<f64>)]| {
-            lines.sort_by_key(|(_, y)| y.map(|y| Reverse(F64Ord(y))))
-        })
+impl std::str::FromStr for HoverPlacement {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "hide" => Ok(HoverPlacement::Hide),
+            "left cursor" => Ok(HoverPlacement::LeftCursor),
+            _ => Err(format!("invalid HoverPlacement: `{}`", s)),
+        }
+    }
+}
+
+impl std::fmt::Display for SortBy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SortBy::Lines => write!(f, "Lines"),
+            SortBy::Ascending => write!(f, "Ascending"),
+            SortBy::Descending => write!(f, "Descending"),
+        }
+    }
+}
+
+impl std::str::FromStr for SortBy {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "lines" => Ok(SortBy::Lines),
+            "ascending" => Ok(SortBy::Ascending),
+            "descending" => Ok(SortBy::Descending),
+            _ => Err(format!("invalid SortBy: `{}`", s)),
+        }
     }
 }
 
 #[component]
-pub fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
-    tooltip: Tooltip<X, Y>,
-    state: State<X, Y>,
-) -> impl IntoView {
+pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> impl IntoView {
     let Tooltip {
+        placement,
         sort_by,
         skip_missing,
         table_margin,
@@ -192,7 +233,7 @@ pub fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
                     .collect::<Vec<_>>()
             }
             // Sort values
-            (sort_by)(&mut y_values);
+            sort_by.get().sort_values(&mut y_values);
             y_values
         })
     };
@@ -228,7 +269,7 @@ pub fn Tooltip<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static>(
     let table_margin =
         Signal::derive(move || table_margin.get().unwrap_or_else(|| font.get().height()));
     view! {
-        <Show when=move || hover_inner.get()>
+        <Show when=move || hover_inner.get() && placement.get() != HoverPlacement::Hide >
             <DebugRect label="tooltip" debug=debug />
             <aside
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff; white-space: pre; font-family: monospace;"

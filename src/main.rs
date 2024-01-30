@@ -24,6 +24,8 @@ const ALL_ASPECT_OPTIONS: &[AspectOption] = &[
     AspectOption::Environment,
 ];
 const ALL_ASPECT_CALCS: &[AspectCalc] = &[AspectCalc::Ratio, AspectCalc::Width, AspectCalc::Height];
+const ALL_HOVER_PLACEMENTS: &[HoverPlacement] = &[HoverPlacement::Hide, HoverPlacement::LeftCursor];
+const ALL_SORT_BYS: &[SortBy] = &[SortBy::Lines, SortBy::Ascending, SortBy::Descending];
 
 #[derive(Clone)]
 struct Options<Opt>(Vec<Opt>);
@@ -97,6 +99,7 @@ pub fn f64_to_dt(at: f64) -> DateTime<Utc> {
 pub fn App() -> impl IntoView {
     provide_meta_context();
 
+    // General options
     let (debug, set_debug) = create_signal(false);
     let padding = create_rw_signal(DEFAULT_FONT_WIDTH);
     let font_height = create_rw_signal(DEFAULT_FONT_HEIGHT);
@@ -115,6 +118,8 @@ pub fn App() -> impl IntoView {
     let sine_width = create_rw_signal(1.0);
     let (cosine_name, set_cosine_name) = create_signal("cosine".to_string());
     let cosine_width = create_rw_signal(1.0);
+
+    // Series
     let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
         .line(
             Line::new(&|w: &Wave| w.sine)
@@ -141,6 +146,8 @@ pub fn App() -> impl IntoView {
         XGuideLine::default().into_inner_layout(),
         YGuideLine::default().into_inner_layout(),
     ]);
+    let tooltip = Tooltip::default();
+    let tooltip_card = tooltip.clone();
 
     view! {
         <Style>"
@@ -169,6 +176,7 @@ pub fn App() -> impl IntoView {
             fieldset > h3 {
                 grid-column: 2 / -1;
                 font-size: 100%;
+                font-weight: normal;
                 margin: 0;
                 align-self: end;
                 padding: 0.2em 0.5em;
@@ -209,7 +217,7 @@ pub fn App() -> impl IntoView {
                 bottom=bottom.get().into_inner()
                 left=left.get().into_inner()
                 inner=inner.get().into_inner()
-                //tooltip=tooltip
+                tooltip=tooltip.clone()
                 series=series.clone()
                 data=data
             />
@@ -285,9 +293,7 @@ pub fn App() -> impl IntoView {
                 </p>
             </fieldset>
 
-            <fieldset class="tooltip">
-                <legend>"Tooltip"</legend>
-            </fieldset>
+            <TooltipCard tooltip=tooltip_card />
 
             <OptionsCard title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
             <OptionsCard title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
@@ -641,7 +647,7 @@ fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
     #[prop(into, optional)] min: Option<String>,
     #[prop(into, optional)] max: Option<String>,
 ) -> impl IntoView {
-    let on_input = move |ev| {
+    let on_change = move |ev| {
         let min = event_target_value(&ev).parse().unwrap_or_default();
         value.set(min)
     };
@@ -653,13 +659,14 @@ fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
             min=min
             max=max
             value=value
-            on:input=on_input />
+            on:change=on_change />
     }
 }
 
 #[component]
 fn SelectOption<Opt>(
     #[prop(into)] label: String,
+    #[prop(into, optional)] id: Option<AttributeValue>,
     value: RwSignal<Opt>,
     all: &'static [Opt],
 ) -> impl IntoView
@@ -668,7 +675,7 @@ where
 {
     let on_change = move |ev| value.set(event_target_value(&ev).parse().unwrap_or(all[0]));
     view! {
-        <select on:change=on_change>
+        <select id=id on:change=on_change>
             <optgroup label=label>
                 <For each=move || all key=|opt| opt.to_string() let:opt>
                     <option selected=move || value.get() == *opt>{opt.to_string()}</option>
@@ -681,8 +688,8 @@ where
 macro_rules! select_impl {
     ($fn:ident, $label:literal, $input:ident, $signal:ty, $all:ident) => {
         #[component]
-        fn $fn($input: RwSignal<$signal>) -> impl IntoView {
-            view!(<SelectOption label=$label value=$input all=$all />)
+        fn $fn(#[prop(into, optional)] id: Option<AttributeValue>, $input: RwSignal<$signal>) -> impl IntoView {
+            view!(<SelectOption id=id label=$label value=$input all=$all />)
         }
     };
 }
@@ -703,6 +710,14 @@ select_impl!(
     ALL_AXIS_PLACEMENTS
 );
 select_impl!(SelectEdge, "Edge", edge, Edge, ALL_EDGES);
+select_impl!(
+    SelectHoverPlacement,
+    "Placement",
+    hover,
+    HoverPlacement,
+    ALL_HOVER_PLACEMENTS
+);
+select_impl!(SelectSortBy, "Order", sort_by, SortBy, ALL_SORT_BYS);
 
 #[component]
 fn SelectColour(colour: RwSignal<Option<Colour>>) -> impl IntoView {
@@ -907,5 +922,57 @@ fn update_aspect_counterpart(
         AspectCalc::Ratio => ratio.set(width.get_untracked() / height.get_untracked()),
         AspectCalc::Width => width.set(height.get_untracked() * ratio.get_untracked()),
         AspectCalc::Height => height.set(width.get_untracked() / ratio.get_untracked()),
+    }
+}
+
+#[component]
+fn TooltipCard<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>) -> impl IntoView {
+    let Tooltip {
+        placement,
+        sort_by,
+        skip_missing,
+        table_margin,
+        ..
+    } = tooltip;
+
+    view! {
+        <fieldset class="tooltip">
+            <legend>"Tooltip"</legend>
+            <p>
+                <label for="tooltip_hover">"Hover"</label>
+                <span><SelectHoverPlacement id="tooltip_hover" hover=placement /></span>
+            </p>
+            <p>
+                <label for="tooltip_sort">"Sort by"</label>
+                <span><SelectSortBy id="tooltip_sort" sort_by=sort_by /></span>
+            </p>
+            <p>
+                <span>
+                    <input type="checkbox" id="skip_missing" checked=skip_missing
+                        on:input=move |ev| skip_missing.set(event_target_checked(&ev)) />
+                </span>
+                <label for="skip_missing">"Skip missing?"</label>
+            </p>
+            <p>
+                <span>
+                    <input type="checkbox" id="table_margin" checked=table_margin
+                        on:input=move |ev| table_margin.set(event_target_checked(&ev).then_some(DEFAULT_FONT_WIDTH)) />
+                </span>
+                <span>
+                    <label for="table_margin">"Table margin?"</label>
+                    {move || table_margin.get().map(move |margin| {
+                        let on_change = move |ev| {
+                            let value = event_target_value(&ev).parse().unwrap_or_default();
+                            table_margin.set(Some(value))
+                        };
+                        view! {
+                            <br />
+                            <input type="number" step="0.1" min="0" value=margin
+                                on:change=on_change />
+                        }
+                    })}
+                </span>
+            </p>
+        </fieldset>
     }
 }
