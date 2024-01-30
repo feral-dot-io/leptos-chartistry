@@ -17,7 +17,6 @@ pub struct Tooltip<X: 'static, Y: 'static> {
     pub skip_missing: RwSignal<bool>,
     pub table_margin: RwSignal<Option<f64>>,
     pub sort_by: RwSignal<SortBy>,
-
     pub x_ticks: TickLabels<X>,
     pub y_ticks: TickLabels<Y>,
 }
@@ -45,29 +44,31 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
     ) -> Self {
         Self {
             placement: RwSignal::new(placement.into()),
-            skip_missing: false.into(),
-            table_margin: None.into(),
-            sort_by: RwSignal::default(),
             x_ticks: x_ticks.borrow().clone(),
             y_ticks: y_ticks.borrow().clone(),
+            ..Default::default()
         }
     }
 
-    pub fn left_cursor(
-        x_ticks: impl Borrow<TickLabels<X>>,
-        y_ticks: impl Borrow<TickLabels<Y>>,
-    ) -> Self {
-        Self::new(HoverPlacement::LeftCursor, x_ticks, y_ticks)
+    pub fn from_placement(placement: impl Into<HoverPlacement>) -> Self {
+        Self::new(placement, TickLabels::default(), TickLabels::default())
+    }
+
+    pub fn left_cursor() -> Self {
+        Self::from_placement(HoverPlacement::LeftCursor)
     }
 }
 
 impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
     fn default() -> Self {
-        Self::new(
-            HoverPlacement::default(),
-            TickLabels::default(),
-            TickLabels::default(),
-        )
+        Self {
+            placement: RwSignal::default(),
+            skip_missing: false.into(),
+            table_margin: None.into(),
+            sort_by: RwSignal::default(),
+            x_ticks: TickLabels::default(),
+            y_ticks: TickLabels::default(),
+        }
     }
 }
 
