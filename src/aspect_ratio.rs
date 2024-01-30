@@ -118,7 +118,7 @@ impl AspectRatioCalc {
             let options = left.get() + right.get();
             match calc.get() {
                 AspectRatioCalc::WidthAndRatio(width, _) => width.size(options),
-                AspectRatioCalc::HeightAndRatio(height, ratio) => height.size(options) / ratio,
+                AspectRatioCalc::HeightAndRatio(height, ratio) => height.size(options) * ratio,
                 AspectRatioCalc::WidthAndHeight(width, _) => width.size(options),
             }
         })
@@ -132,7 +132,7 @@ impl AspectRatioCalc {
         create_memo(move |_| {
             let options = top.get() + bottom.get();
             match calc.get() {
-                AspectRatioCalc::WidthAndRatio(width, ratio) => width.size(options) * ratio,
+                AspectRatioCalc::WidthAndRatio(width, ratio) => width.size(options) / ratio,
                 AspectRatioCalc::HeightAndRatio(height, _) => height.size(options),
                 AspectRatioCalc::WidthAndHeight(_, height) => height.size(options),
             }
