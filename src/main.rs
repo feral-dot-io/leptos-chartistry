@@ -106,11 +106,11 @@ pub fn App() -> impl IntoView {
     let font_width = create_rw_signal(DEFAULT_FONT_WIDTH);
 
     // Aspect ratio
-    let aspect = create_rw_signal((AspectOption::default(), AspectCalc::default()));
+    let aspect = create_rw_signal(AspectOption::default());
+    let calc = create_rw_signal(AspectCalc::default());
     let width = create_rw_signal(800.0);
     let height = create_rw_signal(600.0);
     let ratio = create_rw_signal(1.0);
-    update_aspect_counterpart(aspect, width, height, ratio);
 
     // Data
     let (data, _) = create_signal(load_data());
@@ -208,7 +208,7 @@ pub fn App() -> impl IntoView {
 
         {move || view!{
             <Chart
-                aspect_ratio=derive_aspect_ratio(aspect, width, height, ratio)
+                aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
                 font=Signal::derive(move || Font::new(font_height.get(), font_width.get()))
                 debug=debug
                 padding=Signal::derive(move || Padding::from(padding.get()))
@@ -235,7 +235,7 @@ pub fn App() -> impl IntoView {
                 </p>
                 <p>
                     <label for="aspect">"Aspect ratio"</label>
-                    <AspectRatio aspect=aspect width=width height=height ratio=ratio />
+                    <AspectRatio aspect=aspect calc=calc width=width height=height ratio=ratio />
                 </p>
                 <p>
                     <label for="padding">"Padding"</label>
@@ -718,6 +718,20 @@ select_impl!(
     ALL_HOVER_PLACEMENTS
 );
 select_impl!(SelectSortBy, "Order", sort_by, SortBy, ALL_SORT_BYS);
+select_impl!(
+    SelectAspectOption,
+    "Aspect ratio",
+    aspect,
+    AspectOption,
+    ALL_ASPECT_OPTIONS
+);
+select_impl!(
+    SelectAspectCalc,
+    "Calculation",
+    calc,
+    AspectCalc,
+    ALL_ASPECT_CALCS
+);
 
 #[component]
 fn SelectColour(colour: RwSignal<Option<Colour>>) -> impl IntoView {
@@ -806,32 +820,32 @@ fn GuideLineOpts(
 }
 
 fn derive_aspect_ratio(
-    aspect: RwSignal<(AspectOption, AspectCalc)>,
+    aspect: RwSignal<AspectOption>,
+    calc: RwSignal<AspectCalc>,
     width: RwSignal<f64>,
     height: RwSignal<f64>,
     ratio: RwSignal<f64>,
 ) -> Signal<AspectRatio> {
     Signal::derive(move || {
-        let (aspect, calc) = aspect.get();
+        let calc = calc.get();
         let width = width.get();
         let height = height.get();
         let ratio = ratio.get();
         use AspectCalc as Calc;
-        match aspect {
+        match aspect.get() {
             AspectOption::Outer => match calc {
-                // TODO rename AspectRatio fns
-                Calc::Width => AspectRatio::outer_height(height, ratio),
-                Calc::Height => AspectRatio::outer_width(width, ratio),
-                Calc::Ratio => AspectRatio::outer(width, height),
+                Calc::Width => AspectRatio::outer_width(height, ratio),
+                Calc::Height => AspectRatio::outer_height(width, ratio),
+                Calc::Ratio => AspectRatio::outer_ratio(width, height),
             },
             AspectOption::Inner => match calc {
-                Calc::Width => AspectRatio::inner_height(width, ratio),
-                Calc::Height => AspectRatio::inner_width(height, ratio),
-                Calc::Ratio => AspectRatio::inner(width, height),
+                Calc::Width => AspectRatio::inner_width(height, ratio),
+                Calc::Height => AspectRatio::inner_height(width, ratio),
+                Calc::Ratio => AspectRatio::inner_ratio(width, height),
             },
             AspectOption::Environment => match calc {
-                Calc::Width => AspectRatio::environment_height(ratio),
-                Calc::Height => AspectRatio::environment_width(ratio),
+                Calc::Width => AspectRatio::environment_width(ratio),
+                Calc::Height => AspectRatio::environment_height(ratio),
                 Calc::Ratio => AspectRatio::environment(),
             },
         }
@@ -840,88 +854,69 @@ fn derive_aspect_ratio(
 
 #[component]
 fn AspectRatio(
-    aspect: RwSignal<(AspectOption, AspectCalc)>,
+    aspect: RwSignal<AspectOption>,
+    calc: RwSignal<AspectCalc>,
     width: RwSignal<f64>,
     height: RwSignal<f64>,
     ratio: RwSignal<f64>,
 ) -> impl IntoView {
-    let on_calc_change = move |ev| {
-        let calc = event_target_value(&ev).parse().unwrap_or_default();
-        aspect.set((aspect.get().0, calc));
-        update_aspect_counterpart(aspect, width, height, ratio);
-    };
-    let select_calc = ALL_ASPECT_OPTIONS
-        .iter()
-        .map(|&opt| {
-            let calcs = ALL_ASPECT_CALCS
-                .iter()
-                .map(|&opt_calc| view! {
-                    <option selected=move || aspect.get() == (opt, opt_calc)>{opt_calc.to_string()}</option>
-                })
-                .collect::<Vec<_>>();
-            view! {
-                <optgroup label=opt.to_string()>
-                    {calcs}
-                </optgroup>
-            }
-        })
-        .collect_view();
-
-    let left_value = move || match aspect.get().1 {
-        AspectCalc::Ratio => width,
-        AspectCalc::Width => height,
-        AspectCalc::Height => width,
-    };
-    let right_value = move || match aspect.get().1 {
-        AspectCalc::Ratio => height,
-        AspectCalc::Width => ratio,
-        AspectCalc::Height => ratio,
-    };
     let on_left = move |ev| {
         let value = event_target_value(&ev).parse().unwrap_or_default();
-        left_value().set(value);
-        update_aspect_counterpart(aspect, width, height, ratio);
+        match calc.get() {
+            AspectCalc::Ratio => width.set(value),
+            AspectCalc::Width => height.set(value),
+            AspectCalc::Height => width.set(value),
+        }
     };
     let on_right = move |ev| {
         let value = event_target_value(&ev).parse().unwrap_or_default();
-        right_value().set(value);
-        update_aspect_counterpart(aspect, width, height, ratio);
+        match calc.get() {
+            AspectCalc::Ratio => height.set(value),
+            AspectCalc::Width => ratio.set(value),
+            AspectCalc::Height => ratio.set(value),
+        }
     };
-    let calc_formula = move || match aspect.get().1 {
+
+    let left_value = move || match calc.get() {
+        AspectCalc::Ratio => format!("{:.0}", width.get()),
+        AspectCalc::Width => format!("{:.0}", height.get()),
+        AspectCalc::Height => format!("{:.0}", width.get()),
+    };
+    let right_value = move || match calc.get() {
+        AspectCalc::Ratio => format!("{:.0}", height.get()),
+        AspectCalc::Width => format!("{:.2}", ratio.get()),
+        AspectCalc::Height => format!("{:.2}", ratio.get()),
+    };
+
+    let calc_formula = move || match calc.get() {
         AspectCalc::Ratio => view! { " / " },
         AspectCalc::Width => view! { " * " },
         AspectCalc::Height => view! { " / " },
     };
-    let result_value = move || match aspect.get().1 {
+    let result_value = move || match calc.get() {
         AspectCalc::Ratio => format!("{:.2} ratio", ratio.get()),
-        AspectCalc::Width => format!("{:.1} width", width.get()),
-        AspectCalc::Height => format!("{:.1} height", height.get()),
+        AspectCalc::Width => format!("{:.0} width", width.get()),
+        AspectCalc::Height => format!("{:.0} height", height.get()),
     };
+
+    // When not used, our third var is just for show. Update it when the other two change.
+    create_effect(move |_| match calc.get() {
+        AspectCalc::Ratio => ratio.set(width.get() / height.get()),
+        AspectCalc::Width => width.set(height.get() * ratio.get()),
+        AspectCalc::Height => height.set(width.get() / ratio.get()),
+    });
 
     view! {
         <span>
-            <select id="aspect" on:change=on_calc_change>
-                {select_calc}
-            </select>
+            <SelectAspectOption aspect=aspect />
             <br />
-            <input type="number" step=1 min=1 value=move || left_value().get() on:change=on_left />
+            <SelectAspectCalc calc=calc />
+            <br />
+            <input type="number" step=1 min=1 value=left_value on:change=on_left />
             {calc_formula}
-            <input type="number" step=0.1 min=0.1 value=move || right_value().get() on:change=on_right />
+            <input type="number" step=0.1 min=0.1 value=right_value on:change=on_right />
             " = " {result_value}
         </span>
-    }
-}
-
-fn update_aspect_counterpart(
-    aspect: RwSignal<(AspectOption, AspectCalc)>,
-    width: RwSignal<f64>,
-    height: RwSignal<f64>,
-    ratio: RwSignal<f64>,
-) {
-    match aspect.get_untracked().1 {
-        AspectCalc::Ratio => ratio.set(width.get_untracked() / height.get_untracked()),
-        AspectCalc::Width => width.set(height.get_untracked() * ratio.get_untracked()),
-        AspectCalc::Height => height.set(width.get_untracked() / ratio.get_untracked()),
     }
 }
 
