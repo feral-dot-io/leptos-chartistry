@@ -484,21 +484,14 @@ impl FromStr for EdgeOption {
     }
 }
 
-impl<Tick> From<&EdgeLayout<Tick>> for EdgeOption {
-    fn from(layout: &EdgeLayout<Tick>) -> Self {
+impl<Tick> From<EdgeLayout<Tick>> for EdgeOption {
+    fn from(layout: EdgeLayout<Tick>) -> Self {
         match layout {
             EdgeLayout::RotatedLabel(_) => Self::RotatedLabel,
             EdgeLayout::Legend(_) => Self::Legend,
             EdgeLayout::TickLabels(_) => Self::TickLabels,
             _ => EdgeOption::default(),
         }
-    }
-}
-
-impl<Tick> From<EdgeLayout<Tick>> for EdgeOption {
-    fn from(layout: EdgeLayout<Tick>) -> Self {
-        // TODO
-        (&layout).into()
     }
 }
 
