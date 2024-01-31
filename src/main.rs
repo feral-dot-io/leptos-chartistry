@@ -543,8 +543,8 @@ impl FromStr for InnerOption {
     }
 }
 
-impl<X: Tick, Y: Tick> From<&InnerLayout<X, Y>> for InnerOption {
-    fn from(layout: &InnerLayout<X, Y>) -> Self {
+impl<X: Tick, Y: Tick> From<InnerLayout<X, Y>> for InnerOption {
+    fn from(layout: InnerLayout<X, Y>) -> Self {
         match layout {
             InnerLayout::AxisMarker(_) => Self::AxisMarker,
             InnerLayout::XGridLine(_) => Self::XGridLine,
@@ -554,13 +554,6 @@ impl<X: Tick, Y: Tick> From<&InnerLayout<X, Y>> for InnerOption {
             InnerLayout::Legend(_) => Self::Legend,
             _ => InnerOption::default(),
         }
-    }
-}
-
-impl<X: Tick, Y: Tick> From<InnerLayout<X, Y>> for InnerOption {
-    fn from(layout: InnerLayout<X, Y>) -> Self {
-        // TODO
-        (&layout).into()
     }
 }
 
