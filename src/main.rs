@@ -127,34 +127,34 @@ pub fn App() -> impl IntoView {
     let (cosine_name, set_cosine_name) = create_signal("cosine".to_string());
     let cosine_width = create_rw_signal(1.0);
 
-    // X axis
-    let x_ticks = TickLabels::aligned_floats();
     // Y axis
-    let y_periods: RwSignal<HashSet<_>> = create_rw_signal(Period::all().into());
-    let y_format = create_rw_signal(TimestampFormat::default());
-    let mk_y_gen = move || {
-        let periods = y_periods.get().into_iter().collect::<Vec<_>>();
-        let format = y_format.get();
+    let y_ticks = TickLabels::aligned_floats();
+    // Y axis
+    let x_periods: RwSignal<HashSet<_>> = create_rw_signal(Period::all().into());
+    let x_format = create_rw_signal(TimestampFormat::default());
+    let mk_x_gen = move || {
+        let periods = x_periods.get().into_iter().collect::<Vec<_>>();
+        let format = x_format.get();
         let gen = PeriodicTimestamps::from_periods(periods).with_format(format);
         Rc::new(gen)
     };
-    let y_ticks = TickLabels::default(); // Assumes y_periods and y_format are picked for default
-    let y_ticks_gen = y_ticks.generator;
+    let x_ticks = TickLabels::default(); // Assumes this uses default periods and format
+    let x_ticks_gen = x_ticks.generator;
     let on_period = move |period, ev| {
-        let mut periods = y_periods.get();
+        let mut periods = x_periods.get();
         // Update periods
         if event_target_checked(&ev) {
             periods.insert(period)
         } else {
             periods.remove(&period)
         };
-        y_periods.set(periods);
-        y_ticks_gen.set(mk_y_gen());
+        x_periods.set(periods);
+        x_ticks_gen.set(mk_x_gen());
     };
     let on_ts_format = move |ev| {
         let format = parse_timestamp_format(&event_target_value(&ev));
-        y_format.set(format);
-        y_ticks_gen.set(mk_y_gen());
+        x_format.set(format);
+        x_ticks_gen.set(mk_x_gen());
     };
 
     // Series
@@ -175,8 +175,8 @@ pub fn App() -> impl IntoView {
         "Hello and welcome to Chartistry!",
     )]);
     let right = Options::create_signal(vec![Legend::middle()]);
-    let bottom = Options::create_signal(vec![y_ticks]);
-    let left = Options::create_signal(vec![x_ticks]);
+    let bottom = Options::create_signal(vec![x_ticks]);
+    let left = Options::create_signal(vec![y_ticks]);
     let inner: RwSignal<Options<InnerLayout<DateTime<Utc>, f64>>> = Options::create_signal(vec![
         AxisMarker::top_edge().into_inner_layout(),
         XGridLine::default().into_inner_layout(),
@@ -309,27 +309,27 @@ pub fn App() -> impl IntoView {
                     </span>
                 </p>
                 <p>
-                    <span>"X axis"</span>
+                    <span>"Y axis"</span>
                     <span>"Aligned floats"</span>
                 </p>
                 <p>
-                    <span>"Y axis"</span>
+                    <span>"X axis"</span>
                     <span>
                         <div class="periods">
-                            <PeriodLabel periods=y_periods period=Period::Year on_change=on_period />
-                            <PeriodLabel periods=y_periods period=Period::Month on_change=on_period />
-                            <PeriodLabel periods=y_periods period=Period::Day on_change=on_period />
-                            <PeriodLabel periods=y_periods period=Period::Hour on_change=on_period />
-                            <PeriodLabel periods=y_periods period=Period::Minute on_change=on_period />
-                            <PeriodLabel periods=y_periods period=Period::Second on_change=on_period />
-                            <PeriodLabel periods=y_periods period=Period::Millisecond on_change=on_period />
-                            <PeriodLabel periods=y_periods period=Period::Microsecond on_change=on_period />
-                            <PeriodLabel periods=y_periods period=Period::Nanosecond on_change=on_period />
+                            <PeriodLabel periods=x_periods period=Period::Year on_change=on_period />
+                            <PeriodLabel periods=x_periods period=Period::Month on_change=on_period />
+                            <PeriodLabel periods=x_periods period=Period::Day on_change=on_period />
+                            <PeriodLabel periods=x_periods period=Period::Hour on_change=on_period />
+                            <PeriodLabel periods=x_periods period=Period::Minute on_change=on_period />
+                            <PeriodLabel periods=x_periods period=Period::Second on_change=on_period />
+                            <PeriodLabel periods=x_periods period=Period::Millisecond on_change=on_period />
+                            <PeriodLabel periods=x_periods period=Period::Microsecond on_change=on_period />
+                            <PeriodLabel periods=x_periods period=Period::Nanosecond on_change=on_period />
                         </div>
                         <select on:change=on_ts_format>
                             <optgroup label="Timestamp format">
                                 <For each=move || ALL_TS_FORMATS key=|opt| opt.to_string() let:format>
-                                    <option selected=move || y_format.get() == *format>{format.to_string()}</option>
+                                    <option selected=move || x_format.get() == *format>{format.to_string()}</option>
                                 </For>
                             </optgroup>
                         </select>
