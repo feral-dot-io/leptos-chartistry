@@ -4,6 +4,9 @@ use leptos_chartistry::{colours::Colour, *};
 use leptos_meta::{provide_meta_context, Style};
 use std::{collections::HashSet, rc::Rc, str::FromStr};
 
+const DEFAULT_WIDTH: f64 = 800.0;
+const DEFAULT_HEIGHT: f64 = 400.0;
+
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
 
@@ -58,8 +61,8 @@ enum InnerOption {
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 enum AspectOption {
-    #[default]
     Outer,
+    #[default]
     Inner,
     Environment,
 }
@@ -119,8 +122,8 @@ pub fn App() -> impl IntoView {
     // Aspect ratio
     let aspect = create_rw_signal(AspectOption::default());
     let calc = create_rw_signal(AspectCalc::default());
-    let width = create_rw_signal(800.0);
-    let height = create_rw_signal(600.0);
+    let width = create_rw_signal(DEFAULT_WIDTH);
+    let height = create_rw_signal(DEFAULT_HEIGHT);
     let ratio = create_rw_signal(1.0);
 
     // Data
@@ -178,7 +181,10 @@ pub fn App() -> impl IntoView {
         "Hello and welcome to Chartistry!",
     )]);
     let right = Options::create_signal(vec![Legend::middle()]);
-    let bottom = Options::create_signal(vec![x_ticks]);
+    let bottom = Options::create_signal(vec![
+        x_ticks.to_edge_layout(),
+        RotatedLabel::middle("Edit me...").to_edge_layout(),
+    ]);
     let left = Options::create_signal(vec![y_ticks]);
     let inner: RwSignal<Options<InnerLayout<DateTime<Utc>, f64>>> = Options::create_signal(vec![
         AxisMarker::top_edge().into_inner_layout(),
@@ -192,7 +198,14 @@ pub fn App() -> impl IntoView {
 
     view! {
         <Style>"
+            html { 
+                min-height: 100%;
+                background: repeating-radial-gradient(circle at top, #eee, #12a5ed);
+            }
+
             ._chartistry {
+                background-color: #fff;
+                border: 1px solid #000;
                 margin: 2em auto;
             }
 
@@ -206,12 +219,18 @@ pub fn App() -> impl IntoView {
             }
 
             fieldset {
-                border: 1px solid #333;
+                background-color: #fff;
+                border: 1px solid #000;
                 border-radius: 0.5em;
-                padding: 1em;
+                padding: 0.5em 1em 1em 1em;
                 display: grid;
                 grid-template-columns: max-content 1fr repeat(3, min-content);
                 align-items: baseline;
+            }
+            fieldset > legend {
+                background-color: #fff;
+                border: 1px solid #000;
+                padding: 0.2em;
             }
 
             fieldset > h3 {
@@ -277,7 +296,7 @@ pub fn App() -> impl IntoView {
                         <input type="checkbox" id="debug" checked=debug
                             on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
                     </span>
-                    <label for="debug">"Debug"</label>
+                    <span><label for="debug">"Debug"</label></span>
                 </p>
                 <p>
                     <label for="aspect">"Aspect ratio"</label>
@@ -302,10 +321,7 @@ pub fn App() -> impl IntoView {
 
             <fieldset class="series">
                 <legend>"Series options"</legend>
-                <p>
-                    <span>"Y axis"</span>
-                    <span>"Aligned floats"</span>
-                </p>
+                <p><span>"Y axis"</span><span>"Aligned floats"</span></p>
                 <p>
                     <span>"X axis"</span>
                     <span>
