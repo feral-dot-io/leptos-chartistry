@@ -67,7 +67,7 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    pub fn set_min_x<Opt>(mut self, min_x: impl Into<MaybeSignal<Opt>>) -> Self
+    pub fn with_min_x<Opt>(mut self, min_x: impl Into<MaybeSignal<Opt>>) -> Self
     where
         Opt: Clone + Into<Option<X>> + 'static,
     {
@@ -76,7 +76,7 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    pub fn set_max_x<Opt>(mut self, max_x: impl Into<MaybeSignal<Opt>>) -> Self
+    pub fn with_max_x<Opt>(mut self, max_x: impl Into<MaybeSignal<Opt>>) -> Self
     where
         Opt: Clone + Into<Option<X>> + 'static,
     {
@@ -85,7 +85,7 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    pub fn set_min_y<Opt>(mut self, min_y: impl Into<MaybeSignal<Opt>>) -> Self
+    pub fn with_min_y<Opt>(mut self, min_y: impl Into<MaybeSignal<Opt>>) -> Self
     where
         Opt: Clone + Into<Option<Y>> + 'static,
     {
@@ -94,7 +94,7 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    pub fn set_max_y<Opt>(mut self, max_y: impl Into<MaybeSignal<Opt>>) -> Self
+    pub fn with_max_y<Opt>(mut self, max_y: impl Into<MaybeSignal<Opt>>) -> Self
     where
         Opt: Clone + Into<Option<Y>> + 'static,
     {
@@ -103,7 +103,7 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    pub fn set_x_range<Min, Max>(
+    pub fn with_x_range<Min, Max>(
         self,
         min_x: impl Into<MaybeSignal<Min>>,
         max_x: impl Into<MaybeSignal<Max>>,
@@ -112,10 +112,10 @@ impl<T, X, Y> Series<T, X, Y> {
         Min: Clone + Into<Option<X>> + 'static,
         Max: Clone + Into<Option<X>> + 'static,
     {
-        self.set_min_x(min_x).set_max_x(max_x)
+        self.with_min_x(min_x).with_max_x(max_x)
     }
 
-    pub fn set_y_range<Min, Max>(
+    pub fn with_y_range<Min, Max>(
         self,
         min_y: impl Into<MaybeSignal<Min>>,
         max_y: impl Into<MaybeSignal<Max>>,
@@ -124,7 +124,7 @@ impl<T, X, Y> Series<T, X, Y> {
         Min: Clone + Into<Option<Y>> + 'static,
         Max: Clone + Into<Option<Y>> + 'static,
     {
-        self.set_min_y(min_y).set_max_y(max_y)
+        self.with_min_y(min_y).with_max_y(max_y)
     }
 
     pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
