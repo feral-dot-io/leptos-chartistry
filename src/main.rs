@@ -2,7 +2,7 @@ use chrono::prelude::*;
 use leptos::*;
 use leptos_chartistry::{colours::Colour, *};
 use leptos_meta::{provide_meta_context, Style};
-use std::str::FromStr;
+use std::{collections::HashSet, rc::Rc, str::FromStr};
 
 const DEFAULT_FONT_HEIGHT: f64 = 16.0;
 const DEFAULT_FONT_WIDTH: f64 = 10.0;
@@ -27,22 +27,11 @@ const ALL_ASPECT_CALCS: &[AspectCalc] = &[AspectCalc::Ratio, AspectCalc::Width, 
 const ALL_HOVER_PLACEMENTS: &[HoverPlacement] = &[HoverPlacement::Hide, HoverPlacement::LeftCursor];
 const ALL_SORT_BYS: &[SortBy] = &[SortBy::Lines, SortBy::Ascending, SortBy::Descending];
 
-const CUSTOM_TS_FORMAT: &str = "🌟⭐🌟%+🌟⭐🌟";
+const CUSTOM_TS_FORMAT: &str = "⭐🌟⭐%+⭐🌟⭐";
 const ALL_TS_FORMATS: &[TimestampFormat] = &[
     TimestampFormat::Short,
     TimestampFormat::Long,
     TimestampFormat::Strftime(CUSTOM_TS_FORMAT),
-];
-const ALL_PERIODS: &[Period] = &[
-    Period::Year,
-    Period::Month,
-    Period::Day,
-    Period::Hour,
-    Period::Minute,
-    Period::Second,
-    Period::Millisecond,
-    Period::Microsecond,
-    Period::Nanosecond,
 ];
 
 #[derive(Clone)]
@@ -141,18 +130,31 @@ pub fn App() -> impl IntoView {
     // X axis
     let x_ticks = TickLabels::aligned_floats();
     // Y axis
+    let y_periods: RwSignal<HashSet<_>> = create_rw_signal(Period::all().into());
     let y_format = create_rw_signal(TimestampFormat::default());
     let mk_y_gen = move || {
-        PeriodicTimestamps::from_periods(Period::all()).with_format(y_format.get_untracked())
+        let periods = y_periods.get().into_iter().collect::<Vec<_>>();
+        let format = y_format.get();
+        let gen = PeriodicTimestamps::from_periods(periods).with_format(format);
+        Rc::new(gen)
     };
-    let y_ticks = TickLabels::from_generator(mk_y_gen());
-    let on_ts_format = {
-        let y_ticks = y_ticks.clone();
-        move |ev| {
-            let format = parse_timestamp_format(&event_target_value(&ev));
-            y_format.set(format);
-            y_ticks.set_generator(mk_y_gen());
-        }
+    let y_ticks = TickLabels::default(); // Assumes y_periods and y_format are picked for default
+    let y_ticks_gen = y_ticks.generator;
+    let on_period = move |period, ev| {
+        let mut periods = y_periods.get();
+        // Update periods
+        if event_target_checked(&ev) {
+            periods.insert(period)
+        } else {
+            periods.remove(&period)
+        };
+        y_periods.set(periods);
+        y_ticks_gen.set(mk_y_gen());
+    };
+    let on_ts_format = move |ev| {
+        let format = parse_timestamp_format(&event_target_value(&ev));
+        y_format.set(format);
+        y_ticks_gen.set(mk_y_gen());
     };
 
     // Series
@@ -240,6 +242,11 @@ pub fn App() -> impl IntoView {
                 width: 6ch;
                 height: 1.6em;
             }
+
+            .periods {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+            }
         "</Style>
 
         {move || view!{
@@ -308,6 +315,17 @@ pub fn App() -> impl IntoView {
                 <p>
                     <span>"Y axis"</span>
                     <span>
+                        <div class="periods">
+                            <PeriodLabel periods=y_periods period=Period::Year on_change=on_period />
+                            <PeriodLabel periods=y_periods period=Period::Month on_change=on_period />
+                            <PeriodLabel periods=y_periods period=Period::Day on_change=on_period />
+                            <PeriodLabel periods=y_periods period=Period::Hour on_change=on_period />
+                            <PeriodLabel periods=y_periods period=Period::Minute on_change=on_period />
+                            <PeriodLabel periods=y_periods period=Period::Second on_change=on_period />
+                            <PeriodLabel periods=y_periods period=Period::Millisecond on_change=on_period />
+                            <PeriodLabel periods=y_periods period=Period::Microsecond on_change=on_period />
+                            <PeriodLabel periods=y_periods period=Period::Nanosecond on_change=on_period />
+                        </div>
                         <select on:change=on_ts_format>
                             <optgroup label="Timestamp format">
                                 <For each=move || ALL_TS_FORMATS key=|opt| opt.to_string() let:format>
@@ -812,6 +830,39 @@ fn parse_timestamp_format(s: &str) -> TimestampFormat {
         "short" => TimestampFormat::Short,
         "long" => TimestampFormat::Long,
         _ => TimestampFormat::Strftime(CUSTOM_TS_FORMAT),
+    }
+}
+
+fn format_ts_period(p: Period) -> &'static str {
+    match p {
+        Period::Year => "year",
+        Period::Month => "month",
+        Period::Day => "day",
+        Period::Hour => "hour",
+        Period::Minute => "minute",
+        Period::Second => "second",
+        Period::Millisecond => "ms",
+        Period::Microsecond => "us",
+        Period::Nanosecond => "ns",
+        _ => "unknown",
+    }
+}
+
+#[component]
+fn PeriodLabel<OC>(
+    periods: RwSignal<HashSet<Period>>,
+    period: Period,
+    on_change: OC,
+) -> impl IntoView
+where
+    OC: Fn(Period, leptos::ev::Event) + 'static,
+{
+    view! {
+        <label>
+            <input type="checkbox" checked=move || periods.get().contains(&period)
+                on:change=move |ev| on_change(period, ev) />
+            {format_ts_period(period)}
+        </label>
     }
 }
 
