@@ -80,19 +80,23 @@ fn main() {
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Wave {
-    x: f64,
+    x: DateTime<Utc>,
     sine: f64,
     cosine: f64,
 }
 
+const Y2K: f64 = 946_684_800f64;
+const ONE_DAY: f64 = 86_400f64;
+
 fn load_data() -> Vec<Wave> {
-    const SCALE: f64 = 1.0;
     let mut data = Vec::new();
-    for i in 0..1000 {
-        let x = i as f64 / 1000.0 * std::f64::consts::PI * 2.0 * 2.0;
-        let sine = x.sin() * SCALE + 1.0;
-        let cosine = x.cos() * SCALE + 1.0;
-        data.push(Wave { x, sine, cosine });
+    for deg in 0..(360 * 3) {
+        let rad = deg as f64 * std::f64::consts::PI / 180.0;
+        data.push(Wave {
+            x: f64_to_dt(Y2K + ONE_DAY * deg as f64),
+            sine: rad.sin(),
+            cosine: rad.cos(),
+        });
     }
     data
 }
@@ -121,7 +125,6 @@ pub fn App() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-
     let (sine_name, set_sine_name) = create_signal("sine".to_string());
     let sine_width = create_rw_signal(1.0);
     let (cosine_name, set_cosine_name) = create_signal("cosine".to_string());
@@ -158,14 +161,14 @@ pub fn App() -> impl IntoView {
     };
 
     // Series
-    let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
+    let series = Series::new(|w: &Wave| w.x)
         .line(
-            Line::new(&|w: &Wave| w.sine)
+            Line::new(|w: &Wave| w.sine)
                 .set_name(sine_name)
                 .set_width(sine_width),
         )
         .line(
-            Line::new(&|w: &Wave| w.cosine)
+            Line::new(|w: &Wave| w.cosine)
                 .set_name(cosine_name)
                 .set_width(cosine_width),
         );
@@ -297,17 +300,8 @@ pub fn App() -> impl IntoView {
                 </p>
             </fieldset>
 
-            <fieldset class="data">
-                <legend>"Data options"</legend>
-                <p>
-                    <label for="data"></label>
-                    <span>
-                        <select id="data">
-                            <option>"Sine & cosine"</option>
-                            <option>"TODO"</option>
-                        </select>
-                    </span>
-                </p>
+            <fieldset class="series">
+                <legend>"Series options"</legend>
                 <p>
                     <span>"Y axis"</span>
                     <span>"Aligned floats"</span>
@@ -336,9 +330,8 @@ pub fn App() -> impl IntoView {
                     </span>
                 </p>
 
-                <h3>"Sine"</h3>
                 <p>
-                    <label for="sine_name">"Name"</label>
+                    <label for="sine_name">"Sine"</label>
                     <span>
                         <input type="text" id="sine_name" value=sine_name
                             on:input=move |ev| set_sine_name.set(event_target_value(&ev)) />
@@ -349,9 +342,8 @@ pub fn App() -> impl IntoView {
                     <span><StepInput id="sine_width" value=sine_width step="0.1" min="0.1" /></span>
                 </p>
 
-                <h3>"Cosine"</h3>
                 <p>
-                    <label for="cosine_name">"Name"</label>
+                    <label for="cosine_name">"Cosine"</label>
                     <span>
                         <input type="text" value=cosine_name
                             on:input=move |ev| set_cosine_name.set(event_target_value(&ev)) />
@@ -839,8 +831,8 @@ fn format_ts_period(p: Period) -> &'static str {
         Period::Month => "month",
         Period::Day => "day",
         Period::Hour => "hour",
-        Period::Minute => "minute",
-        Period::Second => "second",
+        Period::Minute => "min",
+        Period::Second => "secs",
         Period::Millisecond => "ms",
         Period::Microsecond => "us",
         Period::Nanosecond => "ns",
