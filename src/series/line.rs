@@ -30,17 +30,17 @@ impl<T, Y> Line<T, Y> {
         }
     }
 
-    pub fn set_name(mut self, name: impl Into<MaybeSignal<String>>) -> Self {
+    pub fn with_name(mut self, name: impl Into<MaybeSignal<String>>) -> Self {
         self.name = name.into();
         self
     }
 
-    pub fn set_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
+    pub fn with_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
         self.colour = colour.into();
         self
     }
 
-    pub fn set_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
+    pub fn with_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
         self.width = width.into();
         self
     }

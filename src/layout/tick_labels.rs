@@ -58,7 +58,7 @@ impl<Tick> TickLabels<Tick> {
         Self::new(gen)
     }
 
-    pub fn set_generator(&self, gen: impl TickGen<Tick = Tick> + 'static) {
+    pub fn with_generator(&self, gen: impl TickGen<Tick = Tick> + 'static) {
         self.generator.set(Rc::new(gen));
     }
 

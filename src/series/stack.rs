@@ -20,7 +20,7 @@ impl<T, Y> Stack<T, Y> {
         Self::default()
     }
 
-    pub fn set_colours<Opt>(mut self, colours: impl Into<MaybeSignal<Opt>>) -> Self
+    pub fn with_colours<Opt>(mut self, colours: impl Into<MaybeSignal<Opt>>) -> Self
     where
         Opt: Clone + Into<Option<ColourScheme>> + 'static,
     {

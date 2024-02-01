@@ -167,13 +167,13 @@ pub fn App() -> impl IntoView {
     let series = Series::new(|w: &Wave| w.x)
         .line(
             Line::new(|w: &Wave| w.sine)
-                .set_name(sine_name)
-                .set_width(sine_width),
+                .with_name(sine_name)
+                .with_width(sine_width),
         )
         .line(
             Line::new(|w: &Wave| w.cosine)
-                .set_name(cosine_name)
-                .set_width(cosine_width),
+                .with_name(cosine_name)
+                .with_width(cosine_width),
         );
 
     // Layout options
@@ -185,15 +185,15 @@ pub fn App() -> impl IntoView {
         x_ticks.to_edge_layout(),
         RotatedLabel::middle("Edit me...").to_edge_layout(),
     ]);
-    let left = Options::create_signal(vec![y_ticks]);
+    let left = Options::create_signal(vec![y_ticks.to_edge_layout()]);
     let inner: RwSignal<Options<InnerLayout<DateTime<Utc>, f64>>> = Options::create_signal(vec![
         AxisMarker::top_edge().into_inner_layout(),
-        XGridLine::default().into_inner_layout(),
-        YGridLine::default().into_inner_layout(),
+        XGridLine::new(&x_ticks).into_inner_layout(),
+        YGridLine::new(&y_ticks).into_inner_layout(),
         XGuideLine::default().into_inner_layout(),
         YGuideLine::default().into_inner_layout(),
     ]);
-    let tooltip = Tooltip::default();
+    let tooltip = Tooltip::new(HoverPlacement::default(), x_ticks, y_ticks);
     let tooltip_card = tooltip.clone();
 
     view! {

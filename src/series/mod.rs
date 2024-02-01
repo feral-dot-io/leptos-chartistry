@@ -58,7 +58,7 @@ impl<T, X, Y> Series<T, X, Y> {
         }
     }
 
-    pub fn set_colours<Opt>(mut self, colours: impl Into<MaybeSignal<Opt>>) -> Self
+    pub fn with_colours<Opt>(mut self, colours: impl Into<MaybeSignal<Opt>>) -> Self
     where
         Opt: Clone + Into<Option<ColourScheme>> + 'static,
     {
