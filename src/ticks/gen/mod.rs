@@ -4,7 +4,7 @@ mod timestamps;
 
 pub use aligned_floats::AlignedFloats;
 pub use span::{HorizontalSpan, VerticalSpan};
-pub use timestamps::{Period, PeriodicTimestamps};
+pub use timestamps::{Format as TimestampFormat, Period, PeriodicTimestamps};
 
 use std::rc::Rc;
 

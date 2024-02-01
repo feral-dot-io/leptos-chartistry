@@ -9,13 +9,13 @@ pub struct PeriodicTimestamps<Tz> {
     tz: std::marker::PhantomData<Tz>,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum Format {
     #[default]
     Short,
     Long,
-    Strftime(String), // TODO: does this make sense if it doesn't take Period into account?
+    Strftime(&'static str),
 }
 
 // Note: Quarter and Week would be useful but would need more formatting options e.g., strftime doesn't offer quarter formatting and we would need to specify when weeks start which would probably want to coincide with years using %G or %Y
@@ -125,7 +125,7 @@ where
     }
 }
 
-impl<Format> PeriodicTimestamps<Format> {
+impl<Tz> PeriodicTimestamps<Tz> {
     fn merge_ticks<T: Clone + Ord>(existing: &[T], candidate: &[T], sample: usize) -> Vec<T> {
         assert!(sample > 0);
         let candidate = candidate.to_owned();
@@ -338,6 +338,16 @@ impl<Tz: TimeZone> Add<Period> for DateTime<Tz> {
             Period::Month => self + Months::new(1),
             //Period::Quarter => self + Months::new(3),
             Period::Year => self + Months::new(12),
+        }
+    }
+}
+
+impl std::fmt::Display for Format {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Format::Short => write!(f, "Short"),
+            Format::Long => write!(f, "Long"),
+            Format::Strftime(fmt) => write!(f, "Strftime \"{}\"", fmt),
         }
     }
 }

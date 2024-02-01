@@ -58,6 +58,10 @@ impl<Tick> TickLabels<Tick> {
         Self::new(gen)
     }
 
+    pub fn set_generator(&self, gen: impl TickGen<Tick = Tick> + 'static) {
+        self.generator.set(Rc::new(gen));
+    }
+
     fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
         Signal::derive(move || {
             gen.with(|GeneratedTicks { ticks, state }| {

@@ -36,4 +36,4 @@ pub use layout::{
 pub use overlay::tooltip::{HoverPlacement, SortBy, Tooltip};
 pub use padding::Padding;
 pub use series::{Line, Series, Stack};
-pub use ticks::{AlignedFloats, Period, PeriodicTimestamps, Tick, TickState};
+pub use ticks::{AlignedFloats, Period, PeriodicTimestamps, Tick, TickState, TimestampFormat};

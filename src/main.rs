@@ -27,6 +27,24 @@ const ALL_ASPECT_CALCS: &[AspectCalc] = &[AspectCalc::Ratio, AspectCalc::Width, 
 const ALL_HOVER_PLACEMENTS: &[HoverPlacement] = &[HoverPlacement::Hide, HoverPlacement::LeftCursor];
 const ALL_SORT_BYS: &[SortBy] = &[SortBy::Lines, SortBy::Ascending, SortBy::Descending];
 
+const CUSTOM_TS_FORMAT: &str = "🌟⭐🌟%+🌟⭐🌟";
+const ALL_TS_FORMATS: &[TimestampFormat] = &[
+    TimestampFormat::Short,
+    TimestampFormat::Long,
+    TimestampFormat::Strftime(CUSTOM_TS_FORMAT),
+];
+const ALL_PERIODS: &[Period] = &[
+    Period::Year,
+    Period::Month,
+    Period::Day,
+    Period::Hour,
+    Period::Minute,
+    Period::Second,
+    Period::Millisecond,
+    Period::Microsecond,
+    Period::Nanosecond,
+];
+
 #[derive(Clone)]
 struct Options<Opt>(Vec<Opt>);
 
@@ -114,10 +132,28 @@ pub fn App() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
+
     let (sine_name, set_sine_name) = create_signal("sine".to_string());
     let sine_width = create_rw_signal(1.0);
     let (cosine_name, set_cosine_name) = create_signal("cosine".to_string());
     let cosine_width = create_rw_signal(1.0);
+
+    // X axis
+    let x_ticks = TickLabels::aligned_floats();
+    // Y axis
+    let y_format = create_rw_signal(TimestampFormat::default());
+    let mk_y_gen = move || {
+        PeriodicTimestamps::from_periods(Period::all()).with_format(y_format.get_untracked())
+    };
+    let y_ticks = TickLabels::from_generator(mk_y_gen());
+    let on_ts_format = {
+        let y_ticks = y_ticks.clone();
+        move |ev| {
+            let format = parse_timestamp_format(&event_target_value(&ev));
+            y_format.set(format);
+            y_ticks.set_generator(mk_y_gen());
+        }
+    };
 
     // Series
     let series = Series::new(&|w: &Wave| f64_to_dt(w.x))
@@ -137,8 +173,8 @@ pub fn App() -> impl IntoView {
         "Hello and welcome to Chartistry!",
     )]);
     let right = Options::create_signal(vec![Legend::middle()]);
-    let bottom = Options::create_signal(vec![TickLabels::timestamps()]);
-    let left = Options::create_signal(vec![TickLabels::aligned_floats()]);
+    let bottom = Options::create_signal(vec![y_ticks]);
+    let left = Options::create_signal(vec![x_ticks]);
     let inner: RwSignal<Options<InnerLayout<DateTime<Utc>, f64>>> = Options::create_signal(vec![
         AxisMarker::top_edge().into_inner_layout(),
         XGridLine::default().into_inner_layout(),
@@ -262,6 +298,22 @@ pub fn App() -> impl IntoView {
                         <select id="data">
                             <option>"Sine & cosine"</option>
                             <option>"TODO"</option>
+                        </select>
+                    </span>
+                </p>
+                <p>
+                    <span>"X axis"</span>
+                    <span>"Aligned floats"</span>
+                </p>
+                <p>
+                    <span>"Y axis"</span>
+                    <span>
+                        <select on:change=on_ts_format>
+                            <optgroup label="Timestamp format">
+                                <For each=move || ALL_TS_FORMATS key=|opt| opt.to_string() let:format>
+                                    <option selected=move || y_format.get() == *format>{format.to_string()}</option>
+                                </For>
+                            </optgroup>
                         </select>
                     </span>
                 </p>
@@ -657,9 +709,9 @@ fn SelectOption<Opt>(
     all: &'static [Opt],
 ) -> impl IntoView
 where
-    Opt: Copy + FromStr + PartialEq + ToString + 'static,
+    Opt: Clone + FromStr + PartialEq + ToString + 'static,
 {
-    let on_change = move |ev| value.set(event_target_value(&ev).parse().unwrap_or(all[0]));
+    let on_change = move |ev| value.set(event_target_value(&ev).parse().unwrap_or(all[0].clone()));
     view! {
         <select id=id on:change=on_change>
             <optgroup label=label>
@@ -719,6 +771,50 @@ select_impl!(
     ALL_ASPECT_CALCS
 );
 
+// TODO remove?
+//select_impl!(SelectTsFormat, "Format", format, TsFormat, ALL_TS_FORMATS);
+#[derive(Clone, Debug, Default, PartialEq)]
+struct TsFormat(TimestampFormat);
+
+impl TsFormat {
+    pub const fn new(f: TimestampFormat) -> Self {
+        Self(f)
+    }
+}
+
+impl std::fmt::Display for TsFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl FromStr for TsFormat {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.to_lowercase();
+        match s.as_str() {
+            "Short" => Ok(TsFormat::new(TimestampFormat::Short)),
+            "Long" => Ok(TsFormat::new(TimestampFormat::Long)),
+            _ => {
+                if s.starts_with("Custom: ") {
+                    Ok(TsFormat::new(TimestampFormat::Strftime(CUSTOM_TS_FORMAT)))
+                } else {
+                    Err(format!("unknown timestamp format: `{}`", s))
+                }
+            }
+        }
+    }
+}
+
+fn parse_timestamp_format(s: &str) -> TimestampFormat {
+    match s.to_lowercase().as_str() {
+        "short" => TimestampFormat::Short,
+        "long" => TimestampFormat::Long,
+        _ => TimestampFormat::Strftime(CUSTOM_TS_FORMAT),
+    }
+}
+
 #[component]
 fn SelectColour(colour: RwSignal<Option<Colour>>) -> impl IntoView {
     let value = move || colour.get().map(|c| c.to_string()).unwrap_or_default();
@@ -751,7 +847,7 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
     view! {
         // TODO
-        <label>"width:"<StepInput value=ticks.min_chars step="1" min="0" /></label>
+        <label>"min width:"<StepInput value=ticks.min_chars step="1" min="0" /></label>
     }
 }
 

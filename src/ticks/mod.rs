@@ -2,7 +2,7 @@ mod gen;
 
 pub use gen::{
     AlignedFloats, GenState as TickState, GeneratedTicks, Generator as TickGen, HorizontalSpan,
-    Period, PeriodicTimestamps, VerticalSpan,
+    Period, PeriodicTimestamps, TimestampFormat, VerticalSpan,
 };
 
 use chrono::prelude::*;
