@@ -321,31 +321,6 @@ pub fn App() -> impl IntoView {
 
             <fieldset class="series">
                 <legend>"Series options"</legend>
-                <p><span>"Y axis"</span><span>"Aligned floats"</span></p>
-                <p>
-                    <span>"X axis"</span>
-                    <span>
-                        <div class="periods">
-                            <PeriodLabel periods=x_periods period=Period::Year on_change=on_period />
-                            <PeriodLabel periods=x_periods period=Period::Month on_change=on_period />
-                            <PeriodLabel periods=x_periods period=Period::Day on_change=on_period />
-                            <PeriodLabel periods=x_periods period=Period::Hour on_change=on_period />
-                            <PeriodLabel periods=x_periods period=Period::Minute on_change=on_period />
-                            <PeriodLabel periods=x_periods period=Period::Second on_change=on_period />
-                            <PeriodLabel periods=x_periods period=Period::Millisecond on_change=on_period />
-                            <PeriodLabel periods=x_periods period=Period::Microsecond on_change=on_period />
-                            <PeriodLabel periods=x_periods period=Period::Nanosecond on_change=on_period />
-                        </div>
-                        <select on:change=on_ts_format>
-                            <optgroup label="Timestamp format">
-                                <For each=move || ALL_TS_FORMATS key=|opt| opt.to_string() let:format>
-                                    <option selected=move || x_format.get() == *format>{format.to_string()}</option>
-                                </For>
-                            </optgroup>
-                        </select>
-                    </span>
-                </p>
-
                 <p>
                     <label for="sine_name">"Sine"</label>
                     <span>
@@ -368,6 +343,37 @@ pub fn App() -> impl IntoView {
                 <p>
                     <label for="cosine_width">"Width:"</label>
                     <span><StepInput id="cosine_width" value=cosine_width step="0.1" min="0.1" /></span>
+                </p>
+            </fieldset>
+
+            <fieldset class="series">
+                <legend>"Axis options"</legend>
+                <p><span>"Y axis"</span><span>"Aligned floats"</span></p>
+                <p>
+                    <span>"X axis"</span>
+                    <span class="periods">
+                        <PeriodLabel periods=x_periods period=Period::Year on_change=on_period />
+                        <PeriodLabel periods=x_periods period=Period::Month on_change=on_period />
+                        <PeriodLabel periods=x_periods period=Period::Day on_change=on_period />
+                        <PeriodLabel periods=x_periods period=Period::Hour on_change=on_period />
+                        <PeriodLabel periods=x_periods period=Period::Minute on_change=on_period />
+                        <PeriodLabel periods=x_periods period=Period::Second on_change=on_period />
+                        <PeriodLabel periods=x_periods period=Period::Millisecond on_change=on_period />
+                        <PeriodLabel periods=x_periods period=Period::Microsecond on_change=on_period />
+                        <PeriodLabel periods=x_periods period=Period::Nanosecond on_change=on_period />
+                    </span>
+                </p>
+                <p>
+                    <span>"Format"</span>
+                    <span>
+                        <select on:change=on_ts_format>
+                            <optgroup label="Timestamp format">
+                                <For each=move || ALL_TS_FORMATS key=|opt| opt.to_string() let:format>
+                                    <option selected=move || x_format.get() == *format>{format.to_string()}</option>
+                                </For>
+                            </optgroup>
+                        </select>
+                    </span>
                 </p>
             </fieldset>
 
