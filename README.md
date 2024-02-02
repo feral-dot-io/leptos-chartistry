@@ -15,7 +15,6 @@ An extensible charting library for Leptos.
 - Switch colours to issue a CSS class or raw colour. Try to skip complexity entirely.
 - Aspect ratio misapplies options on calculation. e.g., when determining the width and have height+ratio then width options are applied to the height. This implies the outer+height calculation should be removed from the API.
 - Tooltip needs a custom formatter. Move to Tick trait. `Fn(&Tick, &dyn TickState<Tick = Tick>) -> String>`. Or possibly rely on TickLabels instead.
-- Min and max values act more like "additional values" can move their opposite e.g., min can raise max.
 - PeriodicTimestamps take a Tz but might work with a fixed offset or naive datetime.
 - Chart builder should work with Local instead of Utc.
 - Toggling x axis periods results in wonky behaviour.
@@ -24,6 +23,7 @@ An extensible charting library for Leptos.
     - Clicking around has resulted in labels being left on the chart that don't respond to anything even the chart changing size (?!)
 - TickGen is not always uniform dates.
 - TickGen is not always uniform for aligned floats?!
+- Tooltip formatting
 - Colours
 - Line dots
 

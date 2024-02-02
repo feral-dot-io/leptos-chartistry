@@ -7,7 +7,7 @@ pub use gen::{
 
 use chrono::prelude::*;
 
-pub trait Tick: Clone + PartialEq + PartialOrd + 'static {
+pub trait Tick: Clone + PartialEq + PartialOrd + std::fmt::Debug + 'static {
     fn default_generator() -> impl TickGen<Tick = Self>;
     fn position(&self) -> f64;
 }

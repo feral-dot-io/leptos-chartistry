@@ -88,70 +88,39 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 
         // Range signals
         let range_x: Memo<Option<(X, X)>> = create_memo(move |_| {
-            let range: Option<(X, X)> =
-                with!(|positions_x, data_x| Self::data_range(positions_x, data_x));
-
-            // Expand specified range to single Option
-            let specified: Option<(X, X)> = match (min_x.get(), max_x.get()) {
-                (Some(min_x), Some(max_x)) => Some((min_x.clone(), max_x.clone())),
-                (Some(min_x), None) => Some((min_x.clone(), min_x.clone())),
-                (None, Some(max_x)) => Some((max_x.clone(), max_x.clone())),
-                (None, None) => None,
-            };
-
-            // Extend range by specified?
-            match (range, specified) {
-                (None, None) => None, // No data, no range
-
-                // One of range or specified
-                (Some(range), None) => Some(range),
-                (None, Some(specified)) => Some(specified),
-
-                // Calculate min / max of range and specified
-                (Some((min_r, max_r)), Some((min_s, max_s))) => Some((
-                    if min_r.position() < min_s.position() {
-                        min_r
-                    } else {
-                        min_s
-                    },
-                    if max_r.position() > max_s.position() {
-                        max_r
-                    } else {
-                        max_s
-                    },
-                )),
-            }
+            let range = with!(|positions_x, data_x| {
+                positions_x
+                    .iter()
+                    .enumerate()
+                    .fold(None, range_minmax_acc)
+                    .map(|((min_i, _), (max_i, _))| {
+                        let min_x = data_x[min_i].clone();
+                        let max_x = data_x[max_i].clone();
+                        (min_x, max_x)
+                    })
+            });
+            extend_range(range, min_x.get(), max_x.get())
         });
-
-        // TODO: consider trying to minimise iterations over data
-        let range_y = create_memo(move |_| {
-            data_y_cumulative
-                .get()
-                .into_iter()
-                .flat_map(|ys| ys.into_values())
-                .chain(min_y.get())
-                .chain(max_y.get())
-                .map(|y| {
-                    let pos = y.position();
-                    (y, pos)
-                })
-                .fold(None, |acc, y @ (_, pos)| {
-                    // Note this logic is duplicated in data_range
-                    if pos.is_finite() {
-                        acc.map(|(min, max): ((Y, f64), (Y, f64))| {
-                            (
-                                if pos < min.1 { y.clone() } else { min },
-                                if pos > max.1 { y.clone() } else { max },
-                            )
+        let range_y: Memo<Option<(Y, Y)>> = create_memo(move |_| {
+            let range = with!(|positions_y| {
+                positions_y
+                    .iter()
+                    .enumerate()
+                    .fold(None, |acc, (i, ys)| {
+                        ys.iter()
+                            .map(|(j, y)| ((i, j), y))
+                            .fold(acc, range_minmax_acc)
+                    })
+                    .map(|(((min_i, min_j), _), ((max_i, max_j), _))| {
+                        data_y_cumulative.with(|data_y| {
+                            let min_y = data_y[min_i].get(min_j).unwrap().clone();
+                            let max_y = data_y[max_i].get(max_j).unwrap().clone();
+                            (min_y, max_y)
                         })
-                        .or(Some((y.clone(), y)))
-                    } else {
-                        acc
-                    }
-                })
-                .map(|((min, _), (max, _))| (min, max))
+                    })
+            });
+            extend_range(range, min_y.get(), max_y.get())
         });
-
         // Position range signal
         let position_range = create_memo(move |_| {
             let (min_x, max_x) = range_x
@@ -176,26 +145,47 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
             position_range,
         }
     }
+}
 
-    /// Given a list of positions. Finds the min / max indexes using is_finite to skip infinite and NaNs. Returns the data values at those indexes. Returns `None` if no data.
-    fn data_range<V: Clone + PartialOrd>(positions: &[f64], data: &[V]) -> Option<(V, V)> {
-        // Find min / max indexes in positions
-        let indexes = positions.iter().enumerate().fold(None, |acc, (i, &pos)| {
-            if pos.is_finite() {
-                acc.map(|(min, max)| {
-                    (
-                        if pos < positions[min] { i } else { min },
-                        if pos > positions[max] { i } else { max },
-                    )
-                })
-                .or(Some((i, i)))
-            } else {
-                acc
-            }
-        });
-        // Return data values
-        indexes.map(|(min, max)| (data[min].clone(), data[max].clone()))
+fn range_minmax_acc<K: Copy>(
+    acc: Option<((K, f64), (K, f64))>,
+    (key, &pos): (K, &f64),
+) -> Option<((K, f64), (K, f64))> {
+    if pos.is_finite() {
+        acc.map(|(min @ (_, min_pos), max @ (_, max_pos))| {
+            (
+                if pos < min_pos { (key, pos) } else { min },
+                if pos > max_pos { (key, pos) } else { max },
+            )
+        })
+        .or(Some(((key, pos), (key, pos))))
+    } else {
+        acc
     }
+}
+
+/// If upper / lower are set, extends the given range (even if range is None).
+fn extend_range<V: Tick>(
+    range: Option<(V, V)>,
+    lower: Option<V>,
+    upper: Option<V>,
+) -> Option<(V, V)> {
+    // Find a V value
+    let (r0, r1) = range.clone().unzip();
+    let v = lower.clone().or(upper.clone()).or(r0).or(r1);
+    v.map(|v| {
+        // Unravel options
+        let (min, max) = range.unwrap_or_else(|| (v.clone(), v.clone()));
+        let lower = lower.unwrap_or_else(|| v.clone());
+        let upper = upper.unwrap_or_else(|| v.clone());
+        let lower_p = lower.position();
+        let upper_p = upper.position();
+        // Extend range?
+        (
+            if min.position() < lower_p { min } else { lower },
+            if max.position() > upper_p { max } else { upper },
+        )
+    })
 }
 
 impl<X: 'static, Y: 'static> UseData<X, Y> {
