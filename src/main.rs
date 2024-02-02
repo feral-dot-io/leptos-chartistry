@@ -84,7 +84,7 @@ fn main() {
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Wave {
-    x: DateTime<Utc>,
+    x: DateTime<Local>,
     sine: f64,
     cosine: f64,
 }
@@ -105,9 +105,9 @@ fn load_data() -> Vec<Wave> {
     data
 }
 
-pub fn f64_to_dt(at: f64) -> DateTime<Utc> {
+pub fn f64_to_dt(at: f64) -> DateTime<Local> {
     let nsecs = (at.fract() * 1_000_000_000.0).round() as u32;
-    Utc.timestamp_opt(at as i64, nsecs).unwrap()
+    Local.timestamp_opt(at as i64, nsecs).unwrap()
 }
 
 #[component]
@@ -165,20 +165,20 @@ pub fn App() -> impl IntoView {
     };
 
     // Range
-    let min_x: RwSignal<Option<DateTime<Utc>>> = create_rw_signal(None);
-    let max_x: RwSignal<Option<DateTime<Utc>>> = create_rw_signal(None);
+    let min_x: RwSignal<Option<DateTime<_>>> = create_rw_signal(None);
+    let max_x: RwSignal<Option<DateTime<_>>> = create_rw_signal(None);
     let min_y: RwSignal<Option<f64>> = create_rw_signal(None);
     let max_y: RwSignal<Option<f64>> = create_rw_signal(None);
-    let on_datetime_change = move |sig: RwSignal<Option<DateTime<Utc>>>| {
+    let on_datetime_change = move |sig: RwSignal<Option<DateTime<_>>>| {
         move |ev| {
             let new_value =
                 NaiveDateTime::parse_from_str(&event_target_value(&ev), JS_TIMESTAMP_FMT)
-                    .map(|dt| dt.and_utc())
-                    .ok();
+                    .ok()
+                    .and_then(|dt| dt.and_local_timezone(Local).latest());
             sig.set(new_value)
         }
     };
-    let mk_range_ts = move |sig: RwSignal<Option<DateTime<Utc>>>| {
+    let mk_range_ts = move |sig: RwSignal<Option<DateTime<_>>>| {
         move || {
             sig.get()
                 .map(|v| v.format(JS_TIMESTAMP_FMT).to_string())
@@ -211,7 +211,7 @@ pub fn App() -> impl IntoView {
         RotatedLabel::middle("Edit me...").to_edge_layout(),
     ]);
     let left = Options::create_signal(vec![y_ticks.to_edge_layout()]);
-    let inner: RwSignal<Options<InnerLayout<DateTime<Utc>, f64>>> = Options::create_signal(vec![
+    let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::create_signal(vec![
         AxisMarker::top_edge().into_inner_layout(),
         XGridLine::new(&x_ticks).into_inner_layout(),
         YGridLine::new(&y_ticks).into_inner_layout(),
