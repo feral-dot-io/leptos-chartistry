@@ -30,6 +30,7 @@ const ALL_ASPECT_CALCS: &[AspectCalc] = &[AspectCalc::Ratio, AspectCalc::Width, 
 const ALL_HOVER_PLACEMENTS: &[HoverPlacement] = &[HoverPlacement::Hide, HoverPlacement::LeftCursor];
 const ALL_SORT_BYS: &[SortBy] = &[SortBy::Lines, SortBy::Ascending, SortBy::Descending];
 
+const JS_TIMESTAMP_FMT: &str = "%FT%R";
 const CUSTOM_TS_FORMAT: &str = "⭐🌟⭐%+⭐🌟⭐";
 const ALL_TS_FORMATS: &[TimestampFormat] = &[
     TimestampFormat::Short,
@@ -163,6 +164,28 @@ pub fn App() -> impl IntoView {
         x_ticks_gen.set(mk_x_gen());
     };
 
+    // Range
+    let min_x: RwSignal<Option<DateTime<Utc>>> = create_rw_signal(None);
+    let max_x: RwSignal<Option<DateTime<Utc>>> = create_rw_signal(None);
+    let min_y: RwSignal<Option<f64>> = create_rw_signal(None);
+    let max_y: RwSignal<Option<f64>> = create_rw_signal(None);
+    let on_datetime_change = move |sig: RwSignal<Option<DateTime<Utc>>>| {
+        move |ev| {
+            let new_value =
+                NaiveDateTime::parse_from_str(&event_target_value(&ev), JS_TIMESTAMP_FMT)
+                    .map(|dt| dt.and_utc())
+                    .ok();
+            sig.set(new_value)
+        }
+    };
+    let mk_range_ts = move |sig: RwSignal<Option<DateTime<Utc>>>| {
+        move || {
+            sig.get()
+                .map(|v| v.format(JS_TIMESTAMP_FMT).to_string())
+                .unwrap_or_default()
+        }
+    };
+
     // Series
     let series = Series::new(|w: &Wave| w.x)
         .line(
@@ -174,7 +197,9 @@ pub fn App() -> impl IntoView {
             Line::new(|w: &Wave| w.cosine)
                 .with_name(cosine_name)
                 .with_width(cosine_width),
-        );
+        )
+        .with_x_range(min_x, max_x)
+        .with_y_range(min_y, max_y);
 
     // Layout options
     let top: RwSignal<Options<EdgeLayout<_>>> = Options::create_signal(vec![RotatedLabel::middle(
@@ -329,7 +354,7 @@ pub fn App() -> impl IntoView {
                     </span>
                 </p>
                 <p>
-                    <label for="sine_width">"Width:"</label>
+                    <label for="sine_width">"Width"</label>
                     <span><StepInput id="sine_width" value=sine_width step="0.1" min="0.1" /></span>
                 </p>
 
@@ -341,7 +366,7 @@ pub fn App() -> impl IntoView {
                     </span>
                 </p>
                 <p>
-                    <label for="cosine_width">"Width:"</label>
+                    <label for="cosine_width">"Width"</label>
                     <span><StepInput id="cosine_width" value=cosine_width step="0.1" min="0.1" /></span>
                 </p>
             </fieldset>
@@ -349,6 +374,18 @@ pub fn App() -> impl IntoView {
             <fieldset class="series">
                 <legend>"Axis options"</legend>
                 <p><span>"Y axis"</span><span>"Aligned floats"</span></p>
+                <p>
+                    <label for="min_y">"Range"</label>
+                    <span>
+                        <input type="number" id="min_y" step="0.1"
+                            value=move || min_y.get().map(|v| v.to_string()).unwrap_or_default()
+                            on:change=move |ev| min_y.set(event_target_value(&ev).parse().ok()) />
+                        " to "
+                        <input type="number" id="max_y" step="0.1"
+                            value=move || max_y.get().map(|v| v.to_string()).unwrap_or_default()
+                            on:change=move |ev| max_y.set(event_target_value(&ev).parse().ok()) />
+                    </span>
+                </p>
                 <p>
                     <span>"X axis"</span>
                     <span class="periods">
@@ -373,6 +410,19 @@ pub fn App() -> impl IntoView {
                                 </For>
                             </optgroup>
                         </select>
+                    </span>
+                </p>
+                <p>
+                    <label for="min_x">"Range"</label>
+                    <span>
+                        <input type="datetime-local" id="min_x"
+                            value=mk_range_ts(min_x)
+                            on:change=on_datetime_change(min_x) />
+                        " to "
+                        <br />
+                        <input type="datetime-local" id="max_x"
+                            value=mk_range_ts(max_x)
+                            on:change=on_datetime_change(max_x) />
                     </span>
                 </p>
             </fieldset>
