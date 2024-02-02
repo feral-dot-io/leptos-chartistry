@@ -212,27 +212,28 @@ pub fn TickLabels<X: Clone + 'static, Y: Clone + 'static>(
     bounds: Memo<Bounds>,
     state: State<X, Y>,
 ) -> impl IntoView {
-    let each_tick = move || {
+    let ticks = move || {
         // Align vertical labels
         let ticks = ticks.ticks.get();
-        if edge.is_vertical() {
+        let ticks = if edge.is_vertical() {
             let (pos, labels): (Vec<f64>, Vec<String>) = ticks.into_iter().unzip();
             let labels = align_tick_labels(labels);
             pos.into_iter().zip(labels).collect::<Vec<_>>()
         } else {
             ticks
-        }
+        };
+        ticks
+            .into_iter()
+            .map(|tick| {
+                view! {
+                    <TickLabel edge=edge outer=bounds state=state.clone() tick=tick />
+                }
+            })
+            .collect_view()
     };
-
-    let state = state.clone();
     view! {
         <g class="_chartistry_tick_labels">
-            <For
-                each=each_tick
-                key=|(_, label)| label.to_owned()
-                let:tick>
-                <TickLabel edge=edge outer=bounds state=state.clone() tick=tick />
-            </For>
+            {ticks}
         </g>
     }
 }
