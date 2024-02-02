@@ -212,7 +212,8 @@ pub fn App() -> impl IntoView {
     ]);
     let left = Options::create_signal(vec![y_ticks.to_edge_layout()]);
     let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::create_signal(vec![
-        AxisMarker::top_edge().into_inner_layout(),
+        AxisMarker::horizontal_zero().into_inner_layout(),
+        AxisMarker::left_edge().into_inner_layout(),
         XGridLine::new(&x_ticks).into_inner_layout(),
         YGridLine::new(&y_ticks).into_inner_layout(),
         XGuideLine::default().into_inner_layout(),
