@@ -7,8 +7,8 @@ edition = "2021"
 chrono = "0.4"
 console_error_panic_hook = "0.1"
 console_log = "1.0"
-leptos = { version = "0.5", features = ["csr"] }
-leptos-use = "0.9"
-leptos_meta = { version = "0.5", features = ["csr"] }
+leptos = { version = "0.6", features = ["csr"] }
+leptos-use = "0.10"
+leptos_meta = { version = "0.6", features = ["csr"] }
 log = "0.4"
 web-sys = { version = "0.3", features = ["DomRectReadOnly"] }
