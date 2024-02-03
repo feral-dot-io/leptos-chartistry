@@ -17,15 +17,12 @@ An extensible charting library for Leptos.
 - Tooltip needs a custom formatter. Move to Tick trait. `Fn(&Tick, &dyn TickState<Tick = Tick>) -> String>`. Or possibly rely on TickLabels instead.
 - PeriodicTimestamps take a Tz but might work with a fixed offset or naive datetime.
 - Chart builder should work with Local instead of Utc.
-- Toggling x axis periods results in wonky behaviour.
-    - Untoggle year and gaps are left.
-    - Keep year, remove a large period (like seconds) and it gets stuck in a very large loop.
-    - Clicking around has resulted in labels being left on the chart that don't respond to anything even the chart changing size (?!)
-- TickGen is not always uniform dates.
-- TickGen is not always uniform for aligned floats?!
-- Tooltip formatting
 - Colours
 - Line dots
+- "Table margin?" is poorly named. Rename to something like cursor distance.
+- Multiple elements in top calculates heights from the wrong elements.
+- PeriodicTimestamps should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
+- We should avoid nested signals like with TickLabels. Ideas: (1) Ticks should be signal free that gets cloned around then transformed into a signal by a layout option, or (2) the layout option should copy the signals it needs instead of cloning the struct. The problem we're trying to solve is to make sure formatting of tooltips different from TickLabels is easy.
 
 ## Design experiments and notes:
 
