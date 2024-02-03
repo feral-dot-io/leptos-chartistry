@@ -4,11 +4,11 @@ use leptos_chartistry::*;
 use leptos_meta::{provide_meta_context, Style};
 use std::str::FromStr;
 
-const DEFAULT_WIDTH: f64 = 800.0;
-const DEFAULT_HEIGHT: f64 = 400.0;
+const WIDTH: f64 = 800.0;
+const HEIGHT: f64 = 400.0;
 
-const DEFAULT_FONT_HEIGHT: f64 = 16.0;
-const DEFAULT_FONT_WIDTH: f64 = 10.0;
+const FONT_HEIGHT: f64 = 16.0;
+const FONT_WIDTH: f64 = 10.0;
 
 const ALL_ALIGN_OVER: &[AlignOver] = &[AlignOver::Mouse, AlignOver::Data];
 const ALL_ANCHORS: &[Anchor] = &[Anchor::Start, Anchor::Middle, Anchor::End];
@@ -115,15 +115,15 @@ pub fn App() -> impl IntoView {
 
     // General options
     let (debug, set_debug) = create_signal(false);
-    let padding = create_rw_signal(DEFAULT_FONT_WIDTH);
-    let font_height = create_rw_signal(DEFAULT_FONT_HEIGHT);
-    let font_width = create_rw_signal(DEFAULT_FONT_WIDTH);
+    let padding = create_rw_signal(FONT_WIDTH);
+    let font_height = create_rw_signal(FONT_HEIGHT);
+    let font_width = create_rw_signal(FONT_WIDTH);
 
     // Aspect ratio
     let aspect = create_rw_signal(AspectOption::default());
     let calc = create_rw_signal(AspectCalc::default());
-    let width = create_rw_signal(DEFAULT_WIDTH);
-    let height = create_rw_signal(DEFAULT_HEIGHT);
+    let width = create_rw_signal(WIDTH);
+    let height = create_rw_signal(HEIGHT);
     let ratio = create_rw_signal(1.0);
 
     // Data
