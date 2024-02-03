@@ -80,11 +80,13 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
     }
 
     fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
+        let format = self.format;
         Signal::derive(move || {
+            let format = format.get();
             gen.with(|GeneratedTicks { ticks, state }| {
                 ticks
                     .iter()
-                    .map(|tick| (tick.position(), state.format(tick)))
+                    .map(|tick| (tick.position(), (format)(tick, state.as_ref())))
                     .collect()
             })
         })
