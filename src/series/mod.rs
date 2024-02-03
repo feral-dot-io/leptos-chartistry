@@ -28,7 +28,7 @@ pub struct Series<T: 'static, X: 'static, Y: 'static> {
     pub max_x: RwSignal<Option<X>>,
     pub min_y: RwSignal<Option<Y>>,
     pub max_y: RwSignal<Option<Y>>,
-    colours: Signal<Option<ColourScheme>>,
+    pub colours: RwSignal<ColourScheme>,
 }
 
 trait ApplyUseSeries<T, Y> {
@@ -41,7 +41,7 @@ trait IntoUseLine<T, Y> {
 
 struct SeriesAcc<T, Y> {
     colour_id: usize,
-    colours: Memo<ColourScheme>,
+    colours: RwSignal<ColourScheme>,
     lines: Vec<(UseLine, GetY<T, Y>)>,
 }
 
@@ -53,17 +53,13 @@ impl<T, X, Y> Series<T, X, Y> {
             max_x: RwSignal::default(),
             min_y: RwSignal::default(),
             max_y: RwSignal::default(),
-            colours: Signal::default(),
+            colours: create_rw_signal(DEFAULT_COLOUR_SCHEME.into()),
             lines: Vec::new(),
         }
     }
 
-    pub fn with_colours<Opt>(mut self, colours: impl Into<MaybeSignal<Opt>>) -> Self
-    where
-        Opt: Clone + Into<Option<ColourScheme>> + 'static,
-    {
-        let colours = colours.into();
-        self.colours = Signal::derive(move || colours.get().into());
+    pub fn with_colours<Opt>(self, colours: impl Into<ColourScheme>) -> Self {
+        self.colours.set(colours.into());
         self
     }
 
@@ -108,8 +104,7 @@ impl<T, X, Y> Series<T, X, Y> {
     }
 
     fn to_use_lines(&self) -> Vec<(UseLine, GetY<T, Y>)> {
-        let colours = ColourScheme::signal_default(self.colours, DEFAULT_COLOUR_SCHEME.into());
-        let mut series = SeriesAcc::new(colours);
+        let mut series = SeriesAcc::new(self.colours);
         for line in self.lines.clone() {
             line.apply_use_series(&mut series);
         }
@@ -125,7 +120,7 @@ impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
 }
 
 impl<T, Y> SeriesAcc<T, Y> {
-    fn new(colours: Memo<ColourScheme>) -> Self {
+    fn new(colours: RwSignal<ColourScheme>) -> Self {
         Self {
             colour_id: 0,
             colours,
