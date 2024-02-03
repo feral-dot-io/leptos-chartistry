@@ -20,9 +20,9 @@ pub use chart::Chart;
 pub use edge::Edge;
 pub use font::Font;
 pub use inner::{
-    axis_marker::{AxisMarker, AxisPlacement, DEFAULT_AXIS_MARKER_COLOUR},
-    grid_line::{XGridLine, YGridLine, DEFAULT_GRID_LINE_COLOUR},
-    guide_line::{AlignOver, XGuideLine, YGuideLine, DEFAULT_GUIDE_LINE_COLOUR},
+    axis_marker::{AxisMarker, AxisPlacement, AXIS_MARKER_COLOUR},
+    grid_line::{XGridLine, YGridLine, GRID_LINE_COLOUR},
+    guide_line::{AlignOver, XGuideLine, YGuideLine, GUIDE_LINE_COLOUR},
     legend::InsetLegend,
     InnerLayout, IntoInnerLayout,
 };

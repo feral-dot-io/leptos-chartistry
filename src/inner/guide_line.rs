@@ -3,7 +3,7 @@ use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State};
 use leptos::*;
 use std::{rc::Rc, str::FromStr};
 
-pub const DEFAULT_GUIDE_LINE_COLOUR: Colour = Colour::new(0x9A, 0x9A, 0x9A);
+pub const GUIDE_LINE_COLOUR: Colour = Colour::new(0x9A, 0x9A, 0x9A);
 
 macro_rules! impl_guide_line {
     ($name:ident) => {
@@ -36,7 +36,7 @@ macro_rules! impl_guide_line {
                 Self {
                     align: RwSignal::default(),
                     width: 1.0.into(),
-                    colour: create_rw_signal(DEFAULT_GUIDE_LINE_COLOUR),
+                    colour: create_rw_signal(GUIDE_LINE_COLOUR),
                 }
             }
         }

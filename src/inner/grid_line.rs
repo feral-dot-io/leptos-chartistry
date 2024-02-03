@@ -6,7 +6,7 @@ use crate::{
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
 
-pub const DEFAULT_GRID_LINE_COLOUR: Colour = Colour::new(0xEF, 0xF2, 0xFA);
+pub const GRID_LINE_COLOUR: Colour = Colour::new(0xEF, 0xF2, 0xFA);
 
 macro_rules! impl_grid_line {
     ($name:ident) => {
@@ -30,7 +30,7 @@ macro_rules! impl_grid_line {
             fn default() -> Self {
                 Self {
                     width: 1.0.into(),
-                    colour: create_rw_signal(DEFAULT_GRID_LINE_COLOUR),
+                    colour: create_rw_signal(GRID_LINE_COLOUR),
                     ticks: TickLabels::default(),
                 }
             }
