@@ -133,7 +133,7 @@ pub fn App() -> impl IntoView {
 
     // Axis
     let x_periods = Timestamps::from_periods(Period::all());
-    let x_ticks = TickLabels::from_generator(x_periods.clone());
+    let x_ticks = TickLabels::new(x_periods.clone());
     let y_ticks = TickLabels::aligned_floats();
 
     // Series
@@ -146,9 +146,7 @@ pub fn App() -> impl IntoView {
     // Tooltip
     let tooltip = Tooltip::new(
         TooltipPlacement::default(),
-        TickLabels::from_generator(
-            x_periods.with_long_format(), /* TODO .with_format(TimestampFormat::Strftime("%c")) */
-        ),
+        TickLabels::new(x_periods.with_long_format()),
         y_ticks.clone(),
     );
     let tooltip_card = tooltip.clone();

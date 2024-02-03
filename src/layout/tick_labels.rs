@@ -5,7 +5,7 @@ use crate::{
     edge::Edge,
     state::{PreState, State},
     ticks::{AlignedFloats, GeneratedTicks, HorizontalSpan, TickGen, Timestamps, VerticalSpan},
-    Period, Tick,
+    Tick,
 };
 use chrono::prelude::*;
 use leptos::*;
@@ -34,13 +34,13 @@ impl<Tick> Clone for TickLabels<Tick> {
 
 impl<Tick: crate::Tick> Default for TickLabels<Tick> {
     fn default() -> Self {
-        Self::from_generator(Tick::default_generator())
+        Self::new(Tick::default_generator())
     }
 }
 
 impl TickLabels<f64> {
     pub fn aligned_floats() -> Self {
-        Self::from_generator(AlignedFloats::default())
+        Self::new(AlignedFloats::default())
     }
 }
 
@@ -50,26 +50,16 @@ where
     Tz::Offset: std::fmt::Display,
 {
     pub fn timestamps() -> Self {
-        Self::from_generator(Timestamps::from_periods(Period::all()))
+        Self::new(Timestamps::default())
     }
 }
 
 impl<Tick: crate::Tick> TickLabels<Tick> {
-    pub fn new(gen: impl Into<RwSignal<Rc<dyn TickGen<Tick = Tick>>>>) -> Self {
+    pub fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
             min_chars: RwSignal::default(),
-            generator: gen.into(),
+            generator: create_rw_signal(Rc::new(gen)),
         }
-    }
-
-    pub fn from_generator(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
-        let gen: Rc<dyn TickGen<Tick = Tick>> = Rc::new(gen);
-        Self::new(gen)
-    }
-
-    pub fn with_generator(self, gen: impl TickGen<Tick = Tick> + 'static) -> Self {
-        self.generator.set(Rc::new(gen));
-        self
     }
 
     pub fn with_min_chars(self, min_chars: impl Into<usize>) -> Self {
