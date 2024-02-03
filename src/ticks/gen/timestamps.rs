@@ -81,6 +81,11 @@ where
         self.format = Rc::new(StrftimeFormat(format.into()));
         self
     }
+
+    pub fn with_format(mut self, f: impl Fn(Period, &DateTime<Tz>) -> String + 'static) -> Self {
+        self.format = Rc::new(f);
+        self
+    }
 }
 
 impl<Tz: TimeZone + 'static> Generator for Timestamps<Tz> {
@@ -233,6 +238,16 @@ where
 {
     fn format(&self, _: Period, at: &DateTime<Tz>) -> String {
         at.format(&self.0).to_string()
+    }
+}
+
+impl<F, Tz> TimestampFormat<Tz> for F
+where
+    F: Fn(Period, &DateTime<Tz>) -> String,
+    Tz: TimeZone,
+{
+    fn format(&self, period: Period, at: &DateTime<Tz>) -> String {
+        (self)(period, at)
     }
 }
 
