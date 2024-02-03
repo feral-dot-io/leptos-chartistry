@@ -9,7 +9,7 @@ pub struct Timestamps<Tz> {
     tz: std::marker::PhantomData<Tz>,
 }
 
-pub trait TimestampFormat<Tz: TimeZone> {
+trait TimestampFormat<Tz: TimeZone> {
     fn format(&self, period: Period, at: &DateTime<Tz>) -> String;
 }
 
@@ -401,7 +401,7 @@ mod tests {
     }
 
     fn mk_span<Tick: 'static>(width: f64) -> impl Span<Tick> {
-        HorizontalSpan::new(6.0, 0, 2.0, width)
+        HorizontalSpan::new(6.0, 0, 2.0, width, HorizontalSpan::identity_format())
     }
 
     #[test]

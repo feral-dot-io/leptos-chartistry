@@ -11,12 +11,10 @@ An extensible charting library for Leptos.
 - Stacked colours iterate but should use sequential colours with "min step by" fn
 - Should stacked colours be a single colour?
 - Aspect ratio misapplies options on calculation. e.g., when determining the width and have height+ratio then width options are applied to the height. This implies the outer+height calculation should be removed from the API.
-- Tooltip needs a custom formatter. Move to Tick trait. `Fn(&Tick, &dyn TickState<Tick = Tick>) -> String>`. Or possibly rely on TickLabels instead.
 - PeriodicTimestamps
     - Take a Tz but might work with a fixed offset or naive datetime.
     - Requires a formatter with Tz to be passed in.
     - Should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
-- We should avoid nested signals like with TickLabels. Ideas: (1) Ticks should be signal free that gets cloned around then transformed into a signal by a layout option, or (2) the layout option should copy the signals it needs instead of cloning the struct. The problem we're trying to solve is to make sure formatting of tooltips different from TickLabels is easy.
 - Check for TODOs
 
 Documentation:

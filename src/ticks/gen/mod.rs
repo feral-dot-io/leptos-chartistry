@@ -3,7 +3,7 @@ mod span;
 mod timestamps;
 
 pub use aligned_floats::AlignedFloats;
-pub use span::{HorizontalSpan, VerticalSpan};
+pub use span::{HorizontalSpan, TickFormatFn, VerticalSpan};
 pub use timestamps::{Period, Timestamps};
 
 use std::rc::Rc;

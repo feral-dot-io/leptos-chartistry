@@ -1,4 +1,5 @@
 use super::{Format, Span};
+use std::rc::Rc;
 
 pub struct VerticalSpan {
     avail_height: f64,
@@ -24,25 +25,39 @@ impl<Tick> Span<Tick> for VerticalSpan {
     }
 }
 
-pub struct HorizontalSpan {
+pub type TickFormatFn<Tick> = dyn Fn(&Tick, &dyn Format<Tick = Tick>) -> String;
+
+pub struct HorizontalSpan<Tick: 'static> {
     font_width: f64,
     min_chars: usize,
     padding_width: f64,
     avail_width: f64,
+    format: Rc<TickFormatFn<Tick>>,
 }
 
-impl HorizontalSpan {
-    pub fn new(font_width: f64, min_chars: usize, padding_width: f64, avail_width: f64) -> Self {
+impl<Tick> HorizontalSpan<Tick> {
+    pub fn new(
+        font_width: f64,
+        min_chars: usize,
+        padding_width: f64,
+        avail_width: f64,
+        format: Rc<TickFormatFn<Tick>>,
+    ) -> Self {
         Self {
             font_width,
             min_chars,
             padding_width,
             avail_width,
+            format,
         }
+    }
+
+    pub fn identity_format() -> Rc<TickFormatFn<Tick>> {
+        Rc::new(|tick, state| state.format(tick))
     }
 }
 
-impl<Tick> Span<Tick> for HorizontalSpan {
+impl<Tick> Span<Tick> for HorizontalSpan<Tick> {
     fn length(&self) -> f64 {
         self.avail_width
     }
@@ -50,7 +65,7 @@ impl<Tick> Span<Tick> for HorizontalSpan {
     fn consumed(&self, state: &dyn Format<Tick = Tick>, ticks: &[Tick]) -> f64 {
         let max_chars = ticks
             .iter()
-            .map(|tick| state.format(tick).len().max(self.min_chars))
+            .map(|tick| (self.format)(tick, state).len().max(self.min_chars))
             .max()
             .unwrap_or_default();
         let max_label_width = max_chars as f64 * self.font_width + self.padding_width * 2.0;

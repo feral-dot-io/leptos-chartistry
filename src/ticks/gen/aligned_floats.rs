@@ -9,12 +9,9 @@ use super::{Format, GeneratedTicks, Generator, Span};
 pub struct AlignedFloats {}
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct State {
+struct State {
     scale: isize,
 }
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct AlignedFormat;
 
 impl Generator for AlignedFloats {
     type Tick = f64;
@@ -121,7 +118,13 @@ mod tests {
     use super::*;
 
     fn mk_span(width: f64) -> Box<dyn Span<f64>> {
-        Box::new(HorizontalSpan::new(1.0, 0, 0.0, width + 0.1))
+        Box::new(HorizontalSpan::new(
+            1.0,
+            0,
+            0.0,
+            width + 0.1,
+            HorizontalSpan::identity_format(),
+        ))
     }
 
     fn assert_precision(first: f64, last: f64, width: f64, scale: isize, count: usize) {

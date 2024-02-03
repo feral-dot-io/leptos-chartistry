@@ -4,7 +4,10 @@ use crate::{
     debug::DebugRect,
     edge::Edge,
     state::{PreState, State},
-    ticks::{AlignedFloats, GeneratedTicks, HorizontalSpan, TickGen, Timestamps, VerticalSpan},
+    ticks::{
+        AlignedFloats, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, Timestamps,
+        VerticalSpan,
+    },
     Tick,
 };
 use chrono::prelude::*;
@@ -13,7 +16,7 @@ use std::rc::Rc;
 
 pub struct TickLabels<Tick: 'static> {
     pub min_chars: RwSignal<usize>,
-    //pub format: RwSignal<Rc<dyn TickFormat>,
+    pub format: RwSignal<Rc<TickFormatFn<Tick>>>,
     pub generator: RwSignal<Rc<dyn TickGen<Tick = Tick>>>,
 }
 
@@ -26,7 +29,7 @@ impl<Tick> Clone for TickLabels<Tick> {
     fn clone(&self) -> Self {
         Self {
             min_chars: self.min_chars,
-            //format: self.format,
+            format: self.format,
             generator: self.generator,
         }
     }
@@ -58,6 +61,7 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
     pub fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
             min_chars: RwSignal::default(),
+            format: RwSignal::new(HorizontalSpan::identity_format()),
             generator: create_rw_signal(Rc::new(gen)),
         }
     }
@@ -97,8 +101,11 @@ impl<X: Tick> TickLabels<X> {
     ) -> Signal<GeneratedTicks<X>> {
         let PreState { font, padding, .. } = *state;
         let range_x = state.data.range_x;
-        let min_chars = self.min_chars;
-        let gen = self.generator;
+        let TickLabels {
+            min_chars,
+            format,
+            generator,
+        } = self.clone();
         create_memo(move |_| {
             let min_chars = min_chars.get();
             range_x.with(|range_x| {
@@ -112,8 +119,9 @@ impl<X: Tick> TickLabels<X> {
                             min_chars,
                             padding_width,
                             avail_width.get(),
+                            format.get(),
                         );
-                        gen.get().generate(first, last, &span)
+                        generator.get().generate(first, last, &span)
                     })
                     .unwrap_or_else(GeneratedTicks::none)
             })
