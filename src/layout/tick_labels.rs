@@ -66,8 +66,8 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
         }
     }
 
-    pub fn with_min_chars(self, min_chars: impl Into<usize>) -> Self {
-        self.min_chars.set(min_chars.into());
+    pub fn with_min_chars(self, min_chars: usize) -> Self {
+        self.min_chars.set(min_chars);
         self
     }
 

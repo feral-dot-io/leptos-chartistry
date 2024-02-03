@@ -16,6 +16,7 @@ An extensible charting library for Leptos.
     - Requires a formatter with Tz to be passed in.
     - Should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
 - Check for TODOs
+- Do we have to expose Font?
 
 Documentation:
 - Colours: need a general write up on difficulties
