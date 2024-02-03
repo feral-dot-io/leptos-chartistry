@@ -4,9 +4,7 @@ use crate::{
     debug::DebugRect,
     edge::Edge,
     state::{PreState, State},
-    ticks::{
-        AlignedFloats, GeneratedTicks, HorizontalSpan, PeriodicTimestamps, TickGen, VerticalSpan,
-    },
+    ticks::{AlignedFloats, GeneratedTicks, HorizontalSpan, TickGen, Timestamps, VerticalSpan},
     Period, Tick,
 };
 use chrono::prelude::*;
@@ -52,7 +50,7 @@ where
     Tz::Offset: std::fmt::Display,
 {
     pub fn timestamps() -> Self {
-        Self::from_generator(PeriodicTimestamps::from_periods(Period::all()))
+        Self::from_generator(Timestamps::from_periods(Period::all()))
     }
 }
 

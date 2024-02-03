@@ -3,7 +3,7 @@ use chrono::{prelude::*, Duration, DurationRound, Months};
 use std::{borrow::Borrow, fmt::Display, ops::Add, rc::Rc};
 
 #[derive(Clone)]
-pub struct PeriodicTimestamps<Tz> {
+pub struct Timestamps<Tz> {
     format: Rc<dyn TimestampFormat<Tz>>,
     periods: Vec<Period>,
     tz: std::marker::PhantomData<Tz>,
@@ -36,7 +36,7 @@ struct State<Tz: TimeZone> {
     tz: std::marker::PhantomData<Tz>,
 }
 
-impl<Tz> Default for PeriodicTimestamps<Tz>
+impl<Tz> Default for Timestamps<Tz>
 where
     Tz: TimeZone,
     Tz::Offset: Display,
@@ -46,7 +46,7 @@ where
     }
 }
 
-impl<Tz> PeriodicTimestamps<Tz>
+impl<Tz> Timestamps<Tz>
 where
     Tz: TimeZone,
     Tz::Offset: Display,
@@ -83,7 +83,7 @@ where
     }
 }
 
-impl<Tz: TimeZone + 'static> Generator for PeriodicTimestamps<Tz> {
+impl<Tz: TimeZone + 'static> Generator for Timestamps<Tz> {
     type Tick = DateTime<Tz>;
 
     fn generate(
@@ -134,7 +134,7 @@ impl<Tz: TimeZone + 'static> Generator for PeriodicTimestamps<Tz> {
     }
 }
 
-impl<Tz: TimeZone> PeriodicTimestamps<Tz> {
+impl<Tz: TimeZone> Timestamps<Tz> {
     fn merge_ticks<T: Clone + Ord>(existing: &[T], candidate: &[T], sample: usize) -> Vec<T> {
         assert!(sample > 0);
         let candidate = candidate.to_owned();
@@ -174,7 +174,7 @@ impl<Tz: TimeZone> PeriodicTimestamps<Tz> {
 }
 
 impl<Tz: TimeZone> State<Tz> {
-    fn from_period(gen: &PeriodicTimestamps<Tz>, period: Period) -> Self {
+    fn from_period(gen: &Timestamps<Tz>, period: Period) -> Self {
         Self {
             format: gen.format.clone(),
             all_periods: gen.periods.clone(),
@@ -391,7 +391,7 @@ mod tests {
 
     #[test]
     fn test_timestamp_generator() {
-        let gen = PeriodicTimestamps::from_periods(Period::all());
+        let gen = Timestamps::from_periods(Period::all());
         let first = Utc.with_ymd_and_hms(2014, 3, 1, 0, 0, 0).unwrap();
         let last = Utc.with_ymd_and_hms(2018, 7, 5, 0, 0, 0).unwrap();
         // Just years
@@ -440,7 +440,7 @@ mod tests {
 
     #[test]
     fn test_timestamp_generator_zero() {
-        let gen = PeriodicTimestamps::from_periods(Period::all());
+        let gen = Timestamps::from_periods(Period::all());
         let first = DateTime::<Utc>::from_timestamp(0, 0).unwrap();
         let last = DateTime::<Utc>::from_timestamp(12, 6_000_000).unwrap();
         assert_ticks(
@@ -454,14 +454,14 @@ mod tests {
 
     #[test]
     fn test_timestamp_generator_no_range() {
-        let gen = PeriodicTimestamps::from_periods(Period::all());
+        let gen = Timestamps::from_periods(Period::all());
         let dt = Utc.with_ymd_and_hms(2015, 1, 1, 0, 0, 0).unwrap();
         assert_ticks(gen.generate(&dt, &dt, &mk_span(1000.0)), vec![])
     }
 
     #[test]
     fn test_gen_small_space() {
-        let gen = PeriodicTimestamps::from_periods(Period::all());
+        let gen = Timestamps::from_periods(Period::all());
         let first = DateTime::<Utc>::from_timestamp(0, 0).unwrap();
         let last = DateTime::<Utc>::from_timestamp(0, 3_000_000).unwrap();
         assert_ticks(gen.generate(&first, &last, &mk_span(10.0)), vec![]);
@@ -469,7 +469,7 @@ mod tests {
 
     #[test]
     fn test_timestamps_empty_periods() {
-        let gen = PeriodicTimestamps::from_periods([]);
+        let gen = Timestamps::from_periods([]);
         let first = Utc.with_ymd_and_hms(2014, 3, 1, 0, 0, 0).unwrap();
         let last = Utc.with_ymd_and_hms(2018, 7, 5, 0, 0, 0).unwrap();
         assert_ticks(gen.generate(&first, &last, &mk_span(1000.0)), vec![]);
@@ -477,7 +477,7 @@ mod tests {
 
     #[test]
     fn test_sample_ticks() {
-        let f = PeriodicTimestamps::<Utc>::sample_ticks::<u32>;
+        let f = Timestamps::<Utc>::sample_ticks::<u32>;
         assert_eq!(f(vec![0, 1, 2, 3, 4, 5], 0, 1), vec![0, 1, 2, 3, 4, 5]);
         assert_eq!(f(vec![0, 1, 2, 3, 4, 5], 1, 2), vec![1, 3, 5]);
         assert_eq!(f(vec![0, 1, 2, 3, 4, 5], 2, 3), vec![2, 5]);

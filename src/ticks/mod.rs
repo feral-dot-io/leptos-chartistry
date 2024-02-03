@@ -2,7 +2,7 @@ mod gen;
 
 pub use gen::{
     AlignedFloats, Format as TickFormat, GeneratedTicks, Generator as TickGen, HorizontalSpan,
-    Period, PeriodicTimestamps, VerticalSpan,
+    Period, Timestamps, VerticalSpan,
 };
 
 use chrono::prelude::*;
@@ -28,7 +28,7 @@ where
     Tz::Offset: std::fmt::Display,
 {
     fn default_generator() -> impl TickGen<Tick = Self> {
-        PeriodicTimestamps::default()
+        Timestamps::default()
     }
 
     fn position(&self) -> f64 {

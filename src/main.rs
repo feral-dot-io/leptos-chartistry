@@ -132,7 +132,7 @@ pub fn App() -> impl IntoView {
     let cosine = Line::new(|w: &Wave| w.cosine).with_name("cosine");
 
     // Axis
-    let x_periods = PeriodicTimestamps::from_periods(Period::all());
+    let x_periods = Timestamps::from_periods(Period::all());
     let x_ticks = TickLabels::from_generator(x_periods.clone());
     let y_ticks = TickLabels::aligned_floats();
 
