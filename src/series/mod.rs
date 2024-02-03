@@ -6,10 +6,7 @@ pub use line::{Line, Snippet, UseLine};
 pub use stack::Stack;
 pub use use_data::{RenderData, UseData};
 
-use crate::{
-    colours::{self, Colour, ColourScheme},
-    Tick,
-};
+use crate::colours::{self, Colour, ColourScheme};
 use leptos::signal_prelude::*;
 use std::rc::Rc;
 
@@ -26,12 +23,12 @@ trait GetYValue<T, Y> {
 #[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
-    min_x: Signal<Option<X>>,
-    max_x: Signal<Option<X>>,
-    min_y: Signal<Option<Y>>,
-    max_y: Signal<Option<Y>>,
-    colours: Signal<Option<ColourScheme>>,
     lines: Vec<Rc<dyn ApplyUseSeries<T, Y>>>,
+    pub min_x: RwSignal<Option<X>>,
+    pub max_x: RwSignal<Option<X>>,
+    pub min_y: RwSignal<Option<Y>>,
+    pub max_y: RwSignal<Option<Y>>,
+    colours: Signal<Option<ColourScheme>>,
 }
 
 trait ApplyUseSeries<T, Y> {
@@ -48,14 +45,14 @@ struct SeriesAcc<T, Y> {
     lines: Vec<(UseLine, GetY<T, Y>)>,
 }
 
-impl<T, X: Tick, Y: Tick> Series<T, X, Y> {
+impl<T, X, Y> Series<T, X, Y> {
     pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
         Self {
             get_x: Rc::new(get_x),
-            min_x: Signal::default(),
-            max_x: Signal::default(),
-            min_y: Signal::default(),
-            max_y: Signal::default(),
+            min_x: RwSignal::default(),
+            max_x: RwSignal::default(),
+            min_y: RwSignal::default(),
+            max_y: RwSignal::default(),
             colours: Signal::default(),
             lines: Vec::new(),
         }
@@ -70,43 +67,31 @@ impl<T, X: Tick, Y: Tick> Series<T, X, Y> {
         self
     }
 
-    pub fn with_min_x(mut self, min_x: impl Into<MaybeSignal<Option<X>>>) -> Self {
-        let min_x = min_x.into();
-        self.min_x = Signal::derive(move || min_x.get());
+    pub fn with_min_x(self, max_x: impl Into<Option<X>>) -> Self {
+        self.min_x.set(max_x.into());
         self
     }
 
-    pub fn with_max_x(mut self, max_x: impl Into<MaybeSignal<Option<X>>>) -> Self {
-        let max_x = max_x.into();
-        self.max_x = Signal::derive(move || max_x.get());
+    pub fn with_max_x(self, max_x: impl Into<Option<X>>) -> Self {
+        self.max_x.set(max_x.into());
         self
     }
 
-    pub fn with_min_y(mut self, min_y: impl Into<MaybeSignal<Option<Y>>>) -> Self {
-        let min_y = min_y.into();
-        self.min_y = Signal::derive(move || min_y.get());
+    pub fn with_min_y(self, min_y: impl Into<Option<Y>>) -> Self {
+        self.min_y.set(min_y.into());
         self
     }
 
-    pub fn with_max_y(mut self, max_y: impl Into<MaybeSignal<Option<Y>>>) -> Self {
-        let max_y = max_y.into();
-        self.max_y = Signal::derive(move || max_y.get());
+    pub fn with_max_y(self, max_y: impl Into<Option<Y>>) -> Self {
+        self.max_y.set(max_y.into());
         self
     }
 
-    pub fn with_x_range(
-        self,
-        min_x: impl Into<MaybeSignal<Option<X>>>,
-        max_x: impl Into<MaybeSignal<Option<X>>>,
-    ) -> Self {
+    pub fn with_x_range(self, min_x: impl Into<Option<X>>, max_x: impl Into<Option<X>>) -> Self {
         self.with_min_x(min_x).with_max_x(max_x)
     }
 
-    pub fn with_y_range(
-        self,
-        min_y: impl Into<MaybeSignal<Option<Y>>>,
-        max_y: impl Into<MaybeSignal<Option<Y>>>,
-    ) -> Self {
+    pub fn with_y_range(self, min_y: impl Into<Option<Y>>, max_y: impl Into<Option<Y>>) -> Self {
         self.with_min_y(min_y).with_max_y(max_y)
     }
 

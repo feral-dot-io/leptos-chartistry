@@ -142,10 +142,6 @@ pub fn App() -> impl IntoView {
     let tooltip_card = tooltip.clone();
 
     // Range
-    let min_x: RwSignal<Option<DateTime<_>>> = create_rw_signal(None);
-    let max_x: RwSignal<Option<DateTime<_>>> = create_rw_signal(None);
-    let min_y: RwSignal<Option<f64>> = create_rw_signal(None);
-    let max_y: RwSignal<Option<f64>> = create_rw_signal(None);
     let on_datetime_change = move |sig: RwSignal<Option<DateTime<_>>>| {
         move |ev| {
             let new_value =
@@ -174,9 +170,9 @@ pub fn App() -> impl IntoView {
             Line::new(|w: &Wave| w.cosine)
                 .with_name(cosine_name)
                 .with_width(cosine_width),
-        )
-        .with_x_range(min_x, max_x)
-        .with_y_range(min_y, max_y);
+        );
+    let (min_x, max_x) = (series.min_x, series.max_x);
+    let (min_y, max_y) = (series.min_y, series.max_y);
 
     // Layout options
     let top: RwSignal<Options<EdgeLayout<_>>> = Options::create_signal(vec![RotatedLabel::middle(
