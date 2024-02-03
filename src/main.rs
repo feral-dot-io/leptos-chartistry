@@ -128,15 +128,20 @@ pub fn App() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-    let (sine_name, set_sine_name) = create_signal("sine".to_string());
-    let sine_width = create_rw_signal(1.0);
-    let (cosine_name, set_cosine_name) = create_signal("cosine".to_string());
-    let cosine_width = create_rw_signal(1.0);
+    let sine = Line::new(|w: &Wave| w.sine).with_name("sine");
+    let cosine = Line::new(|w: &Wave| w.cosine).with_name("cosine");
 
     // Axis
     let x_periods = PeriodicTimestamps::from_periods(Period::all());
     let x_ticks = TickLabels::from_generator(x_periods.clone());
     let y_ticks = TickLabels::aligned_floats();
+
+    // Series
+    let series = Series::new(|w: &Wave| w.x)
+        .line(sine.clone())
+        .line(cosine.clone());
+    let (min_x, max_x) = (series.min_x, series.max_x);
+    let (min_y, max_y) = (series.min_y, series.max_y);
 
     // Tooltip
     let tooltip = Tooltip::new(
@@ -163,21 +168,6 @@ pub fn App() -> impl IntoView {
                 .unwrap_or_default()
         }
     };
-
-    // Series
-    let series = Series::new(|w: &Wave| w.x)
-        .line(
-            Line::new(|w: &Wave| w.sine)
-                .with_name(sine_name)
-                .with_width(sine_width),
-        )
-        .line(
-            Line::new(|w: &Wave| w.cosine)
-                .with_name(cosine_name)
-                .with_width(cosine_width),
-        );
-    let (min_x, max_x) = (series.min_x, series.max_x);
-    let (min_y, max_y) = (series.min_y, series.max_y);
 
     // Layout options
     let top: RwSignal<Options<EdgeLayout<_>>> = Options::create_signal(vec![RotatedLabel::middle(
@@ -327,25 +317,25 @@ pub fn App() -> impl IntoView {
                 <p>
                     <label for="sine_name">"Sine"</label>
                     <span>
-                        <input type="text" id="sine_name" value=sine_name
-                            on:input=move |ev| set_sine_name.set(event_target_value(&ev)) />
+                        <input type="text" id="sine_name" value=sine.name
+                            on:input=move |ev| sine.name.set(event_target_value(&ev)) />
                     </span>
                 </p>
                 <p>
                     <label for="sine_width">"Width"</label>
-                    <span><StepInput id="sine_width" value=sine_width step="0.1" min="0.1" /></span>
+                    <span><StepInput id="sine_width" value=sine.width step="0.1" min="0.1" /></span>
                 </p>
 
                 <p>
                     <label for="cosine_name">"Cosine"</label>
                     <span>
-                        <input type="text" value=cosine_name
-                            on:input=move |ev| set_cosine_name.set(event_target_value(&ev)) />
+                        <input type="text" value=cosine.name
+                            on:input=move |ev| cosine.name.set(event_target_value(&ev)) />
                     </span>
                 </p>
                 <p>
                     <label for="cosine_width">"Width"</label>
-                    <span><StepInput id="cosine_width" value=cosine_width step="0.1" min="0.1" /></span>
+                    <span><StepInput id="cosine_width" value=cosine.width step="0.1" min="0.1" /></span>
                 </p>
             </fieldset>
 

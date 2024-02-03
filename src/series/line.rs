@@ -7,41 +7,41 @@ use std::rc::Rc;
 
 pub struct Line<T, Y> {
     get_y: Rc<dyn GetYValue<T, Y>>,
-    name: MaybeSignal<String>,
-    colour: MaybeSignal<Option<Colour>>,
-    width: MaybeSignal<f64>,
+    pub name: RwSignal<String>,
+    pub colour: RwSignal<Option<Colour>>,
+    pub width: RwSignal<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
     pub id: usize,
-    pub name: MaybeSignal<String>,
-    pub colour: Signal<Colour>,
-    width: MaybeSignal<f64>,
+    pub name: RwSignal<String>,
+    colour: Signal<Colour>,
+    width: RwSignal<f64>,
 }
 
 impl<T, Y> Line<T, Y> {
     pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self {
         Self {
             get_y: Rc::new(get_y),
-            name: MaybeSignal::default(),
-            colour: MaybeSignal::default(),
+            name: RwSignal::default(),
+            colour: RwSignal::default(),
             width: 1.0.into(),
         }
     }
 
-    pub fn with_name(mut self, name: impl Into<MaybeSignal<String>>) -> Self {
-        self.name = name.into();
+    pub fn with_name(self, name: impl Into<String>) -> Self {
+        self.name.set(name.into());
         self
     }
 
-    pub fn with_colour(mut self, colour: impl Into<MaybeSignal<Option<Colour>>>) -> Self {
-        self.colour = colour.into();
+    pub fn with_colour(self, colour: impl Into<Option<Colour>>) -> Self {
+        self.colour.set(colour.into());
         self
     }
 
-    pub fn with_width(mut self, width: impl Into<MaybeSignal<f64>>) -> Self {
-        self.width = width.into();
+    pub fn with_width(self, width: impl Into<f64>) -> Self {
+        self.width.set(width.into());
         self
     }
 }
@@ -50,7 +50,7 @@ impl<T, Y> Clone for Line<T, Y> {
     fn clone(&self) -> Self {
         Self {
             get_y: self.get_y.clone(),
-            name: self.name.clone(),
+            name: self.name,
             colour: self.colour,
             width: self.width,
         }
@@ -86,7 +86,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
         let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
         let line = UseLine {
             id,
-            name: self.name.clone(),
+            name: self.name,
             colour,
             width: self.width,
         };
@@ -168,7 +168,7 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
 #[component]
 pub fn Snippet<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
-    let name = series.name.clone();
+    let name = series.name;
     view! {
         <div class="_chartistry_snippet" style="white-space: nowrap;">
             <DebugRect label="snippet" debug=debug />
