@@ -2,7 +2,7 @@ use chrono::prelude::*;
 use leptos::*;
 use leptos_chartistry::{colours::Colour, *};
 use leptos_meta::{provide_meta_context, Style};
-use std::{collections::HashSet, rc::Rc, str::FromStr};
+use std::str::FromStr;
 
 const DEFAULT_WIDTH: f64 = 800.0;
 const DEFAULT_HEIGHT: f64 = 400.0;
@@ -31,12 +31,6 @@ const ALL_HOVER_PLACEMENTS: &[HoverPlacement] = &[HoverPlacement::Hide, HoverPla
 const ALL_SORT_BYS: &[SortBy] = &[SortBy::Lines, SortBy::Ascending, SortBy::Descending];
 
 const JS_TIMESTAMP_FMT: &str = "%FT%R";
-const CUSTOM_TS_FORMAT: &str = "⭐🌟⭐%+⭐🌟⭐";
-const ALL_TS_FORMATS: &[TimestampFormat] = &[
-    TimestampFormat::Short,
-    TimestampFormat::Long,
-    TimestampFormat::Strftime(CUSTOM_TS_FORMAT),
-];
 
 #[derive(Clone)]
 struct Options<Opt>(Vec<Opt>);
@@ -134,35 +128,18 @@ pub fn App() -> impl IntoView {
     let (cosine_name, set_cosine_name) = create_signal("cosine".to_string());
     let cosine_width = create_rw_signal(1.0);
 
-    // Y axis
+    // Axis
+    let x_periods = PeriodicTimestamps::from_periods(Period::all());
+    let x_ticks = TickLabels::from_generator(x_periods.clone());
     let y_ticks = TickLabels::aligned_floats();
-    // Y axis
-    let x_periods: RwSignal<HashSet<_>> = create_rw_signal(Period::all().into());
-    let x_format = create_rw_signal(TimestampFormat::default());
-    let mk_x_gen = move || {
-        let periods = x_periods.get().into_iter().collect::<Vec<_>>();
-        let format = x_format.get();
-        let gen = PeriodicTimestamps::from_periods(periods).with_format(format);
-        Rc::new(gen)
-    };
-    let x_ticks = TickLabels::default(); // Assumes this uses default periods and format
-    let x_ticks_gen = x_ticks.generator;
-    let on_period = move |period, ev| {
-        let mut periods = x_periods.get();
-        // Update periods
-        if event_target_checked(&ev) {
-            periods.insert(period)
-        } else {
-            periods.remove(&period)
-        };
-        x_periods.set(periods);
-        x_ticks_gen.set(mk_x_gen());
-    };
-    let on_ts_format = move |ev| {
-        let format = parse_timestamp_format(&event_target_value(&ev));
-        x_format.set(format);
-        x_ticks_gen.set(mk_x_gen());
-    };
+
+    // Tooltip
+    let tooltip = Tooltip::new(
+        HoverPlacement::default(),
+        TickLabels::from_generator(x_periods.with_format(TimestampFormat::Strftime("%c"))),
+        y_ticks.clone(),
+    );
+    let tooltip_card = tooltip.clone();
 
     // Range
     let min_x: RwSignal<Option<DateTime<_>>> = create_rw_signal(None);
@@ -219,8 +196,6 @@ pub fn App() -> impl IntoView {
         XGuideLine::default().into_inner_layout(),
         YGuideLine::default().into_inner_layout(),
     ]);
-    let tooltip = Tooltip::new(HoverPlacement::default(), x_ticks, y_ticks);
-    let tooltip_card = tooltip.clone();
 
     view! {
         <Style>"
@@ -389,29 +364,7 @@ pub fn App() -> impl IntoView {
                 </p>
                 <p>
                     <span>"X axis"</span>
-                    <span class="periods">
-                        <PeriodLabel periods=x_periods period=Period::Year on_change=on_period />
-                        <PeriodLabel periods=x_periods period=Period::Month on_change=on_period />
-                        <PeriodLabel periods=x_periods period=Period::Day on_change=on_period />
-                        <PeriodLabel periods=x_periods period=Period::Hour on_change=on_period />
-                        <PeriodLabel periods=x_periods period=Period::Minute on_change=on_period />
-                        <PeriodLabel periods=x_periods period=Period::Second on_change=on_period />
-                        <PeriodLabel periods=x_periods period=Period::Millisecond on_change=on_period />
-                        <PeriodLabel periods=x_periods period=Period::Microsecond on_change=on_period />
-                        <PeriodLabel periods=x_periods period=Period::Nanosecond on_change=on_period />
-                    </span>
-                </p>
-                <p>
-                    <span>"Format"</span>
-                    <span>
-                        <select on:change=on_ts_format>
-                            <optgroup label="Timestamp format">
-                                <For each=move || ALL_TS_FORMATS key=|opt| opt.to_string() let:format>
-                                    <option selected=move || x_format.get() == *format>{format.to_string()}</option>
-                                </For>
-                            </optgroup>
-                        </select>
-                    </span>
+                    <span class="periods">"Timestamps"</span>
                 </p>
                 <p>
                     <label for="min_x">"Range"</label>
@@ -853,83 +806,6 @@ select_impl!(
     AspectCalc,
     ALL_ASPECT_CALCS
 );
-
-// TODO remove?
-//select_impl!(SelectTsFormat, "Format", format, TsFormat, ALL_TS_FORMATS);
-#[derive(Clone, Debug, Default, PartialEq)]
-struct TsFormat(TimestampFormat);
-
-impl TsFormat {
-    pub const fn new(f: TimestampFormat) -> Self {
-        Self(f)
-    }
-}
-
-impl std::fmt::Display for TsFormat {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl FromStr for TsFormat {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = s.to_lowercase();
-        match s.as_str() {
-            "Short" => Ok(TsFormat::new(TimestampFormat::Short)),
-            "Long" => Ok(TsFormat::new(TimestampFormat::Long)),
-            _ => {
-                if s.starts_with("Custom: ") {
-                    Ok(TsFormat::new(TimestampFormat::Strftime(CUSTOM_TS_FORMAT)))
-                } else {
-                    Err(format!("unknown timestamp format: `{}`", s))
-                }
-            }
-        }
-    }
-}
-
-fn parse_timestamp_format(s: &str) -> TimestampFormat {
-    match s.to_lowercase().as_str() {
-        "short" => TimestampFormat::Short,
-        "long" => TimestampFormat::Long,
-        _ => TimestampFormat::Strftime(CUSTOM_TS_FORMAT),
-    }
-}
-
-fn format_ts_period(p: Period) -> &'static str {
-    match p {
-        Period::Year => "year",
-        Period::Month => "month",
-        Period::Day => "day",
-        Period::Hour => "hour",
-        Period::Minute => "min",
-        Period::Second => "secs",
-        Period::Millisecond => "ms",
-        Period::Microsecond => "us",
-        Period::Nanosecond => "ns",
-        _ => "unknown",
-    }
-}
-
-#[component]
-fn PeriodLabel<OC>(
-    periods: RwSignal<HashSet<Period>>,
-    period: Period,
-    on_change: OC,
-) -> impl IntoView
-where
-    OC: Fn(Period, leptos::ev::Event) + 'static,
-{
-    view! {
-        <label>
-            <input type="checkbox" checked=move || periods.get().contains(&period)
-                on:change=move |ev| on_change(period, ev) />
-            {format_ts_period(period)}
-        </label>
-    }
-}
 
 #[component]
 fn SelectColour(colour: RwSignal<Option<Colour>>) -> impl IntoView {
