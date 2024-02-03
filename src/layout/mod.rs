@@ -9,6 +9,7 @@ use crate::{
     bounds::Bounds,
     edge::Edge,
     state::{PreState, State},
+    Tick,
 };
 use leptos::*;
 
@@ -53,7 +54,7 @@ impl UseLayout {
     }
 }
 
-impl<Tick: PartialEq> EdgeLayout<Tick> {
+impl<Tick: crate::Tick> EdgeLayout<Tick> {
     fn fixed_height<Y>(&self, state: &PreState<Tick, Y>) -> Signal<f64> {
         match self {
             Self::Legend(inner) => inner.fixed_height(state),
@@ -63,7 +64,7 @@ impl<Tick: PartialEq> EdgeLayout<Tick> {
     }
 }
 
-impl<X: PartialEq> EdgeLayout<X> {
+impl<X: Tick> EdgeLayout<X> {
     fn to_horizontal_use<Y>(&self, state: &PreState<X, Y>, avail_width: Memo<f64>) -> UseLayout {
         match self {
             Self::Legend(inner) => inner.to_horizontal_use(),
@@ -73,7 +74,7 @@ impl<X: PartialEq> EdgeLayout<X> {
     }
 }
 
-impl<Y: PartialEq> EdgeLayout<Y> {
+impl<Y: Tick> EdgeLayout<Y> {
     fn to_vertical_use<X>(
         &self,
         state: &PreState<X, Y>,

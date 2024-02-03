@@ -146,7 +146,9 @@ pub fn App() -> impl IntoView {
     // Tooltip
     let tooltip = Tooltip::new(
         TooltipPlacement::default(),
-        TickLabels::from_generator(x_periods.with_format(TimestampFormat::Strftime("%c"))),
+        TickLabels::from_generator(
+            x_periods.with_long_format(), /* TODO .with_format(TimestampFormat::Strftime("%c")) */
+        ),
         y_ticks.clone(),
     );
     let tooltip_card = tooltip.clone();

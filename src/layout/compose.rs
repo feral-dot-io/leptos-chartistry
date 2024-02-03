@@ -4,6 +4,7 @@ use crate::{
     bounds::Bounds,
     edge::Edge,
     state::{PreState, State},
+    Tick,
 };
 use leptos::*;
 
@@ -50,7 +51,7 @@ impl Layout {
     ///  - Calculate the bounds: outer, inner, edges, edge components. Adhere to aspect ratio.
     ///  - Return state (Layout) and a deferred renderer (ComposedLayout).
     ///
-    pub fn compose<X: Clone + PartialEq, Y: Clone + PartialEq>(
+    pub fn compose<X: Tick, Y: Tick>(
         top: &[EdgeLayout<X>],
         right: &[EdgeLayout<Y>],
         bottom: &[EdgeLayout<X>],
@@ -161,7 +162,7 @@ impl Layout {
     }
 }
 
-fn collect_heights<X: PartialEq, Y>(
+fn collect_heights<X: Tick, Y>(
     items: &[EdgeLayout<X>],
     state: &PreState<X, Y>,
 ) -> Vec<Signal<f64>> {
@@ -171,7 +172,7 @@ fn collect_heights<X: PartialEq, Y>(
         .collect::<Vec<_>>()
 }
 
-fn use_vertical<X: PartialEq, Y: PartialEq>(
+fn use_vertical<X: Tick, Y: Tick>(
     items: &[EdgeLayout<Y>],
     state: &PreState<X, Y>,
     avail_height: Memo<f64>,

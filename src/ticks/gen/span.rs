@@ -1,4 +1,4 @@
-use super::{GenState, Span};
+use super::{Format, Span};
 
 pub struct VerticalSpan {
     avail_height: f64,
@@ -19,7 +19,7 @@ impl<Tick> Span<Tick> for VerticalSpan {
         self.avail_height
     }
 
-    fn consumed(&self, _: &dyn GenState<Tick = Tick>, ticks: &[Tick]) -> f64 {
+    fn consumed(&self, _: &dyn Format<Tick = Tick>, ticks: &[Tick]) -> f64 {
         self.line_height * ticks.len() as f64
     }
 }
@@ -47,7 +47,7 @@ impl<Tick> Span<Tick> for HorizontalSpan {
         self.avail_width
     }
 
-    fn consumed(&self, state: &dyn GenState<Tick = Tick>, ticks: &[Tick]) -> f64 {
+    fn consumed(&self, state: &dyn Format<Tick = Tick>, ticks: &[Tick]) -> f64 {
         let max_chars = ticks
             .iter()
             .map(|tick| state.format(tick).len().max(self.min_chars))

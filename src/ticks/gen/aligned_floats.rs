@@ -1,4 +1,4 @@
-use super::{GenState, GeneratedTicks, Generator, Span};
+use super::{Format, GeneratedTicks, Generator, Span};
 
 /// Generates a vector of aligned, "nice" floats. The vector will contain `count` values between `from` and `to` inclusive. Returned ticks will be aligned to "nice" values in powers of 10. e.g., gen_nice_floats(0.1, 0.3, 3) -> [0.1, 0.2, 0.3].
 ///
@@ -9,9 +9,12 @@ use super::{GenState, GeneratedTicks, Generator, Span};
 pub struct AlignedFloats {}
 
 #[derive(Clone, Debug, PartialEq)]
-struct AlignedState {
+pub struct State {
     scale: isize,
 }
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct AlignedFormat;
 
 impl Generator for AlignedFloats {
     type Tick = f64;
@@ -20,12 +23,12 @@ impl Generator for AlignedFloats {
         &self,
         &first: &Self::Tick,
         &last: &Self::Tick,
-        span: Box<dyn Span<Self::Tick>>,
+        span: &dyn Span<Self::Tick>,
     ) -> GeneratedTicks<Self::Tick> {
-        let (scale, count) = Self::find_precision(first, last, span.as_ref());
+        let (scale, count) = Self::find_precision(first, last, span);
         let (scale, ticks) = Self::generate_count(first, last, scale, count);
-        let state = AlignedState::new(scale);
-        GeneratedTicks::new(ticks, state)
+        let state = State::new(scale);
+        GeneratedTicks::new(state, ticks)
     }
 }
 
@@ -46,7 +49,7 @@ impl AlignedFloats {
 
     /// Finds the longest string that could be displayed between first and last inclusive
     fn mock_value_count(first: f64, last: f64, scale: isize, span: &dyn Span<f64>) -> usize {
-        let state = AlignedState::new(scale);
+        let state = State::new(scale);
         let first_consumed = span.consumed(&state, &[first]);
         let last_consumed = span.consumed(&state, &[last]);
         let consumed = first_consumed.max(last_consumed);
@@ -71,18 +74,14 @@ impl AlignedFloats {
     }
 }
 
-impl AlignedState {
-    pub fn new(scale: isize) -> AlignedState {
+impl State {
+    pub fn new(scale: isize) -> State {
         Self { scale }
     }
 }
 
-impl GenState for AlignedState {
+impl Format for State {
     type Tick = f64;
-
-    fn position(&self, value: &Self::Tick) -> f64 {
-        *value
-    }
 
     fn format(&self, value: &Self::Tick) -> String {
         if value.is_nan() {
@@ -139,7 +138,7 @@ mod tests {
         expected: Vec<&'static str>,
     ) {
         let (scale, ticks) = AlignedFloats::generate_count(first, last, scale, count);
-        let state = AlignedState::new(scale);
+        let state = State::new(scale);
         let ticks = (ticks.into_iter())
             .map(|tick| state.format(&tick))
             .collect::<Vec<_>>();
@@ -244,7 +243,7 @@ mod tests {
 
     #[test]
     fn test_format() {
-        let format = |scale: isize, value: f64| AlignedState::new(scale).format(&value);
+        let format = |scale: isize, value: f64| State::new(scale).format(&value);
 
         // Significant digits
         assert_eq!(format(0, 1.0), "1");

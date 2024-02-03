@@ -7,7 +7,7 @@ use crate::{
     ticks::{
         AlignedFloats, GeneratedTicks, HorizontalSpan, PeriodicTimestamps, TickGen, VerticalSpan,
     },
-    Period,
+    Period, Tick,
 };
 use chrono::prelude::*;
 use leptos::*;
@@ -15,12 +15,23 @@ use std::rc::Rc;
 
 pub struct TickLabels<Tick: 'static> {
     pub min_chars: RwSignal<usize>,
+    //pub format: RwSignal<Rc<dyn TickFormat>,
     pub generator: RwSignal<Rc<dyn TickGen<Tick = Tick>>>,
 }
 
 #[derive(Clone)]
 pub struct UseTickLabels {
     ticks: Signal<Vec<(f64, String)>>,
+}
+
+impl<Tick> Clone for TickLabels<Tick> {
+    fn clone(&self) -> Self {
+        Self {
+            min_chars: self.min_chars,
+            //format: self.format,
+            generator: self.generator,
+        }
+    }
 }
 
 impl<Tick: crate::Tick> Default for TickLabels<Tick> {
@@ -45,7 +56,7 @@ where
     }
 }
 
-impl<Tick> TickLabels<Tick> {
+impl<Tick: crate::Tick> TickLabels<Tick> {
     pub fn new(gen: impl Into<RwSignal<Rc<dyn TickGen<Tick = Tick>>>>) -> Self {
         Self {
             min_chars: RwSignal::default(),
@@ -73,23 +84,14 @@ impl<Tick> TickLabels<Tick> {
             gen.with(|GeneratedTicks { ticks, state }| {
                 ticks
                     .iter()
-                    .map(|tick| (state.position(tick), state.format(tick)))
+                    .map(|tick| (tick.position(), state.format(tick)))
                     .collect()
             })
         })
     }
 }
 
-impl<Tick> Clone for TickLabels<Tick> {
-    fn clone(&self) -> Self {
-        Self {
-            min_chars: self.min_chars,
-            generator: self.generator,
-        }
-    }
-}
-
-impl<X: PartialEq> TickLabels<X> {
+impl<X: Tick> TickLabels<X> {
     pub fn generate_x<Y>(
         &self,
         state: &PreState<X, Y>,
@@ -113,7 +115,7 @@ impl<X: PartialEq> TickLabels<X> {
                             padding_width,
                             avail_width.get(),
                         );
-                        gen.get().generate(first, last, Box::new(span))
+                        gen.get().generate(first, last, &span)
                     })
                     .unwrap_or_else(GeneratedTicks::none)
             })
@@ -137,7 +139,7 @@ impl<X: PartialEq> TickLabels<X> {
     }
 }
 
-impl<Y: PartialEq> TickLabels<Y> {
+impl<Y: Tick> TickLabels<Y> {
     pub fn generate_y<X>(
         &self,
         state: &PreState<X, Y>,
@@ -153,7 +155,7 @@ impl<Y: PartialEq> TickLabels<Y> {
                     .map(|(first, last)| {
                         let line_height = font.get().height() + padding.get().height();
                         let span = VerticalSpan::new(line_height, avail_height.get());
-                        gen.get().generate(first, last, Box::new(span))
+                        gen.get().generate(first, last, &span)
                     })
                     .unwrap_or_else(GeneratedTicks::none)
             })

@@ -1,8 +1,8 @@
 mod gen;
 
 pub use gen::{
-    AlignedFloats, GenState as TickState, GeneratedTicks, Generator as TickGen, HorizontalSpan,
-    Period, PeriodicTimestamps, TimestampFormat, VerticalSpan,
+    AlignedFloats, Format as TickFormat, GeneratedTicks, Generator as TickGen, HorizontalSpan,
+    Period, PeriodicTimestamps, VerticalSpan,
 };
 
 use chrono::prelude::*;

@@ -88,23 +88,20 @@ impl<Y: Tick> YGridLine<Y> {
     }
 }
 
-impl<X, Y> UseInner<X, Y> for UseXGridLine<X> {
+impl<X: Tick, Y> UseInner<X, Y> for UseXGridLine<X> {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View {
         view!( <ViewXGridLine line=(*self).clone() state=state /> )
     }
 }
 
-impl<X, Y> UseInner<X, Y> for UseYGridLine<Y> {
+impl<X, Y: Tick> UseInner<X, Y> for UseYGridLine<Y> {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View {
         view!( <ViewYGridLine line=(*self).clone() state=state /> )
     }
 }
 
 #[component]
-fn ViewXGridLine<X: 'static, Y: 'static>(
-    line: UseXGridLine<X>,
-    state: State<X, Y>,
-) -> impl IntoView {
+fn ViewXGridLine<X: Tick, Y: 'static>(line: UseXGridLine<X>, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
@@ -133,10 +130,7 @@ fn ViewXGridLine<X: 'static, Y: 'static>(
 }
 
 #[component]
-fn ViewYGridLine<X: 'static, Y: 'static>(
-    line: UseYGridLine<Y>,
-    state: State<X, Y>,
-) -> impl IntoView {
+fn ViewYGridLine<X: 'static, Y: Tick>(line: UseYGridLine<Y>, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
@@ -164,7 +158,7 @@ fn ViewYGridLine<X: 'static, Y: 'static>(
     }
 }
 
-fn for_ticks<Tick>(
+fn for_ticks<Tick: crate::Tick>(
     ticks: Signal<GeneratedTicks<Tick>>,
     proj: Signal<Projection>,
     is_x: bool,
@@ -176,7 +170,7 @@ fn for_ticks<Tick>(
             .iter()
             .map(|tick| {
                 let label = ticks.state.format(tick);
-                let tick = ticks.state.position(tick);
+                let tick = tick.position();
                 let tick = if is_x {
                     proj.position_to_svg(tick, 0.0).0
                 } else {
