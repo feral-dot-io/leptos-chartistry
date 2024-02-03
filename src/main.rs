@@ -329,7 +329,7 @@ pub fn App() -> impl IntoView {
                 <p>
                     <label for="cosine_name">"Cosine"</label>
                     <span>
-                        <input type="text" value=cosine.name
+                        <input type="text" id="cosine_name" value=cosine.name
                             on:input=move |ev| cosine.name.set(event_target_value(&ev)) />
                     </span>
                 </p>
