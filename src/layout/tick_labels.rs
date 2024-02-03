@@ -8,7 +8,7 @@ use crate::{
         AlignedFloats, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, Timestamps,
         VerticalSpan,
     },
-    Tick,
+    Tick, TickFormat,
 };
 use chrono::prelude::*;
 use leptos::*;
@@ -68,6 +68,14 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
 
     pub fn with_min_chars(self, min_chars: impl Into<usize>) -> Self {
         self.min_chars.set(min_chars.into());
+        self
+    }
+
+    pub fn with_format(
+        self,
+        format: impl Fn(&Tick, &dyn TickFormat<Tick = Tick>) -> String + 'static,
+    ) -> Self {
+        self.format.set(Rc::new(format));
         self
     }
 
