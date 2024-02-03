@@ -26,6 +26,8 @@ Features:
 - Line dots
 - Bars
 - Stacked bars
+- Canvas to auto calculate font
+- Multi-line labels
 
 ## Design experiments and notes:
 

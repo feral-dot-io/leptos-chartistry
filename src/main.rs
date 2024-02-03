@@ -222,7 +222,7 @@ pub fn App() -> impl IntoView {
             }
             fieldset > legend {
                 background-color: #fff;
-                border: 1px solid #000;
+                border-bottom: 0.2em solid #fc7089;
                 padding: 0.2em;
             }
 
