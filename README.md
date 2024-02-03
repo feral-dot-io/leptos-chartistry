@@ -19,7 +19,6 @@ An extensible charting library for Leptos.
 - Chart builder should work with Local instead of Utc.
 - Colours
 - Line dots
-- "Table margin?" is poorly named. Rename to something like cursor distance.
 - Multiple elements in top calculates heights from the wrong elements.
 - PeriodicTimestamps should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
 - We should avoid nested signals like with TickLabels. Ideas: (1) Ticks should be signal free that gets cloned around then transformed into a signal by a layout option, or (2) the layout option should copy the signals it needs instead of cloning the struct. The problem we're trying to solve is to make sure formatting of tooltips different from TickLabels is easy.

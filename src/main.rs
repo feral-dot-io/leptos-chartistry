@@ -185,7 +185,8 @@ pub fn App() -> impl IntoView {
     let right = Options::create_signal(vec![Legend::middle()]);
     let bottom = Options::create_signal(vec![
         x_ticks.to_edge_layout(),
-        RotatedLabel::middle("Edit me...").to_edge_layout(),
+        RotatedLabel::middle("This demo shows most of the available options. Edit things below...")
+            .to_edge_layout(),
     ]);
     let left = Options::create_signal(vec![y_ticks.to_edge_layout()]);
     let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::create_signal(vec![
@@ -1000,7 +1001,7 @@ fn TooltipCard<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>) -> impl IntoView {
         placement,
         sort_by,
         skip_missing,
-        table_margin,
+        cursor_distance,
         ..
     } = tooltip;
 
@@ -1024,15 +1025,15 @@ fn TooltipCard<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>) -> impl IntoView {
             </p>
             <p>
                 <span>
-                    <input type="checkbox" id="table_margin" checked=table_margin
-                        on:input=move |ev| table_margin.set(event_target_checked(&ev).then_some(DEFAULT_FONT_WIDTH)) />
+                    <input type="checkbox" id="cursor_distance" checked=cursor_distance
+                        on:input=move |ev| cursor_distance.set(event_target_checked(&ev).then_some(DEFAULT_FONT_WIDTH)) />
                 </span>
                 <span>
-                    <label for="table_margin">"Table margin?"</label>
-                    {move || table_margin.get().map(move |margin| {
+                    <label for="cursor_distance">"Cursor distance?"</label>
+                    {move || cursor_distance.get().map(move |margin| {
                         let on_change = move |ev| {
                             let value = event_target_value(&ev).parse().unwrap_or_default();
-                            table_margin.set(Some(value))
+                            cursor_distance.set(Some(value))
                         };
                         view! {
                             <br />

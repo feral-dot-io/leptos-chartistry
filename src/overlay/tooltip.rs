@@ -15,7 +15,7 @@ use std::{
 pub struct Tooltip<X: 'static, Y: 'static> {
     pub placement: RwSignal<HoverPlacement>,
     pub skip_missing: RwSignal<bool>,
-    pub table_margin: RwSignal<Option<f64>>,
+    pub cursor_distance: RwSignal<Option<f64>>,
     pub sort_by: RwSignal<SortBy>,
     pub x_ticks: TickLabels<X>,
     pub y_ticks: TickLabels<Y>,
@@ -64,7 +64,7 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
         Self {
             placement: RwSignal::default(),
             skip_missing: false.into(),
-            table_margin: None.into(),
+            cursor_distance: None.into(),
             sort_by: RwSignal::default(),
             x_ticks: TickLabels::default(),
             y_ticks: TickLabels::default(),
@@ -153,7 +153,7 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
         placement,
         sort_by,
         skip_missing,
-        table_margin,
+        cursor_distance,
         x_ticks,
         y_ticks,
     } = tooltip;
@@ -238,15 +238,15 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
         }
     };
 
-    let table_margin =
-        Signal::derive(move || table_margin.get().unwrap_or_else(|| font.get().height()));
+    let cursor_distance =
+        Signal::derive(move || cursor_distance.get().unwrap_or_else(|| font.get().height()));
     view! {
         <Show when=move || hover_inner.get() && placement.get() != HoverPlacement::Hide >
             <DebugRect label="tooltip" debug=debug />
             <aside
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff; white-space: pre; font-family: monospace;"
                 style:top=move || format!("calc({}px)", mouse_page.get().1)
-                style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, table_margin.get())
+                style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, cursor_distance.get())
                 style:padding=move || padding.get().to_css_style()>
                 <h2
                     style="margin: 0; text-align: center;"
