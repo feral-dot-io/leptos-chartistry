@@ -15,23 +15,25 @@ pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
 
 #[derive(Clone)]
 pub struct Tooltip<X: 'static, Y: 'static> {
-    pub placement: RwSignal<HoverPlacement>,
-    pub skip_missing: RwSignal<bool>,
+    pub placement: RwSignal<TooltipPlacement>,
+    pub sort_by: RwSignal<TooltipSortBy>,
     pub cursor_distance: RwSignal<f64>,
-    pub sort_by: RwSignal<SortBy>,
+    pub skip_missing: RwSignal<bool>,
     pub x_ticks: TickLabels<X>,
     pub y_ticks: TickLabels<Y>,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
-pub enum HoverPlacement {
+#[non_exhaustive]
+pub enum TooltipPlacement {
     Hide,
     #[default]
     LeftCursor,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
-pub enum SortBy {
+#[non_exhaustive]
+pub enum TooltipSortBy {
     #[default]
     Lines,
     Ascending,
@@ -40,7 +42,7 @@ pub enum SortBy {
 
 impl<X: Tick, Y: Tick> Tooltip<X, Y> {
     pub fn new(
-        placement: impl Into<HoverPlacement>,
+        placement: impl Into<TooltipPlacement>,
         x_ticks: impl Borrow<TickLabels<X>>,
         y_ticks: impl Borrow<TickLabels<Y>>,
     ) -> Self {
@@ -52,16 +54,26 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
         }
     }
 
-    pub fn from_placement(placement: impl Into<HoverPlacement>) -> Self {
+    pub fn from_placement(placement: impl Into<TooltipPlacement>) -> Self {
         Self::new(placement, TickLabels::default(), TickLabels::default())
     }
 
     pub fn left_cursor() -> Self {
-        Self::from_placement(HoverPlacement::LeftCursor)
+        Self::from_placement(TooltipPlacement::LeftCursor)
+    }
+
+    pub fn with_sort_by(self, sort_by: impl Into<TooltipSortBy>) -> Self {
+        self.sort_by.set(sort_by.into());
+        self
     }
 
     pub fn with_cursor_distance(self, distance: impl Into<f64>) -> Self {
         self.cursor_distance.set(distance.into());
+        self
+    }
+
+    pub fn skip_missing(self, skip_missing: impl Into<bool>) -> Self {
+        self.skip_missing.set(skip_missing.into());
         self
     }
 }
@@ -70,25 +82,25 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
     fn default() -> Self {
         Self {
             placement: RwSignal::default(),
-            skip_missing: false.into(),
-            cursor_distance: create_rw_signal(TOOLTIP_CURSOR_DISTANCE),
             sort_by: RwSignal::default(),
+            cursor_distance: create_rw_signal(TOOLTIP_CURSOR_DISTANCE),
+            skip_missing: false.into(),
             x_ticks: TickLabels::default(),
             y_ticks: TickLabels::default(),
         }
     }
 }
 
-impl SortBy {
+impl TooltipSortBy {
     fn to_ord<Y: Tick>(y: &Option<Y>) -> Option<F64Ord> {
         y.as_ref().map(|y| F64Ord(y.position()))
     }
 
     fn sort_values<Y: Tick>(&self, values: &mut [(UseLine, Option<Y>)]) {
         match self {
-            SortBy::Lines => values.sort_by_key(|(line, _)| line.name.get()),
-            SortBy::Ascending => values.sort_by_key(|(_, y)| Self::to_ord(y)),
-            SortBy::Descending => values.sort_by_key(|(_, y)| Reverse(Self::to_ord(y))),
+            TooltipSortBy::Lines => values.sort_by_key(|(line, _)| line.name.get()),
+            TooltipSortBy::Ascending => values.sort_by_key(|(_, y)| Self::to_ord(y)),
+            TooltipSortBy::Descending => values.sort_by_key(|(_, y)| Reverse(Self::to_ord(y))),
         }
     }
 }
@@ -110,45 +122,45 @@ impl Ord for F64Ord {
 
 impl Eq for F64Ord {}
 
-impl std::fmt::Display for HoverPlacement {
+impl std::fmt::Display for TooltipPlacement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            HoverPlacement::Hide => write!(f, "Hide"),
-            HoverPlacement::LeftCursor => write!(f, "Left cursor"),
+            TooltipPlacement::Hide => write!(f, "Hide"),
+            TooltipPlacement::LeftCursor => write!(f, "Left cursor"),
         }
     }
 }
 
-impl std::str::FromStr for HoverPlacement {
+impl std::str::FromStr for TooltipPlacement {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "hide" => Ok(HoverPlacement::Hide),
-            "left cursor" => Ok(HoverPlacement::LeftCursor),
-            _ => Err(format!("invalid HoverPlacement: `{}`", s)),
+            "hide" => Ok(TooltipPlacement::Hide),
+            "left cursor" => Ok(TooltipPlacement::LeftCursor),
+            _ => Err(format!("invalid TooltipPlacement: `{}`", s)),
         }
     }
 }
 
-impl std::fmt::Display for SortBy {
+impl std::fmt::Display for TooltipSortBy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SortBy::Lines => write!(f, "Lines"),
-            SortBy::Ascending => write!(f, "Ascending"),
-            SortBy::Descending => write!(f, "Descending"),
+            TooltipSortBy::Lines => write!(f, "Lines"),
+            TooltipSortBy::Ascending => write!(f, "Ascending"),
+            TooltipSortBy::Descending => write!(f, "Descending"),
         }
     }
 }
 
-impl std::str::FromStr for SortBy {
+impl std::str::FromStr for TooltipSortBy {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "lines" => Ok(SortBy::Lines),
-            "ascending" => Ok(SortBy::Ascending),
-            "descending" => Ok(SortBy::Descending),
+            "lines" => Ok(TooltipSortBy::Lines),
+            "ascending" => Ok(TooltipSortBy::Ascending),
+            "descending" => Ok(TooltipSortBy::Descending),
             _ => Err(format!("invalid SortBy: `{}`", s)),
         }
     }
@@ -246,7 +258,7 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
     };
 
     view! {
-        <Show when=move || hover_inner.get() && placement.get() != HoverPlacement::Hide >
+        <Show when=move || hover_inner.get() && placement.get() != TooltipPlacement::Hide >
             <DebugRect label="tooltip" debug=debug />
             <aside
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff; white-space: pre; font-family: monospace;"

@@ -27,8 +27,13 @@ const ALL_ASPECT_OPTIONS: &[AspectOption] = &[
     AspectOption::Environment,
 ];
 const ALL_ASPECT_CALCS: &[AspectCalc] = &[AspectCalc::Ratio, AspectCalc::Width, AspectCalc::Height];
-const ALL_HOVER_PLACEMENTS: &[HoverPlacement] = &[HoverPlacement::Hide, HoverPlacement::LeftCursor];
-const ALL_SORT_BYS: &[SortBy] = &[SortBy::Lines, SortBy::Ascending, SortBy::Descending];
+const ALL_TOOLTIP_PLACEMENTS: &[TooltipPlacement] =
+    &[TooltipPlacement::Hide, TooltipPlacement::LeftCursor];
+const ALL_SORT_BYS: &[TooltipSortBy] = &[
+    TooltipSortBy::Lines,
+    TooltipSortBy::Ascending,
+    TooltipSortBy::Descending,
+];
 
 const JS_TIMESTAMP_FMT: &str = "%FT%R";
 
@@ -135,7 +140,7 @@ pub fn App() -> impl IntoView {
 
     // Tooltip
     let tooltip = Tooltip::new(
-        HoverPlacement::default(),
+        TooltipPlacement::default(),
         TickLabels::from_generator(x_periods.with_format(TimestampFormat::Strftime("%c"))),
         y_ticks.clone(),
     );
@@ -782,13 +787,13 @@ select_impl!(
 );
 select_impl!(SelectEdge, "Edge", edge, Edge, ALL_EDGES);
 select_impl!(
-    SelectHoverPlacement,
+    SelectTooltipPlacement,
     "Placement",
     hover,
-    HoverPlacement,
-    ALL_HOVER_PLACEMENTS
+    TooltipPlacement,
+    ALL_TOOLTIP_PLACEMENTS
 );
-select_impl!(SelectSortBy, "Order", sort_by, SortBy, ALL_SORT_BYS);
+select_impl!(SelectSortBy, "Order", sort_by, TooltipSortBy, ALL_SORT_BYS);
 select_impl!(
     SelectAspectOption,
     "Aspect ratio",
@@ -1003,7 +1008,7 @@ fn TooltipCard<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>) -> impl IntoView {
             <legend>"Tooltip"</legend>
             <p>
                 <label for="tooltip_hover">"Hover"</label>
-                <span><SelectHoverPlacement id="tooltip_hover" hover=placement /></span>
+                <span><SelectTooltipPlacement id="tooltip_hover" hover=placement /></span>
             </p>
             <p>
                 <label for="tooltip_sort">"Sort by"</label>
