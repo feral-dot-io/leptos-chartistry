@@ -1,5 +1,3 @@
-mod colourmaps;
-
 /*
 Colours are an important part of charts. Our aim is to avoid less readable and misleading colour schemes. So we rely on the scientific colour maps developed by Fabio Crameri. These are perceptually uniform, colour blind friendly, and monochrome friendly.
 

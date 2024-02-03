@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 use leptos::*;
-use leptos_chartistry::{colours::Colour, *};
+use leptos_chartistry::*;
 use leptos_meta::{provide_meta_context, Style};
 use std::str::FromStr;
 

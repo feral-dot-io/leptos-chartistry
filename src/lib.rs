@@ -1,7 +1,7 @@
 mod aspect_ratio;
 mod bounds;
 mod chart;
-pub mod colours;
+mod colours;
 mod debug;
 mod edge;
 mod font;
@@ -17,6 +17,7 @@ mod use_watched_node;
 
 pub use aspect_ratio::AspectRatio;
 pub use chart::Chart;
+pub use colours::{Colour, ColourScheme};
 pub use edge::Edge;
 pub use font::Font;
 pub use inner::{
