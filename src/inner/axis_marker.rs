@@ -3,10 +3,12 @@ use crate::{colours::Colour, debug::DebugRect, state::State};
 use leptos::*;
 use std::{rc::Rc, str::FromStr};
 
+pub const DEFAULT_AXIS_MARKER_COLOUR: Colour = Colour::new(0xD2, 0xD2, 0xD2);
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct AxisMarker {
     pub placement: RwSignal<AxisPlacement>,
-    pub colour: RwSignal<Option<Colour>>,
+    pub colour: RwSignal<Colour>,
     pub arrow: RwSignal<bool>,
     pub width: RwSignal<f64>,
 }
@@ -26,7 +28,7 @@ impl AxisMarker {
     pub fn new(placement: impl Into<RwSignal<AxisPlacement>>) -> Self {
         Self {
             placement: placement.into(),
-            colour: RwSignal::default(),
+            colour: create_rw_signal(DEFAULT_AXIS_MARKER_COLOUR),
             arrow: true.into(),
             width: 1.0.into(),
         }
@@ -130,7 +132,7 @@ pub fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>
         }
     };
 
-    let colour = Colour::signal_option(marker.colour, super::DEFAULT_COLOUR_AXIS_MARKER);
+    let colour = marker.colour;
     let colour = move || colour.get().to_string();
     view! {
         <g class="_chartistry_axis_marker">

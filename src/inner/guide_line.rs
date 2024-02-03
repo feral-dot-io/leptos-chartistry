@@ -3,13 +3,15 @@ use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State};
 use leptos::*;
 use std::{rc::Rc, str::FromStr};
 
+pub const DEFAULT_GUIDE_LINE_COLOUR: Colour = Colour::new(0x9A, 0x9A, 0x9A);
+
 macro_rules! impl_guide_line {
     ($name:ident) => {
         #[derive(Clone, Debug)]
         pub struct $name {
             pub align: RwSignal<AlignOver>,
             pub width: RwSignal<f64>,
-            pub colour: RwSignal<Option<Colour>>,
+            pub colour: RwSignal<Colour>,
         }
 
         impl $name {
@@ -26,7 +28,7 @@ macro_rules! impl_guide_line {
                 Self {
                     align: AlignOver::default().into(),
                     width: 1.0.into(),
-                    colour: RwSignal::default(),
+                    colour: create_rw_signal(DEFAULT_GUIDE_LINE_COLOUR),
                 }
             }
         }
@@ -135,7 +137,7 @@ fn YGuideLine<X: 'static, Y: 'static>(line: YGuideLine, state: State<X, Y>) -> i
 fn GuideLine<X: 'static, Y: 'static>(
     id: &'static str,
     width: RwSignal<f64>,
-    colour: RwSignal<Option<Colour>>,
+    colour: RwSignal<Colour>,
     state: State<X, Y>,
     pos: Signal<Bounds>,
 ) -> impl IntoView {
@@ -152,7 +154,6 @@ fn GuideLine<X: 'static, Y: 'static>(
         !(x1.get().is_nan() || y1.get().is_nan() || x2.get().is_nan() || y2.get().is_nan())
     });
 
-    let colour = Colour::signal_option(colour, super::DEFAULT_COLOUR_GUIDE_LINE);
     view! {
         <g class=format!("_chartistry_{}_guide_line", id)>
             <Show when=move || hover_inner.get() && have_data.get() >

@@ -809,14 +809,11 @@ select_impl!(
 );
 
 #[component]
-fn SelectColour(colour: RwSignal<Option<Colour>>) -> impl IntoView {
-    let value = move || colour.get().map(|c| c.to_string()).unwrap_or_default();
-    let on_change = move |ev| {
-        //let new = event_target_value(&ev).parse().ok();
-        //colour.set(new);
-    };
+fn SelectColour(colour: RwSignal<Colour>) -> impl IntoView {
     view! {
-        <input type="color" value=value on:input=on_change />
+        <input type="color" value=move || colour.get().to_string()
+            // TODO on:input=on_change
+        />
     }
 }
 
@@ -871,7 +868,7 @@ fn InsetLegendOpts(legend: InsetLegend) -> impl IntoView {
 }
 
 #[component]
-fn GridLineOpts(width: RwSignal<f64>, colour: RwSignal<Option<Colour>>) -> impl IntoView {
+fn GridLineOpts(width: RwSignal<f64>, colour: RwSignal<Colour>) -> impl IntoView {
     view! {
         <SelectColour colour=colour />
         " "
@@ -883,7 +880,7 @@ fn GridLineOpts(width: RwSignal<f64>, colour: RwSignal<Option<Colour>>) -> impl 
 fn GuideLineOpts(
     align: RwSignal<AlignOver>,
     width: RwSignal<f64>,
-    colour: RwSignal<Option<Colour>>,
+    colour: RwSignal<Colour>,
 ) -> impl IntoView {
     view! {
         <SelectColour colour=colour />

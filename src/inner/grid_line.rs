@@ -6,12 +6,14 @@ use crate::{
 use leptos::*;
 use std::{borrow::Borrow, rc::Rc};
 
+pub const DEFAULT_GRID_LINE_COLOUR: Colour = Colour::new(0xEF, 0xF2, 0xFA);
+
 macro_rules! impl_grid_line {
     ($name:ident) => {
         #[derive(Clone)]
         pub struct $name<Tick: 'static> {
             pub width: RwSignal<f64>,
-            pub colour: RwSignal<Option<Colour>>,
+            pub colour: RwSignal<Colour>,
             pub ticks: TickLabels<Tick>,
         }
 
@@ -28,7 +30,7 @@ macro_rules! impl_grid_line {
             fn default() -> Self {
                 Self {
                     width: 1.0.into(),
-                    colour: RwSignal::default(),
+                    colour: create_rw_signal(DEFAULT_GRID_LINE_COLOUR),
                     ticks: TickLabels::default(),
                 }
             }
@@ -43,15 +45,15 @@ macro_rules! impl_use_grid_line {
     ($name:ident) => {
         struct $name<Tick: 'static> {
             width: RwSignal<f64>,
-            colour: RwSignal<Option<Colour>>,
+            colour: RwSignal<Colour>,
             ticks: Signal<GeneratedTicks<Tick>>,
         }
 
         impl<Tick> Clone for $name<Tick> {
             fn clone(&self) -> Self {
                 Self {
-                    width: self.width.clone(),
-                    colour: self.colour.clone(),
+                    width: self.width,
+                    colour: self.colour,
                     ticks: self.ticks,
                 }
             }
@@ -107,7 +109,7 @@ fn ViewXGridLine<X: 'static, Y: 'static>(
     let inner = state.layout.inner;
     let proj = state.projection;
 
-    let colour = Colour::signal_option(line.colour, super::DEFAULT_COLOUR_GRID_LINE);
+    let colour = line.colour;
     view! {
         <g class="_chartistry_grid_line_x">
             <DebugRect label="grid_line_x" debug=debug />
@@ -139,7 +141,7 @@ fn ViewYGridLine<X: 'static, Y: 'static>(
     let inner = state.layout.inner;
     let proj = state.projection;
 
-    let colour = Colour::signal_option(line.colour, super::DEFAULT_COLOUR_GRID_LINE);
+    let colour = line.colour;
     view! {
         <g class="_chartistry_grid_line_y">
             <DebugRect label="grid_line_y" debug=debug />

@@ -3,14 +3,9 @@ pub mod grid_line;
 pub mod guide_line;
 pub mod legend;
 
-use crate::{colours::Colour, state::State, Tick};
+use crate::{state::State, Tick};
 use leptos::*;
 use std::rc::Rc;
-
-// Fall back colours used if nothing is specified directly on the component. These are from darker to lighter grey.
-pub const DEFAULT_COLOUR_GUIDE_LINE: Colour = Colour::new(0x9A, 0x9A, 0x9A); // Light grey
-pub const DEFAULT_COLOUR_AXIS_MARKER: Colour = Colour::new(0xD2, 0xD2, 0xD2); // Lighter grey
-pub const DEFAULT_COLOUR_GRID_LINE: Colour = Colour::new(0xEF, 0xF2, 0xFA); // Lightest grey
 
 #[derive(Clone)]
 #[non_exhaustive]

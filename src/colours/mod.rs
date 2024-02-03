@@ -67,13 +67,6 @@ impl Colour {
     pub(crate) const fn new(red: u8, green: u8, blue: u8) -> Self {
         Self { red, green, blue }
     }
-
-    pub(crate) fn signal_option(
-        colour: impl SignalGet<Value = Option<Colour>> + 'static,
-        fallback: Colour,
-    ) -> Signal<Colour> {
-        Signal::derive(move || colour.get().unwrap_or(fallback))
-    }
 }
 
 impl From<[Colour; 3]> for ColourScheme {
