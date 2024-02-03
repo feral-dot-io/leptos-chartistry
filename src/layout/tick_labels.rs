@@ -58,8 +58,14 @@ impl<Tick> TickLabels<Tick> {
         Self::new(gen)
     }
 
-    pub fn with_generator(&self, gen: impl TickGen<Tick = Tick> + 'static) {
+    pub fn with_generator(self, gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         self.generator.set(Rc::new(gen));
+        self
+    }
+
+    pub fn with_min_chars(self, min_chars: impl Into<usize>) -> Self {
+        self.min_chars.set(min_chars.into());
+        self
     }
 
     fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
