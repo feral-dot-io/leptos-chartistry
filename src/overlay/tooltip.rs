@@ -11,11 +11,13 @@ use std::{
     cmp::{Ordering, Reverse},
 };
 
+pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
+
 #[derive(Clone)]
 pub struct Tooltip<X: 'static, Y: 'static> {
     pub placement: RwSignal<HoverPlacement>,
     pub skip_missing: RwSignal<bool>,
-    pub cursor_distance: RwSignal<Option<f64>>,
+    pub cursor_distance: RwSignal<f64>,
     pub sort_by: RwSignal<SortBy>,
     pub x_ticks: TickLabels<X>,
     pub y_ticks: TickLabels<Y>,
@@ -57,6 +59,11 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
     pub fn left_cursor() -> Self {
         Self::from_placement(HoverPlacement::LeftCursor)
     }
+
+    pub fn with_cursor_distance(self, distance: impl Into<f64>) -> Self {
+        self.cursor_distance.set(distance.into());
+        self
+    }
 }
 
 impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
@@ -64,7 +71,7 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
         Self {
             placement: RwSignal::default(),
             skip_missing: false.into(),
-            cursor_distance: None.into(),
+            cursor_distance: create_rw_signal(TOOLTIP_CURSOR_DISTANCE),
             sort_by: RwSignal::default(),
             x_ticks: TickLabels::default(),
             y_ticks: TickLabels::default(),
@@ -238,8 +245,6 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
         }
     };
 
-    let cursor_distance =
-        Signal::derive(move || cursor_distance.get().unwrap_or_else(|| font.get().height()));
     view! {
         <Show when=move || hover_inner.get() && placement.get() != HoverPlacement::Hide >
             <DebugRect label="tooltip" debug=debug />

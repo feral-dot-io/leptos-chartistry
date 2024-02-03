@@ -32,7 +32,7 @@ pub use layout::{
     tick_labels::TickLabels,
     EdgeLayout, HorizontalVec, ToEdgeLayout, VerticalVec,
 };
-pub use overlay::tooltip::{HoverPlacement, SortBy, Tooltip};
+pub use overlay::tooltip::{HoverPlacement, SortBy, Tooltip, TOOLTIP_CURSOR_DISTANCE};
 pub use padding::Padding;
 pub use series::{Line, Series, Stack};
 pub use ticks::{AlignedFloats, Period, PeriodicTimestamps, Tick, TickState, TimestampFormat};

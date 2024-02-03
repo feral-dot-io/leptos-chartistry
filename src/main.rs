@@ -1010,31 +1010,15 @@ fn TooltipCard<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>) -> impl IntoView {
                 <span><SelectSortBy id="tooltip_sort" sort_by=sort_by /></span>
             </p>
             <p>
+                <label for="tooltip_distance">"Cursor distance"</label>
+                <span><StepInput id="tooltip_distance" value=cursor_distance step="0.1" min="0" /></span>
+            </p>
+            <p>
                 <span>
                     <input type="checkbox" id="skip_missing" checked=skip_missing
                         on:input=move |ev| skip_missing.set(event_target_checked(&ev)) />
                 </span>
                 <label for="skip_missing">"Skip missing?"</label>
-            </p>
-            <p>
-                <span>
-                    <input type="checkbox" id="cursor_distance" checked=cursor_distance
-                        on:input=move |ev| cursor_distance.set(event_target_checked(&ev).then_some(DEFAULT_FONT_WIDTH)) />
-                </span>
-                <span>
-                    <label for="cursor_distance">"Cursor distance?"</label>
-                    {move || cursor_distance.get().map(move |margin| {
-                        let on_change = move |ev| {
-                            let value = event_target_value(&ev).parse().unwrap_or_default();
-                            cursor_distance.set(Some(value))
-                        };
-                        view! {
-                            <br />
-                            <input type="number" step="0.1" min="0" value=margin
-                                on:change=on_change />
-                        }
-                    })}
-                </span>
             </p>
         </fieldset>
     }
