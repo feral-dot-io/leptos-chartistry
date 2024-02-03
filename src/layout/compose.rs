@@ -193,7 +193,6 @@ fn option_bounds(edge: Edge, outer: Memo<Bounds>, sizes: Vec<Signal<f64>>) -> Ve
     let mut seen = Vec::<Signal<f64>>::with_capacity(sizes.len());
     sizes
         .into_iter()
-        .rev() // Inside out
         .map(|size| {
             let prev = seen.clone();
             seen.push(size);
