@@ -146,7 +146,7 @@ pub fn App() -> impl IntoView {
     // Tooltip
     let tooltip = Tooltip::new(
         TooltipPlacement::default(),
-        TickLabels::new(x_periods.with_long_format()),
+        x_periods.with_long_format(),
         y_ticks.clone(),
     );
     let tooltip_card = tooltip.clone();
@@ -183,8 +183,8 @@ pub fn App() -> impl IntoView {
     let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::create_signal(vec![
         AxisMarker::horizontal_zero().into_inner_layout(),
         AxisMarker::left_edge().into_inner_layout(),
-        XGridLine::new(&x_ticks).into_inner_layout(),
-        YGridLine::new(&y_ticks).into_inner_layout(),
+        XGridLine::new(x_ticks).into_inner_layout(),
+        YGridLine::new(y_ticks).into_inner_layout(),
         XGuideLine::default().into_inner_layout(),
         YGuideLine::default().into_inner_layout(),
     ]);

@@ -6,10 +6,7 @@ use crate::{
     Tick, TickLabels,
 };
 use leptos::*;
-use std::{
-    borrow::Borrow,
-    cmp::{Ordering, Reverse},
-};
+use std::cmp::{Ordering, Reverse};
 
 pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
 
@@ -43,13 +40,13 @@ pub enum TooltipSortBy {
 impl<X: Tick, Y: Tick> Tooltip<X, Y> {
     pub fn new(
         placement: impl Into<TooltipPlacement>,
-        x_ticks: impl Borrow<TickLabels<X>>,
-        y_ticks: impl Borrow<TickLabels<Y>>,
+        x_ticks: impl Into<TickLabels<X>>,
+        y_ticks: impl Into<TickLabels<Y>>,
     ) -> Self {
         Self {
             placement: RwSignal::new(placement.into()),
-            x_ticks: x_ticks.borrow().clone(),
-            y_ticks: y_ticks.borrow().clone(),
+            x_ticks: x_ticks.into(),
+            y_ticks: y_ticks.into(),
             ..Default::default()
         }
     }

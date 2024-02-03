@@ -4,7 +4,7 @@ use crate::{
     Tick, TickLabels,
 };
 use leptos::*;
-use std::{borrow::Borrow, rc::Rc};
+use std::rc::Rc;
 
 pub const GRID_LINE_COLOUR: Colour = Colour::new(0xEF, 0xF2, 0xFA);
 
@@ -18,9 +18,9 @@ macro_rules! impl_grid_line {
         }
 
         impl<Tick: crate::Tick> $name<Tick> {
-            pub fn new(ticks: impl Borrow<TickLabels<Tick>>) -> Self {
+            pub fn new(ticks: impl Into<TickLabels<Tick>>) -> Self {
                 Self {
-                    ticks: ticks.borrow().clone(),
+                    ticks: ticks.into(),
                     ..Default::default()
                 }
             }

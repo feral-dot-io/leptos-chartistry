@@ -79,6 +79,16 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
     }
 }
 
+impl<Gen, Tick> From<Gen> for TickLabels<Tick>
+where
+    Gen: TickGen<Tick = Tick> + 'static,
+    Tick: crate::Tick,
+{
+    fn from(gen: Gen) -> Self {
+        Self::new(gen)
+    }
+}
+
 impl<X: Tick> TickLabels<X> {
     pub fn generate_x<Y>(
         &self,
