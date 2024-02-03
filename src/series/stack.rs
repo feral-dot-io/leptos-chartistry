@@ -1,13 +1,25 @@
 use super::{line::UseLine, ApplyUseSeries, GetYValue, IntoUseLine, SeriesAcc};
 use crate::{
-    colours::{self, Colour, ColourScheme},
+    colours::{Colour, ColourScheme},
     Line,
 };
 use leptos::signal_prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 
-pub const STACK_COLOUR_SCHEME: [Colour; 10] = colours::BATLOW;
+/// BATLOW
+pub const STACK_COLOUR_SCHEME: [Colour; 10] = [
+    Colour::new(0x01, 0x19, 0x59),
+    Colour::new(0x10, 0x3F, 0x60),
+    Colour::new(0x1C, 0x5A, 0x62),
+    Colour::new(0x3C, 0x6D, 0x56),
+    Colour::new(0x68, 0x7B, 0x3E),
+    Colour::new(0x9D, 0x89, 0x2B),
+    Colour::new(0xD2, 0x93, 0x43),
+    Colour::new(0xF8, 0xA1, 0x7B),
+    Colour::new(0xFD, 0xB7, 0xBC),
+    Colour::new(0xFA, 0xCC, 0xFA),
+];
 
 #[derive(Clone)]
 pub struct Stack<T, Y> {

@@ -6,11 +6,23 @@ pub use line::{Line, Snippet, UseLine};
 pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
 
-use crate::colours::{self, Colour, ColourScheme};
+use crate::colours::{Colour, ColourScheme};
 use leptos::signal_prelude::*;
 use std::rc::Rc;
 
-const SERIES_COLOUR_SCHEME: [Colour; 10] = colours::ARBITRARY;
+/// Arbitrary colours for a brighter palette than BATLOW
+const SERIES_COLOUR_SCHEME: [Colour; 10] = [
+    Colour::new(0x12, 0xA5, 0xED), // Blue
+    Colour::new(0xF5, 0x32, 0x5B), // Red
+    Colour::new(0x71, 0xc6, 0x14), // Green
+    Colour::new(0xFF, 0x84, 0x00), // Orange
+    Colour::new(0x7b, 0x4d, 0xff), // Purple
+    Colour::new(0xdb, 0x4c, 0xb2), // Magenta
+    Colour::new(0x92, 0xb4, 0x2c), // Darker green
+    Colour::new(0xFF, 0xCA, 0x00), // Yellow
+    Colour::new(0x22, 0xd2, 0xba), // Turquoise
+    Colour::new(0xea, 0x60, 0xdf), // Pink
+];
 
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
 type GetY<T, Y> = Rc<dyn GetYValue<T, Y>>;
