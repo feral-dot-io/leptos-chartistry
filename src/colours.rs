@@ -42,20 +42,21 @@ impl Colour {
     }
 }
 
-impl From<[Colour; 3]> for ColourScheme {
-    fn from(colours: [Colour; 3]) -> Self {
-        Self::new(colours[0], &colours[1..])
-    }
-}
-
-impl From<[Colour; 10]> for ColourScheme {
-    fn from(colours: [Colour; 10]) -> Self {
-        Self::new(colours[0], &colours[1..])
-    }
-}
-
 impl std::fmt::Display for Colour {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "#{:02X}{:02X}{:02X}", self.red, self.green, self.blue)
     }
 }
+
+macro_rules! from_array_to_colour_scheme {
+    ($($n:literal),*) => {
+        $(
+            impl From<[Colour; $n]> for ColourScheme {
+                fn from(colours: [Colour; $n]) -> Self {
+                    Self::new(colours[0], &colours[1..])
+                }
+            }
+        )*
+    };
+}
+from_array_to_colour_scheme!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
