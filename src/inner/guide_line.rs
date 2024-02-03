@@ -15,18 +15,26 @@ macro_rules! impl_guide_line {
         }
 
         impl $name {
-            pub fn new(align: impl Into<RwSignal<AlignOver>>) -> Self {
+            pub fn new(align: impl Into<AlignOver>) -> Self {
                 Self {
-                    align: align.into(),
+                    align: create_rw_signal(align.into()),
                     ..Default::default()
                 }
+            }
+
+            pub fn over_mouse() -> Self {
+                Self::new(AlignOver::Mouse)
+            }
+
+            pub fn over_data() -> Self {
+                Self::new(AlignOver::Data)
             }
         }
 
         impl Default for $name {
             fn default() -> Self {
                 Self {
-                    align: AlignOver::default().into(),
+                    align: RwSignal::default(),
                     width: 1.0.into(),
                     colour: create_rw_signal(DEFAULT_GUIDE_LINE_COLOUR),
                 }
