@@ -252,7 +252,7 @@ where
 }
 
 impl Period {
-    fn short_format(self) -> &'static str {
+    pub fn short_format(self) -> &'static str {
         match self {
             Period::Nanosecond => "%H:%M:%S.%f",
             Period::Microsecond => "%H:%M:%S.%6f",
@@ -265,7 +265,7 @@ impl Period {
         }
     }
 
-    fn long_format(self) -> &'static str {
+    pub fn long_format(self) -> &'static str {
         match self {
             Period::Nanosecond => "%Y-%m-%d %H:%M:%S.%9f %Z",
             Period::Microsecond => "%Y-%m-%d %H:%M:%S.%6f %Z",

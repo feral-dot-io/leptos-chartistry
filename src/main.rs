@@ -146,7 +146,7 @@ pub fn App() -> impl IntoView {
     // Tooltip
     let tooltip = Tooltip::new(
         TooltipPlacement::default(),
-        x_periods.with_long_format(),
+        x_periods.with_strftime("%c"),
         y_ticks.clone(),
     );
     let tooltip_card = tooltip.clone();
