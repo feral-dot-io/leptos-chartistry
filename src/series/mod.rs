@@ -3,14 +3,14 @@ mod stack;
 mod use_data;
 
 pub use line::{Line, Snippet, UseLine};
-pub use stack::Stack;
+pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
 
 use crate::colours::{self, Colour, ColourScheme};
 use leptos::signal_prelude::*;
 use std::rc::Rc;
 
-const DEFAULT_COLOUR_SCHEME: [Colour; 10] = colours::ARBITRARY;
+const SERIES_COLOUR_SCHEME: [Colour; 10] = colours::ARBITRARY;
 
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
 type GetY<T, Y> = Rc<dyn GetYValue<T, Y>>;
@@ -53,7 +53,7 @@ impl<T, X, Y> Series<T, X, Y> {
             max_x: RwSignal::default(),
             min_y: RwSignal::default(),
             max_y: RwSignal::default(),
-            colours: create_rw_signal(DEFAULT_COLOUR_SCHEME.into()),
+            colours: create_rw_signal(SERIES_COLOUR_SCHEME.into()),
             lines: Vec::new(),
         }
     }

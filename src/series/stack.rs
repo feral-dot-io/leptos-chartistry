@@ -7,12 +7,12 @@ use leptos::signal_prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 
-const DEFAULT_COLOUR_SCHEME: [Colour; 10] = colours::BATLOW;
+pub const STACK_COLOUR_SCHEME: [Colour; 10] = colours::BATLOW;
 
 #[derive(Clone)]
 pub struct Stack<T, Y> {
-    colours: Signal<Option<ColourScheme>>,
     lines: Vec<Line<T, Y>>,
+    pub colours: RwSignal<ColourScheme>,
 }
 
 impl<T, Y> Stack<T, Y> {
@@ -20,17 +20,13 @@ impl<T, Y> Stack<T, Y> {
         Self::default()
     }
 
-    pub fn with_colours<Opt>(mut self, colours: impl Into<MaybeSignal<Opt>>) -> Self
-    where
-        Opt: Clone + Into<Option<ColourScheme>> + 'static,
-    {
-        let colours = colours.into();
-        self.colours = Signal::derive(move || colours.get().into());
+    pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
+        self.lines.push(line.into());
         self
     }
 
-    pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
-        self.lines.push(line.into());
+    pub fn with_colours<Opt>(self, colours: impl Into<ColourScheme>) -> Self {
+        self.colours.set(colours.into());
         self
     }
 }
@@ -38,8 +34,8 @@ impl<T, Y> Stack<T, Y> {
 impl<T, Y> Default for Stack<T, Y> {
     fn default() -> Self {
         Self {
-            colours: Signal::default(),
             lines: Vec::new(),
+            colours: create_rw_signal(STACK_COLOUR_SCHEME.into()),
         }
     }
 }
@@ -56,7 +52,7 @@ impl<T, Y, I: IntoIterator<Item = Line<T, Y>>> From<I> for Stack<T, Y> {
 
 impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> for Stack<T, Y> {
     fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
-        let colours = ColourScheme::signal_default(self.colours, DEFAULT_COLOUR_SCHEME.into());
+        let colours = self.colours;
         let mut previous = None;
         for (id, line) in self.lines.clone().into_iter().enumerate() {
             let colour = create_memo(move |_| colours.get().by_index(id));

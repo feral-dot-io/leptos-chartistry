@@ -2,8 +2,6 @@ mod colourmaps;
 
 pub use colourmaps::*;
 
-use leptos::signal_prelude::*;
-
 /*
 Colours are an important part of charts. Our aim is to avoid less readable and misleading colour schemes. So we rely on the scientific colour maps developed by Fabio Crameri. These are perceptually uniform, colour blind friendly, and monochrome friendly.
 
@@ -53,13 +51,6 @@ impl ColourScheme {
         // Note: not using checked_rem_euclid as we're guaranteed to have at least one colour
         let index = index.rem_euclid(self.swatches.len());
         self.swatches[index]
-    }
-
-    pub fn signal_default(
-        colours: Signal<Option<ColourScheme>>,
-        default: ColourScheme,
-    ) -> Memo<ColourScheme> {
-        create_memo(move |_| colours.get().unwrap_or_else(|| default.clone()))
     }
 }
 
