@@ -109,7 +109,8 @@ impl<X: Tick> TickLabels<X> {
         state: &PreState<X, Y>,
         avail_width: Signal<f64>,
     ) -> Signal<GeneratedTicks<X>> {
-        let PreState { font, padding, .. } = *state;
+        let font_width = state.font_width;
+        let padding = state.padding;
         let range_x = state.data.range_x;
         let TickLabels {
             min_chars,
@@ -122,7 +123,7 @@ impl<X: Tick> TickLabels<X> {
                 range_x
                     .as_ref()
                     .map(|(first, last)| {
-                        let font_width = font.get().width();
+                        let font_width = font_width.get();
                         let padding_width = padding.get().width();
                         let span = HorizontalSpan::new(
                             font_width,
@@ -140,8 +141,9 @@ impl<X: Tick> TickLabels<X> {
     }
 
     pub(super) fn fixed_height<Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
-        let PreState { font, padding, .. } = *state;
-        Signal::derive(move || with!(|font, padding| { font.height() + padding.height() }))
+        let font_height = state.font_height;
+        let padding = state.padding;
+        Signal::derive(move || font_height.get() + padding.get().height())
     }
 
     pub(super) fn to_horizontal_use<Y>(
@@ -161,7 +163,8 @@ impl<Y: Tick> TickLabels<Y> {
         state: &PreState<X, Y>,
         avail_height: Signal<f64>,
     ) -> Signal<GeneratedTicks<Y>> {
-        let PreState { font, padding, .. } = *state;
+        let font_height = state.font_height;
+        let padding = state.padding;
         let range_y = state.data.range_y;
         let gen = self.generator;
         create_memo(move |_| {
@@ -169,7 +172,7 @@ impl<Y: Tick> TickLabels<Y> {
                 range_y
                     .as_ref()
                     .map(|(first, last)| {
-                        let line_height = font.get().height() + padding.get().height();
+                        let line_height = font_height.get() + padding.get().height();
                         let span = VerticalSpan::new(line_height, avail_height.get());
                         gen.get().generate(first, last, &span)
                     })
@@ -197,7 +200,8 @@ fn mk_width<X, Y>(
     state: &PreState<X, Y>,
     ticks: Signal<Vec<(f64, String)>>,
 ) -> Signal<f64> {
-    let PreState { font, padding, .. } = *state;
+    let font_width = state.font_width;
+    let padding = state.padding;
     Signal::derive(move || {
         let longest_chars = ticks.with(|ticks| {
             ticks
@@ -207,7 +211,7 @@ fn mk_width<X, Y>(
                 .unwrap_or_default()
                 .max(min_chars.get())
         }) as f64;
-        font.get().width() * longest_chars + padding.get().width()
+        font_width.get() * longest_chars + padding.get().width()
     })
 }
 
@@ -269,22 +273,19 @@ fn TickLabel<X: 'static, Y: 'static>(
     state: State<X, Y>,
     tick: (f64, String),
 ) -> impl IntoView {
-    let PreState {
-        debug,
-        font,
-        padding,
-        ..
-    } = state.pre;
+    let debug = state.pre.debug;
+    let font_height = state.pre.font_height;
+    let font_width = state.pre.font_width;
+    let padding = state.pre.padding;
     let projection = state.projection;
 
     let (position, label) = tick;
     let label_len = label.len();
     // Calculate positioning Bounds. Note: tick w / h includes padding
     let bounds = Signal::derive(move || {
-        let font = font.get();
         let padding = padding.get();
-        let width = font.width() * label_len as f64 + padding.width();
-        let height = font.height() + padding.height();
+        let width = font_width.get() * label_len as f64 + padding.width();
+        let height = font_height.get() + padding.height();
 
         let proj = projection.get();
         let outer = outer.get();
@@ -329,7 +330,7 @@ fn TickLabel<X: 'static, Y: 'static>(
                 y=move || content.get().centre_y()
                 style="white-space: pre;"
                 font-family="monospace"
-                font-size=move || font.get().height()
+                font-size=move || font_height.get()
                 dominant-baseline="middle"
                 text-anchor=move || text_position.get().0>
                 {label.clone()}

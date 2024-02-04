@@ -8,14 +8,18 @@ use crate::{
     series::{RenderData, UseData},
     state::{PreState, State},
     use_watched_node::{use_watched_node, UseWatchedNode},
-    AspectRatio, Font, Padding, Series, Tick,
+    AspectRatio, Padding, Series, Tick,
 };
 use leptos::{html::Div, *};
+
+pub const FONT_HEIGHT: f64 = 16.0;
+pub const FONT_WIDTH: f64 = 10.0;
 
 #[component]
 pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     #[prop(into)] aspect_ratio: MaybeSignal<AspectRatio>,
-    #[prop(into)] font: MaybeSignal<Font>,
+    #[prop(into, optional)] font_height: Option<MaybeSignal<f64>>,
+    #[prop(into, optional)] font_width: Option<MaybeSignal<f64>>,
     #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
 
@@ -43,10 +47,12 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     });
 
     let debug = create_memo(move |_| debug.get());
+    let font_height = create_memo(move |_| font_height.map(|f| f.get()).unwrap_or(FONT_HEIGHT));
+    let font_width = create_memo(move |_| font_width.map(|f| f.get()).unwrap_or(FONT_WIDTH));
     let padding = create_memo(move |_| {
         padding
             .map(|p| p.get())
-            .unwrap_or_else(move || Padding::from(font.get().width()))
+            .unwrap_or_else(move || Padding::from(font_width.get()))
     });
 
     // Edges are added top to bottom, left to right. Layout compoeses inside out:
@@ -55,12 +61,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
 
     // Build data
     let data = UseData::new(series, data);
-    let pre = PreState::new(
-        debug.into(),
-        Signal::derive(move || font.get()),
-        padding.into(),
-        data,
-    );
+    let pre = PreState::new(debug.into(), font_height, font_width, padding.into(), data);
 
     view! {
         <div class="_chartistry" node_ref=root style="width: fit-content; height: fit-content; overflow: visible;">

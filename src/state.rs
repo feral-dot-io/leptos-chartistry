@@ -4,14 +4,15 @@ use crate::{
     projection::Projection,
     series::{UseData, UseLine},
     use_watched_node::UseWatchedNode,
-    Font, Padding,
+    Padding,
 };
 use leptos::signal_prelude::*;
 
 #[derive(Clone)]
 pub struct PreState<X: 'static, Y: 'static> {
     pub debug: Signal<bool>,
-    pub font: Signal<Font>,
+    pub font_height: Memo<f64>,
+    pub font_width: Memo<f64>,
     pub padding: Signal<Padding>,
     pub data: UseData<X, Y>,
 }
@@ -46,13 +47,15 @@ pub struct State<X: 'static, Y: 'static> {
 impl<X, Y> PreState<X, Y> {
     pub fn new(
         debug: Signal<bool>,
-        font: Signal<Font>,
+        font_height: Memo<f64>,
+        font_width: Memo<f64>,
         padding: Signal<Padding>,
         data: UseData<X, Y>,
     ) -> Self {
         Self {
             debug,
-            font,
+            font_height,
+            font_width,
             padding,
             data,
         }

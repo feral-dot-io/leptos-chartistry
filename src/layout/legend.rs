@@ -32,11 +32,13 @@ impl Legend {
     }
 
     pub(crate) fn width<X, Y>(state: &PreState<X, Y>) -> Signal<f64> {
-        let PreState { font, padding, .. } = *state;
+        let font_height = state.font_height;
+        let font_width = state.font_width;
+        let padding = state.padding;
         let series = state.data.series;
-        let snippet_bounds = UseLine::snippet_width(font);
+        let snippet_bounds = UseLine::snippet_width(font_height, font_width);
         Signal::derive(move || {
-            let font_width = font.get().width();
+            let font_width = font_width.get();
             let max_chars = series
                 .get()
                 .into_iter()
@@ -48,9 +50,9 @@ impl Legend {
     }
 
     pub(crate) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
-        let font = state.font;
+        let font_height = state.font_height;
         let padding = state.padding;
-        Signal::derive(move || font.get().height() + padding.get().height())
+        Signal::derive(move || font_height.get() + padding.get().height())
     }
 
     pub(super) fn to_horizontal_use(&self) -> UseLayout {
@@ -73,12 +75,9 @@ pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     state: State<X, Y>,
 ) -> impl IntoView {
     let anchor = legend.anchor;
-    let PreState {
-        debug,
-        padding,
-        font,
-        ..
-    } = state.pre;
+    let debug = state.pre.debug;
+    let font_height = state.pre.font_height;
+    let padding = state.pre.padding;
     let series = state.pre.data.series;
 
     // Don't apply padding on the edges of our axis i.e., maximise the space we extend over
@@ -106,7 +105,7 @@ pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
                 style:justify-content=move || anchor.get().css_justify_content()>
                 <table
                     style="border-collapse: collapse; border-spacing: 0; margin: 0;"
-                    style:font-size=move || format!("{}px", font.get().height())>
+                    style:font-size=move || format!("{}px", font_height.get())>
                     <tbody>
                         {body}
                     </tbody>

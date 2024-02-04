@@ -43,12 +43,13 @@ impl RotatedLabel {
 
     fn size<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         let text = self.text;
-        let PreState { font, padding, .. } = *state;
+        let font_height = state.font_height;
+        let padding = state.padding;
         Signal::derive(move || {
             if text.with(|t| t.is_empty()) {
                 0.0
             } else {
-                font.get().height() + padding.get().height()
+                font_height.get() + padding.get().height()
             }
         })
     }
@@ -123,12 +124,9 @@ pub fn RotatedLabel<X: 'static, Y: 'static>(
     state: State<X, Y>,
 ) -> impl IntoView {
     let RotatedLabel { text, anchor } = label;
-    let PreState {
-        font,
-        padding,
-        debug,
-        ..
-    } = state.pre;
+    let debug = state.pre.debug;
+    let font_height = state.pre.font_height;
+    let padding = state.pre.padding;
 
     let content = Signal::derive(move || padding.get().apply(bounds.get()));
     let position = create_memo(move |_| {
@@ -154,8 +152,8 @@ pub fn RotatedLabel<X: 'static, Y: 'static>(
                 transform=move || position.with(|(rotate, x, y)| format!("rotate({rotate}, {x}, {y})"))
                 dominant-baseline="middle"
                 text-anchor=move || anchor.get().to_svg_attr()
-                font-family=move || font.get().svg_family()
-                font-size=move || font.get().svg_size()>
+                font-family="monospace"
+                font-size=move || format!("{}px", font_height.get())>
                 {text}
             </text>
         </g>

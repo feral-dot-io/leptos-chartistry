@@ -267,7 +267,8 @@ pub fn App() -> impl IntoView {
         {move || view!{
             <Chart
                 aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
-                font=Signal::derive(move || Font::new(font_height.get(), font_width.get()))
+                font_height=font_height
+                font_width=font_width
                 debug=debug
                 padding=Signal::derive(move || Padding::from(padding.get()))
                 top=top.get().into_inner()
@@ -303,11 +304,11 @@ pub fn App() -> impl IntoView {
                 <p>
                     <label for="font_height">"Font"</label>
                     <span style="grid-column: 2 / -1">
-                        <StepInput id="font_width" value=font_width step="0.1" min="0.1" />
-                        <small>" width"</small>
-                        <br />
                         <StepInput id="font_height" value=font_height step="0.1" min="0.1" />
                         <small>" height"</small>
+                        <br />
+                        <StepInput id="font_width" value=font_width step="0.1" min="0.1" />
+                        <small>" width"</small>
                     </span>
                 </p>
             </fieldset>

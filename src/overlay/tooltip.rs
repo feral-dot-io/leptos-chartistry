@@ -2,7 +2,7 @@ use crate::{
     debug::DebugRect,
     layout::Layout,
     series::{Snippet, UseLine},
-    state::{PreState, State},
+    state::State,
     Tick, TickLabels,
 };
 use leptos::*;
@@ -173,12 +173,10 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
         x_ticks,
         y_ticks,
     } = tooltip;
-    let PreState {
-        debug,
-        font,
-        padding,
-        ..
-    } = state.pre;
+    let debug = state.pre.debug;
+    let font_height = state.pre.font_height;
+    let font_width = state.pre.font_width;
+    let padding = state.pre.padding;
     let State {
         layout: Layout { inner, .. },
         mouse_page,
@@ -245,8 +243,8 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
                     <td><Snippet series=series state=state.clone() /></td>
                     <td
                         style="white-space: pre; font-family: monospace; text-align: right;"
-                        style:padding-top=move || format!("{}px", font.get().height() / 4.0)
-                        style:padding-left=move || format!("{}px", font.get().width())>
+                        style:padding-top=move || format!("{}px", font_height.get() / 4.0)
+                        style:padding-left=move || format!("{}px", font_width.get())>
                         {y_value}
                     </td>
                 </tr>
@@ -264,12 +262,12 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
                 style:padding=move || padding.get().to_css_style()>
                 <h2
                     style="margin: 0; text-align: center;"
-                    style:font-size=move || format!("{}px", font.get().height())>
+                    style:font-size=move || format!("{}px", font_height.get())>
                     {x_body}
                 </h2>
                 <table
                     style="border-collapse: collapse; border-spacing: 0; margin: 0 auto; padding: 0;"
-                    style:font-size=move || format!("{}px", font.get().height())>
+                    style:font-size=move || format!("{}px", font_height.get())>
                     <tbody>
                         <For
                             each=nearest_data_y

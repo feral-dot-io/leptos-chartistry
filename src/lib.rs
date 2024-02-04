@@ -4,7 +4,6 @@ mod chart;
 mod colours;
 mod debug;
 mod edge;
-mod font;
 mod inner;
 mod layout;
 mod overlay;
@@ -19,7 +18,6 @@ pub use aspect_ratio::AspectRatio;
 pub use chart::Chart;
 pub use colours::{Colour, ColourScheme};
 pub use edge::Edge;
-pub use font::Font;
 pub use inner::{
     axis_marker::{AxisMarker, AxisPlacement, AXIS_MARKER_COLOUR},
     grid_line::{XGridLine, YGridLine, GRID_LINE_COLOUR},

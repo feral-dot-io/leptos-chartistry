@@ -1,7 +1,5 @@
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc};
-use crate::{
-    bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State, Font,
-};
+use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State};
 use leptos::*;
 use std::rc::Rc;
 
@@ -95,16 +93,13 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
 }
 
 impl UseLine {
-    pub fn taster_bounds(font: Signal<Font>) -> Memo<Bounds> {
-        create_memo(move |_| {
-            let font = font.get();
-            Bounds::new(font.width() * 2.0, font.height())
-        })
+    pub fn taster_bounds(font_height: Memo<f64>, font_width: Memo<f64>) -> Memo<Bounds> {
+        create_memo(move |_| Bounds::new(font_width.get() * 2.0, font_height.get()))
     }
 
-    pub fn snippet_width(font: Signal<Font>) -> Signal<f64> {
-        let taster_bounds = Self::taster_bounds(font);
-        Signal::derive(move || taster_bounds.get().width() + font.get().width())
+    pub fn snippet_width(font_height: Memo<f64>, font_width: Memo<f64>) -> Signal<f64> {
+        let taster_bounds = Self::taster_bounds(font_height, font_width);
+        Signal::derive(move || taster_bounds.get().width() + font_width.get())
     }
 
     pub fn taster(&self, bounds: Memo<Bounds>) -> View {
@@ -181,15 +176,15 @@ pub fn Snippet<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> i
 #[component]
 pub fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
-    let font = state.pre.font;
-    let bounds = UseLine::taster_bounds(font);
+    let font_width = state.pre.font_width;
+    let bounds = UseLine::taster_bounds(state.pre.font_height, font_width);
     view! {
         <svg
             class="_chartistry_taster"
             width=move || bounds.get().width()
             height=move || bounds.get().height()
             viewBox=move || format!("0 0 {} {}", bounds.get().width(), bounds.get().height())
-            style:padding-right=move || format!("{}px", font.get().width())>
+            style:padding-right=move || format!("{}px", font_width.get())>
             <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
             {series.taster(bounds)}
         </svg>
