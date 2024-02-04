@@ -234,15 +234,10 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
     }
 
     /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
-    pub fn nearest_position_x(&self, pos_x: Signal<f64>) -> Memo<f64> {
+    pub fn nearest_position_x(&self, pos_x: Signal<f64>) -> Memo<Option<f64>> {
         let positions_x = self.positions_x;
         let index = self.nearest_index(pos_x);
-        create_memo(move |_| {
-            index
-                .get()
-                .map(|index| with!(|positions_x| positions_x[index]))
-                .unwrap_or(f64::NAN)
-        })
+        create_memo(move |_| index.get().map(|index| positions_x.with(|pos| pos[index])))
     }
 
     pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Memo<Vec<(UseLine, Option<Y>)>>

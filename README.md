@@ -10,14 +10,7 @@ An extensible charting library for Leptos.
 
 - Stacked colours iterate but should use sequential colours with "min step by" fn
 - Should stacked colours be a single colour?
-- PeriodicTimestamps
-    - Take a Tz but might work with a fixed offset or naive datetime.
-    - Requires a formatter with Tz to be passed in.
-    - Should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
 - Check for TODOs
-
-Documentation:
-- Colours: need a general write up on difficulties
 
 Features:
 - Line dots
@@ -35,4 +28,5 @@ It's not clear that it could be efficient (avoiding extra iterations and copies 
 
 ## Caveats
 
-- Timestamps
+- Timestamps: Should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
+- Colours: need a general write up on difficulties

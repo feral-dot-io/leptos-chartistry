@@ -37,7 +37,7 @@ pub struct State<X: 'static, Y: 'static> {
     pub hover_inner: Signal<bool>,
 
     /// X coord of nearest mouse data in SVG space
-    pub nearest_svg_x: Memo<f64>,
+    pub nearest_svg_x: Memo<Option<f64>>,
     /// X value of nearest mouse data
     pub nearest_data_x: Memo<Option<X>>,
     /// Y values of nearest mouse data. Index corresponds to line index.
@@ -82,9 +82,10 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
 
         let nearest_pos_x = pre.data.nearest_position_x(hover_data_x);
         let nearest_svg_x = create_memo(move |_| {
-            let data_x = nearest_pos_x.get();
-            let (svg_x, _) = proj.get().position_to_svg(data_x, 0.0);
-            svg_x
+            nearest_pos_x.get().map(|data_x| {
+                let (svg_x, _) = proj.get().position_to_svg(data_x, 0.0);
+                svg_x
+            })
         });
 
         let nearest_data_x = pre.data.nearest_data_x(hover_data_x);

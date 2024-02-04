@@ -110,16 +110,12 @@ fn XGuideLine<X: 'static, Y: 'static>(line: XGuideLine, state: State<X, Y>) -> i
     let nearest_svg_x = state.nearest_svg_x;
     let pos = Signal::derive(move || {
         let (mouse_x, _) = mouse_chart.get();
+        let x = match line.align.get() {
+            AlignOver::Data => nearest_svg_x.get().unwrap_or(mouse_x),
+            AlignOver::Mouse => mouse_x,
+        };
         let inner = inner.get();
-        match line.align.get() {
-            AlignOver::Data => {
-                let svg_x = nearest_svg_x.get();
-                Bounds::from_points(svg_x, inner.top_y(), svg_x, inner.bottom_y())
-            }
-            AlignOver::Mouse => {
-                Bounds::from_points(mouse_x, inner.top_y(), mouse_x, inner.bottom_y())
-            }
-        }
+        Bounds::from_points(x, inner.top_y(), x, inner.bottom_y())
     });
     view! {
         <GuideLine id="x" width=line.width colour=line.colour state=state pos=pos />
