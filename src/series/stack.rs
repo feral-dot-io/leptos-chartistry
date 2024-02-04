@@ -7,6 +7,7 @@ use leptos::signal_prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 
+// Note: we assume light colour backgrounds so this gets inverted (dark values for high values)
 pub const STACK_COLOUR_SCHEME: [Colour; 10] = BATLOW;
 
 pub const BATLOW: [Colour; 10] = [
@@ -48,7 +49,7 @@ impl<T, Y> Default for Stack<T, Y> {
     fn default() -> Self {
         Self {
             lines: Vec::new(),
-            colours: create_rw_signal(STACK_COLOUR_SCHEME.into()),
+            colours: ColourScheme::from(STACK_COLOUR_SCHEME).invert().into(),
         }
     }
 }

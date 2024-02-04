@@ -35,6 +35,12 @@ impl ColourScheme {
         self.swatches[index]
     }
 
+    pub fn invert(self) -> Self {
+        let mut swatches = self.swatches.clone();
+        swatches.reverse();
+        Self { swatches }
+    }
+
     fn line_to_prior_swatch_index(&self, line: usize, total: usize) -> usize {
         // Avoid divide by zero and preference first
         if total <= 1 {

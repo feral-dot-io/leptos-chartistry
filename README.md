@@ -31,3 +31,4 @@ It's not clear that it could be efficient (avoiding extra iterations and copies 
 
 - Timestamps: Should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
 - Colours: need a general write up on difficulties
+- Assumes light background
