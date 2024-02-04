@@ -1,16 +1,16 @@
 use leptos::*;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct AspectRatio(pub(crate) CalcUsing);
+pub struct AspectRatio(CalcUsing);
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum CalcUsing {
+enum CalcUsing {
     Env(EnvCalc),
     Known(AspectRatioCalc),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum EnvCalc {
+enum EnvCalc {
     WidthAndRatio(f64),
     HeightAndRatio(f64),
     WidthAndHeight,
@@ -92,10 +92,21 @@ impl AspectRatio {
     pub const fn environment() -> Self {
         Self(CalcUsing::Env(EnvCalc::WidthAndHeight))
     }
+
+    pub(crate) fn calculation(
+        self,
+        env_width: Memo<f64>,
+        env_height: Memo<f64>,
+    ) -> AspectRatioCalc {
+        match self.0 {
+            CalcUsing::Env(calc) => calc.mk_signal(env_width, env_height),
+            CalcUsing::Known(calc) => calc,
+        }
+    }
 }
 
 impl EnvCalc {
-    pub fn mk_signal(self, width: Memo<f64>, height: Memo<f64>) -> AspectRatioCalc {
+    fn mk_signal(self, width: Memo<f64>, height: Memo<f64>) -> AspectRatioCalc {
         use AspectRatioCalc as C;
         use Dimension as D;
         match self {

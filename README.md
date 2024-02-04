@@ -16,7 +16,6 @@ An extensible charting library for Leptos.
     - Requires a formatter with Tz to be passed in.
     - Should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
 - Check for TODOs
-- Do we have to expose Font?
 
 Documentation:
 - Colours: need a general write up on difficulties
@@ -34,3 +33,7 @@ Features:
 
 - Data is a `Vec<T>` to simplify building of line Series. To drop the <T> we could use an IntoIterator on the Series or each line. The has the drawback of complicating the chart internals as it still needs an efficient aggregate model. 
 It's not clear that it could be efficient (avoiding extra iterations and copies of data) without impacting API ergonomics. For example, per line: `Iterator<Item = (X, Y)>`, per series: `Iterator<Item = (X, [Y])>` and `[Y] -> Y` per line which implies a generic Item = (X, T) and T -> Y. There are usecases for a data transform step but this looks better suited as a step before the data is passed to the library.
+
+## Caveats
+
+- Timestamps
