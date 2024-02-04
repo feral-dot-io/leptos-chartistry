@@ -6,10 +6,10 @@ pub struct AspectRatio(CalcUsing);
 #[derive(Clone, Debug, PartialEq)]
 enum CalcUsing {
     Env(EnvCalc),
-    Known(AspectRatioCalc),
+    Known(KnownAspectRatio),
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 enum EnvCalc {
     WidthAndRatio(f64),
     HeightAndRatio(f64),
@@ -17,65 +17,55 @@ enum EnvCalc {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum AspectRatioCalc {
-    WidthAndRatio(Dimension, f64),
-    HeightAndRatio(Dimension, f64),
-    WidthAndHeight(Dimension, Dimension),
+pub enum KnownAspectRatio {
+    Outer(AspectRatioVars),
+    Inner(AspectRatioVars),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Dimension {
-    Outer(f64),
-    Inner(f64),
+pub enum AspectRatioVars {
+    WidthAndRatio(f64, f64),
+    HeightAndRatio(f64, f64),
+    WidthAndHeight(f64, f64),
 }
 
 impl AspectRatio {
-    /// The outer height is set by width / ratio.
+    const fn new_outer(vars: AspectRatioVars) -> Self {
+        Self(CalcUsing::Known(KnownAspectRatio::Outer(vars)))
+    }
+
+    const fn new_inner(vars: AspectRatioVars) -> Self {
+        Self(CalcUsing::Known(KnownAspectRatio::Inner(vars)))
+    }
+
+    /// The height is set by width / ratio.
     pub const fn outer_height(width: f64, ratio: f64) -> Self {
-        Self(CalcUsing::Known(AspectRatioCalc::WidthAndRatio(
-            Dimension::Outer(width),
-            ratio,
-        )))
+        Self::new_outer(AspectRatioVars::WidthAndRatio(width, ratio))
     }
 
-    /// The outer width is set by height * ratio.
+    /// The width is set by height * ratio.
     pub const fn outer_width(height: f64, ratio: f64) -> Self {
-        Self(CalcUsing::Known(AspectRatioCalc::HeightAndRatio(
-            Dimension::Outer(height),
-            ratio,
-        )))
+        Self::new_outer(AspectRatioVars::HeightAndRatio(height, ratio))
     }
 
-    /// Sets the outer width and height of the chart. Ratio is implied width / height.
+    /// Sets the width and height of the chart. Ratio is implied width / height.
     pub const fn outer_ratio(width: f64, height: f64) -> Self {
-        Self(CalcUsing::Known(AspectRatioCalc::WidthAndHeight(
-            Dimension::Outer(width),
-            Dimension::Outer(height),
-        )))
+        Self::new_outer(AspectRatioVars::WidthAndHeight(width, height))
     }
 
-    /// The inner height is set by width / ratio.
+    /// The height is set by width / ratio.
     pub const fn inner_height(width: f64, ratio: f64) -> Self {
-        Self(CalcUsing::Known(AspectRatioCalc::WidthAndRatio(
-            Dimension::Inner(width),
-            ratio,
-        )))
+        Self::new_inner(AspectRatioVars::WidthAndRatio(width, ratio))
     }
 
-    /// The inner width is set by height * ratio.
+    /// The width is set by height * ratio.
     pub const fn inner_width(height: f64, ratio: f64) -> Self {
-        Self(CalcUsing::Known(AspectRatioCalc::HeightAndRatio(
-            Dimension::Inner(height),
-            ratio,
-        )))
+        Self::new_inner(AspectRatioVars::HeightAndRatio(height, ratio))
     }
 
-    /// Sets the inner width and height of the chart. Ratio is implied width / height.
+    /// Sets the width and height of the chart. Ratio is implied width / height.
     pub const fn inner_ratio(width: f64, height: f64) -> Self {
-        Self(CalcUsing::Known(AspectRatioCalc::WidthAndHeight(
-            Dimension::Inner(width),
-            Dimension::Inner(height),
-        )))
+        Self::new_inner(AspectRatioVars::WidthAndHeight(width, height))
     }
 
     /// The outer height is set by the width of the parent container and a given ratio (width / ratio).
@@ -93,69 +83,60 @@ impl AspectRatio {
         Self(CalcUsing::Env(EnvCalc::WidthAndHeight))
     }
 
-    pub(crate) fn calculation(
+    pub(crate) fn into_known(
         self,
         env_width: Memo<f64>,
         env_height: Memo<f64>,
-    ) -> AspectRatioCalc {
+    ) -> KnownAspectRatio {
         match self.0 {
-            CalcUsing::Env(calc) => calc.mk_signal(env_width, env_height),
+            CalcUsing::Env(calc) => calc.into_known(env_width, env_height),
             CalcUsing::Known(calc) => calc,
         }
     }
 }
 
 impl EnvCalc {
-    fn mk_signal(self, width: Memo<f64>, height: Memo<f64>) -> AspectRatioCalc {
-        use AspectRatioCalc as C;
-        use Dimension as D;
+    fn into_known(self, width: Memo<f64>, height: Memo<f64>) -> KnownAspectRatio {
+        use AspectRatioVars as C;
+        use KnownAspectRatio as K;
         match self {
-            EnvCalc::WidthAndRatio(ratio) => C::WidthAndRatio(D::Outer(width.get()), ratio),
-            EnvCalc::HeightAndRatio(ratio) => C::HeightAndRatio(D::Outer(height.get()), ratio),
-            EnvCalc::WidthAndHeight => {
-                C::WidthAndHeight(D::Outer(width.get()), D::Outer(height.get()))
-            }
+            Self::WidthAndRatio(ratio) => K::Outer(C::WidthAndRatio(width.get(), ratio)),
+            Self::HeightAndRatio(ratio) => K::Outer(C::HeightAndRatio(height.get(), ratio)),
+            Self::WidthAndHeight => K::Outer(C::WidthAndHeight(width.get(), height.get())),
         }
     }
 }
 
-impl AspectRatioCalc {
-    pub fn inner_width_signal(
-        calc: Memo<AspectRatioCalc>,
-        left: Memo<f64>,
-        right: Memo<f64>,
-    ) -> Memo<f64> {
-        create_memo(move |_| {
-            let options = left.get() + right.get();
-            match calc.get() {
-                AspectRatioCalc::WidthAndRatio(width, _) => width.size(options),
-                AspectRatioCalc::HeightAndRatio(height, ratio) => height.size(options) * ratio,
-                AspectRatioCalc::WidthAndHeight(width, _) => width.size(options),
-            }
+impl KnownAspectRatio {
+    pub fn inner_width_signal(known: Memo<Self>, left: Memo<f64>, right: Memo<f64>) -> Memo<f64> {
+        create_memo(move |_| match known.get() {
+            Self::Inner(vars) => vars.width(),
+            Self::Outer(vars) => vars.width() - left.get() - right.get(),
         })
     }
 
-    pub fn inner_height_signal(
-        calc: Memo<AspectRatioCalc>,
-        top: Memo<f64>,
-        bottom: Memo<f64>,
-    ) -> Memo<f64> {
-        create_memo(move |_| {
-            let options = top.get() + bottom.get();
-            match calc.get() {
-                AspectRatioCalc::WidthAndRatio(width, ratio) => width.size(options) / ratio,
-                AspectRatioCalc::HeightAndRatio(height, _) => height.size(options),
-                AspectRatioCalc::WidthAndHeight(_, height) => height.size(options),
-            }
+    pub fn inner_height_signal(known: Memo<Self>, top: Memo<f64>, bottom: Memo<f64>) -> Memo<f64> {
+        create_memo(move |_| match known.get() {
+            Self::Inner(vars) => vars.height(),
+            Self::Outer(vars) => vars.height() - top.get() - bottom.get(),
         })
     }
 }
 
-impl Dimension {
-    pub fn size(self, options: f64) -> f64 {
+impl AspectRatioVars {
+    pub fn width(self) -> f64 {
         match self {
-            Dimension::Outer(value) => value - options,
-            Dimension::Inner(value) => value,
+            Self::WidthAndRatio(width, _) => width,
+            Self::HeightAndRatio(height, ratio) => height * ratio,
+            Self::WidthAndHeight(width, _) => width,
+        }
+    }
+
+    pub fn height(self) -> f64 {
+        match self {
+            Self::WidthAndRatio(width, ratio) => width / ratio,
+            Self::HeightAndRatio(height, _) => height,
+            Self::WidthAndHeight(_, height) => height,
         }
     }
 }

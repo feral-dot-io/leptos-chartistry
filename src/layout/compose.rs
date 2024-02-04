@@ -1,6 +1,6 @@
 use super::{EdgeLayout, UseLayout};
 use crate::{
-    aspect_ratio::AspectRatioCalc,
+    aspect_ratio::KnownAspectRatio,
     bounds::Bounds,
     edge::Edge,
     state::{PreState, State},
@@ -56,7 +56,7 @@ impl Layout {
         right: &[EdgeLayout<Y>],
         bottom: &[EdgeLayout<X>],
         left: &[EdgeLayout<Y>],
-        aspect_ratio: Memo<AspectRatioCalc>,
+        aspect_ratio: Memo<KnownAspectRatio>,
         state: &PreState<X, Y>,
     ) -> (Layout, Vec<DeferredRender>) {
         // Horizontal options
@@ -65,7 +65,7 @@ impl Layout {
         let bottom_heights = collect_heights(bottom, state);
         let bottom_height = sum_sizes(bottom_heights.clone());
         let inner_height =
-            AspectRatioCalc::inner_height_signal(aspect_ratio, top_height, bottom_height);
+            KnownAspectRatio::inner_height_signal(aspect_ratio, top_height, bottom_height);
 
         // Vertical options
         let (left_widths, left) = use_vertical(left, state, inner_height);
@@ -73,7 +73,7 @@ impl Layout {
         let (right_widths, right) = use_vertical(right, state, inner_height);
         let right_width = sum_sizes(right_widths.clone());
         let avail_width =
-            AspectRatioCalc::inner_width_signal(aspect_ratio, left_width, right_width);
+            KnownAspectRatio::inner_width_signal(aspect_ratio, left_width, right_width);
 
         // Bounds
         let outer = create_memo(move |_| {

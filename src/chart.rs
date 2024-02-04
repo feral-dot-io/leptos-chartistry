@@ -1,5 +1,5 @@
 use crate::{
-    aspect_ratio::AspectRatioCalc,
+    aspect_ratio::KnownAspectRatio,
     debug::DebugRect,
     inner::InnerLayout,
     layout::{EdgeLayout, HorizontalVec, Layout, VerticalVec},
@@ -41,7 +41,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     let have_dimensions = create_memo(move |_| watch.bounds.get().is_some());
     let width = create_memo(move |_| watch.bounds.get().unwrap_or_default().width());
     let height = create_memo(move |_| watch.bounds.get().unwrap_or_default().height());
-    let calc = create_memo(move |_| aspect_ratio.get().calculation(width, height));
+    let calc = create_memo(move |_| aspect_ratio.get().into_known(width, height));
 
     let debug = create_memo(move |_| debug.get());
     let font_height = create_memo(move |_| font_height.map(|f| f.get()).unwrap_or(FONT_HEIGHT));
@@ -84,7 +84,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
 fn RenderChart<'a, X: Tick, Y: Tick>(
     watch: UseWatchedNode,
     pre_state: PreState<X, Y>,
-    aspect_ratio: Memo<AspectRatioCalc>,
+    aspect_ratio: Memo<KnownAspectRatio>,
     top: &'a [EdgeLayout<X>],
     right: &'a [EdgeLayout<Y>],
     bottom: &'a [EdgeLayout<X>],
