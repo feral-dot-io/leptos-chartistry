@@ -7,8 +7,9 @@ use leptos::signal_prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 
-/// BATLOW
-pub const STACK_COLOUR_SCHEME: [Colour; 10] = [
+pub const STACK_COLOUR_SCHEME: [Colour; 10] = BATLOW;
+
+pub const BATLOW: [Colour; 10] = [
     Colour::new(0x01, 0x19, 0x59),
     Colour::new(0x10, 0x3F, 0x60),
     Colour::new(0x1C, 0x5A, 0x62),
@@ -66,8 +67,9 @@ impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> fo
     fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
         let colours = self.colours;
         let mut previous = None;
+        let total_lines = self.lines.len();
         for (id, line) in self.lines.clone().into_iter().enumerate() {
-            let colour = create_memo(move |_| colours.get().by_index(id));
+            let colour = create_memo(move |_| colours.get().interpolate(id, total_lines));
             let line = StackedLine::new(line, previous.clone());
             let get_y = series.push(colour, line);
             // Sum next line with this one

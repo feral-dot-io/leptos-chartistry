@@ -11,6 +11,7 @@ An extensible charting library for Leptos.
 - Stacked colours iterate but should use sequential colours with "min step by" fn
 - Should stacked colours be a single colour?
 - Check for TODOs
+- Reconsider Chart's data. Check that Iterator is out. What about Option<Vec<T>>?
 
 Features:
 - Line dots
