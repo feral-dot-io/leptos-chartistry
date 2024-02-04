@@ -105,26 +105,31 @@ fn ViewXGridLine<X: Tick, Y: 'static>(line: UseXGridLine<X>, state: State<X, Y>)
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
-
     let colour = line.colour;
+
+    let lines = move || {
+        for_ticks(line.ticks, proj, true)
+            .into_iter()
+            .map(|(x, label)| {
+                view! {
+                    <DebugRect label=format!("grid_line_x/{}", label) debug=debug />
+                    <line
+                        x1=x
+                        y1=move || inner.get().top_y()
+                        x2=x
+                        y2=move || inner.get().bottom_y()
+                        stroke=move || colour.get().to_string()
+                        stroke-width=line.width
+                    />
+                }
+            })
+            .collect_view()
+    };
+
     view! {
         <g class="_chartistry_grid_line_x">
             <DebugRect label="grid_line_x" debug=debug />
-            <For
-                each=move || for_ticks(line.ticks, proj, true)
-                key=|(_, label)| label.to_owned()
-                let:tick
-            >
-                <DebugRect label=format!("grid_line_x/{}", tick.1) debug=debug />
-                <line
-                    x1=tick.0
-                    y1=move || inner.get().top_y()
-                    x2=tick.0
-                    y2=move || inner.get().bottom_y()
-                    stroke=move || colour.get().to_string()
-                    stroke-width=line.width
-                />
-            </For>
+            {lines}
         </g>
     }
 }
@@ -134,26 +139,31 @@ fn ViewYGridLine<X: 'static, Y: Tick>(line: UseYGridLine<Y>, state: State<X, Y>)
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
-
     let colour = line.colour;
+
+    let lines = move || {
+        for_ticks(line.ticks, proj, false)
+            .into_iter()
+            .map(|(y, label)| {
+                view! {
+                    <DebugRect label=format!("grid_line_y/{}", label) debug=debug />
+                    <line
+                        x1=move || inner.get().left_x()
+                        y1=y
+                        x2=move || inner.get().right_x()
+                        y2=y
+                        stroke=move || colour.get().to_string()
+                        stroke-width=line.width
+                    />
+                }
+            })
+            .collect_view()
+    };
+
     view! {
         <g class="_chartistry_grid_line_y">
             <DebugRect label="grid_line_y" debug=debug />
-            <For
-                each=move || for_ticks(line.ticks, proj, false)
-                key=|(_, label)| label.to_owned()
-                let:tick
-            >
-                <DebugRect label=format!("grid_line_y/{}", tick.1) debug=debug />
-                <line
-                    x1=move || inner.get().left_x()
-                    y1=tick.0
-                    x2=move || inner.get().right_x()
-                    y2=tick.0
-                    stroke=move || colour.get().to_string()
-                    stroke-width=line.width
-                />
-            </For>
+            {lines}
         </g>
     }
 }

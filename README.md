@@ -10,7 +10,6 @@ An extensible charting library for Leptos.
 
 - Stacked colours iterate but should use sequential colours with "min step by" fn
 - Should stacked colours be a single colour?
-- Aspect ratio misapplies options on calculation. e.g., when determining the width and have height+ratio then width options are applied to the height. This implies the outer+height calculation should be removed from the API.
 - PeriodicTimestamps
     - Take a Tz but might work with a fixed offset or naive datetime.
     - Requires a formatter with Tz to be passed in.
