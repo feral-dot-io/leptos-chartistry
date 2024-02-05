@@ -1,7 +1,14 @@
 [package]
 name = "leptos-chartistry"
 version = "0.1.0"
+authors = [ "Joshua McQuistan <joshua.mcquistan@feral.io>" ]
 edition = "2021"
+description = "Chartistry is a charting library for Leptos"
+documentation = "https://docs.rs/leptos-chartistry"
+repository = "https://github.com/feral-dot-io/leptos-chartistry"
+license = "MPL-2.0"
+keywords = [ "leptos", "wasm", "charts" ]
+categories = [ "graphics", "gui", "wasm", "web-programming" ]
 
 [dependencies]
 chrono = "0.4"
