@@ -9,7 +9,7 @@
   </a>
 </p>
 
-An extensible charting library for [Leptos](https://github.com/leptos-rs/leptos).
+Leptos Chartistry is an extensible charting library for [Leptos](https://github.com/leptos-rs/leptos). It provides a simple and easy to use `<Chart>` component.
 
 - [Interactive demo](#todo)
 - [Usage examples](#todo)
@@ -18,7 +18,13 @@ An extensible charting library for [Leptos](https://github.com/leptos-rs/leptos)
 
 ## Getting started
 
-Run `cargo add leptos-chartistry` to add the library to your project. Next, use `<Chart ... />` to render a chart.
+To add Leptos Chartistry to your project, run the following command:
+
+```bash
+cargo add leptos-chartistry
+```
+
+Next, use `<Chart ... />` to render a chart in your Leptos application. Here's a small example:
 
 ```rust
 use leptos::*;
