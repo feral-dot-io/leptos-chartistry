@@ -88,133 +88,31 @@ impl<Y: Tick> EdgeLayout<Y> {
     }
 }
 
-// TODO: use macros to reduce boilerplate
-
-/// Conversion to a HorizontalLayout
-pub trait ToEdgeLayout<X> {
-    fn to_edge_layout(&self) -> EdgeLayout<X>;
+pub trait IntoEdge<X> {
+    fn into_edge(self) -> EdgeLayout<X>;
 }
 
-impl<X> ToEdgeLayout<X> for legend::Legend {
-    fn to_edge_layout(&self) -> EdgeLayout<X> {
-        EdgeLayout::Legend(self.clone())
-    }
+macro_rules! impl_into_edge {
+    ($ty:ty, $enum:ident) => {
+        impl<V> IntoEdge<V> for $ty {
+            fn into_edge(self) -> EdgeLayout<V> {
+                EdgeLayout::$enum(self)
+            }
+        }
+
+        impl<V> From<$ty> for EdgeLayout<V> {
+            fn from(inner: $ty) -> Self {
+                inner.into_edge()
+            }
+        }
+
+        impl<V> From<$ty> for Vec<EdgeLayout<V>> {
+            fn from(inner: $ty) -> Self {
+                vec![inner.into_edge()]
+            }
+        }
+    };
 }
-
-impl<X> ToEdgeLayout<X> for rotated_label::RotatedLabel {
-    fn to_edge_layout(&self) -> EdgeLayout<X> {
-        EdgeLayout::RotatedLabel(self.clone())
-    }
-}
-
-impl<X: Clone> ToEdgeLayout<X> for tick_labels::TickLabels<X> {
-    fn to_edge_layout(&self) -> EdgeLayout<X> {
-        EdgeLayout::TickLabels(self.clone())
-    }
-}
-
-impl<T: Clone + ToEdgeLayout<X>, X> ToEdgeLayout<X> for &T {
-    fn to_edge_layout(&self) -> EdgeLayout<X> {
-        (*self).clone().to_edge_layout()
-    }
-}
-
-impl<X: Clone> ToEdgeLayout<X> for EdgeLayout<X> {
-    fn to_edge_layout(&self) -> EdgeLayout<X> {
-        self.clone()
-    }
-}
-
-impl<X> From<legend::Legend> for EdgeLayout<X> {
-    fn from(legend: legend::Legend) -> Self {
-        Self::Legend(legend)
-    }
-}
-
-impl<X> From<rotated_label::RotatedLabel> for EdgeLayout<X> {
-    fn from(label: rotated_label::RotatedLabel) -> Self {
-        Self::RotatedLabel(label)
-    }
-}
-
-impl<X> From<tick_labels::TickLabels<X>> for EdgeLayout<X> {
-    fn from(ticks: tick_labels::TickLabels<X>) -> Self {
-        Self::TickLabels(ticks)
-    }
-}
-
-#[derive(Clone)]
-pub struct HorizontalVec<X: 'static>(Vec<EdgeLayout<X>>);
-
-impl<X> Default for HorizontalVec<X> {
-    fn default() -> Self {
-        Self(Vec::new())
-    }
-}
-
-// Note: this interface is minimised to avoid exposing the `Vec` API
-impl<X> HorizontalVec<X> {
-    pub(crate) fn reverse(&mut self) {
-        self.0.reverse();
-    }
-
-    pub(crate) fn as_slice(&self) -> &[EdgeLayout<X>] {
-        &self.0
-    }
-}
-
-impl<X> From<HorizontalVec<X>> for Vec<EdgeLayout<X>> {
-    fn from(vec: HorizontalVec<X>) -> Self {
-        vec.0
-    }
-}
-
-impl<T: ToEdgeLayout<X>, X> From<Vec<T>> for HorizontalVec<X> {
-    fn from(items: Vec<T>) -> Self {
-        Self(
-            items
-                .into_iter()
-                .map(|i| i.to_edge_layout())
-                .collect::<Vec<_>>(),
-        )
-    }
-}
-
-#[derive(Clone)]
-pub struct VerticalVec<Y: 'static>(Vec<EdgeLayout<Y>>);
-
-/// Start with an empty vector
-impl<Y> Default for VerticalVec<Y> {
-    fn default() -> Self {
-        Self(Vec::new())
-    }
-}
-
-/// Add items to the vector. Could use `vec![item.to_vertical()]` instead.
-impl<Y> VerticalVec<Y> {
-    pub(crate) fn reverse(&mut self) {
-        self.0.reverse();
-    }
-
-    pub(crate) fn as_slice(&self) -> &[EdgeLayout<Y>] {
-        &self.0
-    }
-}
-
-/// End result. Convert to a `Vec<VerticalLayout<Y>>`
-impl<Y> From<VerticalVec<Y>> for Vec<EdgeLayout<Y>> {
-    fn from(vec: VerticalVec<Y>) -> Self {
-        vec.0
-    }
-}
-
-impl<T: ToEdgeLayout<Y>, Y> From<Vec<T>> for VerticalVec<Y> {
-    fn from(items: Vec<T>) -> Self {
-        Self(
-            items
-                .into_iter()
-                .map(|i| i.to_edge_layout())
-                .collect::<Vec<_>>(),
-        )
-    }
-}
+impl_into_edge!(legend::Legend, Legend);
+impl_into_edge!(rotated_label::RotatedLabel, RotatedLabel);
+impl_into_edge!(tick_labels::TickLabels<V>, TickLabels);

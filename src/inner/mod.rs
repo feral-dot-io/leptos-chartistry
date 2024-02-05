@@ -18,8 +18,8 @@ pub enum InnerLayout<X: Tick, Y: Tick> {
     Legend(legend::InsetLegend),
 }
 
-pub trait IntoInnerLayout<X: Tick, Y: Tick> {
-    fn into_inner_layout(self) -> InnerLayout<X, Y>;
+pub trait IntoInner<X: Tick, Y: Tick> {
+    fn into_inner(self) -> InnerLayout<X, Y>;
 }
 
 impl<X: Tick, Y: Tick> InnerLayout<X, Y> {
@@ -39,24 +39,30 @@ pub trait UseInner<X, Y> {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View;
 }
 
-macro_rules! impl_into_inner_layout {
+macro_rules! impl_into_inner {
     ($ty:ty, $enum:ident) => {
-        impl<X: Tick, Y: Tick> IntoInnerLayout<X, Y> for $ty {
-            fn into_inner_layout(self) -> InnerLayout<X, Y> {
+        impl<X: Tick, Y: Tick> IntoInner<X, Y> for $ty {
+            fn into_inner(self) -> InnerLayout<X, Y> {
                 InnerLayout::$enum(self)
             }
         }
 
         impl<X: Tick, Y: Tick> From<$ty> for InnerLayout<X, Y> {
             fn from(inner: $ty) -> Self {
-                inner.into_inner_layout()
+                inner.into_inner()
+            }
+        }
+
+        impl<X: Tick, Y: Tick> From<$ty> for Vec<InnerLayout<X, Y>> {
+            fn from(inner: $ty) -> Self {
+                vec![inner.into_inner()]
             }
         }
     };
 }
-impl_into_inner_layout!(axis_marker::AxisMarker, AxisMarker);
-impl_into_inner_layout!(grid_line::XGridLine<X>, XGridLine);
-impl_into_inner_layout!(grid_line::YGridLine<Y>, YGridLine);
-impl_into_inner_layout!(guide_line::XGuideLine, XGuideLine);
-impl_into_inner_layout!(guide_line::YGuideLine, YGuideLine);
-impl_into_inner_layout!(legend::InsetLegend, Legend);
+impl_into_inner!(axis_marker::AxisMarker, AxisMarker);
+impl_into_inner!(grid_line::XGridLine<X>, XGridLine);
+impl_into_inner!(grid_line::YGridLine<Y>, YGridLine);
+impl_into_inner!(guide_line::XGuideLine, XGuideLine);
+impl_into_inner!(guide_line::YGuideLine, YGuideLine);
+impl_into_inner!(legend::InsetLegend, Legend);

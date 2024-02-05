@@ -23,13 +23,13 @@ pub use inner::{
     grid_line::{XGridLine, YGridLine, GRID_LINE_COLOUR},
     guide_line::{AlignOver, XGuideLine, YGuideLine, GUIDE_LINE_COLOUR},
     legend::InsetLegend,
-    InnerLayout, IntoInnerLayout,
+    InnerLayout, IntoInner,
 };
 pub use layout::{
     legend::Legend,
     rotated_label::{Anchor, RotatedLabel},
     tick_labels::TickLabels,
-    EdgeLayout, HorizontalVec, ToEdgeLayout, VerticalVec,
+    EdgeLayout, IntoEdge,
 };
 pub use overlay::tooltip::{Tooltip, TooltipPlacement, TooltipSortBy, TOOLTIP_CURSOR_DISTANCE};
 pub use padding::Padding;

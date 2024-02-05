@@ -177,18 +177,18 @@ pub fn App() -> impl IntoView {
     )]);
     let right = Options::create_signal(vec![Legend::middle()]);
     let bottom = Options::create_signal(vec![
-        x_ticks.to_edge_layout(),
+        x_ticks.clone().into_edge(),
         RotatedLabel::middle("This demo shows most of the available options. Edit things below...")
-            .to_edge_layout(),
+            .into_edge(),
     ]);
-    let left = Options::create_signal(vec![y_ticks.to_edge_layout()]);
+    let left = Options::create_signal(vec![y_ticks.clone().into_edge()]);
     let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::create_signal(vec![
-        AxisMarker::horizontal_zero().into_inner_layout(),
-        AxisMarker::left_edge().into_inner_layout(),
-        XGridLine::new(x_ticks).into_inner_layout(),
-        YGridLine::new(y_ticks).into_inner_layout(),
-        XGuideLine::default().into_inner_layout(),
-        YGuideLine::default().into_inner_layout(),
+        AxisMarker::horizontal_zero().into_inner(),
+        AxisMarker::left_edge().into_inner(),
+        XGridLine::new(x_ticks).into_inner(),
+        YGridLine::new(y_ticks).into_inner(),
+        XGuideLine::default().into_inner(),
+        YGuideLine::default().into_inner(),
     ]);
 
     view! {

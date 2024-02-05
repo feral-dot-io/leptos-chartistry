@@ -2,7 +2,7 @@ use crate::{
     aspect_ratio::KnownAspectRatio,
     debug::DebugRect,
     inner::InnerLayout,
-    layout::{EdgeLayout, HorizontalVec, Layout, VerticalVec},
+    layout::{EdgeLayout, Layout},
     overlay::tooltip::Tooltip,
     projection::Projection,
     series::{RenderData, UseData},
@@ -23,10 +23,10 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     #[prop(into, optional)] debug: MaybeSignal<bool>,
     #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
 
-    #[prop(into, optional)] mut top: HorizontalVec<X>,
-    #[prop(into, optional)] right: VerticalVec<Y>,
-    #[prop(into, optional)] bottom: HorizontalVec<X>,
-    #[prop(into, optional)] mut left: VerticalVec<Y>,
+    #[prop(into, optional)] mut top: Vec<EdgeLayout<X>>,
+    #[prop(into, optional)] right: Vec<EdgeLayout<Y>>,
+    #[prop(into, optional)] bottom: Vec<EdgeLayout<X>>,
+    #[prop(into, optional)] mut left: Vec<EdgeLayout<Y>>,
 
     #[prop(into, optional)] inner: Vec<InnerLayout<X, Y>>,
     #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,

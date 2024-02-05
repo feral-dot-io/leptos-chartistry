@@ -13,7 +13,6 @@ An extensible charting library for [Leptos](https://github.com/leptos-rs/leptos)
     - Top panel
     - Usecase page
 - Docs
-- to_edge_layout vs into_inner_layout
 
 Features to add:
 - Line dots
