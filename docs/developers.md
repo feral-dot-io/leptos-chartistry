@@ -11,15 +11,18 @@ It's not clear that it could be efficient (avoiding extra iterations and copies 
 
 ## TODO
 
+For release:
 - Check for TODOs
 - Hosted site
     - Top panel
-    - Usecase page
+    - Usecase / examples page
 - Docs
-- Stacked line ordering
 - Demo needs a fixed size container for an environment aspect ratio
+- Fix up links
+- Release to crates.io
 
 Features to add:
+- Stacked line ordering
 - Line dots
 - Bars
 - Stacked bars
