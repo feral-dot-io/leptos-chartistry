@@ -39,6 +39,14 @@ impl<T, Y> Stack<T, Y> {
         self
     }
 
+    pub fn len(&self) -> usize {
+        self.lines.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.lines.is_empty()
+    }
+
     pub fn with_colours<Opt>(self, colours: impl Into<ColourScheme>) -> Self {
         self.colours.set(colours.into());
         self

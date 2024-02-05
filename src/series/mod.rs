@@ -115,6 +115,14 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
+    pub fn len(&self) -> usize {
+        self.lines.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.lines.is_empty()
+    }
+
     fn to_use_lines(&self) -> Vec<(UseLine, GetY<T, Y>)> {
         let mut series = SeriesAcc::new(self.colours);
         for line in self.lines.clone() {

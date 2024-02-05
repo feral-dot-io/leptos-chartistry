@@ -142,6 +142,8 @@ pub fn App() -> impl IntoView {
         .line(cosine.clone());
     let (min_x, max_x) = (series.min_x, series.max_x);
     let (min_y, max_y) = (series.min_y, series.max_y);
+    let series_colours = series.colours;
+    let series_len = series.len();
 
     // Tooltip
     let tooltip = Tooltip::new(
@@ -337,6 +339,12 @@ pub fn App() -> impl IntoView {
                 <p>
                     <label for="cosine_width">"Width"</label>
                     <span><StepInput id="cosine_width" value=cosine.width step="0.1" min="0.1" /></span>
+                </p>
+                <p>
+                    <label for="series_colours">"Colours"</label>
+                    <span>
+                        <SelectColourScheme colours=series_colours lines=series_len />
+                    </span>
                 </p>
             </fieldset>
 
@@ -802,11 +810,34 @@ select_impl!(
 
 #[component]
 fn SelectColour(colour: RwSignal<Colour>) -> impl IntoView {
+    let on_change = move |ev| {
+        if let Ok(value) = event_target_value(&ev).parse() {
+            colour.set(value);
+        }
+    };
     view! {
-        <input type="color" value=move || colour.get().to_string()
-            // TODO on:input=on_change
-        />
+        <input type="color" value=move || colour.get().to_string() on:input=on_change />
     }
+}
+
+#[component]
+fn SelectColourScheme(colours: RwSignal<ColourScheme>, lines: usize) -> impl IntoView {
+    (0..lines)
+        .map(|line| {
+            let on_change = move |ev| {
+                if let Ok(colour) = event_target_value(&ev).parse() {
+                    let mut new_colours = colours.get();
+                    new_colours.set_by_index(line, colour);
+                    colours.set(new_colours);
+                }
+            };
+            view! {
+                <input type="color"
+                    value=move || colours.get().by_index(line).to_string()
+                    on:input=on_change />
+            }
+        })
+        .collect_view()
 }
 
 #[component]

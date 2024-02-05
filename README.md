@@ -1,6 +1,6 @@
 # Leptos Chartistry
 
-An extensible charting library for Leptos.
+An extensible charting library for [Leptos](https://github.com/leptos-rs/leptos).
 
 ## Review
 
@@ -8,17 +8,22 @@ An extensible charting library for Leptos.
 
 ## TODO
 
-- Stacked colours iterate but should use sequential colours with "min step by" fn
-- Should stacked colours be a single colour?
 - Check for TODOs
-- Reconsider Chart's data. Check that Iterator is out. What about Option<Vec<T>>?
+- Hosted site
+    - Top panel
+    - Usecase page
+- Docs
+- to_edge_layout vs into_inner_layout
 
-Features:
+Features to add:
 - Line dots
 - Bars
 - Stacked bars
-- Canvas to auto calculate font
-- Multi-line labels
+- Loading status
+- Canvas
+    - Calculate font
+    - Multi-line labels
+    - Can we get background colour?
 
 ## Design experiments and notes:
 
@@ -32,3 +37,13 @@ It's not clear that it could be efficient (avoiding extra iterations and copies 
 - Timestamps: Should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
 - Colours: need a general write up on difficulties
 - Assumes light background
+
+## Feedback
+
+- Looking for feedback on the API.
+- More example usecases.
+- Consider giving the project a star.
+
+## Licence
+
+MPL2

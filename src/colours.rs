@@ -9,6 +9,8 @@ Reading material:
 - Available colour schemes: https://s-ink.org/scientific-colour-maps
 */
 
+use std::str::FromStr;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColourScheme {
     // Must have at least one colour
@@ -29,10 +31,19 @@ impl ColourScheme {
         }
     }
 
-    pub fn by_index(&self, index: usize) -> Colour {
+    fn get_index(&self, index: usize) -> usize {
         // Note: not using checked_rem_euclid as we're guaranteed to have at least one colour
-        let index = index.rem_euclid(self.swatches.len());
+        index.rem_euclid(self.swatches.len())
+    }
+
+    pub fn by_index(&self, index: usize) -> Colour {
+        let index = self.get_index(index);
         self.swatches[index]
+    }
+
+    pub fn set_by_index(&mut self, index: usize, colour: Colour) {
+        let index = self.get_index(index);
+        self.swatches[index] = colour;
     }
 
     pub fn invert(self) -> Self {
@@ -105,6 +116,22 @@ impl Colour {
 impl std::fmt::Display for Colour {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "#{:02X}{:02X}{:02X}", self.red, self.green, self.blue)
+    }
+}
+
+impl FromStr for Colour {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim_start_matches('#');
+        let len = s.len();
+        if len != 6 {
+            return Err(format!("expected 6 characters, got {}", len));
+        }
+        let red = u8::from_str_radix(&s[0..2], 16).map_err(|e| e.to_string())?;
+        let green = u8::from_str_radix(&s[2..4], 16).map_err(|e| e.to_string())?;
+        let blue = u8::from_str_radix(&s[4..6], 16).map_err(|e| e.to_string())?;
+        Ok(Colour { red, green, blue })
     }
 }
 
