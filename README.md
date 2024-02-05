@@ -3,7 +3,8 @@
 <p>
   <a href="https://crates.io/crates/leptos-chartistry">
     <img src="https://img.shields.io/crates/v/leptos-chartistry.svg?style=for-the-badge" alt="Crates.io version" />
-  </a><a href="https://docs.rs/leptos-chartistry">
+  </a>
+  <a href="https://docs.rs/leptos-chartistry">
     <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=for-the-badge" alt="Docs.rs" />
   </a>
 </p>
@@ -65,7 +66,3 @@ This project is in its early stages and feedback is welcome. Here are some thing
 - The first priority is getting rid of bugs, issues and glaring omissions -- please report them!
 - I am looking for feedback on the public API to avoid future churn.
 - Following this I'd like to drive forward with examples and usecases. If you have a usecase that you think would be a good fit for Chartistry, please let me know with examples found on the web.
-
-## Licence
-
-MPL2
