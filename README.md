@@ -4,7 +4,7 @@ An extensible charting library for [Leptos](https://github.com/leptos-rs/leptos)
 
 - [Interactive demo](#todo)
 - [Usage examples](#todo)
-- [API documentation](#todo)
+- [API documentation](https://docs.rs/leptos-chartistry)
 - If you like or use Chartistry, consider giving it a star.
 
 ## Getting started
@@ -54,8 +54,9 @@ pub fn MyFirstChart(data: Signal<Vec<MyData>>) -> impl IntoView {
 
 This project is in its early stages and feedback is welcome. Here are some things we're particularly interested in:
 
-- I am looking for feedback on the public API.
-- Usecases and examples of features from other charts found on the web whose features could be incorporated.
+- The first priority is getting rid of bugs, issues and glaring omissions -- please report them!
+- I am looking for feedback on the public API to avoid future churn.
+- Following this I'd like to drive forward with examples and usecases. If you have a usecase that you think would be a good fit for Chartistry, please let me know with examples found on the web.
 
 ## Licence
 
