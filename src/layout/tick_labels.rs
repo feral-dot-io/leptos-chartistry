@@ -5,15 +5,16 @@ use crate::{
     edge::Edge,
     state::{PreState, State},
     ticks::{
-        AlignedFloats, GeneratedTicks, HorizontalSpan, TickFormatFn, TickGen, Timestamps,
-        VerticalSpan,
+        AlignedFloats, GeneratedTicks, HorizontalSpan, TickFormat, TickFormatFn, TickGen,
+        Timestamps, VerticalSpan,
     },
-    Tick, TickFormat,
+    Tick,
 };
 use chrono::prelude::*;
 use leptos::*;
 use std::rc::Rc;
 
+/// Builds tick labels for an axis.
 pub struct TickLabels<Tick: 'static> {
     pub min_chars: RwSignal<usize>,
     pub format: RwSignal<Rc<TickFormatFn<Tick>>>,

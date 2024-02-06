@@ -11,12 +11,14 @@ Reading material:
 
 use std::str::FromStr;
 
+/// A colour scheme with at least one colour.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColourScheme {
     // Must have at least one colour
     swatches: Vec<Colour>,
 }
 
+/// A colour in RGB format.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Colour {
     red: u8,

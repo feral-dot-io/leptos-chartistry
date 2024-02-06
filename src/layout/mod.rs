@@ -13,6 +13,7 @@ use crate::{
 };
 use leptos::*;
 
+/// Layout options for an edge of a [Chart](crate::Chart).
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum EdgeLayout<Tick: 'static> {
@@ -88,8 +89,9 @@ impl<Y: Tick> EdgeLayout<Y> {
     }
 }
 
-pub trait IntoEdge<X> {
-    fn into_edge(self) -> EdgeLayout<X>;
+/// Convert a type (e.g., a [rotated label](struct@rotated_label::RotatedLabel)) into an [`EdgeLayout<Tick>`](EdgeLayout) for use with [Chart](crate::Chart).
+pub trait IntoEdge<Tick> {
+    fn into_edge(self) -> EdgeLayout<Tick>;
 }
 
 macro_rules! impl_into_edge {

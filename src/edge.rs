@@ -1,7 +1,7 @@
+use crate::bounds::Bounds;
 use std::str::FromStr;
 
-use crate::bounds::Bounds;
-
+/// Identifies a rectangle edge.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Edge {
     Top,

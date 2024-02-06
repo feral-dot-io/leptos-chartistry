@@ -32,6 +32,7 @@ trait GetYValue<T, Y> {
     fn cumulative_value(&self, t: &T) -> Y;
 }
 
+/// Describes the lines, bars, etc. that make up a series. Maps `T` (your struct) to `X` and `[Y]`.
 #[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,

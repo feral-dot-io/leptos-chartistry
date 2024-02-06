@@ -7,6 +7,7 @@ pub use gen::{
 
 use chrono::prelude::*;
 
+/// A type that can be used as a tick on an axis. Try to rely on provided implementations.
 pub trait Tick: Clone + PartialEq + PartialOrd + std::fmt::Debug + 'static {
     fn default_generator() -> impl TickGen<Tick = Self>;
     fn position(&self) -> f64;

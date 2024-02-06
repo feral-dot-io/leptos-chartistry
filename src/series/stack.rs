@@ -7,10 +7,10 @@ use leptos::signal_prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 
-// Note: we assume light colour backgrounds so this gets inverted (dark values for high values)
+/// Default colour scheme for stack. Assumes a light background with dark values for high values.
 pub const STACK_COLOUR_SCHEME: [Colour; 10] = BATLOW;
 
-pub const BATLOW: [Colour; 10] = [
+const BATLOW: [Colour; 10] = [
     Colour::new(0x01, 0x19, 0x59),
     Colour::new(0x10, 0x3F, 0x60),
     Colour::new(0x1C, 0x5A, 0x62),
@@ -23,6 +23,7 @@ pub const BATLOW: [Colour; 10] = [
     Colour::new(0xFA, 0xCC, 0xFA),
 ];
 
+/// Draws a stack of lines on top of each other.
 #[derive(Clone)]
 pub struct Stack<T, Y> {
     lines: Vec<Line<T, Y>>,

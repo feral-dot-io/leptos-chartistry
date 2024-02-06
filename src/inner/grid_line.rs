@@ -6,10 +6,12 @@ use crate::{
 use leptos::*;
 use std::rc::Rc;
 
+/// Default colour for grid lines.
 pub const GRID_LINE_COLOUR: Colour = Colour::new(0xEF, 0xF2, 0xFA);
 
 macro_rules! impl_grid_line {
     ($name:ident) => {
+        /// Builds a tick-aligned grid line across the inner chart area.
         #[derive(Clone)]
         pub struct $name<Tick: 'static> {
             pub width: RwSignal<f64>,

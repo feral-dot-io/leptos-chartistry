@@ -3,6 +3,7 @@ use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue
 use leptos::*;
 use std::rc::Rc;
 
+/// Draws a line on the chart.
 pub struct Line<T, Y> {
     get_y: Rc<dyn GetYValue<T, Y>>,
     pub name: RwSignal<String>,

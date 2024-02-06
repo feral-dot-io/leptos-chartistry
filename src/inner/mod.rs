@@ -7,6 +7,7 @@ use crate::{state::State, Tick};
 use leptos::*;
 use std::rc::Rc;
 
+/// Inner layout options for a [Chart](crate::Chart).
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum InnerLayout<X: Tick, Y: Tick> {
@@ -18,6 +19,7 @@ pub enum InnerLayout<X: Tick, Y: Tick> {
     Legend(legend::InsetLegend),
 }
 
+/// Convert a type (e.g., a [guide line](struct@guide_line::XGuideLine)) into an [InnerLayout<X, Y>](InnerLayout) for use in a [Chart](crate::Chart).
 pub trait IntoInner<X: Tick, Y: Tick> {
     fn into_inner(self) -> InnerLayout<X, Y>;
 }

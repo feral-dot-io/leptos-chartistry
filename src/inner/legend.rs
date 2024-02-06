@@ -3,6 +3,7 @@ use crate::{edge::Edge, state::State, Anchor, Legend};
 use leptos::*;
 use std::rc::Rc;
 
+/// Builds an inset legend for the chart [series](crate::Series). Differs from [Legend](struct@Legend) by being placed inside the chart area.
 #[derive(Clone, Debug)]
 pub struct InsetLegend {
     pub edge: RwSignal<Edge>,

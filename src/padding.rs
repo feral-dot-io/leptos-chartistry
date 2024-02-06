@@ -1,5 +1,6 @@
 use super::bounds::Bounds;
 
+/// Represents padding around the edges of a component.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Padding {
     pub(crate) top: f64,

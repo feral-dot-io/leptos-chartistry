@@ -1,10 +1,6 @@
 use super::{Format, GeneratedTicks, Generator, Span};
 
-/// Generates a vector of aligned, "nice" floats. The vector will contain `count` values between `from` and `to` inclusive. Returned ticks will be aligned to "nice" values in powers of 10. e.g., gen_nice_floats(0.1, 0.3, 3) -> [0.1, 0.2, 0.3].
-///
-/// If count is 1 or 0, returns the midpoint of the range.
-///
-/// Given a range (from - to), produce a series of evenly spaced ticks whose steps are the smallest values possible that are still distinguishable from each other. This results in "nice" rounded values that are easy to read. This is done by determining the scale (powers of 10) of the range and count to calculate a step size. The step size is then used to produce a series of evenly spaced ticks which get formatted to our desired precision.
+/// Generates f64 ticks. Aligned to nice values (powers of 10).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AlignedFloats {}
 
@@ -16,6 +12,12 @@ struct State {
 impl Generator for AlignedFloats {
     type Tick = f64;
 
+    /// Generates a vector of aligned, "nice" floats. The vector will contain `count` values between `from` and `to` inclusive. Returned ticks will be aligned to "nice" values in powers of 10. e.g., gen_nice_floats(0.1, 0.3, 3) -> [0.1, 0.2, 0.3].
+    ///
+    /// If count is 1 or 0, returns the midpoint of the range.
+    ///
+    /// Given a range (from - to), produce a series of evenly spaced ticks whose steps are the smallest values possible that are still distinguishable from each other. This results in "nice" rounded values that are easy to read. This is done by determining the scale (powers of 10) of the range and count to calculate a step size. The step size is then used to produce a series of evenly spaced ticks which get formatted to our desired precision.
+    /// TODO
     fn generate(
         &self,
         &first: &Self::Tick,

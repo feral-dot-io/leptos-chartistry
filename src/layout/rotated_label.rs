@@ -9,6 +9,7 @@ use crate::{
 };
 use leptos::*;
 
+/// Label placement on its axis. Similar to SVG's [text-anchor](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/text-anchor) or CSS's [justify-content](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content).
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum Anchor {
@@ -17,6 +18,7 @@ pub enum Anchor {
     End,
 }
 
+/// Builds a rotated label to match the orientation of the axis it's placed on.
 #[derive(Clone, Debug)]
 pub struct RotatedLabel {
     pub text: RwSignal<String>,

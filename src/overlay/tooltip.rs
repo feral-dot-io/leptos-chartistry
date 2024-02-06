@@ -8,8 +8,10 @@ use crate::{
 use leptos::*;
 use std::cmp::{Ordering, Reverse};
 
+/// Default gap distance from cursor to tooltip when shown.
 pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
 
+/// Builds a mouse tooltip that shows X and Y values for the nearest data.
 #[derive(Clone)]
 pub struct Tooltip<X: 'static, Y: 'static> {
     pub placement: RwSignal<TooltipPlacement>,
@@ -20,6 +22,7 @@ pub struct Tooltip<X: 'static, Y: 'static> {
     pub y_ticks: TickLabels<Y>,
 }
 
+/// Where the tooltip is place when shown.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum TooltipPlacement {
@@ -28,6 +31,7 @@ pub enum TooltipPlacement {
     LeftCursor,
 }
 
+/// How the tooltip Y value table is sorted.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum TooltipSortBy {

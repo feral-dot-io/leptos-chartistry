@@ -2,6 +2,7 @@ use super::{Format, GeneratedTicks, Generator, Span};
 use chrono::{prelude::*, Duration, DurationRound, Months};
 use std::{borrow::Borrow, fmt::Display, ops::Add, rc::Rc};
 
+/// Generates timestamp ticks from a set of periods. Aligned to nice values (earlier periods).
 #[derive(Clone)]
 pub struct Timestamps<Tz> {
     format: Rc<dyn TimestampFormat<Tz>>,
@@ -13,6 +14,7 @@ trait TimestampFormat<Tz: TimeZone> {
     fn format(&self, period: Period, at: &DateTime<Tz>) -> String;
 }
 
+/// Available periods for [timestamp tick generation](Timestamps::from_periods).
 // Note: Quarter and Week would be useful but would need more formatting options e.g., strftime doesn't offer quarter formatting and we would need to specify when weeks start which would probably want to coincide with years using %G or %Y
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[non_exhaustive]

@@ -3,10 +3,12 @@ use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State};
 use leptos::*;
 use std::{rc::Rc, str::FromStr};
 
+/// Default colour for guide lines.
 pub const GUIDE_LINE_COLOUR: Colour = Colour::new(0x9A, 0x9A, 0x9A);
 
 macro_rules! impl_guide_line {
     ($name:ident) => {
+        /// Builds a mouse guide line. Aligned over the mouse position or nearest data.
         #[derive(Clone, Debug)]
         pub struct $name {
             pub align: RwSignal<AlignOver>,
@@ -46,6 +48,7 @@ macro_rules! impl_guide_line {
 impl_guide_line!(XGuideLine);
 impl_guide_line!(YGuideLine);
 
+/// Align over mouse or nearest data.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum AlignOver {
