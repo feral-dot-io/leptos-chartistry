@@ -1,12 +1,35 @@
-html {
-    min-height: 100%;
+header {
+    border-bottom: 1px solid #fc7089;
+    font-size: 100%;
+    padding: 0.5em 1em;
+    display: flex;
+    flex-flow: row wrap;
+    gap: 0.5em;
+    justify-content: center;
+    align-items: center;
+}
+
+header>h2 {
+    margin: 0 2em 0 0;
+    font-size: 100%;
+    justify-self: flex-start;
+    flex: auto;
+}
+
+header>p {
+    margin: 0;
+}
+
+main {
+    min-height: 100vh;
+    padding: 2em;
     background: repeating-radial-gradient(circle at top, #eee, #12a5ed);
 }
 
 ._chartistry {
     background-color: #fff;
     border: 1px solid #000;
-    margin: 2em auto;
+    margin: 0 auto;
 }
 
 .outer {
