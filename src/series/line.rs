@@ -181,9 +181,10 @@ pub fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> im
     view! {
         <svg
             class="_chartistry_taster"
-            width=move || bounds.get().width()
+            width=move || bounds.get().width() + font_width.get()
             height=move || bounds.get().height()
             viewBox=move || format!("0 0 {} {}", bounds.get().width(), bounds.get().height())
+            style="box-sizing: border-box;"
             style:padding-right=move || format!("{}px", font_width.get())>
             <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
             {series.taster(bounds)}
