@@ -13,7 +13,6 @@ It's not clear that it could be efficient (avoiding extra iterations and copies 
 
 For release:
 - Check for TODOs
-- Top panel
 - Usecase / examples page
 - Docs
 - Demo needs a fixed size container for an environment aspect ratio

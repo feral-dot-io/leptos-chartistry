@@ -258,7 +258,7 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
     };
 
     view! {
-        <Show when=move || hover_inner.get() && placement.get() != TooltipPlacement::Hide >
+        <Show when=move || hover_inner.get() && placement.get() != TooltipPlacement::Hide>
             <DebugRect label="tooltip" debug=debug />
             <aside
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff; white-space: pre; font-family: monospace;"
@@ -271,7 +271,7 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
                     {x_body}
                 </h2>
                 <table
-                    style="border-collapse: collapse; border-spacing: 0; margin: 0 auto; padding: 0;"
+                    style="border-collapse: collapse; border-spacing: 0; margin: 0 0 0 auto; padding: 0;"
                     style:font-size=move || format!("{}px", font_height.get())>
                     <tbody>
                         <For
