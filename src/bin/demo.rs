@@ -1,7 +1,6 @@
 use chrono::prelude::*;
 use leptos::*;
 use leptos_chartistry::*;
-use leptos_meta::{provide_meta_context, Style};
 use std::str::FromStr;
 
 const WIDTH: f64 = 800.0;
@@ -111,8 +110,6 @@ pub fn f64_to_dt(at: f64) -> DateTime<Local> {
 
 #[component]
 pub fn App() -> impl IntoView {
-    provide_meta_context();
-
     // General options
     let (debug, set_debug) = create_signal(false);
     let padding = create_rw_signal(FONT_WIDTH);
@@ -192,80 +189,6 @@ pub fn App() -> impl IntoView {
     ]);
 
     view! {
-        <Style>"
-            html { 
-                min-height: 100%;
-                background: repeating-radial-gradient(circle at top, #eee, #12a5ed);
-            }
-
-            ._chartistry {
-                background-color: #fff;
-                border: 1px solid #000;
-                margin: 2em auto;
-            }
-
-            .outer {
-                margin: 2em auto;
-                display: flex;
-                gap: 2em;
-                flex-wrap: wrap;
-                justify-content: center;
-                align-items: flex-start;
-            }
-
-            fieldset {
-                background-color: #fff;
-                border: 1px solid #000;
-                border-radius: 0.5em;
-                padding: 0.5em 1em 1em 1em;
-                display: grid;
-                grid-template-columns: max-content 1fr repeat(3, min-content);
-                align-items: baseline;
-            }
-            fieldset > legend {
-                background-color: #fff;
-                border-bottom: 0.2em solid #fc7089;
-                padding: 0.2em;
-            }
-
-            fieldset > h3 {
-                grid-column: 2 / -1;
-                font-size: 100%;
-                font-weight: normal;
-                margin: 0;
-                align-self: end;
-                padding: 0.2em 0.5em;
-            }
-
-            fieldset > p {
-                display: contents;
-            }
-
-            fieldset > p > :nth-child(1) { 
-                grid-column: 1; 
-                text-align: right; }
-            fieldset > p > :nth-child(2) { 
-                grid-column: 2;
-                padding: 0.2em 0.5em; }
-            fieldset > p > :nth-child(3) { grid-column: 3; }
-            fieldset > p > :nth-child(4) { grid-column: 4; }
-            fieldset > p > :nth-child(5) { grid-column: 5; }
-
-            fieldset input[type=number] {
-                width: 8ch;
-            }
-
-            fieldset input[type=color] {
-                width: 6ch;
-                height: 1.6em;
-            }
-
-            .periods {
-                display: grid;
-                grid-template-columns: 1fr 1fr 1fr;
-            }
-        "</Style>
-
         {move || view!{
             <Chart
                 aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
