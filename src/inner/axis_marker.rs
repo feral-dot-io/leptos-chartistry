@@ -38,12 +38,12 @@ pub enum AxisPlacement {
 }
 
 impl AxisMarker {
-    pub fn new(placement: impl Into<RwSignal<AxisPlacement>>) -> Self {
+    fn new(placement: AxisPlacement) -> Self {
         Self {
-            placement: placement.into(),
+            placement: create_rw_signal(placement),
             colour: create_rw_signal(AXIS_MARKER_COLOUR),
-            arrow: true.into(),
-            width: 1.0.into(),
+            arrow: create_rw_signal(true),
+            width: create_rw_signal(1.0),
         }
     }
 

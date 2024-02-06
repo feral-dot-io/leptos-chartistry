@@ -17,10 +17,11 @@ macro_rules! impl_guide_line {
         }
 
         impl $name {
-            pub fn new(align: impl Into<AlignOver>) -> Self {
+            fn new(align: AlignOver) -> Self {
                 Self {
                     align: create_rw_signal(align.into()),
-                    ..Default::default()
+                    width: create_rw_signal(1.0),
+                    colour: create_rw_signal(GUIDE_LINE_COLOUR),
                 }
             }
 
@@ -35,11 +36,7 @@ macro_rules! impl_guide_line {
 
         impl Default for $name {
             fn default() -> Self {
-                Self {
-                    align: RwSignal::default(),
-                    width: 1.0.into(),
-                    colour: create_rw_signal(GUIDE_LINE_COLOUR),
-                }
+                Self::new(AlignOver::default())
             }
         }
     };

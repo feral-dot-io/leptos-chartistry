@@ -26,21 +26,21 @@ pub struct RotatedLabel {
 }
 
 impl RotatedLabel {
-    pub fn new(anchor: impl Into<RwSignal<Anchor>>, text: impl Into<RwSignal<String>>) -> Self {
+    fn new(anchor: Anchor, text: String) -> Self {
         Self {
-            text: text.into(),
-            anchor: anchor.into(),
+            text: create_rw_signal(text),
+            anchor: create_rw_signal(anchor),
         }
     }
 
     pub fn start(text: impl Into<String>) -> Self {
-        Self::new(Anchor::Start, create_rw_signal(text.into()))
+        Self::new(Anchor::Start, text.into())
     }
     pub fn middle(text: impl Into<String>) -> Self {
-        Self::new(Anchor::Middle, create_rw_signal(text.into()))
+        Self::new(Anchor::Middle, text.into())
     }
     pub fn end(text: impl Into<String>) -> Self {
-        Self::new(Anchor::End, create_rw_signal(text.into()))
+        Self::new(Anchor::End, text.into())
     }
 
     fn size<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {

@@ -20,7 +20,7 @@ macro_rules! impl_grid_line {
         }
 
         impl<Tick: crate::Tick> $name<Tick> {
-            pub fn new(ticks: impl Into<TickLabels<Tick>>) -> Self {
+            pub fn from_ticks(ticks: impl Into<TickLabels<Tick>>) -> Self {
                 Self {
                     ticks: ticks.into(),
                     ..Default::default()

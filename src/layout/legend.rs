@@ -16,9 +16,9 @@ pub struct Legend {
 }
 
 impl Legend {
-    pub fn new(anchor: impl Into<RwSignal<Anchor>>) -> Self {
+    pub(crate) fn new(anchor: Anchor) -> Self {
         Self {
-            anchor: anchor.into(),
+            anchor: create_rw_signal(anchor),
         }
     }
 

@@ -11,39 +11,35 @@ pub struct InsetLegend {
 }
 
 impl InsetLegend {
-    pub fn new(edge: impl Into<RwSignal<Edge>>, legend: impl Into<Legend>) -> Self {
+    fn new(edge: Edge, anchor: Anchor) -> Self {
         Self {
-            edge: edge.into(),
-            legend: legend.into(),
+            edge: create_rw_signal(edge),
+            legend: Legend::new(anchor),
         }
     }
-
-    fn new_static(edge: Edge, anchor: Anchor) -> Self {
-        Self::new(edge, Legend::new(anchor))
-    }
     pub fn top_left() -> Self {
-        Self::new_static(Edge::Top, Anchor::Start)
+        Self::new(Edge::Top, Anchor::Start)
     }
     pub fn top() -> Self {
-        Self::new_static(Edge::Top, Anchor::Middle)
+        Self::new(Edge::Top, Anchor::Middle)
     }
     pub fn top_right() -> Self {
-        Self::new_static(Edge::Top, Anchor::End)
+        Self::new(Edge::Top, Anchor::End)
     }
     pub fn bottom_left() -> Self {
-        Self::new_static(Edge::Bottom, Anchor::Start)
+        Self::new(Edge::Bottom, Anchor::Start)
     }
     pub fn bottom() -> Self {
-        Self::new_static(Edge::Bottom, Anchor::Middle)
+        Self::new(Edge::Bottom, Anchor::Middle)
     }
     pub fn bottom_right() -> Self {
-        Self::new_static(Edge::Bottom, Anchor::End)
+        Self::new(Edge::Bottom, Anchor::End)
     }
     pub fn left() -> Self {
-        Self::new_static(Edge::Left, Anchor::Middle)
+        Self::new(Edge::Left, Anchor::Middle)
     }
     pub fn right() -> Self {
-        Self::new_static(Edge::Right, Anchor::Middle)
+        Self::new(Edge::Right, Anchor::Middle)
     }
 }
 

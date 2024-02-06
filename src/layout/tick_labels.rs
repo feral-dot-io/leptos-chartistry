@@ -38,13 +38,13 @@ impl<Tick> Clone for TickLabels<Tick> {
 
 impl<Tick: crate::Tick> Default for TickLabels<Tick> {
     fn default() -> Self {
-        Self::new(Tick::default_generator())
+        Self::from_generator(Tick::default_generator())
     }
 }
 
 impl TickLabels<f64> {
     pub fn aligned_floats() -> Self {
-        Self::new(AlignedFloats::default())
+        Self::from_generator(AlignedFloats::default())
     }
 }
 
@@ -54,12 +54,12 @@ where
     Tz::Offset: std::fmt::Display,
 {
     pub fn timestamps() -> Self {
-        Self::new(Timestamps::default())
+        Self::from_generator(Timestamps::default())
     }
 }
 
 impl<Tick: crate::Tick> TickLabels<Tick> {
-    pub fn new(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
+    pub fn from_generator(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
             min_chars: RwSignal::default(),
             format: RwSignal::new(HorizontalSpan::identity_format()),
@@ -100,7 +100,7 @@ where
     Tick: crate::Tick,
 {
     fn from(gen: Gen) -> Self {
-        Self::new(gen)
+        Self::from_generator(gen)
     }
 }
 

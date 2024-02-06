@@ -162,7 +162,7 @@ pub fn Demo() -> impl IntoView {
 
     // Axis
     let x_periods = Timestamps::from_periods(Period::all());
-    let x_ticks = TickLabels::new(x_periods.clone());
+    let x_ticks = TickLabels::from_generator(x_periods.clone());
     let y_ticks = TickLabels::aligned_floats();
 
     // Series
@@ -214,8 +214,8 @@ pub fn Demo() -> impl IntoView {
     let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::create_signal(vec![
         AxisMarker::horizontal_zero().into_inner(),
         AxisMarker::left_edge().into_inner(),
-        XGridLine::new(x_ticks).into_inner(),
-        YGridLine::new(y_ticks).into_inner(),
+        XGridLine::from_ticks(x_ticks).into_inner(),
+        YGridLine::from_ticks(y_ticks).into_inner(),
         XGuideLine::default().into_inner(),
         YGuideLine::default().into_inner(),
     ]);
