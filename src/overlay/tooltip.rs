@@ -14,11 +14,17 @@ pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
 /// Builds a mouse tooltip that shows X and Y values for the nearest data.
 #[derive(Clone)]
 pub struct Tooltip<X: 'static, Y: 'static> {
+    /// Where the tooltip is placed when shown.
     pub placement: RwSignal<TooltipPlacement>,
+    /// How the tooltip Y value table is sorted.
     pub sort_by: RwSignal<TooltipSortBy>,
+    /// Gap distance from cursor to tooltip when shown.
     pub cursor_distance: RwSignal<f64>,
+    /// If true, skips Y values that are `f64::NAN`.
     pub skip_missing: RwSignal<bool>,
+    /// X axis formatter.
     pub x_ticks: TickLabels<X>,
+    /// Y axis formatter.
     pub y_ticks: TickLabels<Y>,
 }
 
@@ -26,7 +32,9 @@ pub struct Tooltip<X: 'static, Y: 'static> {
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum TooltipPlacement {
+    /// Does not show a tooltip.
     Hide,
+    /// Shows the tooltip to the left of the cursor.
     #[default]
     LeftCursor,
 }
@@ -35,13 +43,17 @@ pub enum TooltipPlacement {
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum TooltipSortBy {
+    /// Sorts by line name.
     #[default]
     Lines,
+    /// Sorts by Y value in ascending order.
     Ascending,
+    /// Sorts by Y value in descending order.
     Descending,
 }
 
 impl<X: Tick, Y: Tick> Tooltip<X, Y> {
+    /// Creates a new tooltip with the given placement, X ticks, and Y ticks.
     pub fn new(
         placement: impl Into<TooltipPlacement>,
         x_ticks: impl Into<TickLabels<X>>,
@@ -55,24 +67,29 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
         }
     }
 
+    /// Creates a new tooltip with the given placement. Uses default X and Y ticks.
     pub fn from_placement(placement: impl Into<TooltipPlacement>) -> Self {
         Self::new(placement, TickLabels::default(), TickLabels::default())
     }
 
+    /// Creates a new tooltip left of the cursor. Uses default X and Y ticks.
     pub fn left_cursor() -> Self {
         Self::from_placement(TooltipPlacement::LeftCursor)
     }
 
+    /// Sets the sort order of the Y value table.
     pub fn with_sort_by(self, sort_by: impl Into<TooltipSortBy>) -> Self {
         self.sort_by.set(sort_by.into());
         self
     }
 
+    /// Sets the gap distance from cursor to tooltip when shown.
     pub fn with_cursor_distance(self, distance: impl Into<f64>) -> Self {
         self.cursor_distance.set(distance.into());
         self
     }
 
+    /// Sets whether the tooltip should skip Y values that are `f64::NAN`.
     pub fn skip_missing(self, skip_missing: impl Into<bool>) -> Self {
         self.skip_missing.set(skip_missing.into());
         self

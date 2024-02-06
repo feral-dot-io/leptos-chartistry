@@ -18,7 +18,8 @@ For release:
 - Remove Option on Chart's tooltip= and rely on default with Placement=Hide
 - `mut top` shows up in Chart. Move to compose
 - Review spooky action at a distance in components. Sometimes we clone() them and use `with_...` and unintentionally edit another. 
-- Some components have a `with_` method that set a signal like TickLabels. This should be avoided (just use the signal) and probably encourages spooky action.
+- Some components have a `with_` method that set a signal like TickLabels and Tooltip. This should be avoided (just use the signal) and probably encourages spooky action.
+- Tooltip cursor distance should be as LeftCursor(f64)
 
 - Make repo public, serve docs/ under pages
 - Method to rebuild demo
