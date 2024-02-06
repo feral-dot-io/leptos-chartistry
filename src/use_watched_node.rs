@@ -1,9 +1,10 @@
 use crate::bounds::Bounds;
 use leptos::{html::Div, *};
 use leptos_use::{
-    use_element_hover, use_mouse_with_options, use_resize_observer, UseMouseCoordType,
-    UseMouseEventExtractorDefault, UseMouseOptions, UseMouseSourceType,
+    use_element_hover, use_mouse_with_options, use_resize_observer_with_options, UseMouseCoordType,
+    UseMouseEventExtractorDefault, UseMouseOptions, UseMouseSourceType, UseResizeObserverOptions,
 };
+use web_sys::ResizeObserverBoxOptions;
 
 #[derive(Clone, Debug)]
 pub struct UseWatchedNode {
@@ -14,13 +15,21 @@ pub struct UseWatchedNode {
 }
 
 pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
-    // SVG bounds -- dimensions for our root <svg> element inside the document
+    // Outer chart bounds -- dimensions for our root element inside the document
+    // Note <svg> has issues around observing size changes. So wrap in a <div>
+    // Note also that the box_ option doesn't seem to work for us so wrap in another <div>
     let (bounds, set_bounds) = create_signal::<Option<Bounds>>(None);
-    use_resize_observer(node, move |entries, _| {
-        let rect = &entries[0].target().get_bounding_client_rect();
-        let rect = Bounds::new(rect.width(), rect.height());
-        set_bounds.set(Some(rect))
-    });
+    use_resize_observer_with_options(
+        node,
+        move |entries, _| {
+            let rect = &entries[0].target().get_bounding_client_rect();
+            let rect = Bounds::new(rect.width(), rect.height());
+            set_bounds.set(Some(rect))
+        },
+        UseResizeObserverOptions {
+            box_: Some(ResizeObserverBoxOptions::BorderBox),
+        },
+    );
     let bounds: Signal<Option<Bounds>> = bounds.into();
 
     // Mouse position

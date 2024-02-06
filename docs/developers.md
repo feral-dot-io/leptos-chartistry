@@ -15,7 +15,6 @@ For release:
 - Check for TODOs
 - Usecase / examples page
 - Docs
-- Demo needs a fixed size container for an environment aspect ratio
 
 - Make repo public, serve docs/ under pages
 - Method to rebuild demo
