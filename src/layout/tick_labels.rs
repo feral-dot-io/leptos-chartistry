@@ -118,21 +118,24 @@ impl<X: Tick> TickLabels<X> {
             generator,
         } = self.clone();
         create_memo(move |_| {
+            let font_width = font_width.get();
+            let padding_width = padding.get().width();
             let min_chars = min_chars.get();
+            let format = format.get();
+            let generator = generator.get();
+            let avail_width = avail_width.get();
             range_x.with(|range_x| {
                 range_x
                     .as_ref()
                     .map(|(first, last)| {
-                        let font_width = font_width.get();
-                        let padding_width = padding.get().width();
                         let span = HorizontalSpan::new(
                             font_width,
                             min_chars,
                             padding_width,
-                            avail_width.get(),
-                            format.get(),
+                            avail_width,
+                            format,
                         );
-                        generator.get().generate(first, last, &span)
+                        generator.generate(first, last, &span)
                     })
                     .unwrap_or_else(GeneratedTicks::none)
             })
@@ -166,15 +169,17 @@ impl<Y: Tick> TickLabels<Y> {
         let font_height = state.font_height;
         let padding = state.padding;
         let range_y = state.data.range_y;
-        let gen = self.generator;
+        let generator = self.generator;
         create_memo(move |_| {
+            let line_height = font_height.get() + padding.get().height();
+            let generator = generator.get();
+            let avail_height = avail_height.get();
             range_y.with(|range_y| {
                 range_y
                     .as_ref()
                     .map(|(first, last)| {
-                        let line_height = font_height.get() + padding.get().height();
-                        let span = VerticalSpan::new(line_height, avail_height.get());
-                        gen.get().generate(first, last, &span)
+                        let span = VerticalSpan::new(line_height, avail_height);
+                        generator.generate(first, last, &span)
                     })
                     .unwrap_or_else(GeneratedTicks::none)
             })
