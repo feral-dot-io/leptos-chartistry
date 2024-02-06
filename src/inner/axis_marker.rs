@@ -9,9 +9,13 @@ pub const AXIS_MARKER_COLOUR: Colour = Colour::new(0xD2, 0xD2, 0xD2);
 /// Builds an axis marker. This marks a boundary (e.g., zero or the chart edge) around the inner chart area.
 #[derive(Clone, Debug, PartialEq)]
 pub struct AxisMarker {
+    /// Placement of the marker.
     pub placement: RwSignal<AxisPlacement>,
+    /// Colour of the marker.
     pub colour: RwSignal<Colour>,
+    /// Whether to show a small arrow at the end of the marker pointing outwards from zero.
     pub arrow: RwSignal<bool>,
+    /// Width of the marker and arrow line.
     pub width: RwSignal<f64>,
 }
 
@@ -19,11 +23,17 @@ pub struct AxisMarker {
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum AxisPlacement {
+    /// Top edge of the inner chart area.
     Top,
+    /// Right edge of the inner chart area.
     Right,
+    /// Bottom edge of the inner chart area.
     Bottom,
+    /// Left edge of the inner chart area.
     Left,
+    /// Horizontal zero line (if present).
     HorizontalZero,
+    /// Vertical zero line (if present).
     VerticalZero,
 }
 
@@ -37,21 +47,27 @@ impl AxisMarker {
         }
     }
 
+    /// New axis marker on the top edge.
     pub fn top_edge() -> Self {
         Self::new(AxisPlacement::Top)
     }
+    /// New axis marker on the right edge.
     pub fn right_edge() -> Self {
         Self::new(AxisPlacement::Right)
     }
+    /// New axis marker on the bottom edge.
     pub fn bottom_edge() -> Self {
         Self::new(AxisPlacement::Bottom)
     }
+    /// New axis marker on the left edge.
     pub fn left_edge() -> Self {
         Self::new(AxisPlacement::Left)
     }
+    /// New axis marker on the horizontal zero line (if present).
     pub fn horizontal_zero() -> Self {
         Self::new(AxisPlacement::HorizontalZero)
     }
+    /// New axis marker on the vertical zero line (if present).
     pub fn vertical_zero() -> Self {
         Self::new(AxisPlacement::VerticalZero)
     }
