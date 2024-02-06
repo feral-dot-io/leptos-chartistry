@@ -187,23 +187,28 @@ pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> 
 
     let avail_width = Signal::derive(move || with!(|inner| inner.width()));
     let avail_height = Signal::derive(move || with!(|inner| inner.height()));
+    let x_format = x_ticks.format;
+    let y_format = y_ticks.format;
     let x_ticks = x_ticks.generate_x(&state.pre, avail_width);
     let y_ticks = y_ticks.generate_y(&state.pre, avail_height);
 
     let x_body = move || {
+        let x_format = x_format.get();
         with!(|nearest_data_x, x_ticks| {
             nearest_data_x.as_ref().map_or_else(
                 || "no data".to_string(),
-                |x_value| x_ticks.state.format(x_value),
+                |x_value| (x_format)(x_value, x_ticks.state.as_ref()),
             )
         })
     };
 
     let format_y_value = move |y_value: Option<Y>| {
+        let y_format = y_format.get();
         y_ticks.with(|y_ticks| {
-            y_value
-                .as_ref()
-                .map_or_else(|| "-".to_string(), |y_value| y_ticks.state.format(y_value))
+            y_value.as_ref().map_or_else(
+                || "-".to_string(),
+                |y_value| (y_format)(y_value, y_ticks.state.as_ref()),
+            )
         })
     };
 
