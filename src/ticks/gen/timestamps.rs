@@ -19,14 +19,23 @@ trait TimestampFormat<Tz: TimeZone> {
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum Period {
+    /// Nanosecond. Warning this generates a lot of timestamps that the algorithm will have to sample. Skip unless needed.
     Nanosecond,
+    /// Microsecond (us)
     Microsecond,
+    /// Millisecond (ms)
     Millisecond,
+    /// Second (s)
     Second,
+    /// Minute (m)
     Minute,
+    /// Hour (h)
     Hour,
+    /// Day (d)
     Day,
+    /// Month (M)
     Month,
+    /// Year (Y)
     Year,
 }
 
@@ -53,6 +62,7 @@ where
     Tz: TimeZone,
     Tz::Offset: Display,
 {
+    /// Create a new timestamp generator from a set of periods. Periods are sorted and deduplicated.
     pub fn from_periods(periods: impl Borrow<[Period]>) -> Self {
         let mut periods = periods.borrow().to_vec();
         periods.sort_unstable();
@@ -65,25 +75,34 @@ where
         }
     }
 
+    /// Create a new timestamp generator from a single period.
     pub fn from_period(period: impl Into<Period>) -> Self {
         Self::from_periods([period.into()])
     }
 
+    /// Sets the short format for timestamps. This is the default.
+    ///
+    /// A short format tries to use the smallest possible representation for a period while reducing ambiguity. and is intended to be used where space is constrained e.g., tick labels. For example, a second will be formatted as `HH:MM:SS` and a year as `YYYY`.
     pub fn with_short_format(mut self) -> Self {
         self.format = Rc::new(ShortFormat);
         self
     }
 
+    /// Sets the long format for timestamps. Shows a full date with time zone while trying to minimise detail. For example if timestamps are shown to the day then "YYYY-MM-DD Z" will be used dropping "HH:MM" however if hours are then shown, they would be included.
+    ///
+    /// Unlike the short format, the long format is intended to be used where space is not constrained e.g., the tooltip.
     pub fn with_long_format(mut self) -> Self {
         self.format = Rc::new(LongFormat);
         self
     }
 
+    /// Sets a fixed strftime format for timestamps. See [chrono::strftime](https://docs.rs/chrono/0.4.33/chrono/format/strftime/index.html).
     pub fn with_strftime(mut self, format: impl Into<String>) -> Self {
         self.format = Rc::new(StrftimeFormat(format.into()));
         self
     }
 
+    /// Sets a custom format for timestamps. The given `Period` is the latest period that was selected. The `DateTime` is the timestamp to format.
     pub fn with_format(mut self, f: impl Fn(Period, &DateTime<Tz>) -> String + 'static) -> Self {
         self.format = Rc::new(f);
         self
@@ -254,7 +273,7 @@ where
 }
 
 impl Period {
-    pub fn short_format(self) -> &'static str {
+    fn short_format(self) -> &'static str {
         match self {
             Period::Nanosecond => "%H:%M:%S.%f",
             Period::Microsecond => "%H:%M:%S.%6f",
@@ -267,7 +286,7 @@ impl Period {
         }
     }
 
-    pub fn long_format(self) -> &'static str {
+    fn long_format(self) -> &'static str {
         match self {
             Period::Nanosecond => "%Y-%m-%d %H:%M:%S.%9f %Z",
             Period::Microsecond => "%Y-%m-%d %H:%M:%S.%6f %Z",
@@ -279,6 +298,7 @@ impl Period {
         }
     }
 
+    /// All available periods.
     pub const fn all() -> [Period; 9] {
         [
             Period::Year,
