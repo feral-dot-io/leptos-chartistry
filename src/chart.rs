@@ -41,7 +41,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     let have_dimensions = create_memo(move |_| watch.bounds.get().is_some());
     let width = create_memo(move |_| watch.bounds.get().unwrap_or_default().width());
     let height = create_memo(move |_| watch.bounds.get().unwrap_or_default().height());
-    let calc = create_memo(move |_| aspect_ratio.get().into_known(width, height));
+    let calc = AspectRatio::known_signal(aspect_ratio, width, height);
 
     let debug = create_memo(move |_| debug.get());
     let font_height = create_memo(move |_| font_height.map(|f| f.get()).unwrap_or(FONT_HEIGHT));

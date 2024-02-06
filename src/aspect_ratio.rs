@@ -83,26 +83,30 @@ impl AspectRatio {
         Self(CalcUsing::Env(EnvCalc::WidthAndHeight))
     }
 
-    pub(crate) fn into_known(
-        self,
+    pub(crate) fn known_signal(
+        aspect_ratio: MaybeSignal<Self>,
         env_width: Memo<f64>,
         env_height: Memo<f64>,
-    ) -> KnownAspectRatio {
-        match self.0 {
-            CalcUsing::Env(calc) => calc.into_known(env_width, env_height),
-            CalcUsing::Known(calc) => calc,
-        }
+    ) -> Memo<KnownAspectRatio> {
+        create_memo(move |_| {
+            let env_width = env_width.get();
+            let env_height = env_height.get();
+            match aspect_ratio.get().0 {
+                CalcUsing::Env(calc) => calc.into_known(env_width, env_height),
+                CalcUsing::Known(calc) => calc,
+            }
+        })
     }
 }
 
 impl EnvCalc {
-    fn into_known(self, width: Memo<f64>, height: Memo<f64>) -> KnownAspectRatio {
+    fn into_known(self, width: f64, height: f64) -> KnownAspectRatio {
         use AspectRatioVars as C;
         use KnownAspectRatio as K;
         match self {
-            Self::WidthAndRatio(ratio) => K::Outer(C::WidthAndRatio(width.get(), ratio)),
-            Self::HeightAndRatio(ratio) => K::Outer(C::HeightAndRatio(height.get(), ratio)),
-            Self::WidthAndHeight => K::Outer(C::WidthAndHeight(width.get(), height.get())),
+            Self::WidthAndRatio(ratio) => K::Outer(C::WidthAndRatio(width, ratio)),
+            Self::HeightAndRatio(ratio) => K::Outer(C::HeightAndRatio(height, ratio)),
+            Self::WidthAndHeight => K::Outer(C::WidthAndHeight(width, height)),
         }
     }
 }

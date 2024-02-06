@@ -16,7 +16,6 @@ For release:
 - Usecase / examples page
 - Docs
 - Demo needs a fixed size container for an environment aspect ratio
-- box-sizing: border-box;
 
 - Make repo public, serve docs/ under pages
 - Method to rebuild demo
