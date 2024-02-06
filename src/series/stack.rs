@@ -27,27 +27,33 @@ const BATLOW: [Colour; 10] = [
 #[derive(Clone)]
 pub struct Stack<T, Y> {
     lines: Vec<Line<T, Y>>,
+    /// Colour scheme for the stack. Interpolates colours across the whole scheme.
     pub colours: RwSignal<ColourScheme>,
 }
 
 impl<T, Y> Stack<T, Y> {
+    /// Create a new empty stack.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Adds a line to the stack.
     pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
         self.lines.push(line.into());
         self
     }
 
+    /// Gets the current number of lines in the stack.
     pub fn len(&self) -> usize {
         self.lines.len()
     }
 
+    /// Returns true if there are no lines in the stack.
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
     }
 
+    /// Sets the colour scheme for the stack.
     pub fn with_colours<Opt>(self, colours: impl Into<ColourScheme>) -> Self {
         self.colours.set(colours.into());
         self

@@ -6,8 +6,11 @@ use std::rc::Rc;
 /// Draws a line on the chart.
 pub struct Line<T, Y> {
     get_y: Rc<dyn GetYValue<T, Y>>,
+    /// Name of the line. Used in the legend.
     pub name: RwSignal<String>,
+    /// Colour of the line. If not set, the next colour in the series will be used.
     pub colour: RwSignal<Option<Colour>>,
+    /// Width of the line.
     pub width: RwSignal<f64>,
 }
 
@@ -20,6 +23,21 @@ pub struct UseLine {
 }
 
 impl<T, Y> Line<T, Y> {
+    /// Create a new line. The `get_y` function is used to extract the Y value from your struct.
+    ///
+    /// Intended to be a simple closure over your own data. For example `Line::new(|t: &MyType| t.y)`
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// // TODO
+    /// // Simple:
+    /// // .line(|t| t.y)
+    /// // Bells and whistles:
+    /// // .line(Line::new(|t| t.y).with_name("My line").with_colour(Colour::new(0, 0, 0)).with_width(2.0))
+    /// // Likely to just be:
+    /// // .line(|t| t.y).with_name("My line")
+    /// ```
     pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self {
         Self {
             get_y: Rc::new(get_y),
@@ -29,16 +47,19 @@ impl<T, Y> Line<T, Y> {
         }
     }
 
+    /// Set the name of the line. Used in the legend.
     pub fn with_name(self, name: impl Into<String>) -> Self {
         self.name.set(name.into());
         self
     }
 
+    /// Set the colour of the line. If not set, the next colour in the series will be used.
     pub fn with_colour(self, colour: impl Into<Option<Colour>>) -> Self {
         self.colour.set(colour.into());
         self
     }
 
+    /// Set the width of the line.
     pub fn with_width(self, width: impl Into<f64>) -> Self {
         self.width.set(width.into());
         self

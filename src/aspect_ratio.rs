@@ -1,6 +1,8 @@
 use leptos::*;
 
 /// Calculates width and height for a chart.
+///
+/// TODO greatly expand the documentation.
 #[derive(Clone, Debug, PartialEq)]
 pub struct AspectRatio(CalcUsing);
 

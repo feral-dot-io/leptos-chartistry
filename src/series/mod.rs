@@ -39,10 +39,15 @@ trait GetYValue<T, Y> {
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
     lines: Vec<Rc<dyn ApplyUseSeries<T, Y>>>,
+    /// Optional minimum X value. Extends the lower bound of the X axis if set.
     pub min_x: RwSignal<Option<X>>,
+    /// Optional maximum X value. Extends the upper bound of the X axis if set.
     pub max_x: RwSignal<Option<X>>,
+    /// Optional minimum Y value. Extends the lower bound of the Y axis if set.
     pub min_y: RwSignal<Option<Y>>,
+    /// Optional maximum Y value. Extends the upper bound of the Y axis if set.
     pub max_y: RwSignal<Option<Y>>,
+    /// Colour scheme for the series. If there are more lines than colours, the colours will repeat.
     pub colours: RwSignal<ColourScheme>,
 }
 
@@ -61,6 +66,11 @@ struct SeriesAcc<T, Y> {
 }
 
 impl<T, X, Y> Series<T, X, Y> {
+    /// Create a new series. The `get_x` function is used to extract the X value from your struct.
+    ///
+    /// Intended to be a simple closure over your own data. For example `Series::new(|t: &MyType| t.x)`
+    ///
+    /// Next: add lines or stacks to the series with [Series::line] or [Series::stack].
     pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
         Self {
             get_x: Rc::new(get_x),
@@ -73,44 +83,53 @@ impl<T, X, Y> Series<T, X, Y> {
         }
     }
 
+    /// Set the colour scheme for the series. If there are more lines than colours, the colours will repeat.
     pub fn with_colours<Opt>(self, colours: impl Into<ColourScheme>) -> Self {
         self.colours.set(colours.into());
         self
     }
 
+    /// Set the minimum X value. Extends the lower bound of the X axis if set.
     pub fn with_min_x(self, max_x: impl Into<Option<X>>) -> Self {
         self.min_x.set(max_x.into());
         self
     }
 
+    /// Set the maximum X value. Extends the upper bound of the X axis if set.
     pub fn with_max_x(self, max_x: impl Into<Option<X>>) -> Self {
         self.max_x.set(max_x.into());
         self
     }
 
+    /// Set the minimum Y value. Extends the lower bound of the Y axis if set.
     pub fn with_min_y(self, min_y: impl Into<Option<Y>>) -> Self {
         self.min_y.set(min_y.into());
         self
     }
 
+    /// Set the maximum Y value. Extends the upper bound of the Y axis if set.
     pub fn with_max_y(self, max_y: impl Into<Option<Y>>) -> Self {
         self.max_y.set(max_y.into());
         self
     }
 
+    /// Set the X range. Extends the lower and upper bounds of the X axis if set.
     pub fn with_x_range(self, min_x: impl Into<Option<X>>, max_x: impl Into<Option<X>>) -> Self {
         self.with_min_x(min_x).with_max_x(max_x)
     }
 
+    /// Set the Y range. Extends the lower and upper bounds of the Y axis if set.
     pub fn with_y_range(self, min_y: impl Into<Option<Y>>, max_y: impl Into<Option<Y>>) -> Self {
         self.with_min_y(min_y).with_max_y(max_y)
     }
 
+    /// Adds a line to the series. See [Line] for more details.
     pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
         self.lines.push(Rc::new(line.into()));
         self
     }
 
+    /// Adds multiple lines to the series at once. This is equivalent to calling [Series::line] multiple times.
     pub fn lines(mut self, lines: impl IntoIterator<Item = impl Into<Line<T, Y>>>) -> Self {
         for line in lines {
             self = self.line(line.into());
@@ -118,10 +137,12 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
+    /// Gets the current size of the series (number of lines and stacks).
     pub fn len(&self) -> usize {
         self.lines.len()
     }
 
+    /// Returns true if the series is empty.
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
     }
@@ -136,6 +157,7 @@ impl<T, X, Y> Series<T, X, Y> {
 }
 
 impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
+    /// Adds a stack to the series. See [Stack] for more details.
     pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
         self.lines.push(Rc::new(stack.into()));
         self
