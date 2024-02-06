@@ -8,25 +8,33 @@ use leptos::*;
 use std::rc::Rc;
 
 /// Inner layout options for a [Chart](crate::Chart). See [IntoInner](trait@IntoInner) for details.
+///
+/// Avoid constructing directly.
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum InnerLayout<X: Tick, Y: Tick> {
+    /// Axis marker. See [AxisMarker](axis_marker::AxisMarker) for details.
     AxisMarker(axis_marker::AxisMarker),
+    /// X grid line. See [XGridLine](grid_line::XGridLine) for details.
     XGridLine(grid_line::XGridLine<X>),
+    /// Y grid line. See [YGridLine](grid_line::YGridLine) for details.
     YGridLine(grid_line::YGridLine<Y>),
+    /// X guide line. See [XGuideLine](guide_line::XGuideLine) for details.
     XGuideLine(guide_line::XGuideLine),
+    /// Y guide line. See [YGuideLine](guide_line::YGuideLine) for details.
     YGuideLine(guide_line::YGuideLine),
+    /// Inset legend. See [InsetLegend](legend::InsetLegend) for details.
     Legend(legend::InsetLegend),
 }
 
 /// Convert a type (e.g., a [guide line](struct@guide_line::XGuideLine)) into an [InnerLayout<X, Y>](InnerLayout) for use in a [Chart](crate::Chart).
 pub trait IntoInner<X: Tick, Y: Tick> {
-    /// Create an [InnerLayout<X, Y>](InnerLayout) from the type. See [IntoInner](trait@IntoInner) for details.
+    /// Create an [`InnerLayout<X, Y>`](InnerLayout) from the type. See [IntoInner](trait@IntoInner) for details.
     fn into_inner(self) -> InnerLayout<X, Y>;
 }
 
 impl<X: Tick, Y: Tick> InnerLayout<X, Y> {
-    pub fn into_use(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+    pub(super) fn into_use(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
         match self {
             Self::AxisMarker(inner) => Rc::new(inner),
             Self::XGridLine(inner) => inner.use_horizontal(state),
