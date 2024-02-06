@@ -239,7 +239,7 @@ fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
 }
 
 #[component]
-pub fn TickLabels<X: Clone + 'static, Y: Clone + 'static>(
+pub(super) fn TickLabels<X: Clone + 'static, Y: Clone + 'static>(
     ticks: UseTickLabels,
     edge: Edge,
     bounds: Memo<Bounds>,

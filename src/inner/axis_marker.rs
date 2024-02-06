@@ -92,7 +92,7 @@ impl<X, Y> UseInner<X, Y> for AxisMarker {
 }
 
 #[component]
-pub fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) -> impl IntoView {
+fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
     let zero = state.svg_zero;
     let inner = state.layout.inner;

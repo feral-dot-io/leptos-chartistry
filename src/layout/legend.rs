@@ -68,7 +68,7 @@ impl Legend {
 }
 
 #[component]
-pub fn Legend<X: Clone + 'static, Y: Clone + 'static>(
+pub(crate) fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     legend: Legend,
     #[prop(into)] edge: MaybeSignal<Edge>,
     bounds: Memo<Bounds>,

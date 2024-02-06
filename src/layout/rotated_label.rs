@@ -117,7 +117,7 @@ impl std::fmt::Display for Anchor {
 }
 
 #[component]
-pub fn RotatedLabel<X: 'static, Y: 'static>(
+pub(super) fn RotatedLabel<X: 'static, Y: 'static>(
     label: RotatedLabel,
     edge: Edge,
     bounds: Memo<Bounds>,

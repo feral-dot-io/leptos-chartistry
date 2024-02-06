@@ -164,7 +164,10 @@ impl std::str::FromStr for TooltipSortBy {
 }
 
 #[component]
-pub fn Tooltip<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>, state: State<X, Y>) -> impl IntoView {
+pub(crate) fn Tooltip<X: Tick, Y: Tick>(
+    tooltip: Tooltip<X, Y>,
+    state: State<X, Y>,
+) -> impl IntoView {
     let Tooltip {
         placement,
         sort_by,
