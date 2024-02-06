@@ -13,11 +13,15 @@ It's not clear that it could be efficient (avoiding extra iterations and copies 
 
 For release:
 - Check for TODOs
-- Hosted site
-    - Top panel
-    - Usecase / examples page
+- Top panel
+- Usecase / examples page
 - Docs
 - Demo needs a fixed size container for an environment aspect ratio
+
+- Make repo public, serve docs/ under pages
+- Method to rebuild demo
+- Write down dev cycle "run this oneshot command"
+- Check nix + trunk = release
 - Fix up links
 - Release to crates.io
 
