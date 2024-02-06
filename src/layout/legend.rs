@@ -12,6 +12,7 @@ use leptos::*;
 /// Builds a legend for the chart [series](crate::Series). Orientated along the axis of its placed edge.
 #[derive(Clone, Debug)]
 pub struct Legend {
+    /// Anchor of the legend.
     pub anchor: RwSignal<Anchor>,
 }
 
@@ -22,12 +23,15 @@ impl Legend {
         }
     }
 
+    /// Creates a new legend placed at the start of the line layout.
     pub fn start() -> Legend {
         Self::new(Anchor::Start)
     }
+    /// Creates a new legend placed in the middle of the line layout.
     pub fn middle() -> Legend {
         Self::new(Anchor::Middle)
     }
+    /// Creates a new legend placed at the end of the line layout.
     pub fn end() -> Legend {
         Self::new(Anchor::End)
     }

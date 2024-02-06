@@ -21,6 +21,7 @@ pub enum InnerLayout<X: Tick, Y: Tick> {
 
 /// Convert a type (e.g., a [guide line](struct@guide_line::XGuideLine)) into an [InnerLayout<X, Y>](InnerLayout) for use in a [Chart](crate::Chart).
 pub trait IntoInner<X: Tick, Y: Tick> {
+    /// Create an [InnerLayout<X, Y>](InnerLayout) from the type. See [IntoInner](trait@IntoInner) for details.
     fn into_inner(self) -> InnerLayout<X, Y>;
 }
 

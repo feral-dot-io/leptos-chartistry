@@ -14,12 +14,16 @@ macro_rules! impl_grid_line {
         /// Builds a tick-aligned grid line across the inner chart area.
         #[derive(Clone)]
         pub struct $name<Tick: 'static> {
+            /// Width of the grid line.
             pub width: RwSignal<f64>,
+            /// Colour of the grid line.
             pub colour: RwSignal<Colour>,
+            /// Ticks to align the grid line to.
             pub ticks: TickLabels<Tick>,
         }
 
         impl<Tick: crate::Tick> $name<Tick> {
+            /// Creates a new grid line from a set of ticks.
             pub fn from_ticks(ticks: impl Into<TickLabels<Tick>>) -> Self {
                 Self {
                     ticks: ticks.into(),

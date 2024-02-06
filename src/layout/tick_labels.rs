@@ -15,9 +15,16 @@ use leptos::*;
 use std::rc::Rc;
 
 /// Builds tick labels for an axis.
+///
+/// Note that ticks lack an identity resulting in generators and labels not being reactive.
 pub struct TickLabels<Tick: 'static> {
+    /// Minimum number of characters to display for each tick label.
+    ///
+    /// Helpful for giving a fixed width to labels e.g., if your graph can display 0-100 then it might show a shorter label on "0" or "42" to "100". Needed to have the same inner chart ratio when using an outer chart ratio. Can also be useful for aligning a list of charts.
     pub min_chars: RwSignal<usize>,
+    /// Format function for the tick labels. See [TickLabels::with_format] for details.
     pub format: RwSignal<Rc<TickFormatFn<Tick>>>,
+    /// Tick generator for the labels.
     pub generator: RwSignal<Rc<dyn TickGen<Tick = Tick>>>,
 }
 
@@ -43,6 +50,7 @@ impl<Tick: crate::Tick> Default for TickLabels<Tick> {
 }
 
 impl TickLabels<f64> {
+    /// Creates a new tick label generator for floating point numbers. See [AlignedFloats] for details.
     pub fn aligned_floats() -> Self {
         Self::from_generator(AlignedFloats::default())
     }
@@ -53,12 +61,14 @@ where
     Tz: TimeZone + 'static,
     Tz::Offset: std::fmt::Display,
 {
+    /// Creates a new tick label generator for timestamps. See [Timestamps] for details.
     pub fn timestamps() -> Self {
         Self::from_generator(Timestamps::default())
     }
 }
 
 impl<Tick: crate::Tick> TickLabels<Tick> {
+    /// Creates a new tick label generator from a tick generator.
     pub fn from_generator(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
         Self {
             min_chars: RwSignal::default(),
@@ -67,11 +77,15 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
         }
     }
 
+    /// Sets the minimum number of characters to display for each tick label.
     pub fn with_min_chars(self, min_chars: usize) -> Self {
         self.min_chars.set(min_chars);
         self
     }
 
+    /// Sets the format function for the tick labels.
+    ///
+    /// This is a function that takes a `Tick` and a formatter and returns a `String`. It gives an opportunity to customise tick label format. The formatter is the resulting state of the tick generator and does the default aciton. For example if aligned floats decides to use "1000s" then the formatter will use that.
     pub fn with_format(
         self,
         format: impl Fn(&Tick, &dyn TickFormat<Tick = Tick>) -> String + 'static,
@@ -105,7 +119,7 @@ where
 }
 
 impl<X: Tick> TickLabels<X> {
-    pub fn generate_x<Y>(
+    pub(crate) fn generate_x<Y>(
         &self,
         state: &PreState<X, Y>,
         avail_width: Signal<f64>,
@@ -162,7 +176,7 @@ impl<X: Tick> TickLabels<X> {
 }
 
 impl<Y: Tick> TickLabels<Y> {
-    pub fn generate_y<X>(
+    pub(crate) fn generate_y<X>(
         &self,
         state: &PreState<X, Y>,
         avail_height: Signal<f64>,

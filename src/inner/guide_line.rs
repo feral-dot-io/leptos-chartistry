@@ -11,8 +11,11 @@ macro_rules! impl_guide_line {
         /// Builds a mouse guide line. Aligned over the mouse position or nearest data.
         #[derive(Clone, Debug)]
         pub struct $name {
+            /// Alignment of the guide line.
             pub align: RwSignal<AlignOver>,
+            /// Width of the guide line.
             pub width: RwSignal<f64>,
+            /// Colour of the guide line.
             pub colour: RwSignal<Colour>,
         }
 
@@ -25,10 +28,12 @@ macro_rules! impl_guide_line {
                 }
             }
 
+            /// Creates a new guide line aligned over the mouse position.
             pub fn over_mouse() -> Self {
                 Self::new(AlignOver::Mouse)
             }
 
+            /// Creates a new guide line aligned over the nearest data.
             pub fn over_data() -> Self {
                 Self::new(AlignOver::Data)
             }
@@ -49,8 +54,10 @@ impl_guide_line!(YGuideLine);
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum AlignOver {
+    /// Align over the mouse position.
     #[default]
     Mouse,
+    /// Align over the nearest data. Creates a "snap to data" effect.
     Data,
 }
 

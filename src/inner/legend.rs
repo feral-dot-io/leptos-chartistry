@@ -6,7 +6,9 @@ use std::rc::Rc;
 /// Builds an inset legend for the chart [series](crate::Series). Differs from [Legend](struct@Legend) by being placed inside the chart area.
 #[derive(Clone, Debug)]
 pub struct InsetLegend {
+    /// Edge of the chart area to place the legend.
     pub edge: RwSignal<Edge>,
+    /// Legend to display. Relies on the internal `anchor` signal. See [Legend](struct@Legend) for details.
     pub legend: Legend,
 }
 
@@ -17,27 +19,36 @@ impl InsetLegend {
             legend: Legend::new(anchor),
         }
     }
+
+    /// Creates a new inset legend placed at the top-left corner of the chart area.
     pub fn top_left() -> Self {
         Self::new(Edge::Top, Anchor::Start)
     }
+    /// Creates a new inset legend placed at the top-middle of the chart area.
     pub fn top() -> Self {
         Self::new(Edge::Top, Anchor::Middle)
     }
+    /// Creates a new inset legend placed at the top-right corner of the chart area.
     pub fn top_right() -> Self {
         Self::new(Edge::Top, Anchor::End)
     }
+    /// Creates a new inset legend placed at the bottom-left corner of the chart area.
     pub fn bottom_left() -> Self {
         Self::new(Edge::Bottom, Anchor::Start)
     }
+    /// Creates a new inset legend placed at the bottom-middle of the chart area.
     pub fn bottom() -> Self {
         Self::new(Edge::Bottom, Anchor::Middle)
     }
+    /// Creates a new inset legend placed at the bottom-right corner of the chart area.
     pub fn bottom_right() -> Self {
         Self::new(Edge::Bottom, Anchor::End)
     }
+    /// Creates a new inset legend placed at the left-middle of the chart area.
     pub fn left() -> Self {
         Self::new(Edge::Left, Anchor::Middle)
     }
+    /// Creates a new inset legend placed at the right-middle of the chart area.
     pub fn right() -> Self {
         Self::new(Edge::Right, Anchor::Middle)
     }

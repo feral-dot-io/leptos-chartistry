@@ -9,19 +9,26 @@ use crate::{
 };
 use leptos::*;
 
-/// Label placement on its axis. Similar to SVG's [text-anchor](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/text-anchor) or CSS's [justify-content](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content).
+/// Label placement on the main-axis of a component. An edge layout's main-axis runs parallel to its given edge. Similar to SVG's [text-anchor](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/text-anchor) or CSS's [justify-content](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content).
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum Anchor {
+    /// Start of the line (main-axis).
     Start,
+    /// Middle of the line (main-axis).
     Middle,
+    /// End of the line (main-axis).
     End,
 }
 
 /// Builds a rotated label to match the orientation of the axis it's placed on.
+///
+/// Warning: does not wrap text. Extra text will not be clipped.
 #[derive(Clone, Debug)]
 pub struct RotatedLabel {
+    /// Text to display.
     pub text: RwSignal<String>,
+    /// Anchor of the label.
     pub anchor: RwSignal<Anchor>,
 }
 
@@ -33,12 +40,15 @@ impl RotatedLabel {
         }
     }
 
+    /// Creates a new rotated label anchored at the start of the line (main-axis).
     pub fn start(text: impl Into<String>) -> Self {
         Self::new(Anchor::Start, text.into())
     }
+    /// Creates a new rotated label anchored at the middle of the line (main-axis).
     pub fn middle(text: impl Into<String>) -> Self {
         Self::new(Anchor::Middle, text.into())
     }
+    /// Creates a new rotated label anchored at the end of the line (main-axis).
     pub fn end(text: impl Into<String>) -> Self {
         Self::new(Anchor::End, text.into())
     }
@@ -86,7 +96,7 @@ impl Anchor {
         }
     }
 
-    pub fn css_justify_content(&self) -> &'static str {
+    pub(crate) fn css_justify_content(&self) -> &'static str {
         match self {
             Anchor::Start => "flex-start",
             Anchor::Middle => "center",
