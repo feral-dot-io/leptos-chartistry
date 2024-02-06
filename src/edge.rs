@@ -4,13 +4,18 @@ use std::str::FromStr;
 /// Identifies a rectangle edge.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Edge {
+    /// The top edge.
     Top,
+    /// The right edge.
     Right,
+    /// The bottom edge.
     Bottom,
+    /// The left edge.
     Left,
 }
 
 impl Edge {
+    /// Returns true if the edge is horizontal (top and bottom).
     pub fn is_horizontal(&self) -> bool {
         match self {
             Self::Top | Self::Bottom => true,
@@ -18,6 +23,7 @@ impl Edge {
         }
     }
 
+    /// Returns true if the edge is vertical (left and right).
     pub fn is_vertical(&self) -> bool {
         !self.is_horizontal()
     }

@@ -7,7 +7,7 @@ use crate::{state::State, Tick};
 use leptos::*;
 use std::rc::Rc;
 
-/// Inner layout options for a [Chart](crate::Chart).
+/// Inner layout options for a [Chart](crate::Chart). See [IntoInner](trait@IntoInner) for details.
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum InnerLayout<X: Tick, Y: Tick> {

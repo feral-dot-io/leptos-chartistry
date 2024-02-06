@@ -33,6 +33,8 @@ trait GetYValue<T, Y> {
 }
 
 /// Describes the lines, bars, etc. that make up a series. Maps `T` (your struct) to `X` and `[Y]`.
+///
+/// TODO Each `T` will yield an `X` and `[Y]`. Each `Y` represents something like a line or bar.
 #[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,

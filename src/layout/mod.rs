@@ -13,7 +13,7 @@ use crate::{
 };
 use leptos::*;
 
-/// Layout options for an edge of a [Chart](crate::Chart).
+/// All possible layout options for an edge of a [Chart](crate::Chart). See [IntoEdge](trait@IntoEdge) for details.
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum EdgeLayout<Tick: 'static> {

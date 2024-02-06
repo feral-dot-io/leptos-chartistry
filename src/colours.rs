@@ -38,16 +38,21 @@ impl ColourScheme {
         index.rem_euclid(self.swatches.len())
     }
 
+    /// Get the colour at the given index. Indexes are wrapped around the number of swatches.
     pub fn by_index(&self, index: usize) -> Colour {
         let index = self.get_index(index);
         self.swatches[index]
     }
 
+    /// Set the colour at the given index. Indexes are wrapped around the number of swatches.
     pub fn set_by_index(&mut self, index: usize, colour: Colour) {
         let index = self.get_index(index);
         self.swatches[index] = colour;
     }
 
+    /// Invert the colour scheme. Useful for changing the direction of a gradient. All Chartistry's default colour palettes assume a light background.
+    ///
+    /// On a light background you should aim to have the lightest colour first and the darkest last. Vice versa for a dark background.
     pub fn invert(self) -> Self {
         let mut swatches = self.swatches.clone();
         swatches.reverse();
@@ -70,6 +75,7 @@ impl ColourScheme {
         (line as f64 / (total as f64 - 1.0) * swatches as f64) as usize
     }
 
+    /// Interpolate between the colours in the scheme. The line is the current line and the total is the total number of lines. Picks the two colours before and after the line and interpolates between them.
     pub fn interpolate(&self, line: usize, total: usize) -> Colour {
         let before_i = self.line_to_prior_swatch_index(line, total);
         // Last swatch? Can't interpolate so return it

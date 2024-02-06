@@ -1,3 +1,20 @@
+#![warn(missing_docs)]
+//! # Leptos Chartistry
+//!
+//! Welcome to Chartistry! This crate provides a flexible way to build charts in [Leptos](https://github.com/leptos-rs/leptos).
+//!
+//! All charts are built using the [Chart] fn. If you understand this function, you understand this library.
+//!
+//! ## Examples
+//! If you skimmed the prop list you'd get a good idea of how the charts are built up from their individual layout components e.g., top, left, and tooltip. These components are picked from a grab bag of options that you'd probably expect in a chart e.g., a label, legend, and ticks. This also makes it flexible and very easy to pick and choose what you need from existing examples. So make sure to take a look at the [list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples/).
+//!
+//! ```rust
+//! // TODO
+//! ```
+//!
+//!
+//!
+
 mod aspect_ratio;
 mod bounds;
 mod chart;

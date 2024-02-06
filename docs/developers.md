@@ -15,6 +15,8 @@ For release:
 - Check for TODOs
 - Usecase / examples page
 - Docs
+- Remove Option on Chart's tooltip= and rely on default with Placement=Hide
+- `mut top` shows up in Chart. Move to compose
 
 - Make repo public, serve docs/ under pages
 - Method to rebuild demo

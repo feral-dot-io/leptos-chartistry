@@ -15,24 +15,136 @@ use leptos::{html::Div, *};
 pub const FONT_HEIGHT: f64 = 16.0;
 pub const FONT_WIDTH: f64 = 10.0;
 
+/// Builds an SVG chart. Used inside the [Leptos view macro](https://docs.rs/leptos/latest/leptos/macro.view.html).
+///
+/// Check the required and optional props list near the bottom for a quick overview. There is an [assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples/) available too.
+///
+/// # Layout props
+///
+/// The chart is built up from layout components. Each edge has a `top`, `right`, `bottom`, and `left` prop while inside the chart has the `inner` prop. These layout props follow the builder pattern where you'll create a component, configure it to your liking, and then call [IntoEdge](crate::IntoEdge) or [IntoInner](crate::IntoInner) to get an [EdgeLayout] or [InnerLayout] respectively.
+///
+/// ```rust
+/// // TODO Example of builder pattern
+/// ```
+///
+/// When building the component you'll have access to a [`RwSignal`](https://docs.rs/leptos/latest/leptos/struct.RwSignal.html) for each configuration option which enables fine-grained reactivity.
+///
+/// ```rust
+/// // TODO Example of using fine-grained reactivity
+/// ```
+///
+/// There is a shortcut where a single component may be converted to a `vec![component.into_edge()]`. This is intended to make it easier to add a single component to a layout prop. For example:
+///
+/// ```rust
+/// <Chart aspect_ratio=AspectRatio::inner_ratio(800.0, 600.0)
+///     // Shorthand for a single component:
+///     top=RotatedLabel::middle("Our chart title") />
+/// ```
+///
+/// A tooltip can be considered as the only "outer" component and is rendered as an overlay that reacts to what's under the mouse cursor.
+///
+/// # Series & data props
+///
+/// Use the `data` prop to pass your data in terms of `T`. Must be sorted. Each `T` should be a row from your results (e.g., from an API request) and should correspond to an `X` value (e.g., a timestamp) and one or more Y values (e.g., floats). For example:
+///
+/// ```rust
+/// pub struct Rate {
+///     pub interval: Timestamp<Utc>,
+///     pub in_octets: f64,
+///     pub out_octets: f64,
+/// }
+/// ```
+///
+/// The `T` corresponds to `Rate`, `X` to `interval`, and `Y` to both `in_octets` and `out_octets`. The `Y` values could potentially return `f64::NAN` to indicate missing data.
+///
+/// The `series` prop describes how this data is rendered using a `[Series]` struct. For example the above might be used to render two lines with:
+///
+/// ```rust
+/// let series = Series::new(|r: &Rate| r.interval)
+///     .line(|r: &Rate| r.in_octets)
+///     .line(|r: &Rate| r.out_octets);
+/// ```
+///
+/// More can be done with this such as naming lines for a legend, stacking lines, and changing the colour scheme. See [Series] for more details.
+///
+/// # Render props
+///
+/// The width and height of a chart is specified via the `aspect_ratio` prop. Only charts with the same ratio and axis ranges are comparable and so you're encouraged to pick an [inner aspect ratio](AspectRatio::inner_ratio). The closest to a "don't think about it" default is [environment](AspectRatio::environment). See [AspectRatio] for more details.
+///
+/// The `font_height` and `font_width` props are required to calculate the dimensions of text. These dimensions are then fed into layout composition to render the chart. So they must be precise. While `font_height` is passed to [SVG text](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text), `font_width` must be the exact width of a monospaced character in the chosen font. The default is 16 and 10 respectively.
+///
+/// The `padding` adds spacing around all components and should be used to control whitespace. The default is the `font_width`.
+///
+/// Finally, the `debug` prop allows you to see how the chart is composed. When developing complex charts it can be useful to get a quick idea of what's going on. Something like the example below might be useful. The default is false.
+///
+/// ```rust
+/// let (debug, set_debug) = create_signal(true);
+/// view! {
+///     <p>
+///         <label>
+///             <input type="checkbox" input type="checkbox"
+///                 on:input=move |ev| set_debug.set(event_target_checked(&ev))
+///             />
+///             " Toggle debug mode"
+///         </label>
+///     </p>
+///     <Chart
+///         aspect_ratio=AspectRatio::inner_ratio(800.0, 600.0)
+///         series=series
+///         data=data
+///         // Toggle debug on the fly
+///         debug=debug />
+/// }
+/// ```
+///
 #[component]
 pub fn Chart<T: 'static, X: Tick, Y: Tick>(
-    #[prop(into)] aspect_ratio: MaybeSignal<AspectRatio>,
-    #[prop(into, optional)] font_height: Option<MaybeSignal<f64>>,
-    #[prop(into, optional)] font_width: Option<MaybeSignal<f64>>,
-    #[prop(into, optional)] debug: MaybeSignal<bool>,
-    #[prop(into, optional)] padding: Option<MaybeSignal<Padding>>,
+    /// Determines the width and height of the chart. See [AspectRatio](AspectRatio).
+    #[prop(into)]
+    aspect_ratio: MaybeSignal<AspectRatio>,
 
-    #[prop(into, optional)] mut top: Vec<EdgeLayout<X>>,
-    #[prop(into, optional)] right: Vec<EdgeLayout<Y>>,
-    #[prop(into, optional)] bottom: Vec<EdgeLayout<X>>,
-    #[prop(into, optional)] mut left: Vec<EdgeLayout<Y>>,
+    /// The height of the font used in the chart. Default is 16.
+    #[prop(into, optional)]
+    font_height: Option<MaybeSignal<f64>>,
 
-    #[prop(into, optional)] inner: Vec<InnerLayout<X, Y>>,
-    #[prop(into, optional)] tooltip: Option<Tooltip<X, Y>>,
+    /// The width of a monospaced character used in the chart. Used to calculate the length of text. Default is 10.
+    #[prop(into, optional)]
+    font_width: Option<MaybeSignal<f64>>,
 
-    #[prop(into)] series: Series<T, X, Y>,
-    #[prop(into)] data: Signal<Vec<T>>,
+    /// Debug mode. If enabled shows lines around components and prints render info to the console. Default is false.
+    #[prop(into, optional)]
+    debug: MaybeSignal<bool>,
+
+    /// Padding around chart components. Default is the font width.
+    #[prop(into, optional)]
+    padding: Option<MaybeSignal<Padding>>,
+
+    /// Top edge components. See [IntoEdge](crate::IntoEdge) for details. Default is none.
+    #[prop(into, optional)]
+    mut top: Vec<EdgeLayout<X>>,
+    /// Right edge components. See [IntoEdge](crate::IntoEdge) for details. Default is none.
+    #[prop(into, optional)]
+    right: Vec<EdgeLayout<Y>>,
+    /// Bottom edge components. See [IntoEdge](crate::IntoEdge) for details. Default is none.
+    #[prop(into, optional)]
+    bottom: Vec<EdgeLayout<X>>,
+    /// Left edge components. See [IntoEdge](crate::IntoEdge) for details. Default is none.
+    #[prop(into, optional)]
+    mut left: Vec<EdgeLayout<Y>>,
+
+    /// Inner chart area components. Does not render lines -- use [Series]. See [IntoInner](crate::IntoInner) for details. Default is none.
+    #[prop(into, optional)]
+    inner: Vec<InnerLayout<X, Y>>,
+    /// Tooltip to show on hover. Seel [Tooltip](crate::Tooltip) for details. Default is none.
+    #[prop(into, optional)]
+    tooltip: Option<Tooltip<X, Y>>,
+
+    /// Series to render. Maps `T` to lines, bars, etc. See [Series] for details.
+    #[prop(into)]
+    series: Series<T, X, Y>,
+    /// Data to render. Must be sorted.
+    #[prop(into)]
+    data: Signal<Vec<T>>,
 ) -> impl IntoView {
     let root = create_node_ref::<Div>();
     let watch = use_watched_node(root);
