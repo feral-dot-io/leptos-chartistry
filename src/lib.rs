@@ -1,6 +1,4 @@
 #![warn(missing_docs)]
-//! # Leptos Chartistry
-//!
 //! Welcome to Chartistry! This crate provides a flexible way to build charts in [Leptos](https://github.com/leptos-rs/leptos).
 //!
 //! All charts are built using the [Chart] fn. If you understand this function, you understand this library.

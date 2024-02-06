@@ -50,11 +50,6 @@ impl Bounds {
         Self::from_points(left, top, right, bottom)
     }
 
-    /// Returns true if the bounds are empty i.e., zero area. Must be absolute zero, does not test for a small float delta.
-    pub fn is_zero(&self) -> bool {
-        self.left == self.right || self.top == self.bottom
-    }
-
     pub fn left_x(&self) -> f64 {
         self.left
     }
@@ -114,8 +109,6 @@ mod tests {
         assert_eq!(b.height(), (4.4 - 2.2));
         assert_eq!(b.centre_x(), (3.3 - 1.1) / 2.0 + 1.1);
         assert_eq!(b.centre_y(), (4.4 - 2.2) / 2.0 + 2.2);
-        assert!(!b.is_zero(),);
-        assert!(Bounds::from_points(0.0, 10.0, 1.0, 10.0).is_zero(),);
         assert!(b.contains(1.1, 2.2),);
         assert!(b.contains(3.3, 4.4),);
         assert!(!b.contains(5.5, 6.6),);
