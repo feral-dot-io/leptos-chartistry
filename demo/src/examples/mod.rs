@@ -1,4 +1,4 @@
-pub mod edge_layout;
+pub mod edge_legend;
 
 use leptos::signal_prelude::*;
 use leptos_chartistry::*;

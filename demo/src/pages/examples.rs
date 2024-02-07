@@ -3,8 +3,46 @@ use js_sys::wasm_bindgen::JsCast;
 use leptos::{html::Dialog, *};
 use web_sys::{HtmlDialogElement, MouseEvent};
 
+macro_rules! figure {
+    ($id:literal, $title:literal, $desc:literal, $path:literal) => {
+        view! {
+            <figure id=$id class="background-box">
+                <figcaption>
+                    <h3>$title</h3>
+                    <p>$desc " " <ShowCode code=include_str!($path) /></p>
+                </figcaption>
+                <edge_legend::Example data=load_data() />
+            </figure>
+        }
+    };
+}
+
+fn all_example_figures() -> Vec<(&'static str, Vec<impl IntoView>)> {
+    vec![(
+        "Edge layout options",
+        vec![figure!(
+            "edge-legend",
+            "Legend",
+            "Add legends to your chart.",
+            "../examples/edge_legend.rs"
+        )],
+    )]
+}
+
 #[component]
 pub fn Examples() -> impl IntoView {
+    let all_figures = all_example_figures()
+        .into_iter()
+        .map(|(header, figures)| {
+            view! {
+                <h2 id="todo">{header}</h2>
+                <div class="cards">
+                    {figures.into_iter().collect_view()}
+                </div>
+            }
+        })
+        .collect_view();
+
     view! {
         <article id="examples">
             <h1>"Examples"</h1>
@@ -64,10 +102,7 @@ pub fn Examples() -> impl IntoView {
                 </div>
             </div>
 
-            <h2 id="edge">"Edge layout options"</h2>
-            <div class="cards">
-                <EdgeLayoutFigures />
-            </div>
+            {all_figures}
 
         </article>
     }
@@ -100,22 +135,5 @@ fn ShowCode(#[prop(into)] code: String) -> impl IntoView {
         <dialog node_ref=dialog on:click=on_close>
             <pre><code>{code}</code></pre>
         </dialog>
-    }
-}
-
-#[component]
-fn EdgeLayoutFigures() -> impl IntoView {
-    let data = load_data();
-    view! {
-        <figure id="edge-legend" class="background-box">
-            <figcaption>
-                <h3>"Legend"</h3>
-                <p>
-                    "Add legends to your chart. "
-                    <ShowCode code=include_str!("../examples/edge_layout.rs") />
-                </p>
-            </figcaption>
-            <edge_layout::Example data=data />
-        </figure>
     }
 }
