@@ -5,19 +5,44 @@ header {
     display: flex;
     flex-flow: row wrap;
     gap: 0.5em;
-    justify-content: center;
-    align-items: center;
+    justify-content: space-between;
+    align-items: end;
+}
+
+header>* {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 0.5em;
+    justify-content: space-between;
 }
 
 header>h2 {
-    margin: 0 2em 0 0;
+    margin: 0 3em 0 0;
     font-size: 100%;
-    justify-self: flex-start;
-    flex: auto;
 }
 
-header>p {
+header p {
     margin: 0;
+}
+
+header>nav>p {
+    margin: 0 1em;
+}
+
+header>nav a {
+    text-decoration: none;
+    color: #222;
+    padding: 0.2em 0;
+}
+
+header>nav a:hover {
+    text-decoration: underline;
+    text-decoration-color: #fc7089;
+    text-decoration-thickness: 0.3em;
+}
+
+header>.badges a>img {
+    display: block;
 }
 
 main {
