@@ -1,5 +1,7 @@
 # Development
 
+These are mostly thoughts and internal notes (for now).
+
 ## Design experiments and notes:
 
 - Series is not a `MaybeSignal` because it requires each Line to specify a key when it's a signal for use in <For>. To do this in a typesafe manner means bigger changes to the API however it doesn't seem to make downstream code better. It still mostly ended up being wrapped in a signal -- just limited to the Series instead. It also complicates the internal logic that would probably make it harder to iterate on future designs. The library's API will probably change.
@@ -14,11 +16,7 @@ It's not clear that it could be efficient (avoiding extra iterations and copies 
 For release:
 - Check for TODOs
 - Usecase / examples page
-- Review spooky action at a distance in components. Sometimes we clone() them and use `with_...` and unintentionally edit another. 
-- Some components have a `with_` method that set a signal like TickLabels and Tooltip. This should be avoided (just use the signal) and probably encourages spooky action.
-- Tooltip cursor distance should be as LeftCursor(f64)
 - Improve docs on:
-    - struct AspectRatio
     - struct Series
     - struct Line
     - struct Stack

@@ -12,7 +12,7 @@ pub trait Tick: Clone + PartialEq + PartialOrd + std::fmt::Debug + 'static {
     /// Default fallback tick generator for when one is not provided.
     fn default_generator() -> impl TickGen<Tick = Self>;
 
-    /// Maps the tick to a position on the axis. Must be uniform.
+    /// Maps the tick to a position on the axis. Must be uniform. May return `f64::NAN` for missing data.
     fn position(&self) -> f64;
 }
 

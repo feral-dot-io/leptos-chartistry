@@ -19,7 +19,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// Check the required and optional props list near the bottom for a quick overview. There is an [assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples/) available too.
 ///
-/// # Layout props
+/// ## Layout props
 ///
 /// The chart is built up from layout components. Each edge has a `top`, `right`, `bottom`, and `left` prop while inside the chart has the `inner` prop. These layout props follow the builder pattern where you'll create a component, configure it to your liking, and then call [IntoEdge](crate::IntoEdge) or [IntoInner](crate::IntoInner) to get an edge layout or inner layout respectively.
 ///
@@ -43,31 +43,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// A tooltip can be considered as the only "outer" component and is rendered as an overlay that reacts to what's under the mouse cursor.
 ///
-/// # Series & data props
-///
-/// Use the `data` prop to pass your data in terms of `T`. Must be sorted. Each `T` should be a row from your results (e.g., from an API request) and should correspond to an `X` value (e.g., a timestamp) and one or more Y values (e.g., floats). For example:
-///
-/// ```rust
-/// pub struct Rate {
-///     pub interval: Timestamp<Utc>,
-///     pub in_octets: f64,
-///     pub out_octets: f64,
-/// }
-/// ```
-///
-/// The `T` corresponds to `Rate`, `X` to `interval`, and `Y` to both `in_octets` and `out_octets`. The `Y` values could potentially return `f64::NAN` to indicate missing data.
-///
-/// The `series` prop describes how this data is rendered using a `[Series]` struct. For example the above might be used to render two lines with:
-///
-/// ```rust
-/// let series = Series::new(|r: &Rate| r.interval)
-///     .line(|r: &Rate| r.in_octets)
-///     .line(|r: &Rate| r.out_octets);
-/// ```
-///
-/// More can be done with this such as naming lines for a legend, stacking lines, and changing the colour scheme. See [Series] for more details.
-///
-/// # Render props
+/// ## Render props
 ///
 /// The `font_height` and `font_width` props are required to calculate the dimensions of text. These dimensions are then fed into layout composition to render the chart. So they must be precise. While `font_height` is passed to [SVG text](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text), `font_width` must be the exact width of a monospaced character in the chosen font. The default is 16 and 10 respectively.
 ///

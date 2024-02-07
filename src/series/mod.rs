@@ -32,9 +32,50 @@ trait GetYValue<T, Y> {
     fn cumulative_value(&self, t: &T) -> Y;
 }
 
-/// Describes the lines, bars, etc. that make up a series. Maps `T` (your struct) to `X` and `[Y]`.
+/// Describes how to render a series of data. A series is a collection of lines, bars, etc. that share the same X and Y axes.
 ///
-/// TODO Each `T` will yield an `X` and `[Y]`. Each `Y` represents something like a line or bar.
+/// ## Building a `Series`
+///
+/// You'll pass your chart a sequence of `T`. Each `T` should be a row from your results (e.g., from an API request) and should correspond to an `X` value (e.g., a timestamp) and one or more Y values (e.g., floats). For example `T`:
+///
+/// ```rust
+/// // Defined somewhere in your code
+/// pub struct Rate {
+///     pub interval: Timestamp<Utc>,
+///     pub in_octets: f64,
+///     pub out_octets: f64,
+/// }
+/// ```
+///
+/// This `T` corresponds to `Rate`, `X` to `interval`, and `Y` to both `in_octets` and `out_octets`. The `Y` values can use `f64::NAN` to indicate missing data.
+///
+/// We then build up a `Series` to describe how to render this data. For example:
+///
+/// ```rust
+/// let series = Series::new(|r: &Rate| r.interval)
+///     .line(|r: &Rate| r.in_octets)
+///     .line(|r: &Rate| r.out_octets);
+/// ```
+///
+/// This is the simplest example and lacks details such as line names. Another more complete example is:
+///
+/// ```rust
+/// let series = Series::new(|r: &Rate| r.interval)
+///    .line(Line::new(|r: &Rate| r.in_octets).name("Rx"))
+///    .line(Line::new(|r: &Rate| r.out_octets).name("Tx"));
+/// ```
+///
+/// Another approach is to use a [Stack] to stack lines on top of each other.
+///
+/// ## Other options
+///
+/// The Series also allows you to control the range of the X and Y axes, and the colour scheme.
+///
+/// ## Full example
+///
+/// ```rust
+/// TODO
+/// ```
 #[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
