@@ -17,7 +17,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 
 /// Builds an SVG chart. Used inside the [Leptos view macro](https://docs.rs/leptos/latest/leptos/macro.view.html).
 ///
-/// Check the required and optional props list near the bottom for a quick overview. There is an [assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples/) available too.
+/// Check the required and optional props list near the bottom for a quick overview. There is an [assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples) available too.
 ///
 /// ## Layout props
 ///

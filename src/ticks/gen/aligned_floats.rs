@@ -12,12 +12,6 @@ struct State {
 impl Generator for AlignedFloats {
     type Tick = f64;
 
-    /// Generates a vector of aligned, "nice" floats. The vector will contain `count` values between `from` and `to` inclusive. Returned ticks will be aligned to "nice" values in powers of 10. e.g., gen_nice_floats(0.1, 0.3, 3) -> [0.1, 0.2, 0.3].
-    ///
-    /// If count is 1 or 0, returns the midpoint of the range.
-    ///
-    /// Given a range (from - to), produce a series of evenly spaced ticks whose steps are the smallest values possible that are still distinguishable from each other. This results in "nice" rounded values that are easy to read. This is done by determining the scale (powers of 10) of the range and count to calculate a step size. The step size is then used to produce a series of evenly spaced ticks which get formatted to our desired precision.
-    /// TODO
     fn generate(
         &self,
         &first: &Self::Tick,
@@ -55,6 +49,11 @@ impl AlignedFloats {
         (span.length() / consumed) as usize
     }
 
+    /// Generates a vector of aligned, "nice" floats. The vector will contain `count` values between `from` and `to` inclusive. Returned ticks will be aligned to "nice" values in powers of 10. e.g., gen_nice_floats(0.1, 0.3, 3) -> [0.1, 0.2, 0.3].
+    ///
+    /// Given a range (from - to), produce a series of evenly spaced ticks whose steps are the smallest values possible that are still distinguishable from each other. This results in "nice" rounded values that are easy to read. This is done by determining the scale (powers of 10) of the range and count to calculate a step size. The step size is then used to produce a series of evenly spaced ticks which get formatted to our desired precision.
+    ///
+    /// If count is 1 or 0, returns the midpoint of the range.
     fn generate_count(first: f64, last: f64, scale: isize, count: usize) -> (isize, Vec<f64>) {
         let range = last - first;
         // If count is too small or no range, return a single tick in the middle
@@ -306,11 +305,5 @@ mod tests {
         assert_eq!(scale10(f64::MAX), 308);
         assert_eq!(scale10(f64::MIN), 308);
         assert_eq!(scale10(f64::MIN_POSITIVE), -308);
-    }
-
-    #[test]
-    fn test_derived() {
-        // TODO
-        //format!("{:?}", AlignedFloatTicks::new(123, vec![123.456]).clone());
     }
 }

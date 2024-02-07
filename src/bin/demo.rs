@@ -814,7 +814,6 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 #[component]
 fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
     view! {
-        // TODO
         <label>"min width:"<StepInput value=ticks.min_chars step="1" min="0" /></label>
     }
 }

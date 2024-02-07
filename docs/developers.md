@@ -14,7 +14,6 @@ It's not clear that it could be efficient (avoiding extra iterations and copies 
 ## TODO
 
 For release:
-- Check for TODOs
 - Usecase / examples page
 - Improve docs on:
     - struct Series

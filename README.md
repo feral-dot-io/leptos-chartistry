@@ -11,8 +11,8 @@
 
 Leptos Chartistry is an extensible charting library for [Leptos](https://github.com/leptos-rs/leptos). It provides a simple and easy to use `<Chart>` component.
 
-- [Interactive demo](#todo)
-- [Usage examples](#todo)
+- [Interactive demo](https://feral-dot-io.github.io/leptos-chartistry/)
+- [Usage examples](https://feral-dot-io.github.io/leptos-chartistry/examples)
 - [API documentation](https://docs.rs/leptos-chartistry)
 - If you like or use Chartistry, consider giving it a star.
 
