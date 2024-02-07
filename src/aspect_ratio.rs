@@ -17,7 +17,7 @@ use leptos::*;
 ///
 /// ## Practical advice
 ///
-/// Bank to 45 degrees. [0]
+/// Bank to 45 degrees. [^bank]
 ///
 /// Bank the slopes of your lines to an average of 45 degrees and you'll maximise the ability to differentiate slope differences. Sunspots become readable. This is intended as a good heuristic to start with and then adjust as needed.
 ///
@@ -27,7 +27,7 @@ use leptos::*;
 ///
 /// I find that there's usually an obvious choice of width or height to pick from e.g., my page is growing horizontally or I'm expecting a lot of free space to the side. In these cases, I'll pick that variable and use a ratio that fits well for the chart. You can't really go wrong here as they're all part of the same choice.
 ///
-/// [0] Cleveland, W. S., McGill, M. E., & McGill, R. (1988). The Shape Parameter of a Two-Variable Graph. Journal of the American Statistical Association, 83(402), 289–300. <https://doi.org/10.2307/2288843>
+/// [^bank]: Cleveland, W. S., McGill, M. E., & McGill, R. (1988). The Shape Parameter of a Two-Variable Graph. Journal of the American Statistical Association, 83(402), 289–300. <https://doi.org/10.2307/2288843>
 #[derive(Clone, Debug, PartialEq)]
 pub struct AspectRatio(CalcUsing);
 
