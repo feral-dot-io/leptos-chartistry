@@ -333,6 +333,7 @@ dependencies = [
  "chrono",
  "console_error_panic_hook",
  "console_log",
+ "js-sys",
  "leptos",
  "leptos-chartistry",
  "leptos-use",

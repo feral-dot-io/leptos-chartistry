@@ -1,5 +1,7 @@
 use crate::examples::*;
-use leptos::*;
+use js_sys::wasm_bindgen::JsCast;
+use leptos::{html::Dialog, *};
+use web_sys::{HtmlDialogElement, MouseEvent};
 
 #[component]
 pub fn Examples() -> impl IntoView {
@@ -72,13 +74,46 @@ pub fn Examples() -> impl IntoView {
 }
 
 #[component]
+fn ShowCode(#[prop(into)] code: String) -> impl IntoView {
+    let dialog = create_node_ref::<Dialog>();
+    let on_open = move |ev: MouseEvent| {
+        ev.prevent_default();
+        if let Some(dialog) = dialog.get() {
+            dialog
+                .show_modal()
+                .expect("unable to show example code dialog");
+        }
+    };
+    let on_close = move |ev: MouseEvent| {
+        ev.prevent_default();
+        if let Some(dialog) = dialog.get() {
+            // Close dialogue (it covers the whole page) on interaction unless user clicks on text inside
+            if let Some(target) = ev.target() {
+                if target.dyn_ref::<HtmlDialogElement>().is_some() {
+                    dialog.close()
+                }
+            }
+        }
+    };
+    view! {
+        <a href="#" on:click=on_open>"Show example code"</a>
+        <dialog node_ref=dialog on:click=on_close>
+            <pre><code>{code}</code></pre>
+        </dialog>
+    }
+}
+
+#[component]
 fn EdgeLayoutFigures() -> impl IntoView {
     let data = load_data();
     view! {
         <figure id="edge-legend" class="background-box">
             <figcaption>
                 <h3>"Legend"</h3>
-                <p>"Add legends to your chart."</p>
+                <p>
+                    "Add legends to your chart. "
+                    <ShowCode code=include_str!("../examples/edge_layout.rs") />
+                </p>
             </figcaption>
             <edge_layout::Example data=data />
         </figure>

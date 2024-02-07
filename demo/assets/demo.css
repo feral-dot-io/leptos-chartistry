@@ -157,6 +157,22 @@ fieldset input[type=color] {
     margin-top: -2em;
 }
 
+#examples dialog {
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 0.5em;
+    padding: 0;
+}
+
+#examples dialog>pre {
+    margin: 0;
+    padding: 5em;
+}
+
+::backdrop {
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
 main h1,
 main h2,
 main h3,
