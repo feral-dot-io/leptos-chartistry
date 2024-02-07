@@ -33,9 +33,9 @@ pub struct Tooltip<X: 'static, Y: 'static> {
 #[non_exhaustive]
 pub enum TooltipPlacement {
     /// Does not show a tooltip.
+    #[default]
     Hide,
     /// Shows the tooltip to the left of the cursor.
-    #[default]
     LeftCursor,
 }
 

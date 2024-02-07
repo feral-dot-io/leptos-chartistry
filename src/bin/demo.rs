@@ -176,7 +176,7 @@ pub fn Demo() -> impl IntoView {
 
     // Tooltip
     let tooltip = Tooltip::new(
-        TooltipPlacement::default(),
+        TooltipPlacement::LeftCursor,
         x_periods.with_strftime("%c"),
         y_ticks.clone(),
     );

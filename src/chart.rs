@@ -132,7 +132,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     inner: Vec<InnerLayout<X, Y>>,
     /// Tooltip to show on hover. Seel [Tooltip](crate::Tooltip) for details. Default is none.
     #[prop(into, optional)]
-    tooltip: Option<Tooltip<X, Y>>,
+    tooltip: Tooltip<X, Y>,
 
     /// Series to render. Maps `T` to lines, bars, etc. See [Series] for details.
     #[prop(into)]
@@ -201,7 +201,7 @@ fn RenderChart<'a, X: Tick, Y: Tick>(
     bottom: &'a [EdgeLayout<X>],
     left: &'a [EdgeLayout<Y>],
     inner: Vec<InnerLayout<X, Y>>,
-    tooltip: Option<Tooltip<X, Y>>,
+    tooltip: Tooltip<X, Y>,
 ) -> impl IntoView {
     let debug = pre_state.debug;
 
@@ -240,8 +240,6 @@ fn RenderChart<'a, X: Tick, Y: Tick>(
             {edges}
             <RenderData state=state.clone() />
         </svg>
-        {tooltip.map(|tooltip| view! {
-            <Tooltip tooltip=tooltip state=state />
-        })}
+        <Tooltip tooltip=tooltip state=state />
     }
 }
