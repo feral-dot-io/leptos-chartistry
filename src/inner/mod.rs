@@ -11,6 +11,7 @@ use std::rc::Rc;
 ///
 /// Avoid constructing directly.
 #[derive(Clone)]
+#[doc(hidden)]
 #[non_exhaustive]
 pub enum InnerLayout<X: Tick, Y: Tick> {
     /// Axis marker. See [AxisMarker](axis_marker::AxisMarker) for details.
@@ -27,9 +28,9 @@ pub enum InnerLayout<X: Tick, Y: Tick> {
     Legend(legend::InsetLegend),
 }
 
-/// Convert a type (e.g., a [guide line](struct@guide_line::XGuideLine)) into an [InnerLayout<X, Y>](InnerLayout) for use in a [Chart](crate::Chart).
+/// Convert a type (e.g., a [guide line](struct@guide_line::XGuideLine)) into an inner layout for use in a [Chart](crate::Chart).
 pub trait IntoInner<X: Tick, Y: Tick> {
-    /// Create an [`InnerLayout<X, Y>`](InnerLayout) from the type. See [IntoInner](trait@IntoInner) for details.
+    /// Create an inner layout from the type. See [IntoInner](trait@IntoInner) for details.
     fn into_inner(self) -> InnerLayout<X, Y>;
 }
 

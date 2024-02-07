@@ -17,6 +17,7 @@ use leptos::*;
 ///
 /// Avoid constructing directly.
 #[derive(Clone)]
+#[doc(hidden)]
 #[non_exhaustive]
 pub enum EdgeLayout<Tick: 'static> {
     /// Legend. See [legend](struct@legend::Legend) for details.
@@ -94,9 +95,9 @@ impl<Y: Tick> EdgeLayout<Y> {
     }
 }
 
-/// Convert a type (e.g., a [rotated label](struct@rotated_label::RotatedLabel)) into an [`EdgeLayout<Tick>`](EdgeLayout) for use with [Chart](crate::Chart).
+/// Convert a type (e.g., a [rotated label](struct@rotated_label::RotatedLabel)) into an edge layout for use with [Chart](crate::Chart).
 pub trait IntoEdge<Tick> {
-    /// Create an [`EdgeLayout<Tick>`](EdgeLayout) from the type. See [IntoEdge](trait@IntoEdge) for details.
+    /// Create an edge layout from the type. See [IntoEdge](trait@IntoEdge) for details.
     fn into_edge(self) -> EdgeLayout<Tick>;
 }
 

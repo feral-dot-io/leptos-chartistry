@@ -21,7 +21,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// # Layout props
 ///
-/// The chart is built up from layout components. Each edge has a `top`, `right`, `bottom`, and `left` prop while inside the chart has the `inner` prop. These layout props follow the builder pattern where you'll create a component, configure it to your liking, and then call [IntoEdge](crate::IntoEdge) or [IntoInner](crate::IntoInner) to get an [EdgeLayout] or [InnerLayout] respectively.
+/// The chart is built up from layout components. Each edge has a `top`, `right`, `bottom`, and `left` prop while inside the chart has the `inner` prop. These layout props follow the builder pattern where you'll create a component, configure it to your liking, and then call [IntoEdge](crate::IntoEdge) or [IntoInner](crate::IntoInner) to get an edge layout or inner layout respectively.
 ///
 /// ```rust
 /// // TODO Example of builder pattern
