@@ -69,37 +69,13 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// # Render props
 ///
-/// The width and height of a chart is specified via the `aspect_ratio` prop. Only charts with the same ratio and axis ranges are comparable and so you're encouraged to pick an [inner aspect ratio](AspectRatio::inner_ratio). The closest to a "don't think about it" default is [environment](AspectRatio::environment). See [AspectRatio] for more details.
-///
 /// The `font_height` and `font_width` props are required to calculate the dimensions of text. These dimensions are then fed into layout composition to render the chart. So they must be precise. While `font_height` is passed to [SVG text](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text), `font_width` must be the exact width of a monospaced character in the chosen font. The default is 16 and 10 respectively.
-///
-/// The `padding` adds spacing around all components and should be used to control whitespace. The default is the `font_width`.
-///
-/// Finally, the `debug` prop allows you to see how the chart is composed. When developing complex charts it can be useful to get a quick idea of what's going on. Something like the example below might be useful. The default is false.
-///
-/// ```rust
-/// let (debug, set_debug) = create_signal(true);
-/// view! {
-///     <p>
-///         <label>
-///             <input type="checkbox" input type="checkbox"
-///                 on:input=move |ev| set_debug.set(event_target_checked(&ev))
-///             />
-///             " Toggle debug mode"
-///         </label>
-///     </p>
-///     <Chart
-///         aspect_ratio=AspectRatio::inner_ratio(800.0, 600.0)
-///         series=series
-///         data=data
-///         // Toggle debug on the fly
-///         debug=debug />
-/// }
-/// ```
 ///
 #[component]
 pub fn Chart<T: 'static, X: Tick, Y: Tick>(
-    /// Determines the width and height of the chart. See [AspectRatio](AspectRatio).
+    /// Determines the width and height of the chart. Charts with a different aspect ratio and axis ranges are difficult to compare. You're encouraged to pick an [inner aspect ratio](AspectRatio::inner_ratio) while the closest to a "don't think about it" approach is to automatically [use the environment](AspectRatio::environment).
+    ///
+    /// See [AspectRatio](AspectRatio) for a detailed explanation.
     #[prop(into)]
     aspect_ratio: MaybeSignal<AspectRatio>,
 
@@ -111,11 +87,30 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     #[prop(into, optional)]
     font_width: Option<MaybeSignal<f64>>,
 
-    /// Debug mode. If enabled shows lines around components and prints render info to the console. Default is false.
+    /// Debug mode. If enabled shows lines around components and prints render info to the console. Useful for getting an idea of how the chart is rendering itself. Below is an example of how you might use it in development. Default is false.
+    ///
+    /// ```rust
+    /// let (debug, set_debug) = create_signal(true);
+    /// view! {
+    ///     <p>
+    ///         <label>
+    ///             <input type="checkbox" input type="checkbox"
+    ///                 on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
+    ///             " Toggle debug mode"
+    ///         </label>
+    ///     </p>
+    ///     <Chart
+    ///         aspect_ratio=AspectRatio::inner_ratio(800.0, 600.0)
+    ///         series=series
+    ///         data=data
+    ///         // Toggle debug on the fly
+    ///         debug=debug />
+    /// }
+    /// ```
     #[prop(into, optional)]
     debug: MaybeSignal<bool>,
 
-    /// Padding around chart components. Default is the font width.
+    /// Padding adds spacing around chart components. Default is the font width.
     #[prop(into, optional)]
     padding: Option<MaybeSignal<Padding>>,
 
@@ -132,7 +127,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     #[prop(into, optional)]
     mut left: Vec<EdgeLayout<Y>>,
 
-    /// Inner chart area components. Does not render lines -- use [Series]. See [IntoInner](crate::IntoInner) for details. Default is none.
+    /// Inner chart area components. Does not render lines -- use [Series] for that. See [IntoInner](crate::IntoInner) for details. Default is none.
     #[prop(into, optional)]
     inner: Vec<InnerLayout<X, Y>>,
     /// Tooltip to show on hover. Seel [Tooltip](crate::Tooltip) for details. Default is none.
