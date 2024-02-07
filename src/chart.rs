@@ -40,13 +40,6 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///     // Shorthand for a single component:
 ///     top=RotatedLabel::middle("Our chart title") />
 /// ```
-///
-/// A tooltip can be considered as the only "outer" component and is rendered as an overlay that reacts to what's under the mouse cursor.
-///
-/// ## Render props
-///
-/// The `font_height` and `font_width` props are required to calculate the dimensions of text. These dimensions are then fed into layout composition to render the chart. So they must be precise. While `font_height` is passed to [SVG text](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text), `font_width` must be the exact width of a monospaced character in the chosen font. The default is 16 and 10 respectively.
-///
 #[component]
 pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     /// Determines the width and height of the chart. Charts with a different aspect ratio and axis ranges are difficult to compare. You're encouraged to pick an [inner aspect ratio](AspectRatio::inner_ratio) while the closest to a "don't think about it" approach is to automatically [use the environment](AspectRatio::environment).
@@ -55,11 +48,11 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     #[prop(into)]
     aspect_ratio: MaybeSignal<AspectRatio>,
 
-    /// The height of the font used in the chart. Default is 16.
+    /// The height of the font used in the chart. Passed to [SVG text](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text). Default is 16.
     #[prop(into, optional)]
     font_height: Option<MaybeSignal<f64>>,
 
-    /// The width of a monospaced character used in the chart. Used to calculate the length of text. Default is 10.
+    /// The width must be the exact width of a monospaced character in the font used. Along with font_height, it is used to calculate the dimensions of text. These dimensions are then fed into layout composition to render the chart. The default is 10.
     #[prop(into, optional)]
     font_width: Option<MaybeSignal<f64>>,
 
@@ -106,7 +99,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     /// Inner chart area components. Does not render lines -- use [Series] for that. See [IntoInner](crate::IntoInner) for details. Default is none.
     #[prop(into, optional)]
     inner: Vec<InnerLayout<X, Y>>,
-    /// Tooltip to show on hover. Seel [Tooltip](crate::Tooltip) for details. Default is none.
+    /// Tooltip to show on mouse hover. See [Tooltip](crate::Tooltip) for details. Default is hidden.
     #[prop(into, optional)]
     tooltip: Tooltip<X, Y>,
 

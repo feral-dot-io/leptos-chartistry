@@ -43,3 +43,4 @@ Features to add:
 
 - Timestamps: Should be reworked to avoid overlapping labels. `iter_aligned_range` should be passed a Duration instead of using Period::increment.
 - Assumes light background
+- Chart's font_width
