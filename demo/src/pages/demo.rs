@@ -183,130 +183,132 @@ pub fn Demo() -> impl IntoView {
     ]);
 
     view! {
-        {move || view!{
-            <Chart
-                aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
-                font_height=font_height
-                font_width=font_width
-                debug=debug
-                padding=Signal::derive(move || Padding::from(padding.get()))
-                top=top.get().into_inner()
-                right=right.get().into_inner()
-                bottom=bottom.get().into_inner()
-                left=left.get().into_inner()
-                inner=inner.get().into_inner()
-                tooltip=tooltip.clone()
-                series=series.clone()
-                data=data
-            />
-        }}
+        <article id="demo">
+            {move || view!{
+                <Chart
+                    aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
+                    font_height=font_height
+                    font_width=font_width
+                    debug=debug
+                    padding=Signal::derive(move || Padding::from(padding.get()))
+                    top=top.get().into_inner()
+                    right=right.get().into_inner()
+                    bottom=bottom.get().into_inner()
+                    left=left.get().into_inner()
+                    inner=inner.get().into_inner()
+                    tooltip=tooltip.clone()
+                    series=series.clone()
+                    data=data
+                />
+            }}
 
-        <div class="outer">
-            <fieldset class="options">
-                <legend>"Chart options"</legend>
-                <p>
-                    <span>
-                        <input type="checkbox" id="debug" checked=debug
-                            on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
-                    </span>
-                    <span><label for="debug">"Debug"</label></span>
-                </p>
-                <p>
-                    <label for="aspect">"Aspect ratio"</label>
-                    <AspectRatio aspect=aspect calc=calc width=width height=height ratio=ratio />
-                </p>
-                <p>
-                    <label for="padding">"Padding"</label>
-                    <span><StepInput id="padding" value=padding step="0.1" min="0.1" /></span>
-                </p>
+            <div class="outer">
+                <fieldset class="options">
+                    <legend>"Chart options"</legend>
+                    <p>
+                        <span>
+                            <input type="checkbox" id="debug" checked=debug
+                                on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
+                        </span>
+                        <span><label for="debug">"Debug"</label></span>
+                    </p>
+                    <p>
+                        <label for="aspect">"Aspect ratio"</label>
+                        <AspectRatio aspect=aspect calc=calc width=width height=height ratio=ratio />
+                    </p>
+                    <p>
+                        <label for="padding">"Padding"</label>
+                        <span><StepInput id="padding" value=padding step="0.1" min="0.1" /></span>
+                    </p>
 
-                <p>
-                    <label for="font_height">"Font"</label>
-                    <span style="grid-column: 2 / -1">
-                        <StepInput id="font_height" value=font_height step="0.1" min="0.1" />
-                        <small>" height"</small>
-                        <br />
-                        <StepInput id="font_width" value=font_width step="0.1" min="0.1" />
-                        <small>" width"</small>
-                    </span>
-                </p>
-            </fieldset>
+                    <p>
+                        <label for="font_height">"Font"</label>
+                        <span style="grid-column: 2 / -1">
+                            <StepInput id="font_height" value=font_height step="0.1" min="0.1" />
+                            <small>" height"</small>
+                            <br />
+                            <StepInput id="font_width" value=font_width step="0.1" min="0.1" />
+                            <small>" width"</small>
+                        </span>
+                    </p>
+                </fieldset>
 
-            <fieldset class="series">
-                <legend>"Series options"</legend>
-                <p>
-                    <label for="sine_name">"Sine"</label>
-                    <span>
-                        <input type="text" id="sine_name" value=sine.name
-                            on:input=move |ev| sine.name.set(event_target_value(&ev)) />
-                    </span>
-                </p>
-                <p>
-                    <label for="sine_width">"Width"</label>
-                    <span><StepInput id="sine_width" value=sine.width step="0.1" min="0.1" /></span>
-                </p>
+                <fieldset class="series">
+                    <legend>"Series options"</legend>
+                    <p>
+                        <label for="sine_name">"Sine"</label>
+                        <span>
+                            <input type="text" id="sine_name" value=sine.name
+                                on:input=move |ev| sine.name.set(event_target_value(&ev)) />
+                        </span>
+                    </p>
+                    <p>
+                        <label for="sine_width">"Width"</label>
+                        <span><StepInput id="sine_width" value=sine.width step="0.1" min="0.1" /></span>
+                    </p>
 
-                <p>
-                    <label for="cosine_name">"Cosine"</label>
-                    <span>
-                        <input type="text" id="cosine_name" value=cosine.name
-                            on:input=move |ev| cosine.name.set(event_target_value(&ev)) />
-                    </span>
-                </p>
-                <p>
-                    <label for="cosine_width">"Width"</label>
-                    <span><StepInput id="cosine_width" value=cosine.width step="0.1" min="0.1" /></span>
-                </p>
-                <p>
-                    <label for="series_colours">"Colours"</label>
-                    <span>
-                        <SelectColourScheme colours=series_colours lines=series_len />
-                    </span>
-                </p>
-            </fieldset>
+                    <p>
+                        <label for="cosine_name">"Cosine"</label>
+                        <span>
+                            <input type="text" id="cosine_name" value=cosine.name
+                                on:input=move |ev| cosine.name.set(event_target_value(&ev)) />
+                        </span>
+                    </p>
+                    <p>
+                        <label for="cosine_width">"Width"</label>
+                        <span><StepInput id="cosine_width" value=cosine.width step="0.1" min="0.1" /></span>
+                    </p>
+                    <p>
+                        <label for="series_colours">"Colours"</label>
+                        <span>
+                            <SelectColourScheme colours=series_colours lines=series_len />
+                        </span>
+                    </p>
+                </fieldset>
 
-            <fieldset class="series">
-                <legend>"Axis options"</legend>
-                <p><span>"Y axis"</span><span>"Aligned floats"</span></p>
-                <p>
-                    <label for="min_y">"Range"</label>
-                    <span>
-                        <input type="number" id="min_y" step="0.1"
-                            value=move || min_y.get().map(|v| v.to_string()).unwrap_or_default()
-                            on:change=move |ev| min_y.set(event_target_value(&ev).parse().ok()) />
-                        " to "
-                        <input type="number" id="max_y" step="0.1"
-                            value=move || max_y.get().map(|v| v.to_string()).unwrap_or_default()
-                            on:change=move |ev| max_y.set(event_target_value(&ev).parse().ok()) />
-                    </span>
-                </p>
-                <p>
-                    <span>"X axis"</span>
-                    <span class="periods">"Timestamps"</span>
-                </p>
-                <p>
-                    <label for="min_x">"Range"</label>
-                    <span>
-                        <input type="datetime-local" id="min_x"
-                            value=mk_range_ts(min_x)
-                            on:change=on_datetime_change(min_x) />
-                        " to "
-                        <br />
-                        <input type="datetime-local" id="max_x"
-                            value=mk_range_ts(max_x)
-                            on:change=on_datetime_change(max_x) />
-                    </span>
-                </p>
-            </fieldset>
+                <fieldset class="series">
+                    <legend>"Axis options"</legend>
+                    <p><span>"Y axis"</span><span>"Aligned floats"</span></p>
+                    <p>
+                        <label for="min_y">"Range"</label>
+                        <span>
+                            <input type="number" id="min_y" step="0.1"
+                                value=move || min_y.get().map(|v| v.to_string()).unwrap_or_default()
+                                on:change=move |ev| min_y.set(event_target_value(&ev).parse().ok()) />
+                            " to "
+                            <input type="number" id="max_y" step="0.1"
+                                value=move || max_y.get().map(|v| v.to_string()).unwrap_or_default()
+                                on:change=move |ev| max_y.set(event_target_value(&ev).parse().ok()) />
+                        </span>
+                    </p>
+                    <p>
+                        <span>"X axis"</span>
+                        <span>"Timestamps"</span>
+                    </p>
+                    <p>
+                        <label for="min_x">"Range"</label>
+                        <span>
+                            <input type="datetime-local" id="min_x"
+                                value=mk_range_ts(min_x)
+                                on:change=on_datetime_change(min_x) />
+                            " to "
+                            <br />
+                            <input type="datetime-local" id="max_x"
+                                value=mk_range_ts(max_x)
+                                on:change=on_datetime_change(max_x) />
+                        </span>
+                    </p>
+                </fieldset>
 
-            <TooltipCard tooltip=tooltip_card />
+                <TooltipCard tooltip=tooltip_card />
 
-            <OptionsCard title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
-            <OptionsCard title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-            <OptionsCard title="Bottom" options=bottom labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-            <OptionsCard title="Left" options=left labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-            <OptionsCard title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
-        </div>
+                <OptionsCard title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
+                <OptionsCard title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+                <OptionsCard title="Bottom" options=bottom labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+                <OptionsCard title="Left" options=left labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+                <OptionsCard title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
+            </div>
+        </article>
     }
 }
 

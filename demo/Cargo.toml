@@ -13,5 +13,6 @@ console_log = "1.0"
 leptos = { version = "0.6", features = ["csr"] }
 leptos-chartistry = { path = "../leptos-chartistry" }
 leptos-use = "0.10"
+leptos_router = { version = "0.6", features = ["csr"] }
 log = "0.4"
 web-sys = { version = "0.3", features = ["DomRectReadOnly"] }

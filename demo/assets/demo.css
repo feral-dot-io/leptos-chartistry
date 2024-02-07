@@ -29,13 +29,13 @@ header>nav>p {
     margin: 0 1em;
 }
 
-header>nav a {
+header a {
     text-decoration: none;
     color: #222;
     padding: 0.2em 0;
 }
 
-header>nav a:hover {
+header a:hover {
     text-decoration: underline;
     text-decoration-color: #fc7089;
     text-decoration-thickness: 0.3em;
@@ -51,13 +51,13 @@ main {
     background: repeating-radial-gradient(circle at top, #eee, #12a5ed);
 }
 
-._chartistry {
+#demo>._chartistry {
     background-color: #fff;
     border: 1px solid #000;
     margin: 0 auto;
 }
 
-.outer {
+#demo>.outer {
     margin: 2em auto;
     display: flex;
     gap: 2em;
@@ -126,7 +126,46 @@ fieldset input[type=color] {
     height: 1.6em;
 }
 
-.periods {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+.background-box {
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 0.5em;
+    padding: 1em;
+}
+
+#examples h2 {
+    background-color: #fff;
+    border-bottom: 0.2em solid #fc7089;
+    padding: 0.2em;
+    width: fit-content;
+}
+
+#examples .cards {
+    margin: 2em 0;
+    display: flex;
+    flex-flow: row wrap;
+    gap: 1em;
+}
+
+#examples .cards>figure {
+    margin: 0;
+    width: fit-content;
+    height: fit-content;
+}
+
+#examples .cards>figure>figcaption {
+    margin-top: -2em;
+}
+
+main h1,
+main h2,
+main h3,
+main h4,
+main h5,
+main h6 {
+    background-color: #fff;
+    border-bottom: 0.2em solid #fc7089;
+    margin: 0;
+    padding: 0.2em;
+    width: fit-content;
 }
