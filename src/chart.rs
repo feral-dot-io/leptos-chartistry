@@ -116,7 +116,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
 
     /// Top edge components. See [IntoEdge](crate::IntoEdge) for details. Default is none.
     #[prop(into, optional)]
-    mut top: Vec<EdgeLayout<X>>,
+    top: Vec<EdgeLayout<X>>,
     /// Right edge components. See [IntoEdge](crate::IntoEdge) for details. Default is none.
     #[prop(into, optional)]
     right: Vec<EdgeLayout<Y>>,
@@ -125,7 +125,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     bottom: Vec<EdgeLayout<X>>,
     /// Left edge components. See [IntoEdge](crate::IntoEdge) for details. Default is none.
     #[prop(into, optional)]
-    mut left: Vec<EdgeLayout<Y>>,
+    left: Vec<EdgeLayout<Y>>,
 
     /// Inner chart area components. Does not render lines -- use [Series] for that. See [IntoInner](crate::IntoInner) for details. Default is none.
     #[prop(into, optional)]
@@ -160,6 +160,8 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     });
 
     // Edges are added top to bottom, left to right. Layout compoeses inside out:
+    let mut top = top;
+    let mut left = left;
     top.reverse();
     left.reverse();
 
