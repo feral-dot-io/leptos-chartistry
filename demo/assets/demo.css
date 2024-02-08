@@ -150,6 +150,12 @@ fieldset input[type=color] {
     transform: rotate(180deg);
 }
 
+#examples .cards>h2 em {
+    font-weight: normal;
+    font-size: 100%;
+}
+
+
 #examples .cards>figure {
     margin: 0;
     width: calc(300px + 2.5em);

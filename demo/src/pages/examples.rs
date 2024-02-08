@@ -34,6 +34,24 @@ macro_rules! example {
     };
 }
 
+// Lines
+
+example!(
+    LineExample,
+    series_line::Example,
+    "Line chart",
+    "A simple line chart.",
+    "../examples/series_line.rs"
+);
+
+example!(
+    StackedLineExample,
+    series_line_stack::Example,
+    "Stacked line chart",
+    "A stacked line chart.",
+    "../examples/series_line_stack.rs"
+);
+
 // Edge layout options
 example!(
     LegendExample,
@@ -201,6 +219,13 @@ pub fn Examples() -> impl IntoView {
             */
 
             <div class="cards">
+                <h2 id="line">"Line charts"</h2>
+                <LineExample debug=debug data=data />
+                <StackedLineExample debug=debug data=data />
+
+                <h2 id="bar">"Bar charts: " <em>"planned"</em></h2>
+                <h2 id="scatter">"Scatter charts: " <em>"planned"</em></h2>
+
                 <h2 id="edge">"Edge layout options"</h2>
                 <LegendExample debug=debug data=data />
                 <TickLabelsExample debug=debug data=data />
