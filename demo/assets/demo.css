@@ -157,6 +157,10 @@ fieldset input[type=color] {
     margin-top: -2em;
 }
 
+#examples .cards>figure>._chartistry {
+    margin: 0 auto;
+}
+
 #examples dialog {
     background-color: #fff;
     border: 1px solid #000;

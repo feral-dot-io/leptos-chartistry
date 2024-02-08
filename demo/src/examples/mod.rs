@@ -1,4 +1,5 @@
 pub mod edge_legend;
+pub mod edge_tick_labels;
 
 use leptos::signal_prelude::*;
 use leptos_chartistry::*;

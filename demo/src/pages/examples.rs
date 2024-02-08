@@ -3,46 +3,57 @@ use js_sys::wasm_bindgen::JsCast;
 use leptos::{html::Dialog, *};
 use web_sys::{HtmlDialogElement, MouseEvent};
 
-macro_rules! figure {
-    ($id:literal, $title:literal, $desc:literal, $path:literal) => {
-        view! {
-            <figure id=$id class="background-box">
-                <figcaption>
-                    <h3>$title</h3>
-                    <p>$desc " " <ShowCode code=include_str!($path) /></p>
-                </figcaption>
-                <edge_legend::Example data=load_data() />
-            </figure>
+#[component]
+fn ExampleFigure(
+    title: &'static str,
+    desc: &'static str,
+    code: &'static str,
+    children: Children,
+) -> impl IntoView {
+    view! {
+        <figure class="background-box">
+            <figcaption>
+                <h3>{title}</h3>
+                <p>{desc} " " <ShowCode code=code /></p>
+            </figcaption>
+            {children()}
+        </figure>
+    }
+}
+
+macro_rules! example {
+    ($id:ident, $ex:path, $title:literal, $desc:literal, $path:literal) => {
+        #[component]
+        fn $id(debug: ReadSignal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
+            view! {
+                <ExampleFigure title=$title desc=$desc code=include_str!($path)>
+                    <$ex debug=debug.into() data=data />
+                </ExampleFigure>
+            }
         }
     };
 }
 
-fn all_example_figures() -> Vec<(&'static str, Vec<impl IntoView>)> {
-    vec![(
-        "Edge layout options",
-        vec![figure!(
-            "edge-legend",
-            "Legend",
-            "Add legends to your chart.",
-            "../examples/edge_legend.rs"
-        )],
-    )]
-}
+example!(
+    LegendExample,
+    edge_legend::Example,
+    "Legend",
+    "Add legends to your chart.",
+    "../examples/edge_legend.rs"
+);
+
+example!(
+    TickLabelsExample,
+    edge_tick_labels::Example,
+    "Tick labels",
+    "Add tick labels to your chart.",
+    "../examples/edge_tick_labels.rs"
+);
 
 #[component]
 pub fn Examples() -> impl IntoView {
-    let all_figures = all_example_figures()
-        .into_iter()
-        .map(|(header, figures)| {
-            view! {
-                <h2 id="todo">{header}</h2>
-                <div class="cards">
-                    {figures.into_iter().collect_view()}
-                </div>
-            }
-        })
-        .collect_view();
-
+    let (debug, set_debug) = create_signal(false);
+    let data = load_data();
     view! {
         <article id="examples">
             <h1>"Examples"</h1>
@@ -83,6 +94,14 @@ pub fn Examples() -> impl IntoView {
                 </ul>
             </nav>
 
+            <p>
+                <label>
+                    <input type="checkbox" input type="checkbox"
+                        on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
+                    " Toggle debug mode"
+                </label>
+            </p>
+
             <div id="series">
                 <div id="series-line">
                     <h2>"Line charts"</h2>
@@ -102,8 +121,11 @@ pub fn Examples() -> impl IntoView {
                 </div>
             </div>
 
-            {all_figures}
-
+            <h2 id="edge">"Edge layout options"</h2>
+            <div class="cards">
+                <LegendExample debug=debug data=data />
+                <TickLabelsExample debug=debug data=data />
+            </div>
         </article>
     }
 }
