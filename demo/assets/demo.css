@@ -133,8 +133,34 @@ fieldset input[type=color] {
     padding: 1em;
 }
 
+#examples h1 {
+    text-align: center;
+    padding: 0.5em 3em;
+    margin-bottom: 1em;
+}
+
+
+#examples nav p {
+    margin: 0.5em 0;
+    padding: 0;
+}
+
+#examples nav p>label {
+    display: inline-block;
+    padding: 1em;
+    width: 100%;
+}
+
+#examples nav ul {
+    margin: 0;
+    list-style-position: inside;
+}
+
+#examples nav li {
+    padding: 0.5em 0;
+}
+
 #examples .cards {
-    margin: 2em 0;
     display: flex;
     flex-flow: row wrap;
     gap: 2em 0.5em;
@@ -152,7 +178,7 @@ fieldset input[type=color] {
 
 #examples .cards>h2 em {
     font-weight: normal;
-    font-size: 100%;
+    font-size: 80%;
 }
 
 
