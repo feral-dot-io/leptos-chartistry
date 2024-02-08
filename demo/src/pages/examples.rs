@@ -34,6 +34,7 @@ macro_rules! example {
     };
 }
 
+// Edge layout options
 example!(
     LegendExample,
     edge_legend::Example,
@@ -56,6 +57,15 @@ example!(
     "Rotated label",
     "Add rotated labels to your chart.",
     "../examples/edge_rotated_label.rs"
+);
+
+// Inner layout options
+example!(
+    InsetLegendExample,
+    inner_legend::Example,
+    "Inset legend",
+    "Add an inset legend to your chart.",
+    "../examples/inner_legend.rs"
 );
 
 #[component]
@@ -130,14 +140,22 @@ pub fn Examples() -> impl IntoView {
                     <p>"Planned"</p>
                 </div>
             </div>
+            */
 
-            <h2 id="edge">"Edge layout options"</h2> */
-
+            <h2 id="edge">"Edge layout options"</h2>
             <div class="cards">
                 <LegendExample debug=debug data=data />
                 <TickLabelsExample debug=debug data=data />
                 <RotatedLabelExample debug=debug data=data />
             </div>
+
+
+            <h2 id="inner">"Inner layout options"</h2>
+            <div class="cards">
+                <InsetLegendExample debug=debug data=data />
+            </div>
+
+
         </article>
     }
 }

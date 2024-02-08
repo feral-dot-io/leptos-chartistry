@@ -1,6 +1,7 @@
 pub mod edge_legend;
 pub mod edge_rotated_label;
 pub mod edge_tick_labels;
+pub mod inner_legend;
 
 use leptos::signal_prelude::*;
 use leptos_chartistry::*;
