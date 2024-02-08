@@ -144,21 +144,16 @@ fieldset input[type=color] {
     margin: 2em 0;
     display: flex;
     flex-flow: row wrap;
-    gap: 1em;
+    gap: 2em 1em;
 }
 
 #examples .cards>figure {
     margin: 0;
-    width: fit-content;
-    height: fit-content;
+    width: calc(300px + 2.5em);
 }
 
 #examples .cards>figure>figcaption {
     margin-top: -2em;
-}
-
-#examples .cards>figure>._chartistry {
-    margin: 0 auto;
 }
 
 #examples dialog {

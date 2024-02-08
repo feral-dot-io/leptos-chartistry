@@ -65,6 +65,16 @@ pub fn Examples() -> impl IntoView {
     view! {
         <article id="examples">
             <h1>"Examples"</h1>
+
+            <p>
+                <label>
+                    <input type="checkbox" input type="checkbox"
+                        on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
+                    " Debug mode"
+                </label>
+            </p>
+
+            /*
             <nav>
                 <ul class="background-box">
                     <li>
@@ -102,14 +112,6 @@ pub fn Examples() -> impl IntoView {
                 </ul>
             </nav>
 
-            <p>
-                <label>
-                    <input type="checkbox" input type="checkbox"
-                        on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
-                    " Toggle debug mode"
-                </label>
-            </p>
-
             <div id="series">
                 <div id="series-line">
                     <h2>"Line charts"</h2>
@@ -129,7 +131,8 @@ pub fn Examples() -> impl IntoView {
                 </div>
             </div>
 
-            <h2 id="edge">"Edge layout options"</h2>
+            <h2 id="edge">"Edge layout options"</h2> */
+
             <div class="cards">
                 <LegendExample debug=debug data=data />
                 <TickLabelsExample debug=debug data=data />

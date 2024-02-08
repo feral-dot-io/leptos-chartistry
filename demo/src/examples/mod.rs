@@ -5,7 +5,7 @@ pub mod edge_tick_labels;
 use leptos::signal_prelude::*;
 use leptos_chartistry::*;
 
-const EXAMPLE_ASPECT_RATIO: AspectRatio = AspectRatio::inner_ratio(300.0, 300.0);
+const EXAMPLE_ASPECT_RATIO: AspectRatio = AspectRatio::outer_height(300.0, 1.0);
 
 pub struct MyData {
     x: f64,
