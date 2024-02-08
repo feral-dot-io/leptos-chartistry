@@ -125,7 +125,7 @@ impl<T, X, Y> Series<T, X, Y> {
     }
 
     /// Set the colour scheme for the series. If there are more lines than colours, the colours will repeat.
-    pub fn with_colours<Opt>(self, colours: impl Into<ColourScheme>) -> Self {
+    pub fn with_colours(self, colours: impl Into<ColourScheme>) -> Self {
         self.colours.set(colours.into());
         self
     }

@@ -30,6 +30,12 @@ macro_rules! impl_grid_line {
                     ..Default::default()
                 }
             }
+
+            /// Sets the colour of the grid line.
+            pub fn with_colour(self, colour: impl Into<Colour>) -> Self {
+                self.colour.set(colour.into());
+                self
+            }
         }
 
         impl<Tick: crate::Tick> Default for $name<Tick> {

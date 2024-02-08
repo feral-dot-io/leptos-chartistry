@@ -118,6 +118,14 @@ example!(
     "../examples/feature_tooltip.rs"
 );
 
+example!(
+    ColoursExample,
+    feature_colours::Example,
+    "Colour",
+    "Change the colours of your chart.",
+    "../examples/feature_colours.rs"
+);
+
 #[component]
 pub fn Examples() -> impl IntoView {
     let (debug, set_debug) = create_signal(false);
@@ -212,6 +220,7 @@ pub fn Examples() -> impl IntoView {
             <h2 id="features">"Features"</h2>
             <div class="cards">
                 <TooltipExample debug=debug data=data />
+                <ColoursExample debug=debug data=data />
             </div>
         </article>
     }

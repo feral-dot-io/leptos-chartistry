@@ -37,6 +37,12 @@ macro_rules! impl_guide_line {
             pub fn over_data() -> Self {
                 Self::new(AlignOver::Data)
             }
+
+            /// Sets the colour of the guide line.
+            pub fn with_colour(self, colour: impl Into<Colour>) -> Self {
+                self.colour.set(colour.into());
+                self
+            }
         }
 
         impl Default for $name {

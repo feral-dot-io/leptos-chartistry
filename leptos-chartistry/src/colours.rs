@@ -27,9 +27,10 @@ pub struct Colour {
 }
 
 impl ColourScheme {
-    pub(crate) fn new(first: Colour, rest: &[Colour]) -> Self {
+    /// Create a new colour scheme with the given colours. Must have at least one colour.
+    pub fn new(first: Colour, rest: impl IntoIterator<Item = Colour>) -> Self {
         Self {
-            swatches: std::iter::once(first).chain(rest.iter().copied()).collect(),
+            swatches: std::iter::once(first).chain(rest).collect(),
         }
     }
 
@@ -95,7 +96,8 @@ impl ColourScheme {
 }
 
 impl Colour {
-    pub(crate) const fn new(red: u8, green: u8, blue: u8) -> Self {
+    /// Create a new colour with the given red, green, and blue values.
+    pub const fn new(red: u8, green: u8, blue: u8) -> Self {
         Self { red, green, blue }
     }
 
@@ -148,7 +150,7 @@ macro_rules! from_array_to_colour_scheme {
         $(
             impl From<[Colour; $n]> for ColourScheme {
                 fn from(colours: [Colour; $n]) -> Self {
-                    Self::new(colours[0], &colours[1..])
+                    Self::new(colours[0], (&colours[1..]).to_vec())
                 }
             }
         )*

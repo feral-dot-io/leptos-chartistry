@@ -77,6 +77,12 @@ impl AxisMarker {
         self.arrow.set(arrow.into());
         self
     }
+
+    /// Sets the marker colour.
+    pub fn with_colour(self, colour: impl Into<Colour>) -> Self {
+        self.colour.set(colour.into());
+        self
+    }
 }
 
 impl std::fmt::Display for AxisPlacement {
