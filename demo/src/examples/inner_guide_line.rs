@@ -4,10 +4,9 @@ use leptos_chartistry::*;
 
 #[component]
 pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
-    // Add names to our lines for the legend to use
     let series = Series::new(|data: &MyData| data.x)
-        .line(Line::new(|data: &MyData| data.y1).with_name("cats"))
-        .line(Line::new(|data: &MyData| data.y2).with_name("dogs"));
+        .line(|data: &MyData| data.y1)
+        .line(|data: &MyData| data.y2);
     view! {
         <Chart
             aspect_ratio=EXAMPLE_ASPECT_RATIO
@@ -16,10 +15,11 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
             data=data
 
             inner=vec![
-                // Pick a place for your legend...
-                InsetLegend::top().into_inner(),
-                // ...and it will appear inside the chart area
-                InsetLegend::bottom_right().into_inner()
+                // Draw a line on the chart area when the mouse hovers
+                XGuideLine::over_mouse().into_inner(),
+                // Instead, they be drawn over the nearest data point
+                // This creates a "snap-to" effect
+                YGuideLine::over_data().into_inner()
             ]
         />
     }

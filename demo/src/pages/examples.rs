@@ -39,7 +39,7 @@ example!(
     LegendExample,
     edge_legend::Example,
     "Legend",
-    "Add legends to your chart.",
+    "Add legends to your chart edges.",
     "../examples/edge_legend.rs"
 );
 
@@ -47,7 +47,7 @@ example!(
     TickLabelsExample,
     edge_tick_labels::Example,
     "Tick labels",
-    "Add tick labels to your chart.",
+    "Add tick labels and auto-pick nice values.",
     "../examples/edge_tick_labels.rs"
 );
 
@@ -64,15 +64,31 @@ example!(
     AxisMarkerExample,
     inner_axis_marker::Example,
     "Axis marker",
-    "Add axis markers to your chart.",
+    "Add axis markers to the edges of your chart area.",
     "../examples/inner_axis_marker.rs"
+);
+
+example!(
+    GridLineExample,
+    inner_grid_line::Example,
+    "Grid line",
+    "Add grid lines aligned to your tick labels.",
+    "../examples/inner_grid_line.rs"
+);
+
+example!(
+    GuideLineExample,
+    inner_guide_line::Example,
+    "Guide line",
+    "Add guide lines to your mouse.",
+    "../examples/inner_guide_line.rs"
 );
 
 example!(
     InsetLegendExample,
     inner_legend::Example,
     "Inset legend",
-    "Add an inset legend to your chart.",
+    "Add a legend inside your chart area.",
     "../examples/inner_legend.rs"
 );
 
@@ -161,6 +177,8 @@ pub fn Examples() -> impl IntoView {
             <h2 id="inner">"Inner layout options"</h2>
             <div class="cards">
                 <AxisMarkerExample debug=debug data=data />
+                <GridLineExample debug=debug data=data />
+                <GuideLineExample debug=debug data=data />
                 <InsetLegendExample debug=debug data=data />
             </div>
 

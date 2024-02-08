@@ -2,12 +2,14 @@ pub mod edge_legend;
 pub mod edge_rotated_label;
 pub mod edge_tick_labels;
 pub mod inner_axis_marker;
+pub mod inner_grid_line;
+pub mod inner_guide_line;
 pub mod inner_legend;
 
 use leptos::signal_prelude::*;
 use leptos_chartistry::*;
 
-const EXAMPLE_ASPECT_RATIO: AspectRatio = AspectRatio::outer_height(300.0, 1.0);
+const EXAMPLE_ASPECT_RATIO: AspectRatio = AspectRatio::outer_height(300.0, 1.2);
 
 pub struct MyData {
     x: f64,
@@ -27,13 +29,13 @@ pub fn load_data() -> Signal<Vec<MyData>> {
             MyData::new(0.0, 1.0, 0.0),
             MyData::new(1.0, 3.0, 1.0),
             MyData::new(2.0, 5.0, 2.5),
-            MyData::new(3.0, 6.0, 3.0),
+            MyData::new(3.0, 5.5, 3.0),
             MyData::new(4.0, 5.0, 3.0),
-            MyData::new(5.0, 3.0, 4.0),
-            MyData::new(6.0, 2.5, 8.0),
-            MyData::new(7.0, 4.0, 6.0),
-            MyData::new(8.0, 7.0, 4.5),
-            MyData::new(10.0, 9.0, 3.0),
+            MyData::new(5.0, 2.5, 4.0),
+            MyData::new(6.0, 2.25, 9.0),
+            MyData::new(7.0, 3.0, 5.0),
+            MyData::new(8.0, 7.0, 3.5),
+            MyData::new(10.0, 10.0, 3.0),
         ]
     })
 }

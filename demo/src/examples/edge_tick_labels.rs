@@ -6,9 +6,7 @@ use leptos_chartistry::*;
 pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
     let series = Series::new(|data: &MyData| data.x)
         .line(|data: &MyData| data.y1)
-        .line(|data: &MyData| data.y2)
-        .with_x_range(0.0, 10.0)
-        .with_y_range(0.0, 10.0);
+        .line(|data: &MyData| data.y2);
     view! {
         <Chart
             aspect_ratio=EXAMPLE_ASPECT_RATIO
