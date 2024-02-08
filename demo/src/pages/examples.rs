@@ -59,6 +59,14 @@ example!(
     "../examples/edge_rotated_label.rs"
 );
 
+example!(
+    EdgeLayoutExample,
+    edge_layout::Example,
+    "Combined edge layout",
+    "A more complete example of all edge options.",
+    "../examples/edge_layout.rs"
+);
+
 // Inner layout options
 example!(
     AxisMarkerExample,
@@ -171,6 +179,7 @@ pub fn Examples() -> impl IntoView {
                 <LegendExample debug=debug data=data />
                 <TickLabelsExample debug=debug data=data />
                 <RotatedLabelExample debug=debug data=data />
+                <EdgeLayoutExample debug=debug data=data />
             </div>
 
 
