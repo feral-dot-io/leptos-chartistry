@@ -14,9 +14,12 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
             series=series
             data=data
 
-            top=RotatedLabel::middle("Chart title")
-            left=RotatedLabel::start("Side edges are rotated...")
-            right=RotatedLabel::end("...to point inwards.")
+            left=RotatedLabel::start("Side edges...")
+            right=RotatedLabel::end("...point inwards.")
+            bottom=vec![
+                RotatedLabel::middle("You can also add...").into_edge(),
+                RotatedLabel::middle("...multiple labels.").into_edge(),
+            ]
         />
     }
 }

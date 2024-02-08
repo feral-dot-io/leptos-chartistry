@@ -5,6 +5,7 @@ pub mod edge_tick_labels;
 pub mod inner_axis_marker;
 pub mod inner_grid_line;
 pub mod inner_guide_line;
+pub mod inner_layout;
 pub mod inner_legend;
 
 use leptos::signal_prelude::*;

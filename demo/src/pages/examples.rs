@@ -100,6 +100,14 @@ example!(
     "../examples/inner_legend.rs"
 );
 
+example!(
+    InnerLayoutExample,
+    inner_layout::Example,
+    "Combined inner layout",
+    "A more complete example of all inner options.",
+    "../examples/inner_layout.rs"
+);
+
 #[component]
 pub fn Examples() -> impl IntoView {
     let (debug, set_debug) = create_signal(false);
@@ -189,9 +197,8 @@ pub fn Examples() -> impl IntoView {
                 <GridLineExample debug=debug data=data />
                 <GuideLineExample debug=debug data=data />
                 <InsetLegendExample debug=debug data=data />
+                <InnerLayoutExample debug=debug data=data />
             </div>
-
-
         </article>
     }
 }
