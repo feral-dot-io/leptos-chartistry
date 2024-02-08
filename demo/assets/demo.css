@@ -60,7 +60,7 @@ main {
 #demo>.outer {
     margin: 2em auto;
     display: flex;
-    gap: 2em;
+    gap: 2em 0.5em;
     flex-wrap: wrap;
     justify-content: center;
     align-items: flex-start;
@@ -138,7 +138,6 @@ fieldset input[type=color] {
     padding: 0.5em 3em;
     margin-bottom: 1em;
 }
-
 
 #examples nav p {
     margin: 0.5em 0;
