@@ -108,6 +108,16 @@ example!(
     "../examples/inner_layout.rs"
 );
 
+// Features
+
+example!(
+    TooltipExample,
+    feature_tooltip::Example,
+    "Tooltip",
+    "Add a mouse tooltip to your chart.",
+    "../examples/feature_tooltip.rs"
+);
+
 #[component]
 pub fn Examples() -> impl IntoView {
     let (debug, set_debug) = create_signal(false);
@@ -190,7 +200,6 @@ pub fn Examples() -> impl IntoView {
                 <EdgeLayoutExample debug=debug data=data />
             </div>
 
-
             <h2 id="inner">"Inner layout options"</h2>
             <div class="cards">
                 <AxisMarkerExample debug=debug data=data />
@@ -198,6 +207,11 @@ pub fn Examples() -> impl IntoView {
                 <GuideLineExample debug=debug data=data />
                 <InsetLegendExample debug=debug data=data />
                 <InnerLayoutExample debug=debug data=data />
+            </div>
+
+            <h2 id="features">"Features"</h2>
+            <div class="cards">
+                <TooltipExample debug=debug data=data />
             </div>
         </article>
     }

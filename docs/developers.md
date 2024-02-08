@@ -21,6 +21,7 @@ For release:
     - struct Stack
 - environment_[height|width] don't make sense
 - aligned_floats is generating weird values. The printed values look rounded
+- Hide tooltip X value for example
 
 - Make repo public, serve docs/ under pages
 - Method to rebuild demo

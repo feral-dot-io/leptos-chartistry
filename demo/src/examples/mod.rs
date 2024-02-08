@@ -2,6 +2,7 @@ pub mod edge_layout;
 pub mod edge_legend;
 pub mod edge_rotated_label;
 pub mod edge_tick_labels;
+pub mod feature_tooltip;
 pub mod inner_axis_marker;
 pub mod inner_grid_line;
 pub mod inner_guide_line;
