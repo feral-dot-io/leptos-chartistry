@@ -61,6 +61,14 @@ example!(
 
 // Inner layout options
 example!(
+    AxisMarkerExample,
+    inner_axis_marker::Example,
+    "Axis marker",
+    "Add axis markers to your chart.",
+    "../examples/inner_axis_marker.rs"
+);
+
+example!(
     InsetLegendExample,
     inner_legend::Example,
     "Inset legend",
@@ -152,6 +160,7 @@ pub fn Examples() -> impl IntoView {
 
             <h2 id="inner">"Inner layout options"</h2>
             <div class="cards">
+                <AxisMarkerExample debug=debug data=data />
                 <InsetLegendExample debug=debug data=data />
             </div>
 

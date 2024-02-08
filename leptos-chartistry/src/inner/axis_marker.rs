@@ -71,6 +71,12 @@ impl AxisMarker {
     pub fn vertical_zero() -> Self {
         Self::new(AxisPlacement::VerticalZero)
     }
+
+    /// Sets the arrow visibility.
+    pub fn with_arrow(self, arrow: impl Into<bool>) -> Self {
+        self.arrow.set(arrow.into());
+        self
+    }
 }
 
 impl std::fmt::Display for AxisPlacement {
