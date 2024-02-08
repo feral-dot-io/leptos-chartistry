@@ -50,6 +50,14 @@ example!(
     "../examples/edge_tick_labels.rs"
 );
 
+example!(
+    RotatedLabelExample,
+    edge_rotated_label::Example,
+    "Rotated label",
+    "Add rotated labels to your chart.",
+    "../examples/edge_rotated_label.rs"
+);
+
 #[component]
 pub fn Examples() -> impl IntoView {
     let (debug, set_debug) = create_signal(false);
@@ -125,6 +133,7 @@ pub fn Examples() -> impl IntoView {
             <div class="cards">
                 <LegendExample debug=debug data=data />
                 <TickLabelsExample debug=debug data=data />
+                <RotatedLabelExample debug=debug data=data />
             </div>
         </article>
     }
