@@ -133,18 +133,21 @@ fieldset input[type=color] {
     padding: 1em;
 }
 
-#examples h2 {
-    background-color: #fff;
-    border-bottom: 0.2em solid #fc7089;
-    padding: 0.2em;
-    width: fit-content;
-}
-
 #examples .cards {
     margin: 2em 0;
     display: flex;
     flex-flow: row wrap;
-    gap: 2em 1em;
+    gap: 2em 0.5em;
+}
+
+#examples .cards>h2 {
+    border: 1px solid #000;
+    border-right: 0.2em solid #fc7089;
+    padding: 1em;
+    text-align: center;
+    writing-mode: vertical-rl;
+    text-orientation: sideways;
+    transform: rotate(180deg);
 }
 
 #examples .cards>figure {

@@ -200,25 +200,21 @@ pub fn Examples() -> impl IntoView {
             </div>
             */
 
-            <h2 id="edge">"Edge layout options"</h2>
             <div class="cards">
+                <h2 id="edge">"Edge layout options"</h2>
                 <LegendExample debug=debug data=data />
                 <TickLabelsExample debug=debug data=data />
                 <RotatedLabelExample debug=debug data=data />
                 <EdgeLayoutExample debug=debug data=data />
-            </div>
 
-            <h2 id="inner">"Inner layout options"</h2>
-            <div class="cards">
+                <h2 id="inner">"Inner layout options"</h2>
                 <AxisMarkerExample debug=debug data=data />
                 <GridLineExample debug=debug data=data />
                 <GuideLineExample debug=debug data=data />
                 <InsetLegendExample debug=debug data=data />
                 <InnerLayoutExample debug=debug data=data />
-            </div>
 
-            <h2 id="features">"Features"</h2>
-            <div class="cards">
+                <h2 id="features">"Features"</h2>
                 <TooltipExample debug=debug data=data />
                 <ColoursExample debug=debug data=data />
             </div>
