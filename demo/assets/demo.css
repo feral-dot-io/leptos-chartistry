@@ -59,6 +59,7 @@ main {
     background-color: #fff;
     border: 1px solid #000;
     margin: 0 auto;
+    width: fit-content;
 }
 
 #demo>.outer {

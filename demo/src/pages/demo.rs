@@ -921,15 +921,22 @@ fn AspectRatio(
         AspectCalc::Height => height.set(width.get() / ratio.get()),
     });
 
+    let env = || "from-env";
+    let is_env = move || aspect.get() == AspectOption::Environment;
+    let is_dual_env = move || is_env() && calc.get() == AspectCalc::Ratio;
     view! {
         <span>
             <SelectAspectOption aspect=aspect />
             <br />
             <SelectAspectCalc calc=calc />
             <br />
-            <input type="number" step=1 min=1 value=left_value on:change=on_left />
+            <Show when=move || !is_env() fallback=env>
+                <input type="number" step=1 min=1 value=left_value on:change=on_left />
+            </Show>
             {calc_formula}
-            <input type="number" step=0.1 min=0.1 value=right_value on:change=on_right />
+            <Show when=move || !is_dual_env() fallback=env>
+                <input type="number" step=0.1 min=0.1 value=right_value on:change=on_right />
+            </Show>
             " = " {result_value}
         </span>
     }
