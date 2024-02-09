@@ -143,6 +143,8 @@ fieldset>legend {
 }
 
 #examples h1 {
+    border: 1px solid #000;
+    border-bottom: 0.2em solid #fc7089;
     text-align: center;
     width: auto;
     padding: 0.5em;
