@@ -10,7 +10,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
         .line(Line::new(|data: &MyData| data.y2).with_name("dragonflies"));
     view! {
         <Chart
-            aspect_ratio=AspectRatio::outer_height(300.0, 1.2)
+            aspect_ratio=AspectRatio::from_outer_height(300.0, 1.2)
             debug=debug
             series=series
             data=data

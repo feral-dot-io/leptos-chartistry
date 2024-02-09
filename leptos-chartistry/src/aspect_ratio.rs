@@ -2,13 +2,11 @@ use leptos::*;
 
 /// Calculates the width and height of a chart.
 ///
-/// An AspectRatio is built from the available constructors: `[inner|outer]_[width|height|ratio]` or `from_environment`.
+/// An AspectRatio is built from the available constructors: `[inner|outer|environment]_[width|height|ratio]`.
 ///
-/// The first part `[inner|outer]` is a choice of what kind of dimensions we are calculating: the inner chart area or the outer chart including the edge layout.
+/// The first part `[inner|outer]` is a choice of what kind of dimensions we are calculating: the inner chart area or the outer chart including the edge layout. Environment auto-fills the width and / or height from the outer parent container.
 ///
 /// The second part `[width|height|ratio]` is a choice of which variable to calculate from the formula: `width / height = ratio`.
-///
-/// Finally, we can also the get the width and / or height from from the environment and use that as an "outer" calculation.
 ///
 /// ## Why is this important?
 ///
@@ -16,7 +14,7 @@ use leptos::*;
 ///
 /// ## Practical advice
 ///
-/// Bank to 45 degrees[^bank] and preference [inner constructors](Self::inner_ratio).
+/// Bank to 45 degrees[^bank] and preference [inner constructors](Self::from_inner_ratio).
 ///
 /// Bank the slopes of your lines to an average of 45 degrees and you'll maximise the ability to differentiate slope differences. Sunspots become readable. This is intended as a good heuristic to start with and then adjust as needed.
 ///
@@ -66,46 +64,46 @@ impl AspectRatio {
     }
 
     /// The outer height is set by width / ratio.
-    pub const fn outer_height(width: f64, ratio: f64) -> Self {
+    pub const fn from_outer_height(width: f64, ratio: f64) -> Self {
         Self::new_outer(AspectRatioVars::WidthAndRatio(width, ratio))
     }
 
     /// The outer width is set by height * ratio.
-    pub const fn outer_width(height: f64, ratio: f64) -> Self {
+    pub const fn from_outer_width(height: f64, ratio: f64) -> Self {
         Self::new_outer(AspectRatioVars::HeightAndRatio(height, ratio))
     }
 
     /// Sets the outer width and height of the chart. Ratio is implied width / height.
-    pub const fn outer_ratio(width: f64, height: f64) -> Self {
+    pub const fn from_outer_ratio(width: f64, height: f64) -> Self {
         Self::new_outer(AspectRatioVars::WidthAndHeight(width, height))
     }
 
     /// The inner height is set by the given width / ratio.
-    pub const fn inner_height(width: f64, ratio: f64) -> Self {
+    pub const fn from_inner_height(width: f64, ratio: f64) -> Self {
         Self::new_inner(AspectRatioVars::WidthAndRatio(width, ratio))
     }
 
     /// The inner width is set by the given height * ratio.
-    pub const fn inner_width(height: f64, ratio: f64) -> Self {
+    pub const fn from_inner_width(height: f64, ratio: f64) -> Self {
         Self::new_inner(AspectRatioVars::HeightAndRatio(height, ratio))
     }
 
     /// Sets the width and height of the inner chart. Ratio is implied width / height. If you're unsure of which constructor to use, pick this one.
-    pub const fn inner_ratio(width: f64, height: f64) -> Self {
+    pub const fn from_inner_ratio(width: f64, height: f64) -> Self {
         Self::new_inner(AspectRatioVars::WidthAndHeight(width, height))
     }
 
-    /// Gets the width from the environment then uses [outer_height](Self::outer_height) with the given ratio.
+    /// Gets the width from the environment then uses [Self::from_outer_height] with the given ratio.
     pub const fn from_environment_width(ratio: f64) -> Self {
         Self(CalcUsing::Env(EnvCalc::WidthAndRatio(ratio)))
     }
 
-    /// Gets the height from the environment then uses [outer_width](Self::outer_width) with the given ratio.
+    /// Gets the height from the environment then uses [Self::from_outer_width] with the given ratio.
     pub const fn from_environment_height(ratio: f64) -> Self {
         Self(CalcUsing::Env(EnvCalc::HeightAndRatio(ratio)))
     }
 
-    /// Gets both the width and height from the environment then uses [outer_ratio](Self::outer_ratio).
+    /// Gets both the width and height from the environment then uses [Self::from_outer_ratio].
     pub const fn from_environment() -> Self {
         Self(CalcUsing::Env(EnvCalc::WidthAndHeight))
     }

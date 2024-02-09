@@ -849,14 +849,14 @@ fn derive_aspect_ratio(
         use AspectCalc as Calc;
         match aspect.get() {
             AspectOption::Outer => match calc {
-                Calc::Width => AspectRatio::outer_width(height, ratio),
-                Calc::Height => AspectRatio::outer_height(width, ratio),
-                Calc::Ratio => AspectRatio::outer_ratio(width, height),
+                Calc::Width => AspectRatio::from_outer_width(height, ratio),
+                Calc::Height => AspectRatio::from_outer_height(width, ratio),
+                Calc::Ratio => AspectRatio::from_outer_ratio(width, height),
             },
             AspectOption::Inner => match calc {
-                Calc::Width => AspectRatio::inner_width(height, ratio),
-                Calc::Height => AspectRatio::inner_height(width, ratio),
-                Calc::Ratio => AspectRatio::inner_ratio(width, height),
+                Calc::Width => AspectRatio::from_inner_width(height, ratio),
+                Calc::Height => AspectRatio::from_inner_height(width, ratio),
+                Calc::Ratio => AspectRatio::from_inner_ratio(width, height),
             },
             AspectOption::Environment => match calc {
                 Calc::Width => AspectRatio::from_environment_height(ratio),

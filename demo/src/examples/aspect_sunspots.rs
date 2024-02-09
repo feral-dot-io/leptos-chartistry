@@ -15,7 +15,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
         "and downs in the chart whose interpretation changes with page width."</p>
         <Chart
             debug=debug
-            aspect_ratio=AspectRatio::inner_ratio(600.0, 600.0)
+            aspect_ratio=AspectRatio::from_inner_ratio(600.0, 600.0)
 
             top=RotatedLabel::middle("Daily sunspots")
             left=y_ticks.clone()
@@ -38,7 +38,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
         "variables from the formula: " <code>"width / height = ratio"</code></p>
         <Chart
             debug=debug
-            aspect_ratio=AspectRatio::inner_width(30.0, 25.0)
+            aspect_ratio=AspectRatio::from_inner_width(30.0, 25.0)
 
             bottom=x_ticks.clone()
             inner=vec![

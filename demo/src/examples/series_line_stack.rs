@@ -15,7 +15,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
         .with_min_y(0.0);
     view! {
         <Chart
-            aspect_ratio=AspectRatio::outer_height(300.0, 1.2)
+            aspect_ratio=AspectRatio::from_outer_height(300.0, 1.2)
             debug=debug
             series=series
             data=data
