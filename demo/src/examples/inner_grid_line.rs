@@ -1,4 +1,4 @@
-use super::{MyData, EXAMPLE_ASPECT_RATIO};
+use super::MyData;
 use leptos::*;
 use leptos_chartistry::*;
 
@@ -10,7 +10,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
     let y_ticks = TickLabels::aligned_floats();
     view! {
         <Chart
-            aspect_ratio=EXAMPLE_ASPECT_RATIO
+            aspect_ratio=AspectRatio::outer_height(300.0, 1.2)
             debug=debug
             series=series
             data=data

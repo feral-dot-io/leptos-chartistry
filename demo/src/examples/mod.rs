@@ -13,9 +13,6 @@ pub mod series_line;
 pub mod series_line_stack;
 
 use leptos::signal_prelude::*;
-use leptos_chartistry::*;
-
-const EXAMPLE_ASPECT_RATIO: AspectRatio = AspectRatio::outer_height(300.0, 1.2);
 
 pub struct MyData {
     x: f64,
