@@ -139,23 +139,21 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     let pre = PreState::new(debug.into(), font_height, font_width, padding.into(), data);
 
     view! {
-        <div class="_chartistry" style="width: fit-content; height: fit-content; overflow: visible;">
-            <div node_ref=root>
-                <DebugRect label="Chart" debug=debug />
-                <Show when=move || have_dimensions.get() fallback=|| view!(<p>"Loading..."</p>)>
-                    <RenderChart
-                        watch=watch.clone()
-                        pre_state=pre.clone()
-                        aspect_ratio=calc
-                        top=top.as_slice()
-                        right=right.as_slice()
-                        bottom=bottom.as_slice()
-                        left=left.as_slice()
-                        inner=inner.clone()
-                        tooltip=tooltip.clone()
-                    />
-                </Show>
-            </div>
+        <div node_ref=root class="_chartistry" style="width: fit-content; height: fit-content; overflow: visible;">
+            <DebugRect label="Chart" debug=debug />
+            <Show when=move || have_dimensions.get() fallback=|| view!(<p>"Loading..."</p>)>
+                <RenderChart
+                    watch=watch.clone()
+                    pre_state=pre.clone()
+                    aspect_ratio=calc
+                    top=top.as_slice()
+                    right=right.as_slice()
+                    bottom=bottom.as_slice()
+                    left=left.as_slice()
+                    inner=inner.clone()
+                    tooltip=tooltip.clone()
+                />
+            </Show>
         </div>
     }
 }
