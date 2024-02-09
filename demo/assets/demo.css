@@ -165,7 +165,16 @@ fieldset input[type=color] {
     gap: 2em 0.5em;
 }
 
-#examples .cards>h2 {
+#examples .cards>div.include-right {
+    width: fit-content;
+    display: flex;
+    flex-flow: row nowrap;
+    gap: 0.5em;
+    /* FF miscalculates (or I misunderstand) the width of our sideways text */
+    width: calc(300px + 2.5em + 5.5em);
+}
+
+#examples .cards h2 {
     border: 1px solid #000;
     border-right: 0.2em solid #fc7089;
     padding: 1em;
@@ -175,18 +184,17 @@ fieldset input[type=color] {
     transform: rotate(180deg);
 }
 
-#examples .cards>h2 em {
+#examples .cards h2>em {
     font-weight: normal;
     font-size: 80%;
 }
 
-
-#examples .cards>figure {
+#examples figure {
     margin: 0;
     width: calc(300px + 2.5em);
 }
 
-#examples .cards>figure>figcaption {
+#examples figure>figcaption {
     margin-top: -2em;
 }
 

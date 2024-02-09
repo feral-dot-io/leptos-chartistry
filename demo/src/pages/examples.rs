@@ -174,21 +174,27 @@ pub fn Examples() -> impl IntoView {
                 <h2 id="bar">"Bar charts: " <em>"planned"</em></h2>
                 <h2 id="scatter">"Scatter charts: " <em>"planned"</em></h2>
 
-                <h2 id="edge">"Edge layout options"</h2>
-                <LegendExample />
+                <div class="include-right">
+                    <h2 id="edge">"Edge layout options"</h2>
+                    <LegendExample />
+                </div>
                 <TickLabelsExample />
                 <RotatedLabelExample />
                 <EdgeLayoutExample />
 
-                <h2 id="inner">"Inner layout options"</h2>
-                <AxisMarkerExample />
+                <div class="include-right">
+                    <h2 id="inner">"Inner layout options"</h2>
+                    <AxisMarkerExample />
+                </div>
                 <GridLineExample />
                 <GuideLineExample />
                 <InsetLegendExample />
                 <InnerLayoutExample />
 
-                <h2 id="features">"Features"</h2>
-                <TooltipExample />
+                <div class="include-right">
+                    <h2 id="features">"Features"</h2>
+                    <TooltipExample />
+                </div>
                 <ColoursExample />
             </div>
         </article>
