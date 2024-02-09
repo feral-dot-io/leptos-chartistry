@@ -126,7 +126,7 @@ fieldset input[type=color] {
     height: 1.6em;
 }
 
-#examples>h1,
+#examples h1,
 #examples .cards>h2,
 #examples .cards>div>h2,
 #examples .cards figcaption>h3 {
@@ -147,8 +147,8 @@ fieldset input[type=color] {
 
 #examples h1 {
     text-align: center;
-    padding: 0.5em 3em;
-    margin-bottom: 1em;
+    width: auto;
+    padding: 0.5em;
 }
 
 #examples nav p {

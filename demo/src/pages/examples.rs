@@ -151,9 +151,9 @@ pub fn Examples() -> impl IntoView {
 
     view! {
         <article id="examples">
-            <h1>"Examples"</h1>
             <div class="cards">
                 <nav>
+                    <h1>"Examples"</h1>
                     <p class="background-box">
                         <label>
                             <input type="checkbox" input type="checkbox"
