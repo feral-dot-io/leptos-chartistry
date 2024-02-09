@@ -1,3 +1,4 @@
+pub mod aspect_sunspots;
 pub mod edge_layout;
 pub mod edge_legend;
 pub mod edge_rotated_label;

@@ -1,4 +1,4 @@
-use crate::examples::*;
+use crate::examples::{aspect_sunspots::AspectRatioSunspots, *};
 use js_sys::wasm_bindgen::JsCast;
 use leptos::{html::Dialog, *};
 use leptos_router::{use_location, use_navigate, NavigateOptions};
@@ -9,11 +9,12 @@ macro_rules! example {
         #[component]
         fn $id() -> impl IntoView {
             let ctx = use_local_context();
+            let id = title_to_id($title);
             view! {
                 <figure class="background-box">
                     <figcaption>
-                        <h3>$title</h3>
-                        <p>$desc " " <ShowCode title=$title code=include_str!($path) /></p>
+                        <h3><a href=format!("#{id}")>$title</a></h3>
+                        <p>$desc " " <ShowCode id=id code=include_str!($path) /></p>
                     </figcaption>
                     <$ex debug=ctx.debug.into() data=ctx.data />
                 </figure>
@@ -175,7 +176,7 @@ pub fn Examples() -> impl IntoView {
                 <h2 id="scatter">"Scatter charts: " <em>"planned"</em></h2>
 
                 <div class="include-right">
-                    <h2 id="edge">"Edge layout options"</h2>
+                    <h2 id="edge"><a href="#edge">"Edge layout options"</a></h2>
                     <LegendExample />
                 </div>
                 <TickLabelsExample />
@@ -183,7 +184,7 @@ pub fn Examples() -> impl IntoView {
                 <EdgeLayoutExample />
 
                 <div class="include-right">
-                    <h2 id="inner">"Inner layout options"</h2>
+                    <h2 id="inner"><a href="#inner">"Inner layout options"</a></h2>
                     <AxisMarkerExample />
                 </div>
                 <GridLineExample />
@@ -192,21 +193,29 @@ pub fn Examples() -> impl IntoView {
                 <InnerLayoutExample />
 
                 <div class="include-right">
-                    <h2 id="features">"Features"</h2>
+                    <h2 id="features"><a href="#features">"Features"</a></h2>
                     <TooltipExample />
                 </div>
                 <ColoursExample />
             </div>
+
+            <section class="background-box">
+                <h2 id="aspect-ratio"><a href="#aspect-ratio">"Aspect ratio"</a></h2>
+                <AspectRatioSunspots debug=debug.into() />
+                <p><ShowCode id="aspect-ratio" code=include_str!("../examples/aspect_sunspots.rs") /></p>
+            </section>
         </article>
     }
 }
 
-#[component]
-fn ShowCode(#[prop(into)] title: String, #[prop(into)] code: String) -> impl IntoView {
-    let dialog = create_node_ref::<Dialog>();
-
+fn title_to_id(title: &str) -> String {
     // ID should not result in any encoding
-    let id = title.to_lowercase().replace(' ', "-");
+    title.to_lowercase().replace(' ', "-")
+}
+
+#[component]
+fn ShowCode(#[prop(into)] id: String, #[prop(into)] code: String) -> impl IntoView {
+    let dialog = create_node_ref::<Dialog>();
     let href = format!("#{}", id);
 
     // Opens dialogue on demand

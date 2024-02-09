@@ -1,3 +1,7 @@
+p {
+    max-width: 40em;
+}
+
 header {
     border-bottom: 1px solid #fc7089;
     font-size: 100%;
@@ -121,7 +125,7 @@ fieldset input[type=color] {
 }
 
 #examples h1,
-#examples .cards>h2,
+#examples h2,
 #examples .cards>div>h2,
 #examples .cards figcaption>h3,
 fieldset>legend {
@@ -132,6 +136,12 @@ fieldset>legend {
     width: fit-content;
     font-weight: bold;
     font-size: 110%;
+}
+
+#examples h2>a,
+#examples h3>a {
+    text-decoration: none;
+    color: inherit;
 }
 
 .background-box {
@@ -181,7 +191,7 @@ fieldset>legend {
     flex-flow: row nowrap;
     gap: 0.5em;
     /* FF miscalculates (or I misunderstand) the width of our sideways text */
-    width: calc(300px + 2.5em + 5.5em);
+    width: calc(300px + 2.5em + 4em);
 }
 
 #examples .cards>h2,
@@ -222,4 +232,12 @@ fieldset>legend {
 
 ::backdrop {
     background-color: rgba(200, 200, 200, 0.75);
+}
+
+#examples section {
+    margin-top: 2em;
+}
+
+#examples section>h2 {
+    margin-top: -2em;
 }
