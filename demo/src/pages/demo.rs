@@ -184,23 +184,25 @@ pub fn Demo() -> impl IntoView {
 
     view! {
         <article id="demo">
-            {move || view!{
-                <Chart
-                    aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
-                    font_height=font_height
-                    font_width=font_width
-                    debug=debug
-                    padding=Signal::derive(move || Padding::from(padding.get()))
-                    top=top.get().into_inner()
-                    right=right.get().into_inner()
-                    bottom=bottom.get().into_inner()
-                    left=left.get().into_inner()
-                    inner=inner.get().into_inner()
-                    tooltip=tooltip.clone()
-                    series=series.clone()
-                    data=data
-                />
-            }}
+            <section id="frame">
+                {move || view!{
+                    <Chart
+                        aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
+                        font_height=font_height
+                        font_width=font_width
+                        debug=debug
+                        padding=Signal::derive(move || Padding::from(padding.get()))
+                        top=top.get().into_inner()
+                        right=right.get().into_inner()
+                        bottom=bottom.get().into_inner()
+                        left=left.get().into_inner()
+                        inner=inner.get().into_inner()
+                        tooltip=tooltip.clone()
+                        series=series.clone()
+                        data=data
+                    />
+                }}
+            </section>
 
             <div class="outer">
                 <fieldset class="options">

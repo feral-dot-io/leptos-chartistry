@@ -28,6 +28,7 @@ For release:
 - Check nix + trunk = release
 - Fix up links
 - Release to crates.io
+- Update AR example with a link to crates.io
 
 Features to add:
 - Stacked line ordering

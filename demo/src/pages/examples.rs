@@ -199,8 +199,8 @@ pub fn Examples() -> impl IntoView {
                 <ColoursExample />
             </div>
 
-            <section class="background-box">
-                <h2 id="aspect-ratio"><a href="#aspect-ratio">"Aspect ratio"</a></h2>
+            <section id="aspect-ratio" class="background-box">
+                <h2><a href="#aspect-ratio">"Aspect ratio"</a></h2>
                 <AspectRatioSunspots debug=debug.into() />
                 <p><ShowCode id="aspect-ratio" code=include_str!("../examples/aspect_sunspots.rs") /></p>
             </section>

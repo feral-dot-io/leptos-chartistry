@@ -55,7 +55,7 @@ main {
     background: repeating-radial-gradient(circle at top, #eee, #12a5ed);
 }
 
-#demo>._chartistry {
+#demo>#frame {
     background-color: #fff;
     border: 1px solid #000;
     margin: 0 auto;
@@ -242,4 +242,8 @@ fieldset>legend {
 
 #examples section>h2 {
     margin-top: -2em;
+}
+
+#aspect-ratio>._chartistry:first-child {
+    width: 40em;
 }
