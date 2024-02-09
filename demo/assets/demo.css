@@ -126,6 +126,18 @@ fieldset input[type=color] {
     height: 1.6em;
 }
 
+#examples>h1,
+#examples .cards>h2,
+#examples .cards>div>h2,
+#examples .cards figcaption>h3 {
+    background-color: #fff;
+    border-bottom: 0.2em solid #fc7089;
+    margin: 0;
+    padding: 0.2em;
+    width: fit-content;
+}
+
+
 .background-box {
     background-color: #fff;
     border: 1px solid #000;
@@ -174,7 +186,8 @@ fieldset input[type=color] {
     width: calc(300px + 2.5em + 5.5em);
 }
 
-#examples .cards h2 {
+#examples .cards>h2,
+#examples .cards>div>h2 {
     border: 1px solid #000;
     border-right: 0.2em solid #fc7089;
     padding: 1em;
@@ -212,17 +225,4 @@ fieldset input[type=color] {
 
 ::backdrop {
     background-color: rgba(200, 200, 200, 0.75);
-}
-
-main h1,
-main h2,
-main h3,
-main h4,
-main h5,
-main h6 {
-    background-color: #fff;
-    border-bottom: 0.2em solid #fc7089;
-    margin: 0;
-    padding: 0.2em;
-    width: fit-content;
 }
