@@ -205,6 +205,18 @@ fn RenderChart<'a, X: Tick, Y: Tick>(
             viewBox=move || with!(|outer| format!("0 0 {} {}", outer.width(), outer.height()))
             style="display: block; overflow: visible;">
             <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
+            <defs>
+                <marker
+                    id="marker_axis_arrow"
+                    markerUnits="strokeWidth"
+                    markerWidth=7
+                    markerHeight=8
+                    refX=0
+                    refY=4
+                    orient="auto">
+                    <path d="M0,0 L0,8 L7,4 z" fill="context-stroke" />
+                </marker>
+            </defs>
             {inner}
             {edges}
             <RenderData state=state.clone() />

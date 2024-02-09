@@ -167,18 +167,6 @@ fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) ->
     let colour = move || colour.get().to_string();
     view! {
         <g class="_chartistry_axis_marker">
-            <defs>
-                <marker
-                    id="marker_axis_arrow"
-                    markerUnits="strokeWidth"
-                    markerWidth=7
-                    markerHeight=8
-                    refX=0
-                    refY=4
-                    orient="auto">
-                    <path d="M0,0 L0,8 L7,4 z" colour=colour />
-                </marker>
-            </defs>
             <Show when=move || in_bounds.get() >
                 <DebugRect label="axis_marker" debug=debug />
                 <line
