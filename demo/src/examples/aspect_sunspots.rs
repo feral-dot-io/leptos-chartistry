@@ -16,6 +16,8 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
         <Chart
             debug=debug
             aspect_ratio=AspectRatio::inner_ratio(600.0, 600.0)
+
+            top=RotatedLabel::middle("Daily sunspots")
             left=y_ticks.clone()
             bottom=x_ticks.clone()
             inner=vec![
@@ -37,6 +39,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
         <Chart
             debug=debug
             aspect_ratio=AspectRatio::inner_width(30.0, 25.0)
+
             bottom=x_ticks.clone()
             inner=vec![
                 XGridLine::from_ticks(x_ticks.clone()).into_inner(),
