@@ -33,7 +33,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
                 YGuideLine::over_mouse().into_inner(),
                 XGuideLine::over_data().into_inner(),
             ]
-            tooltip=Tooltip::left_cursor()
+            tooltip=Tooltip::left_cursor().show_x_ticks(false)
         />
     }
 }

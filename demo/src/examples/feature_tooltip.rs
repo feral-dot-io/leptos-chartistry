@@ -16,7 +16,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
             data=data
 
             // Add a tooltip to the chart
-            tooltip=Tooltip::left_cursor()
+            tooltip=Tooltip::left_cursor().show_x_ticks(false)
         />
     }
 }

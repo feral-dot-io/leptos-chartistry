@@ -22,6 +22,9 @@ pub struct Tooltip<X: 'static, Y: 'static> {
     pub cursor_distance: RwSignal<f64>,
     /// If true, skips Y values that are `f64::NAN`.
     pub skip_missing: RwSignal<bool>,
+    /// Whether to show X ticks. Default is true.
+    // TODO: move to TickLabels
+    pub show_x_ticks: RwSignal<bool>,
     /// X axis formatter.
     pub x_ticks: TickLabels<X>,
     /// Y axis formatter.
@@ -94,6 +97,12 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
         self.skip_missing.set(skip_missing.into());
         self
     }
+
+    /// Sets whether to show X ticks.
+    pub fn show_x_ticks(self, show_x_ticks: impl Into<bool>) -> Self {
+        self.show_x_ticks.set(show_x_ticks.into());
+        self
+    }
 }
 
 impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
@@ -102,7 +111,8 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
             placement: RwSignal::default(),
             sort_by: RwSignal::default(),
             cursor_distance: create_rw_signal(TOOLTIP_CURSOR_DISTANCE),
-            skip_missing: false.into(),
+            skip_missing: create_rw_signal(false),
+            show_x_ticks: create_rw_signal(true),
             x_ticks: TickLabels::default(),
             y_ticks: TickLabels::default(),
         }
@@ -194,6 +204,7 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
         sort_by,
         skip_missing,
         cursor_distance,
+        show_x_ticks,
         x_ticks,
         y_ticks,
     } = tooltip;
@@ -217,6 +228,10 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
     let y_ticks = y_ticks.generate_y(&state.pre, avail_height);
 
     let x_body = move || {
+        // Hide ticks?
+        if !show_x_ticks.get() {
+            return "".to_string();
+        }
         let x_format = x_format.get();
         with!(|nearest_data_x, x_ticks| {
             nearest_data_x.as_ref().map_or_else(
