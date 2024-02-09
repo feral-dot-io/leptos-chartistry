@@ -203,7 +203,7 @@ fieldset input[type=color] {
 }
 
 ::backdrop {
-    background-color: rgba(0, 0, 0, 0.75);
+    background-color: rgba(200, 200, 200, 0.75);
 }
 
 main h1,

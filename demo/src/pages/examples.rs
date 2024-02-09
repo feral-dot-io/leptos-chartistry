@@ -1,41 +1,28 @@
 use crate::examples::*;
 use js_sys::wasm_bindgen::JsCast;
 use leptos::{html::Dialog, *};
+use leptos_router::use_location;
 use web_sys::{HtmlDialogElement, MouseEvent};
-
-#[component]
-fn ExampleFigure(
-    title: &'static str,
-    desc: &'static str,
-    code: &'static str,
-    children: Children,
-) -> impl IntoView {
-    view! {
-        <figure class="background-box">
-            <figcaption>
-                <h3>{title}</h3>
-                <p>{desc} " " <ShowCode code=code /></p>
-            </figcaption>
-            {children()}
-        </figure>
-    }
-}
 
 macro_rules! example {
     ($id:ident, $ex:path, $title:literal, $desc:literal, $path:literal) => {
         #[component]
-        fn $id(debug: ReadSignal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
+        fn $id() -> impl IntoView {
+            let ctx = use_local_context();
             view! {
-                <ExampleFigure title=$title desc=$desc code=include_str!($path)>
-                    <$ex debug=debug.into() data=data />
-                </ExampleFigure>
+                <figure class="background-box">
+                    <figcaption>
+                        <h3>$title</h3>
+                        <p>$desc " " <ShowCode title=$title code=include_str!($path) /></p>
+                    </figcaption>
+                    <$ex debug=ctx.debug.into() data=ctx.data />
+                </figure>
             }
         }
     };
 }
 
 // Lines
-
 example!(
     LineExample,
     series_line::Example,
@@ -144,10 +131,24 @@ example!(
     "../examples/feature_colours.rs"
 );
 
+#[derive(Clone)]
+struct Context {
+    debug: RwSignal<bool>,
+    data: Signal<Vec<MyData>>,
+}
+
+fn use_local_context() -> Context {
+    use_context::<Context>().expect("missing examples::context")
+}
+
 #[component]
 pub fn Examples() -> impl IntoView {
-    let (debug, set_debug) = create_signal(false);
-    let data = load_data();
+    let debug = create_rw_signal(false);
+    provide_context(Context {
+        debug,
+        data: load_data(),
+    });
+
     view! {
         <article id="examples">
             <h1>"Examples"</h1>
@@ -156,71 +157,90 @@ pub fn Examples() -> impl IntoView {
                     <p class="background-box">
                         <label>
                             <input type="checkbox" input type="checkbox"
-                                on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
+                                on:input=move |ev| debug.set(event_target_checked(&ev)) />
                             " Debug mode"
                         </label>
                     </p>
                     <ul class="background-box">
-                        <li><a href="#line">"Line charts"</a></li>
                         <li><a href="#edge">"Edge layout options"</a></li>
                         <li><a href="#inner">"Inner layout options"</a></li>
                         <li><a href="#features">"Features"</a></li>
                     </ul>
                 </nav>
 
-                <h2 id="line">"Line charts"</h2>
-                <LineExample debug=debug data=data />
-                <StackedLineExample debug=debug data=data />
+                <LineExample />
+                <StackedLineExample />
 
                 <h2 id="bar">"Bar charts: " <em>"planned"</em></h2>
                 <h2 id="scatter">"Scatter charts: " <em>"planned"</em></h2>
 
                 <h2 id="edge">"Edge layout options"</h2>
-                <LegendExample debug=debug data=data />
-                <TickLabelsExample debug=debug data=data />
-                <RotatedLabelExample debug=debug data=data />
-                <EdgeLayoutExample debug=debug data=data />
+                <LegendExample />
+                <TickLabelsExample />
+                <RotatedLabelExample />
+                <EdgeLayoutExample />
 
                 <h2 id="inner">"Inner layout options"</h2>
-                <AxisMarkerExample debug=debug data=data />
-                <GridLineExample debug=debug data=data />
-                <GuideLineExample debug=debug data=data />
-                <InsetLegendExample debug=debug data=data />
-                <InnerLayoutExample debug=debug data=data />
+                <AxisMarkerExample />
+                <GridLineExample />
+                <GuideLineExample />
+                <InsetLegendExample />
+                <InnerLayoutExample />
 
                 <h2 id="features">"Features"</h2>
-                <TooltipExample debug=debug data=data />
-                <ColoursExample debug=debug data=data />
+                <TooltipExample />
+                <ColoursExample />
             </div>
         </article>
     }
 }
 
 #[component]
-fn ShowCode(#[prop(into)] code: String) -> impl IntoView {
+fn ShowCode(#[prop(into)] title: String, #[prop(into)] code: String) -> impl IntoView {
     let dialog = create_node_ref::<Dialog>();
-    let on_open = move |ev: MouseEvent| {
-        ev.prevent_default();
-        if let Some(dialog) = dialog.get() {
-            dialog
-                .show_modal()
-                .expect("unable to show example code dialog");
-        }
+
+    // ID should not result in any encoding
+    let id = title.to_lowercase().replace(' ', "-");
+    let href = format!("#{}", id);
+
+    // Opens dialogue on demand
+    let show_modal = move |dialog: HtmlElement<Dialog>| {
+        dialog
+            .show_modal()
+            .expect("unable to show example code dialog")
     };
-    let on_close = move |ev: MouseEvent| {
-        ev.prevent_default();
+
+    let on_click = move |_| {
+        dialog.get().map(show_modal);
+    };
+    let on_dismiss = move |ev: MouseEvent| {
         if let Some(dialog) = dialog.get() {
-            // Close dialogue (it covers the whole page) on interaction unless user clicks on text inside
             if let Some(target) = ev.target() {
+                // Skip if click was inside the dialog
                 if target.dyn_ref::<HtmlDialogElement>().is_some() {
                     dialog.close()
                 }
             }
         }
     };
+
+    // Show if page fragment matches ID
+    // TODO investigate why this triggers a panic https://docs.rs/leptos/latest/leptos/struct.NodeRef.html#method.on_load
+    create_render_effect(move |_| {
+        if let Some(dialog) = dialog.get() {
+            let hash = use_location().hash.get().trim_start_matches('#').to_owned();
+            let hash: String = js_sys::decode_uri(&hash)
+                .map(|s| s.into())
+                .unwrap_or_default();
+            if hash == id {
+                let _ = dialog.on_mount(show_modal);
+            }
+        }
+    });
+
     view! {
-        <a href="#" on:click=on_open>"Show example code"</a>
-        <dialog node_ref=dialog on:click=on_close>
+        <a href=href on:click=on_click>"Show example code"</a>
+        <dialog node_ref=dialog on:click=on_dismiss>
             <pre><code>{code}</code></pre>
         </dialog>
     }
