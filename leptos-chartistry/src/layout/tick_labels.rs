@@ -45,7 +45,7 @@ impl<Tick> Clone for TickLabels<Tick> {
 
 impl<Tick: crate::Tick> Default for TickLabels<Tick> {
     fn default() -> Self {
-        Self::from_generator(Tick::default_generator())
+        Self::from_generator(Tick::tick_label_generator())
     }
 }
 

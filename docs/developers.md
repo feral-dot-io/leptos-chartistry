@@ -20,7 +20,6 @@ For release:
     - struct Stack
 - environment doesn't work???
 - aspect_ratio example should use environment width
-- Tooltip full formatting on example pages -- missing a sensible default?
 - Aspect ratio side scroller
 
 - Make repo public, serve docs/ under pages

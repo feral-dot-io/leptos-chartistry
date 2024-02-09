@@ -9,15 +9,20 @@ use chrono::prelude::*;
 
 /// A type that can be used as a tick on an axis. Try to rely on provided implementations.
 pub trait Tick: Clone + PartialEq + PartialOrd + std::fmt::Debug + 'static {
-    /// Default fallback tick generator for when one is not provided.
-    fn default_generator() -> impl TickGen<Tick = Self>;
+    /// Default tick generator used in tick labels.
+    fn tick_label_generator() -> impl TickGen<Tick = Self>;
+
+    /// Default tick generator used in tooltips.
+    fn tooltip_generator() -> impl TickGen<Tick = Self> {
+        Self::tick_label_generator()
+    }
 
     /// Maps the tick to a position on the axis. Must be uniform. May return `f64::NAN` for missing data.
     fn position(&self) -> f64;
 }
 
 impl Tick for f64 {
-    fn default_generator() -> impl TickGen<Tick = Self> {
+    fn tick_label_generator() -> impl TickGen<Tick = Self> {
         AlignedFloats::default()
     }
 
@@ -31,8 +36,12 @@ where
     Tz: TimeZone + 'static,
     Tz::Offset: std::fmt::Display,
 {
-    fn default_generator() -> impl TickGen<Tick = Self> {
+    fn tick_label_generator() -> impl TickGen<Tick = Self> {
         Timestamps::default()
+    }
+
+    fn tooltip_generator() -> impl TickGen<Tick = Self> {
+        Timestamps::default().with_long_format()
     }
 
     fn position(&self) -> f64 {

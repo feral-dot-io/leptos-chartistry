@@ -72,7 +72,11 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
 
     /// Creates a new tooltip with the given placement. Uses default X and Y ticks.
     pub fn from_placement(placement: impl Into<TooltipPlacement>) -> Self {
-        Self::new(placement, TickLabels::default(), TickLabels::default())
+        Self::new(
+            placement,
+            TickLabels::from_generator(X::tooltip_generator()),
+            TickLabels::from_generator(Y::tooltip_generator()),
+        )
     }
 
     /// Creates a new tooltip left of the cursor. Uses default X and Y ticks.
