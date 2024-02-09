@@ -18,14 +18,12 @@ For release:
     - struct Series
     - struct Line
     - struct Stack
-    - aspect_ratio
-- environment_[height|width] don't make sense
 - environment doesn't work???
 - aspect_ratio example should use environment width
 - aligned_floats is generating weird values. The printed values look rounded
 - Hide tooltip X value for example
 - Tooltip full formatting on example pages -- missing a sensible default?
-- Aspect ratio side scroller``
+- Aspect ratio side scroller
 
 - Make repo public, serve docs/ under pages
 - Method to rebuild demo

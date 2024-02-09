@@ -857,9 +857,9 @@ fn derive_aspect_ratio(
                 Calc::Ratio => AspectRatio::inner_ratio(width, height),
             },
             AspectOption::Environment => match calc {
-                Calc::Width => AspectRatio::environment_width(ratio),
-                Calc::Height => AspectRatio::environment_height(ratio),
-                Calc::Ratio => AspectRatio::environment(),
+                Calc::Width => AspectRatio::from_environment_height(ratio),
+                Calc::Height => AspectRatio::from_environment_width(ratio),
+                Calc::Ratio => AspectRatio::from_environment(),
             },
         }
     })
