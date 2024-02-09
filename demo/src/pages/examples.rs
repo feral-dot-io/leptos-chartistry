@@ -1,7 +1,7 @@
 use crate::examples::*;
 use js_sys::wasm_bindgen::JsCast;
 use leptos::{html::Dialog, *};
-use leptos_router::use_location;
+use leptos_router::{use_location, use_navigate, NavigateOptions};
 use web_sys::{HtmlDialogElement, MouseEvent};
 
 macro_rules! example {
@@ -224,7 +224,17 @@ fn ShowCode(#[prop(into)] title: String, #[prop(into)] code: String) -> impl Int
             if let Some(target) = ev.target() {
                 // Skip if click was inside the dialog
                 if target.dyn_ref::<HtmlDialogElement>().is_some() {
-                    dialog.close()
+                    dialog.close();
+                    // Navigate away from the fragment
+                    use_navigate()(
+                        &use_location().pathname.get(),
+                        NavigateOptions {
+                            resolve: true,
+                            replace: true,
+                            scroll: false,
+                            state: Default::default(),
+                        },
+                    );
                 }
             }
         }
