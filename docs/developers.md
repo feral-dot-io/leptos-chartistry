@@ -43,5 +43,5 @@ Features to add:
 ## Release checklist
 
 - Run `cargo update` and commit.
-- Run `./demo/release` and commit.
-
+- Update the version in `Cargo.toml` and commit.
+- Run `./demo/release` and commit (requires Nix flakes).
