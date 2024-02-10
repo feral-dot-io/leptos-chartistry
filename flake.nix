@@ -27,21 +27,26 @@
 
         demoArgs = with pkgs; {
           CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
-          trunkExtraBuildArgs =
-            "--features build-demo --public-url /leptos-chartistry";
+          cargoExtraArgs = "--package=demo";
+          trunkExtraBuildArgs = "--public-url /leptos-chartistry";
+
+          pname = "chartistry-demo";
+          version = "0.0.1";
           strictDeps = true;
           src = lib.cleanSourceWith {
             src = ./.;
             filter = path: type:
-              (lib.hasSuffix ".html" path) || (lib.hasInfix "/public/" path)
+              (lib.hasSuffix ".html" path) || (lib.hasInfix "/assets/" path)
               || (craneLib.filterCargoSources path type);
           };
         };
 
+        cargoArtifacts =
+          craneLib.buildDepsOnly (demoArgs // { doCheck = false; });
+
         demo = craneLib.buildTrunkPackage (demoArgs // {
-          pname = "chartistry-demo";
-          cargoArtifacts =
-            craneLib.buildDepsOnly (demoArgs // { doCheck = false; });
+          inherit cargoArtifacts;
+          trunkIndexPath = "demo/index.html";
           wasm-bindgen-cli = pkgs.wasm-bindgen-cli.override {
             version = "0.2.90";
             hash = "sha256-X8+DVX7dmKh7BgXqP7Fp0smhup5OO8eWEhn26ODYbkQ=";
@@ -51,7 +56,15 @@
       in {
         devShells.default =
           pkgs.mkShell { packages = with pkgs; [ trunk wasm-bindgen-cli ]; };
-        checks.demo = demo;
+        checks = {
+          inherit demo;
+          # Check formatting and clippy 
+          fmt = craneLib.cargoFmt demoArgs;
+          clippy = craneLib.cargoClippy (demoArgs // {
+            inherit cargoArtifacts;
+            cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+          });
+        };
         packages.demo = demo;
       });
 }
