@@ -18,9 +18,6 @@ For release:
     - struct Series
     - struct Line
     - struct Stack
-- environment doesn't work???
-- aspect_ratio example should use environment width
-- Aspect ratio side scroller
 
 - Make repo public, serve docs/ under pages
 - Method to rebuild demo

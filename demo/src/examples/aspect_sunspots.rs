@@ -58,7 +58,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
         <p>"We can make more sense of the data—and see more useful patterns—by "
         "setting a fixed ratio for a chart. This can be done by supplying two "
         "variables from the formula: " <code>"width / height = ratio"</code>.</p>
-        <div style:width=frame_width>
+        <div style:width=frame_width style="height: 90px;">
             <Chart
                 debug=debug
                 aspect_ratio=AspectRatio::from_env_width_apply_ratio(15.0)
