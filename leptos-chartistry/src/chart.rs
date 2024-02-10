@@ -117,7 +117,14 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     let have_dimensions = create_memo(move |_| watch.bounds.get().is_some());
     let width = create_memo(move |_| watch.bounds.get().unwrap_or_default().width());
     let height = create_memo(move |_| watch.bounds.get().unwrap_or_default().height());
-    let calc = AspectRatio::known_signal(aspect_ratio, width, height);
+    let calc = AspectRatio::known_signal(aspect_ratio.clone(), width, height);
+    let env_size = move || {
+        if aspect_ratio.get().is_env() {
+            "100%"
+        } else {
+            "fit-content"
+        }
+    };
 
     let debug = create_memo(move |_| debug.get());
     let font_height = create_memo(move |_| font_height.map(|f| f.get()).unwrap_or(FONT_HEIGHT));
@@ -139,7 +146,12 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     let pre = PreState::new(debug.into(), font_height, font_width, padding.into(), data);
 
     view! {
-        <div node_ref=root class="_chartistry" style="width: fit-content; height: fit-content; overflow: visible;">
+        <div
+            node_ref=root
+            class="_chartistry"
+            style:width=env_size.clone()
+            style:height=env_size
+            style="overflow: visible;">
             <DebugRect label="Chart" debug=debug />
             <Show when=move || have_dimensions.get() fallback=|| view!(<p>"Loading..."</p>)>
                 <RenderChart

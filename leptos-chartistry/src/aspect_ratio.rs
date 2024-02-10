@@ -2,7 +2,7 @@ use leptos::*;
 
 /// Calculates the width and height of a chart.
 ///
-/// An AspectRatio is built from the available constructors: `[inner|outer|environment]_[width|height|ratio]`.
+/// An AspectRatio is built from the available constructors: `[inner|outer|env]_[width|height|ratio]`.
 ///
 /// The first part `[inner|outer]` is a choice of what kind of dimensions we are calculating: the inner chart area or the outer chart including the edge layout. Environment auto-fills the width and / or height from the outer parent container.
 ///
@@ -20,7 +20,7 @@ use leptos::*;
 ///
 /// You should preference "inner" dimensions when you can which leads to a chart-centric approach (the chart is always matches your intention). However charts also live on a web page with constraints -- and its in this context that you'll probably prefer to work with a chart with known "outer" dimensions. When using outer dimensions try to ensure the layout is a fixed size regardless of the input data and this will be just as good as having a fixed inner chart (setting [TickLabels::min_chars](crate::TickLabels::min_chars) on the Y axis is an example of this).
 ///
-/// Finally the "environment" dimensions work great for automatically grabbing the width or height from the parent container. The same caveats as "outer" apply but you have less control. YOLO! The risk is that if you change the page and incidentally change the dimensions, you'll change your perception of the chart.
+/// Finally the "env" dimensions work great for automatically grabbing the width or height from the parent container. The same caveats as "outer" apply but you have less control. YOLO! The risk is that if you change the page and incidentally change the dimensions, you'll change your perception of the chart.
 ///
 /// I find that there's usually an obvious choice of width or height to pick from e.g., my page is growing horizontally or I'm expecting a lot of free space to the side. In these cases, I'll pick that variable and use a ratio that fits well for the chart. You can't really go wrong here as they're all part of the same choice.
 ///
@@ -35,10 +35,13 @@ enum CalcUsing {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[allow(dead_code)]
 enum EnvCalc {
-    WidthAndRatio(f64),
-    HeightAndRatio(f64),
-    WidthAndHeight,
+    AutoWidthAndRatio(f64),
+    AutoWidthAndHeight(f64),
+    AutoHeightAndRatio(f64),
+    AutoHeightAndWidth(f64),
+    FullyAuto,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -93,19 +96,31 @@ impl AspectRatio {
         Self::new_inner(AspectRatioVars::WidthAndHeight(width, height))
     }
 
-    /// Gets the width from the environment then uses [Self::from_outer_height] with the given ratio.
-    pub const fn from_environment_width(ratio: f64) -> Self {
-        Self(CalcUsing::Env(EnvCalc::WidthAndRatio(ratio)))
+    /// Automatically gets the width from the environment. The parent container *must* have a width. Then calls [Self::from_outer_ratio] See the notes on [Self::from_env].
+    pub const fn from_env_width(height: f64) -> Self {
+        Self(CalcUsing::Env(EnvCalc::AutoWidthAndHeight(height)))
     }
 
-    /// Gets the height from the environment then uses [Self::from_outer_width] with the given ratio.
-    pub const fn from_environment_height(ratio: f64) -> Self {
-        Self(CalcUsing::Env(EnvCalc::HeightAndRatio(ratio)))
+    /// Automatically gets the width from the environment. The parent container *must* have a width. Then calls [Self::from_outer_height]. See the notes on [Self::from_env].
+    pub const fn from_env_width_apply_ratio(ratio: f64) -> Self {
+        Self(CalcUsing::Env(EnvCalc::AutoWidthAndRatio(ratio)))
     }
 
-    /// Gets both the width and height from the environment then uses [Self::from_outer_ratio].
-    pub const fn from_environment() -> Self {
-        Self(CalcUsing::Env(EnvCalc::WidthAndHeight))
+    /// Automatically gets the height from the environment. The parent container *must* have a height. Then calls [Self::from_outer_ratio]. See the notes on [Self::from_env].
+    pub const fn from_env_height(width: f64) -> Self {
+        Self(CalcUsing::Env(EnvCalc::AutoHeightAndWidth(width)))
+    }
+
+    /// Automatically gets the height from the environment. The parent container *must* have a height. Then calls [Self::from_outer_width]. See the notes on [Self::from_env].
+    pub const fn from_env_height_apply_ratio(ratio: f64) -> Self {
+        Self(CalcUsing::Env(EnvCalc::AutoHeightAndRatio(ratio)))
+    }
+
+    /// Automatically gets the width and height from the environment. Then calls [Self::from_outer_ratio].
+    ///
+    /// You should avoid using this where possible as you have to be certain the parent container has an associated width and height. You should consider using [Self::from_inner_ratio] or [Self::from_outer_ratio] instead. Sometimes you'll have a width set but not a height in which case [Self::from_env_width] will still work.
+    pub const fn from_env() -> Self {
+        Self(CalcUsing::Env(EnvCalc::FullyAuto))
     }
 
     pub(crate) fn known_signal(
@@ -122,16 +137,22 @@ impl AspectRatio {
             }
         })
     }
+
+    pub(super) fn is_env(&self) -> bool {
+        matches!(self.0, CalcUsing::Env(_))
+    }
 }
 
 impl EnvCalc {
     fn into_known(self, width: f64, height: f64) -> KnownAspectRatio {
-        use AspectRatioVars as C;
+        use AspectRatioVars as V;
         use KnownAspectRatio as K;
         match self {
-            Self::WidthAndRatio(ratio) => K::Outer(C::WidthAndRatio(width, ratio)),
-            Self::HeightAndRatio(ratio) => K::Outer(C::HeightAndRatio(height, ratio)),
-            Self::WidthAndHeight => K::Outer(C::WidthAndHeight(width, height)),
+            Self::AutoWidthAndRatio(ratio) => K::Outer(V::WidthAndRatio(width, ratio)),
+            Self::AutoWidthAndHeight(height) => K::Outer(V::WidthAndHeight(width, height)),
+            Self::AutoHeightAndRatio(ratio) => K::Outer(V::HeightAndRatio(height, ratio)),
+            Self::AutoHeightAndWidth(width) => K::Outer(V::WidthAndHeight(width, height)),
+            Self::FullyAuto => K::Outer(V::WidthAndHeight(width, height)),
         }
     }
 }

@@ -20,11 +20,7 @@ const ALL_AXIS_PLACEMENTS: &[AxisPlacement] = &[
     AxisPlacement::VerticalZero,
 ];
 const ALL_EDGES: &[Edge] = &[Edge::Top, Edge::Right, Edge::Bottom, Edge::Left];
-const ALL_ASPECT_OPTIONS: &[AspectOption] = &[
-    AspectOption::Outer,
-    AspectOption::Inner,
-    AspectOption::Environment,
-];
+const ALL_ASPECT_OPTIONS: &[AspectOption] = &[AspectOption::Outer, AspectOption::Inner];
 const ALL_ASPECT_CALCS: &[AspectCalc] = &[AspectCalc::Ratio, AspectCalc::Width, AspectCalc::Height];
 const ALL_TOOLTIP_PLACEMENTS: &[TooltipPlacement] =
     &[TooltipPlacement::Hide, TooltipPlacement::LeftCursor];
@@ -63,7 +59,6 @@ enum AspectOption {
     Outer,
     #[default]
     Inner,
-    Environment,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
@@ -184,25 +179,23 @@ pub fn Demo() -> impl IntoView {
 
     view! {
         <article id="demo">
-            <section id="frame">
-                {move || view!{
-                    <Chart
-                        aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
-                        font_height=font_height
-                        font_width=font_width
-                        debug=debug
-                        padding=Signal::derive(move || Padding::from(padding.get()))
-                        top=top.get().into_inner()
-                        right=right.get().into_inner()
-                        bottom=bottom.get().into_inner()
-                        left=left.get().into_inner()
-                        inner=inner.get().into_inner()
-                        tooltip=tooltip.clone()
-                        series=series.clone()
-                        data=data
-                    />
-                }}
-            </section>
+            {move || view!{
+                <Chart
+                    aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
+                    font_height=font_height
+                    font_width=font_width
+                    debug=debug
+                    padding=Signal::derive(move || Padding::from(padding.get()))
+                    top=top.get().into_inner()
+                    right=right.get().into_inner()
+                    bottom=bottom.get().into_inner()
+                    left=left.get().into_inner()
+                    inner=inner.get().into_inner()
+                    tooltip=tooltip.clone()
+                    series=series.clone()
+                    data=data
+                />
+            }}
 
             <div class="outer">
                 <fieldset class="options">
@@ -424,7 +417,6 @@ impl std::fmt::Display for AspectOption {
         match self {
             AspectOption::Outer => write!(f, "Outer"),
             AspectOption::Inner => write!(f, "Inner"),
-            AspectOption::Environment => write!(f, "Environment"),
         }
     }
 }
@@ -436,7 +428,6 @@ impl FromStr for AspectOption {
         match s.to_lowercase().as_str() {
             "outer" => Ok(AspectOption::Outer),
             "inner" => Ok(AspectOption::Inner),
-            "environment" => Ok(AspectOption::Environment),
             _ => Err("unknown aspect ratio option"),
         }
     }
@@ -858,11 +849,6 @@ fn derive_aspect_ratio(
                 Calc::Height => AspectRatio::from_inner_height(width, ratio),
                 Calc::Ratio => AspectRatio::from_inner_ratio(width, height),
             },
-            AspectOption::Environment => match calc {
-                Calc::Width => AspectRatio::from_environment_height(ratio),
-                Calc::Height => AspectRatio::from_environment_width(ratio),
-                Calc::Ratio => AspectRatio::from_environment(),
-            },
         }
     })
 }
@@ -922,7 +908,7 @@ fn AspectRatio(
     });
 
     let env = || "from-env";
-    let is_env = move || aspect.get() == AspectOption::Environment;
+    let is_env = move || false;
     let is_dual_env = move || is_env() && calc.get() == AspectCalc::Ratio;
     view! {
         <span>
