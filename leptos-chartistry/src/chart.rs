@@ -15,30 +15,79 @@ use leptos::{html::Div, *};
 pub const FONT_HEIGHT: f64 = 16.0;
 pub const FONT_WIDTH: f64 = 10.0;
 
-/// Builds an SVG chart. Used inside the [Leptos view macro](https://docs.rs/leptos/latest/leptos/macro.view.html).
+/// Renders an SVG chart.
 ///
-/// Check the required and optional props list near the bottom for a quick overview. There is an [assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples) available too.
+/// Check the required and optional props list near the bottom for a quick overview. Used inside the [Leptos view macro](https://docs.rs/leptos/latest/leptos/macro.view.html).
+///
+/// ## Examples
+///
+/// There is an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples) available. See below for a quick [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#line-chart):
+///
+/// ```rust
+/// use leptos::*;
+/// use leptos_chartistry::*;
+///
+/// let data: Signal<Vec<MyData>> = load_data(/* pull data from a resource */);
+/// view! {
+///     <Chart
+///         // Sets the width and height
+///         aspect_ratio=AspectRatio::from_outer_ratio(600.0, 300.0)
+///
+///         // Decorate our chart
+///         top=RotatedLabel::middle("My garden")
+///         left=TickLabels::aligned_floats()
+///         right=Legend::end()
+///         bottom=TickLabels::timestamps()
+///         inner=[
+///             AxisMarker::left_edge().into_inner(),
+///             AxisMarker::bottom_edge().into_inner(),
+///             XGridLine::default().into_inner(),
+///             YGridLine::default().into_inner(),
+///             YGuideLine::over_mouse().into_inner(),
+///             XGuideLine::over_data().into_inner(),
+///         ]
+///         tooltip=Tooltip::left_cursor()
+///
+///         // Describe the data
+///         series=Series::new(|data: &MyData| data.x)
+///             .line(Line::new(|data: &MyData| data.y1).with_name("butterflies"))
+///             .line(Line::new(|data: &MyData| data.y2).with_name("dragonflies"));
+///         data=data
+///     />
+/// }
+/// ```
 ///
 /// ## Layout props
 ///
 /// The chart is built up from layout components. Each edge has a `top`, `right`, `bottom`, and `left` prop while inside the chart has the `inner` prop. These layout props follow the builder pattern where you'll create a component, configure it to your liking, and then call [IntoEdge](crate::IntoEdge) or [IntoInner](crate::IntoInner) to get an edge layout or inner layout respectively.
 ///
+/// Here's an example of building a [TickLabels](crate::TickLabels) component, setting the minimum number of characters to 5, and then converting it for use to an edge layout:
+///
 /// ```rust
-/// // TODO Example of builder pattern
+/// TickLabels::aligned_floats().with_min_chars(5).into_edge()
 /// ```
 ///
-/// When building the component you'll have access to a [`RwSignal`](https://docs.rs/leptos/latest/leptos/struct.RwSignal.html) for each configuration option which enables fine-grained reactivity.
+/// ### Fine-grained reactivity
+///
+/// You'll also have access to this API via [`RwSignals`](https://docs.rs/leptos/latest/leptos/struct.RwSignal.html) allowing you to make changes after the chart creation. This enables fine-grained reactivity.
 ///
 /// ```rust
-/// // TODO Example of using fine-grained reactivity
+/// let y_ticks = TickLabels::aligned_floats().with_min_chars(5);
+/// // Copy the min_chars RwSignal
+/// let y_ticks_min_chars = y_ticks.min_chars;
+/// // Later on, you can change it on the fly:
+/// <button on:click=move |_| y_ticks_min_chars.set(10)>"Set min chars to 10"</button>
 /// ```
 ///
-/// There is a shortcut where a single component may be converted to a `vec![component.into_edge()]`. This is intended to make it easier to add a single component to a layout prop. For example:
+/// ### Shorthand
 ///
+/// The edges and inner props all take a `Vec` of components. Often you'll find yourself adding a single component to an edge. In this case you can use the layout option directly as it becomes shorthand for `vec![component.into_edge()]`. Here's an example:
 /// ```rust
-/// <Chart aspect_ratio=AspectRatio::inner_ratio(800.0, 600.0)
+/// <Chart aspect_ratio=AspectRatio::from_inner_ratio(800.0, 600.0)
 ///     // Shorthand for a single component:
-///     top=RotatedLabel::middle("Our chart title") />
+///     top=RotatedLabel::middle("Our chart title")
+///     // This becomes (but on a different edge):
+///     bottom=vec![RotatedLabel::middle("Our chart title").into_edge()] />
 /// ```
 #[component]
 pub fn Chart<T: 'static, X: Tick, Y: Tick>(
