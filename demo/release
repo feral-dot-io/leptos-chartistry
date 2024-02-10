@@ -17,6 +17,7 @@ nix flake check .
 demo="$(nix build --print-out-paths --no-link .#demo)"
 
 # Copy the release to docs
+rm -f ./docs/demo-* docs/index.html
 cp "$demo"/* ./docs
 
 git status
