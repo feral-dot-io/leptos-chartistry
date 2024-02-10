@@ -14,11 +14,6 @@ It's not clear that it could be efficient (avoiding extra iterations and copies 
 ## TODO
 
 For release:
-- Improve docs on:
-    - struct Series
-    - struct Line
-    - struct Stack
-
 - Make repo public, serve docs/ under pages
 - Method to rebuild demo
 - Write down dev cycle "run this oneshot command"

@@ -4,6 +4,24 @@ use leptos::*;
 use std::rc::Rc;
 
 /// Draws a line on the chart.
+///
+/// # Simple example
+/// With no legend names, lines can be a simple closure:
+/// ```rust
+/// let series = Series::new(|data: &MyData| data.x)
+///     .line(|data: &MyData| data.y1)
+///     .line(|data: &MyData| data.y2);
+/// ```
+/// See this in action with the [tick labels example](https://feral-dot-io.github.io/leptos-chartistry/examples#tick-labels).
+///
+/// # Example
+/// However, we can also set the name of the line which a legend can show:
+/// ```rust
+/// let series = Series::new(|data: &MyData| data.x)
+///     .line(Line::new(|data: &MyData| data.y1).with_name("pears"))
+///     .line(Line::new(|data: &MyData| data.y2).with_name("apples"));
+/// ```
+/// See this in action with the [legend example](https://feral-dot-io.github.io/leptos-chartistry/examples#legend).
 pub struct Line<T, Y> {
     get_y: Rc<dyn GetYValue<T, Y>>,
     /// Name of the line. Used in the legend.
@@ -25,19 +43,7 @@ pub struct UseLine {
 impl<T, Y> Line<T, Y> {
     /// Create a new line. The `get_y` function is used to extract the Y value from your struct.
     ///
-    /// Intended to be a simple closure over your own data. For example `Line::new(|t: &MyType| t.y)`
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// // TODO
-    /// // Simple:
-    /// // .line(|t| t.y)
-    /// // Bells and whistles:
-    /// // .line(Line::new(|t| t.y).with_name("My line").with_colour(Colour::new(0, 0, 0)).with_width(2.0))
-    /// // Likely to just be:
-    /// // .line(|t| t.y).with_name("My line")
-    /// ```
+    /// See the module documentation for examples.
     pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self {
         Self {
             get_y: Rc::new(get_y),

@@ -24,6 +24,14 @@ const BATLOW: [Colour; 10] = [
 ];
 
 /// Draws a stack of lines on top of each other.
+///
+/// # Example
+/// ```rust
+/// let stack = Stack::new()
+///     .line(Line::new(|data: &MyData| data.y1).with_name("fairies"))
+///     .line(Line::new(|data: &MyData| data.y2).with_name("pixies"));
+/// ```
+/// See this in action with the [stacked line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#stacked-line-chart).
 #[derive(Clone)]
 pub struct Stack<T, Y> {
     lines: Vec<Line<T, Y>>,

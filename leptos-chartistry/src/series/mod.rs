@@ -34,12 +34,13 @@ trait GetYValue<T, Y> {
 
 /// Describes how to render a series of data. A series is a collection of lines, bars, etc. that share the same X and Y axes.
 ///
+/// See [all examples](http://localhost:8080/examples) for a full list of examples.
+///
 /// ## Building a `Series`
 ///
-/// You'll pass your chart a sequence of `T`. Each `T` should be a row from your results (e.g., from an API request) and should correspond to an `X` value (e.g., a timestamp) and one or more Y values (e.g., floats). For example `T`:
+/// When calling [Chart](crate::Chart) you'll pass `data=Vec<T>`. Each `T` (e.g., from an API request) represents an `X` value (e.g., a timestamp) whose getter is specified in [Series::new]. `Y` values (e.g., floats) are added to the series by adding lines, bars, etc to the series. For example, consider this `T` describing network traffic:
 ///
 /// ```rust
-/// // Defined somewhere in your code
 /// pub struct Rate {
 ///     pub interval: Timestamp<Utc>,
 ///     pub in_octets: f64,
@@ -65,17 +66,30 @@ trait GetYValue<T, Y> {
 ///    .line(Line::new(|r: &Rate| r.out_octets).name("Tx"));
 /// ```
 ///
-/// Another approach is to use a [Stack] to stack lines on top of each other.
+/// This is how most series will be built and used. See a full example can be found in the [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#line-chart).
+///
+/// ### Transforming data
+///
+/// We can also apply transformations to the `Y` values. In our last example we used  octets to show bytes per second but if we wanted to show bits we could use `|r: &Rate| r.in_octets * 8` as the getter. We can also use signals here i.e., have a chart that can switch between bits and bytes.
+///
+/// One caveat of this approach is that the granularity of line signals is limited to the whole data. A signal fired in the getter will trigger recomputing the whole series.
+///
+/// ### Stacking lines
+///
+/// Another approach is to use a [Stack] to stack lines on top of each other. For example if we wanted to chart the total traffic we could use:
+///
+/// ```rust
+/// let series = Series::new(|r: &Rate| r.interval)
+///     .stack(Stack::new()
+///         .line(|r: &Rate| r.in_octets)
+///         .line(|r: &Rate| r.out_octets));
+/// ```
+///
+/// This would render the lines on top of each other to show the total traffic. Check this out on the [stacked line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#stacked-line-chart).
 ///
 /// ## Other options
 ///
-/// The Series also allows you to control the range of the X and Y axes, and the colour scheme.
-///
-/// ## Full example
-///
-/// ```rust
-/// TODO
-/// ```
+/// Finally, like most other components, you can control aspects such as the colour scheme and data ranges of X and Y.
 #[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
