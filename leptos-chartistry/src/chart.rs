@@ -43,8 +43,8 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///             AxisMarker::bottom_edge().into_inner(),
 ///             XGridLine::default().into_inner(),
 ///             YGridLine::default().into_inner(),
-///             YGuideLine::over_mouse().into_inner(),
 ///             XGuideLine::over_data().into_inner(),
+///             YGuideLine::over_mouse().into_inner(),
 ///         ]
 ///         tooltip=Tooltip::left_cursor()
 ///
