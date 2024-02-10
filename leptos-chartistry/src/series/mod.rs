@@ -41,8 +41,9 @@ trait GetYValue<T, Y> {
 /// When calling [Chart](crate::Chart) you'll pass `data=Vec<T>`. Each `T` (e.g., from an API request) represents an `X` value (e.g., a timestamp) whose getter is specified in [Series::new]. `Y` values (e.g., floats) are added to the series by adding lines, bars, etc to the series. For example, consider this `T` describing network traffic:
 ///
 /// ```rust
+/// # use chrono::prelude::*;
 /// pub struct Rate {
-///     pub interval: Timestamp<Utc>,
+///     pub interval: DateTime<Utc>,
 ///     pub in_octets: f64,
 ///     pub out_octets: f64,
 /// }
@@ -53,6 +54,9 @@ trait GetYValue<T, Y> {
 /// We then build up a `Series` to describe how to render this data. For example:
 ///
 /// ```rust
+/// # use chrono::prelude::*;
+/// # use leptos_chartistry::*;
+/// # struct Rate { interval: DateTime<Utc>, in_octets: f64, out_octets: f64 }
 /// let series = Series::new(|r: &Rate| r.interval)
 ///     .line(|r: &Rate| r.in_octets)
 ///     .line(|r: &Rate| r.out_octets);
@@ -61,9 +65,12 @@ trait GetYValue<T, Y> {
 /// This is the simplest example and lacks details such as line names. Another more complete example is:
 ///
 /// ```rust
+/// # use chrono::prelude::*;
+/// # use leptos_chartistry::*;
+/// # struct Rate { interval: DateTime<Utc>, in_octets: f64, out_octets: f64 }
 /// let series = Series::new(|r: &Rate| r.interval)
-///    .line(Line::new(|r: &Rate| r.in_octets).name("Rx"))
-///    .line(Line::new(|r: &Rate| r.out_octets).name("Tx"));
+///    .line(Line::new(|r: &Rate| r.in_octets).with_name("Rx"))
+///    .line(Line::new(|r: &Rate| r.out_octets).with_name("Tx"));
 /// ```
 ///
 /// This is how most series will be built and used. See a full example can be found in the [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#line-chart).
@@ -79,6 +86,9 @@ trait GetYValue<T, Y> {
 /// Another approach is to use a [Stack] to stack lines on top of each other. For example if we wanted to chart the total traffic we could use:
 ///
 /// ```rust
+/// # use chrono::prelude::*;
+/// # use leptos_chartistry::*;
+/// # struct Rate { interval: DateTime<Utc>, in_octets: f64, out_octets: f64 }
 /// let series = Series::new(|r: &Rate| r.interval)
 ///     .stack(Stack::new()
 ///         .line(|r: &Rate| r.in_octets)

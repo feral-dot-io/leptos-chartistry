@@ -22,11 +22,16 @@ pub const FONT_WIDTH: f64 = 10.0;
 /// ## Examples
 ///
 /// There is an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples) available. See below for a quick [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#line-chart):
-///
 /// ```rust
 /// use leptos::*;
 /// use leptos_chartistry::*;
 ///
+/// # use chrono::prelude::*;
+/// # struct MyData { x: DateTime<Utc>, y1: f64, y2: f64 }
+/// # fn load_data() -> Signal<Vec<MyData>> { Signal::default() }
+///
+/// # #[component]
+/// # fn SimpleChartComponent() -> impl IntoView {
 /// let data: Signal<Vec<MyData>> = load_data(/* pull data from a resource */);
 /// view! {
 ///     <Chart
@@ -51,10 +56,11 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///         // Describe the data
 ///         series=Series::new(|data: &MyData| data.x)
 ///             .line(Line::new(|data: &MyData| data.y1).with_name("butterflies"))
-///             .line(Line::new(|data: &MyData| data.y2).with_name("dragonflies"));
+///             .line(Line::new(|data: &MyData| data.y2).with_name("dragonflies"))
 ///         data=data
 ///     />
 /// }
+/// # }
 /// ```
 ///
 /// ## Layout props
@@ -64,7 +70,8 @@ pub const FONT_WIDTH: f64 = 10.0;
 /// Here's an example of building a [TickLabels](crate::TickLabels) component, setting the minimum number of characters to 5, and then converting it for use to an edge layout:
 ///
 /// ```rust
-/// TickLabels::aligned_floats().with_min_chars(5).into_edge()
+/// # use leptos_chartistry::*;
+/// TickLabels::aligned_floats().with_min_chars(5).into_edge();
 /// ```
 ///
 /// ### Fine-grained reactivity
@@ -72,11 +79,17 @@ pub const FONT_WIDTH: f64 = 10.0;
 /// You'll also have access to this API via [`RwSignals`](https://docs.rs/leptos/latest/leptos/struct.RwSignal.html) allowing you to make changes after the chart creation. This enables fine-grained reactivity.
 ///
 /// ```rust
+/// # use leptos::*;
+/// # use leptos_chartistry::*;
+/// # #[component]
+/// # fn FindGrainedComponent() -> impl IntoView {
 /// let y_ticks = TickLabels::aligned_floats().with_min_chars(5);
 /// // Copy the min_chars RwSignal
 /// let y_ticks_min_chars = y_ticks.min_chars;
 /// // Later on, you can change it on the fly:
+/// # view! {
 /// <button on:click=move |_| y_ticks_min_chars.set(10)>"Set min chars to 10"</button>
+/// # } }
 /// ```
 ///
 /// ## Next steps
@@ -101,6 +114,10 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     /// Debug mode. If enabled shows lines around components and prints render info to the console. Useful for getting an idea of how the chart is rendering itself. Below is an example of how you might use it in development. Default is false.
     ///
     /// ```rust
+    /// # use leptos::*;
+    /// # use leptos_chartistry::*;
+    /// # #[component]
+    /// # fn DebugComponent() -> impl IntoView {
     /// let (debug, set_debug) = create_signal(true);
     /// view! {
     ///     <p>
@@ -111,12 +128,15 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     ///         </label>
     ///     </p>
     ///     <Chart
-    ///         aspect_ratio=AspectRatio::inner_ratio(800.0, 600.0)
-    ///         series=series
-    ///         data=data
     ///         // Toggle debug on the fly
-    ///         debug=debug />
+    ///         debug=debug
+    ///         // ... fill in the rest of your props
+    /// #       aspect_ratio=AspectRatio::from_outer_ratio(600.0, 300.0)
+    /// #       series=Series::new(|(x, _): &(f64, f64)| *x).line(|(_, y): &(f64, f64)| *y)
+    /// #       data=Signal::default()
+    ///     />
     /// }
+    /// # }
     /// ```
     #[prop(into, optional)]
     debug: MaybeSignal<bool>,

@@ -8,6 +8,8 @@ use std::rc::Rc;
 /// # Simple example
 /// With no legend names, lines can be a simple closure:
 /// ```rust
+/// # use leptos_chartistry::*;
+/// # struct MyData { x: f64, y1: f64, y2: f64 }
 /// let series = Series::new(|data: &MyData| data.x)
 ///     .line(|data: &MyData| data.y1)
 ///     .line(|data: &MyData| data.y2);
@@ -17,6 +19,8 @@ use std::rc::Rc;
 /// # Example
 /// However, we can also set the name of the line which a legend can show:
 /// ```rust
+/// # use leptos_chartistry::*;
+/// # struct MyData { x: f64, y1: f64, y2: f64 }
 /// let series = Series::new(|data: &MyData| data.x)
 ///     .line(Line::new(|data: &MyData| data.y1).with_name("pears"))
 ///     .line(Line::new(|data: &MyData| data.y2).with_name("apples"));

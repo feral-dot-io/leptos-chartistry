@@ -27,6 +27,8 @@ const BATLOW: [Colour; 10] = [
 ///
 /// # Example
 /// ```rust
+/// # use leptos_chartistry::*;
+/// # struct MyData { x: f64, y1: f64, y2: f64 }
 /// let stack = Stack::new()
 ///     .line(Line::new(|data: &MyData| data.y1).with_name("fairies"))
 ///     .line(Line::new(|data: &MyData| data.y2).with_name("pixies"));

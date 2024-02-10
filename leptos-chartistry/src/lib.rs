@@ -14,6 +14,12 @@
 //! use leptos::*;
 //! use leptos_chartistry::*;
 //!
+//! # use chrono::prelude::*;
+//! # struct MyData { x: DateTime<Utc>, y1: f64, y2: f64 }
+//! # fn load_data() -> Signal<Vec<MyData>> { Signal::default() }
+//!
+//! # #[component]
+//! # fn SimpleChartComponent() -> impl IntoView {
 //! let data: Signal<Vec<MyData>> = load_data(/* pull data from a resource */);
 //! view! {
 //!     <Chart
@@ -38,10 +44,11 @@
 //!         // Describe the data
 //!         series=Series::new(|data: &MyData| data.x)
 //!             .line(Line::new(|data: &MyData| data.y1).with_name("butterflies"))
-//!             .line(Line::new(|data: &MyData| data.y2).with_name("dragonflies"));
+//!             .line(Line::new(|data: &MyData| data.y2).with_name("dragonflies"))
 //!         data=data
 //!     />
 //! }
+//! # }
 //! ```
 
 mod aspect_ratio;
