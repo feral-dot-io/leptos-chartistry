@@ -78,17 +78,6 @@ pub const FONT_WIDTH: f64 = 10.0;
 /// // Later on, you can change it on the fly:
 /// <button on:click=move |_| y_ticks_min_chars.set(10)>"Set min chars to 10"</button>
 /// ```
-///
-/// ### Shorthand
-///
-/// The edges and inner props all take a `Vec` of components. Often you'll find yourself adding a single component to an edge. In this case you can use the layout option directly as it becomes shorthand for `vec![component.into_edge()]`. Here's an example:
-/// ```rust
-/// <Chart aspect_ratio=AspectRatio::from_inner_ratio(800.0, 600.0)
-///     // Shorthand for a single component:
-///     top=RotatedLabel::middle("Our chart title")
-///     // This becomes (but on a different edge):
-///     bottom=vec![RotatedLabel::middle("Our chart title").into_edge()] />
-/// ```
 #[component]
 pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     /// Determines the width and height of the chart. Charts with a different aspect ratio and axis ranges are difficult to compare. You're encouraged to pick an [inner aspect ratio](AspectRatio::inner_ratio) while the closest to a "don't think about it" approach is to automatically [use the environment](AspectRatio::environment).
