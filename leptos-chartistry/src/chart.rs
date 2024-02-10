@@ -17,7 +17,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 
 /// Renders an SVG chart.
 ///
-/// Check the required and optional props list near the bottom for a quick overview. Used inside the [Leptos view macro](https://docs.rs/leptos/latest/leptos/macro.view.html).
+/// Check the required and optional props list near the bottom for a quick overview.
 ///
 /// ## Examples
 ///
@@ -78,6 +78,10 @@ pub const FONT_WIDTH: f64 = 10.0;
 /// // Later on, you can change it on the fly:
 /// <button on:click=move |_| y_ticks_min_chars.set(10)>"Set min chars to 10"</button>
 /// ```
+///
+/// ## Next steps
+///
+/// See the props below for more details. Copy and paste [examples](https://feral-dot-io.github.io/leptos-chartistry/examples) to get going quickly.
 #[component]
 pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     /// Determines the width and height of the chart. Charts with a different aspect ratio and axis ranges are difficult to compare. You're encouraged to pick an [inner aspect ratio](AspectRatio::inner_ratio) while the closest to a "don't think about it" approach is to automatically [use the environment](AspectRatio::environment).
