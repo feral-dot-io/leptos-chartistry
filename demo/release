@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -eux -o pipefail
+
+function usage() {
+    echo "Usage: ./demo/release"
+    echo "  Must be run from the root of the project."
+    exit 1    
+}
+
+# Sanity check we're run from the root of the project
+[[ -f flake.nix ]] || usage
+
+# Run all checks
+nix flake check .
+
+# Build the release
+demo="$(nix build --print-out-paths --no-link .#demo)"
+
+# Copy the release to docs
+cp "$demo"/* ./docs
+
+git status
+echo "Release built and copied to ./docs. Ready to commit and push."
