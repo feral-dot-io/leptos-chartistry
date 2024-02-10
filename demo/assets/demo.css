@@ -131,7 +131,8 @@ fieldset input[type=color] {
 #examples .cards>div>h2,
 #examples .cards>div>h2,
 #examples .cards figcaption>h3,
-fieldset>legend {
+fieldset>legend,
+#status404 h1 {
     background-color: #fff;
     border-bottom: 0.2em solid #fc7089;
     margin: 0;
@@ -139,6 +140,10 @@ fieldset>legend {
     width: fit-content;
     font-weight: bold;
     font-size: 110%;
+}
+
+#status404 h1 {
+    font-size: 150%;
 }
 
 #examples h2>a,

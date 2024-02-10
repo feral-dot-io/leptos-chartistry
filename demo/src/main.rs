@@ -57,6 +57,9 @@ fn SiteHeader() -> impl IntoView {
 #[component]
 fn NotFound() -> impl IntoView {
     view! {
-        <h1>"Page not found"</h1>
+        <article id="status404">
+            <h1>"Page not found"</h1>
+            <p class="background-box">"The page you are looking for does not exist."</p>
+        </article>
     }
 }
