@@ -95,8 +95,8 @@ impl Format for State {
             let neg_offset = if value.starts_with('-') { 1 } else { 0 };
             let scale = (scale as usize).min(value.len() - 1 - neg_offset);
             // Truncate from offset to the end with zeros
-            if let Some(offset) = value.len().checked_sub(scale as usize) {
-                value.replace_range(offset.., &"0".repeat(scale as usize));
+            if let Some(offset) = value.len().checked_sub(scale) {
+                value.replace_range(offset.., &"0".repeat(scale));
             }
         }
         value
