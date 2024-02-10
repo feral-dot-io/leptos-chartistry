@@ -1,0 +1,250 @@
+p {
+    max-width: 40em;
+}
+
+header {
+    border-bottom: 1px solid #fc7089;
+    font-size: 100%;
+    padding: 0.5em 1em;
+    display: flex;
+    flex-flow: row wrap;
+    gap: 0.5em;
+    justify-content: space-between;
+    align-items: end;
+}
+
+header>* {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 0.5em;
+    justify-content: space-between;
+}
+
+header>h2 {
+    margin: 0 3em 0 0;
+    font-size: 100%;
+}
+
+header p {
+    margin: 0;
+}
+
+header>nav>p {
+    margin: 0 1em;
+}
+
+header a {
+    text-decoration: none;
+    color: #222;
+    padding: 0.2em 0;
+}
+
+header a:hover {
+    text-decoration: underline;
+    text-decoration-color: #fc7089;
+    text-decoration-thickness: 0.3em;
+}
+
+header>.badges a>img {
+    display: block;
+}
+
+main {
+    min-height: 100vh;
+    padding: 2em;
+    background: repeating-radial-gradient(circle at top, #eee, #12a5ed);
+}
+
+#demo>._chartistry {
+    background-color: #fff;
+    border: 1px solid #000;
+    margin: 0 auto;
+    width: fit-content;
+}
+
+#demo>.outer {
+    margin: 2em auto;
+    display: flex;
+    gap: 2em 0.5em;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+fieldset {
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 0.5em;
+    padding: 0.5em 1em 1em 1em;
+    display: grid;
+    grid-template-columns: max-content 1fr repeat(3, min-content);
+    align-items: baseline;
+}
+
+fieldset>h3 {
+    grid-column: 2 / -1;
+    font-size: 100%;
+    font-weight: normal;
+    margin: 0;
+    align-self: end;
+    padding: 0.2em 0.5em;
+}
+
+fieldset>p {
+    display: contents;
+}
+
+fieldset>p> :nth-child(1) {
+    grid-column: 1;
+    text-align: right;
+}
+
+fieldset>p> :nth-child(2) {
+    grid-column: 2;
+    padding: 0.2em 0.5em;
+}
+
+fieldset>p> :nth-child(3) {
+    grid-column: 3;
+}
+
+fieldset>p> :nth-child(4) {
+    grid-column: 4;
+}
+
+fieldset>p> :nth-child(5) {
+    grid-column: 5;
+}
+
+fieldset input[type=number] {
+    width: 8ch;
+}
+
+fieldset input[type=color] {
+    width: 6ch;
+    height: 1.6em;
+}
+
+#examples h1,
+#examples section>h2,
+#examples .cards>h2,
+#examples .cards>div>h2,
+#examples .cards>div>h2,
+#examples .cards figcaption>h3,
+fieldset>legend {
+    background-color: #fff;
+    border-bottom: 0.2em solid #fc7089;
+    margin: 0;
+    padding: 0.2em;
+    width: fit-content;
+    font-weight: bold;
+    font-size: 110%;
+}
+
+#examples h2>a,
+#examples h3>a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.background-box {
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 0.5em;
+    padding: 1em;
+}
+
+#examples h1 {
+    border: 1px solid #000;
+    border-bottom: 0.2em solid #fc7089;
+    text-align: center;
+    width: auto;
+    padding: 0.5em;
+}
+
+#examples nav p {
+    margin: 0.5em 0;
+    padding: 0;
+}
+
+#examples nav p>label {
+    display: inline-block;
+    padding: 1em;
+    width: 100%;
+}
+
+#examples nav ul {
+    margin: 0;
+    list-style-position: inside;
+}
+
+#examples nav li {
+    padding: 0.5em 0;
+}
+
+#examples .cards {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 2em 0.5em;
+}
+
+#examples .cards>div.include-right {
+    width: fit-content;
+    display: flex;
+    flex-flow: row nowrap;
+    gap: 0.5em;
+    /* FF miscalculates (or I misunderstand) the width of our sideways text */
+    width: calc(300px + 2.5em + 4em);
+}
+
+#examples .cards>h2,
+#examples .cards>div>h2 {
+    border: 1px solid #000;
+    border-right: 0.2em solid #fc7089;
+    padding: 1em;
+    text-align: center;
+    writing-mode: vertical-rl;
+    text-orientation: sideways;
+    transform: rotate(180deg);
+}
+
+#examples .cards h2>em {
+    font-weight: normal;
+}
+
+#examples figure {
+    margin: 0;
+    width: calc(300px + 2.5em);
+}
+
+#examples figure>figcaption {
+    margin-top: -2em;
+}
+
+#examples dialog {
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 0.5em;
+    padding: 0;
+}
+
+#examples dialog>pre {
+    margin: 0;
+    padding: 5em;
+}
+
+::backdrop {
+    background-color: rgba(200, 200, 200, 0.75);
+}
+
+#examples section {
+    margin-top: 2em;
+}
+
+#examples section>h2 {
+    margin-top: -2em;
+}
+
+#aspect-ratio>._chartistry:first-child {
+    width: 40em;
+}
