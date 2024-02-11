@@ -17,6 +17,8 @@ Chartistry is an extensible charting library for [Leptos](https://github.com/lep
 
 Add Chartistry to your project with `cargo add leptos-chartistry`
 
+![Chartistry in action!](docs/screenshot.png?raw=true "Chartistry in action!")
+
 ## Feedback
 
 This project is in its early stages and feedback is welcome.
