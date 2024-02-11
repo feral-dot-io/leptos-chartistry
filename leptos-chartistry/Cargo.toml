@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = [ "Joshua McQuistan <joshua.mcquistan@feral.io>" ]
 edition = "2021"
 description = "Chartistry is a charting library for Leptos"
+homepage = "https://feral-dot-io.github.io/leptos-chartistry/"
 documentation = "https://docs.rs/leptos-chartistry"
 repository = "https://github.com/feral-dot-io/leptos-chartistry"
 readme = "../README.md"
