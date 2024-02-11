@@ -53,5 +53,6 @@ trunk serve --open
 
 - Run `cargo update` and commit
 - Update the version in `Cargo.toml` and commit
+- Run `nix flake check` -- success? All systems go!
 - Run `./demo/release` and commit (requires Nix flakes)
-- Run `cargo publish`
+- Run `cargo publish` -- no turning back...
