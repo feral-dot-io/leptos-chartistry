@@ -20,15 +20,6 @@ These are mostly thoughts and internal notes (for now).
 
 ## TODO
 
-For release:
-- Method to rebuild demo
-- Write down dev cycle "run this oneshot command"
-- Check nix + trunk = release
-- Fix up links
-- Release to crates.io
-- Update AR example with a link to crates.io
-- screenshot on readme
-
 Features to add:
 - Stacked line ordering
 - Line dots
