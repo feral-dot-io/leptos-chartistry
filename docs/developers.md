@@ -40,8 +40,18 @@ Features to add:
     - Multi-line labels
     - Can we get background colour?
 
+## Development cycle
+
+For the demo site:
+
+```
+cd demo
+trunk serve --open
+```
+
 ## Release checklist
 
-- Run `cargo update` and commit.
-- Update the version in `Cargo.toml` and commit.
-- Run `./demo/release` and commit (requires Nix flakes).
+- Run `cargo update` and commit
+- Update the version in `Cargo.toml` and commit
+- Run `./demo/release` and commit (requires Nix flakes)
+- Run `cargo publish`
