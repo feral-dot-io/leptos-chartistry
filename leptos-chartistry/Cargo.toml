@@ -6,6 +6,7 @@ edition = "2021"
 description = "Chartistry is a charting library for Leptos"
 documentation = "https://docs.rs/leptos-chartistry"
 repository = "https://github.com/feral-dot-io/leptos-chartistry"
+readme = "../README.md"
 license = "MPL-2.0"
 keywords = [ "leptos", "wasm", "charts" ]
 categories = [ "graphics", "gui", "wasm", "web-programming" ]
