@@ -21,7 +21,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// ## Examples
 ///
-/// There is an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry.html/examples) available. See below for a quick [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#line-chart):
+/// There is an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples.html) available. See below for a quick [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#line-chart):
 /// ```rust
 /// use leptos::*;
 /// use leptos_chartistry::*;
