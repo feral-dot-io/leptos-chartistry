@@ -21,7 +21,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// ## Examples
 ///
-/// There is an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples) available. See below for a quick [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#line-chart):
+/// There is an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry.html/examples) available. See below for a quick [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#line-chart):
 /// ```rust
 /// use leptos::*;
 /// use leptos_chartistry::*;
@@ -94,7 +94,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// ## Next steps
 ///
-/// See the props below for more details. Copy and paste [examples](https://feral-dot-io.github.io/leptos-chartistry/examples) to get going quickly.
+/// See the props below for more details. Copy and paste [examples](https://feral-dot-io.github.io/leptos-chartistry/examples.html) to get going quickly.
 #[component]
 pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     /// Determines the width and height of the chart. Charts with a different aspect ratio and axis ranges are difficult to compare. You're encouraged to pick an [inner aspect ratio](AspectRatio::inner_ratio) while the closest to a "don't think about it" approach is to automatically [use the environment](AspectRatio::environment).

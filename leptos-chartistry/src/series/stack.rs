@@ -33,7 +33,7 @@ const BATLOW: [Colour; 10] = [
 ///     .line(Line::new(|data: &MyData| data.y1).with_name("fairies"))
 ///     .line(Line::new(|data: &MyData| data.y2).with_name("pixies"));
 /// ```
-/// See this in action with the [stacked line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#stacked-line-chart).
+/// See this in action with the [stacked line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#stacked-line-chart).
 #[derive(Clone)]
 pub struct Stack<T, Y> {
     lines: Vec<Line<T, Y>>,

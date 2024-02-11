@@ -16,7 +16,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes base="/leptos-chartistry".to_string()>
                     <Route path="/" view=Demo />
-                    <Route path="/examples" view=Examples />
+                    <Route path="/examples.html" view=Examples />
                     <Route path="/*any" view=NotFound />
                 </Routes>
             </main>
@@ -31,7 +31,7 @@ fn SiteHeader() -> impl IntoView {
             <h2><a rel="external" href="https://github.com/feral-dot-io/leptos-chartistry">"leptos-chartistry"</a></h2>
             <nav>
                 <p><A href="/leptos-chartistry/">"Demo"</A></p>
-                <p><A href="/leptos-chartistry/examples">"Examples"</A></p>
+                <p><A href="/leptos-chartistry/examples.html">"Examples"</A></p>
             </nav>
             <div class="badges">
                 <p>

@@ -73,7 +73,7 @@ trait GetYValue<T, Y> {
 ///    .line(Line::new(|r: &Rate| r.out_octets).with_name("Tx"));
 /// ```
 ///
-/// This is how most series will be built and used. See a full example can be found in the [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#line-chart).
+/// This is how most series will be built and used. See a full example can be found in the [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#line-chart).
 ///
 /// ### Transforming data
 ///
@@ -95,7 +95,7 @@ trait GetYValue<T, Y> {
 ///         .line(|r: &Rate| r.out_octets));
 /// ```
 ///
-/// This would render the lines on top of each other to show the total traffic. Check this out on the [stacked line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples#stacked-line-chart).
+/// This would render the lines on top of each other to show the total traffic. Check this out on the [stacked line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#stacked-line-chart).
 ///
 /// ## Other options
 ///

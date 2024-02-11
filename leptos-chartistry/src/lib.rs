@@ -6,7 +6,7 @@
 //! ## Examples
 //!
 //! - See the [demo for Chartistry in action](https://feral-dot-io.github.io/leptos-chartistry/).
-//! - There is also an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples) available.
+//! - There is also an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples.html) available.
 //!
 //! Below is an example chart:
 //!

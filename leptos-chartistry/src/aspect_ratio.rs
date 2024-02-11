@@ -10,7 +10,7 @@ use leptos::*;
 ///
 /// ## Why is this important?
 ///
-/// See the [sunspot activity example](https://feral-dot-io.github.io/leptos-chartistry/examples#aspect-ratio) for a visual demonstration.
+/// See the [sunspot activity example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#aspect-ratio) for a visual demonstration.
 ///
 /// ## Practical advice
 ///

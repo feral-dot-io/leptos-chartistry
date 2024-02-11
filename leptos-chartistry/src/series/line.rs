@@ -14,7 +14,7 @@ use std::rc::Rc;
 ///     .line(|data: &MyData| data.y1)
 ///     .line(|data: &MyData| data.y2);
 /// ```
-/// See this in action with the [tick labels example](https://feral-dot-io.github.io/leptos-chartistry/examples#tick-labels).
+/// See this in action with the [tick labels example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#tick-labels).
 ///
 /// # Example
 /// However, we can also set the name of the line which a legend can show:
@@ -25,7 +25,7 @@ use std::rc::Rc;
 ///     .line(Line::new(|data: &MyData| data.y1).with_name("pears"))
 ///     .line(Line::new(|data: &MyData| data.y2).with_name("apples"));
 /// ```
-/// See this in action with the [legend example](https://feral-dot-io.github.io/leptos-chartistry/examples#legend).
+/// See this in action with the [legend example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#legend).
 pub struct Line<T, Y> {
     get_y: Rc<dyn GetYValue<T, Y>>,
     /// Name of the line. Used in the legend.
