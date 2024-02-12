@@ -43,7 +43,7 @@ pub struct Line<T, Y> {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Marker {
     pub shape: RwSignal<MarkerShape>,
-    pub size: RwSignal<f64>,
+    pub width: RwSignal<f64>,
     pub colour: RwSignal<Option<Colour>>,
     pub border: RwSignal<Option<Colour>>,
     pub border_width: RwSignal<f64>,
@@ -120,7 +120,7 @@ impl Default for Marker {
     fn default() -> Self {
         Self {
             shape: MarkerShape::Circle.into(),
-            size: MARKER_SIZE.into(),
+            width: MARKER_SIZE.into(),
             colour: RwSignal::default(),
             border: RwSignal::default(),
             border_width: RwSignal::default(),
@@ -214,44 +214,44 @@ fn RenderMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Into
     };
 
     // Dimensions
-    let diameter = line.marker.size.get();
-    let radius = diameter / 2.0;
-    let third = diameter / 3.0;
+    let width = line.marker.width.get();
+    let half = width / 2.0;
+    let third = width / 3.0;
 
     let shape = line.marker.shape.get();
     let shape = |x, y| match shape {
         MarkerShape::None => ().into_view(),
 
         MarkerShape::Circle => view! {
-            <circle cx=x cy=y r=move || diameter / 2.0 />
+            <circle cx=x cy=y r=move || width / 2.0 />
         }
         .into_view(),
 
         MarkerShape::Triangle => view! {
             <polygon
                 points=format!("{},{} {},{} {},{}",
-                    x, y - radius,
-                    x - radius, y + radius,
-                    x + radius, y + radius) />
+                    x, y - half,
+                    x - half, y + half,
+                    x + half, y + half) />
         }
         .into_view(),
 
         MarkerShape::Square => view! {
             <rect
-                x=x - radius
-                y=y - radius
-                width=diameter
-                height=diameter />
+                x=x - half
+                y=y - half
+                width=width
+                height=width />
         }
         .into_view(),
 
         MarkerShape::Diamond => view! {
             <polygon
                 points=format!("{},{} {},{} {},{} {},{}",
-                    x, y - radius,
-                    x - radius, y,
-                    x, y + radius,
-                    x + radius, y) />
+                    x, y - half,
+                    x - half, y,
+                    x, y + half,
+                    x + half, y) />
         }
         .into_view(),
 
@@ -259,7 +259,7 @@ fn RenderMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Into
             // Outline of a big plus (like the Swiss flag) up against the edge
             <path
                 d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
-                    x - radius + third, y - radius, // Top-most left
+                    x - half + third, y - half, // Top-most left
                     third, // Top-most right
                     third,
                     third, // Right-most top
@@ -279,7 +279,7 @@ fn RenderMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Into
             <path
                 transform=format!("rotate(45 {x} {y})")
                 d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
-                    x - radius + third, y - radius, // Top-most left
+                    x - half + third, y - half, // Top-most left
                     third, // Top-most right
                     third,
                     third, // Right-most top
