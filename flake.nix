@@ -27,6 +27,7 @@
 
         demoArgs = with pkgs; {
           CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
+          CARGO_PROFILE = "release";
           cargoExtraArgs = "--package=demo";
           trunkExtraBuildArgs = "--public-url /leptos-chartistry";
 
