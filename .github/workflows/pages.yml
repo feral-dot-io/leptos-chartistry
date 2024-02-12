@@ -1,4 +1,4 @@
-name: Run all checks and deploys demo site to Pages
+name: Checks and deploy demo site
 
 on:
   push:
