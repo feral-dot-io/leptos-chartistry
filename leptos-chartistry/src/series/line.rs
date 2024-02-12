@@ -186,6 +186,112 @@ fn LineTaster(line: UseLine, bounds: Memo<Bounds>) -> impl IntoView {
 }
 
 #[component]
+fn RenderMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
+    // Colours
+    let fill_colour = {
+        let line_colour = line.colour;
+        let marker_colour = line.marker.colour;
+        Signal::derive(move || marker_colour.get().unwrap_or(line_colour.get()).to_string())
+    };
+
+    // Dimensions
+    let diameter = line.marker.size.get().unwrap_or(line.width.get() * 6.0);
+    let radius = diameter / 2.0;
+    let third = diameter / 3.0;
+
+    let shape = line.marker.shape.get();
+    let shape = |x, y| match shape {
+        MarkerShape::None => ().into_view(),
+
+        MarkerShape::Circle => view! {
+            <circle cx=x cy=y r=move || diameter / 2.0 />
+        }
+        .into_view(),
+
+        MarkerShape::Triangle => view! {
+            <polygon
+                points=format!("{},{} {},{} {},{}",
+                    x, y - radius,
+                    x - radius, y + radius,
+                    x + radius, y + radius) />
+        }
+        .into_view(),
+
+        MarkerShape::Square => view! {
+            <rect
+                x=x - radius
+                y=y - radius
+                width=diameter
+                height=diameter />
+        }
+        .into_view(),
+
+        MarkerShape::Diamond => view! {
+            <polygon
+                points=format!("{},{} {},{} {},{} {},{}",
+                    x, y - radius,
+                    x - radius, y,
+                    x, y + radius,
+                    x + radius, y) />
+        }
+        .into_view(),
+
+        MarkerShape::Plus => view! {
+            // Outline of a big plus (like the Swiss flag) up against the edge
+            <path
+                d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
+                    x - radius + third, y - radius, // Top-most left
+                    third, // Top-most right
+                    third,
+                    third, // Right-most top
+                    third, // Right-most bottom
+                    -third,
+                    third, // Bottom-most right
+                    -third, // Bottom-most left
+                    -third,
+                    -third, // Left-most bottom
+                    -third, // Left-most top
+                    third) />
+        }
+        .into_view(),
+
+        MarkerShape::Cross => view! {
+            // Same as Plus, but rotated 45 degrees
+            <path
+                transform=format!("rotate(45 {x} {y})")
+                d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
+                    x - radius + third, y - radius, // Top-most left
+                    third, // Top-most right
+                    third,
+                    third, // Right-most top
+                    third, // Right-most bottom
+                    -third,
+                    third, // Bottom-most right
+                    -third, // Bottom-most left
+                    -third,
+                    -third, // Left-most bottom
+                    -third, // Left-most top
+                    third) />
+        }
+        .into_view(),
+    };
+
+    let markers = positions.with(|positions| {
+        positions
+            .iter()
+            .filter(|(x, y)| !x.is_nan() && !y.is_nan())
+            // Draw shape around centre (x, y)
+            .map(|&(x, y)| shape(x, y))
+            .collect_view()
+    });
+    view! {
+        <g class="_chartistry_line_markers" fill=fill_colour>
+            {markers}
+        </g>
+    }
+}
+
+#[component]
 pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
     let path = move || {
         positions.with(|positions| {
@@ -207,113 +313,16 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
         })
     };
 
-    // Derive colours
     let colour = line.colour;
-    let marker_colour = {
-        let marker_colour = line.marker.colour;
-        Signal::derive(move || marker_colour.get().unwrap_or(colour.get()).to_string())
-    };
-    let line_colour = Signal::derive(move || colour.get().to_string());
-
-    let markers = move || {
-        let shape = line.marker.shape.get();
-        let diameter = line.marker.size.get().unwrap_or(line.width.get() * 6.0);
-        let radius = diameter / 2.0;
-        let third = diameter / 3.0;
-
-        positions.with(|positions| {
-            positions
-                .iter()
-                .filter(|(x, y)| !x.is_nan() && !y.is_nan())
-                // Draw shape around centre (x, y)
-                .map(|&(x, y)| match shape {
-                    MarkerShape::None => ().into_view(),
-                    MarkerShape::Circle => view! {
-                    <circle
-                        cx=x
-                        cy=y
-                        r=move || diameter / 2.0 />
-                    }
-                    .into_view(),
-                    MarkerShape::Triangle => view! {
-                        <polygon
-                            points=format!("{},{} {},{} {},{}",
-                                x, y - radius,
-                                x - radius, y + radius,
-                                x + radius, y + radius) />
-                    }
-                    .into_view(),
-                    MarkerShape::Square => view! {
-                    <rect
-                        x=x - radius
-                        y=y - radius
-                        width=diameter
-                        height=diameter />
-                    }
-                    .into_view(),
-                    MarkerShape::Diamond => view! {
-                        <polygon
-                            points=format!("{},{} {},{} {},{} {},{}",
-                                x, y - radius,
-                                x - radius, y,
-                                x, y + radius,
-                                x + radius, y) />
-                    }
-                    .into_view(),
-                    MarkerShape::Plus => {
-                        view! {
-                            // Outline of a big plus (like the Swiss flag) up against the edge
-                            <path
-                                d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
-                                    x - radius + third, y - radius, // Top-most left
-                                    third, // Top-most right
-                                    third,
-                                    third, // Right-most top
-                                    third, // Right-most bottom
-                                    -third,
-                                    third, // Bottom-most right
-                                    -third, // Bottom-most left
-                                    -third,
-                                    -third, // Left-most bottom
-                                    -third, // Left-most top
-                                    third) />
-                        }
-                        .into_view()
-                    }
-                    MarkerShape::Cross => view! {
-                        // Same as Plus, but rotated 45 degrees
-                        <path
-                            transform=format!("rotate(45 {x} {y})")
-                            d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
-                                x - radius + third, y - radius, // Top-most left
-                                third, // Top-most right
-                                third,
-                                third, // Right-most top
-                                third, // Right-most bottom
-                                -third,
-                                third, // Bottom-most right
-                                -third, // Bottom-most left
-                                -third,
-                                -third, // Left-most bottom
-                                -third, // Left-most top
-                                third) />
-                    }.into_view(),
-                })
-                .collect_view()
-        })
-    };
-
     view! {
         <g class="_chartistry_line">
             <path
                 d=path
                 fill="none"
-                stroke=line_colour
+                stroke=move || colour.get().to_string()
                 stroke-width=line.width
             />
-            <g class="_chartistry_line_markers" fill=marker_colour>
-                {markers}
-            </g>
+            <RenderMarkers line=line.clone() positions=positions />
         </g>
     }
 }
