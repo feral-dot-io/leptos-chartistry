@@ -52,6 +52,10 @@
             hash = "sha256-X8+DVX7dmKh7BgXqP7Fp0smhup5OO8eWEhn26ODYbkQ=";
             cargoHash = "sha256-ckJxAR20GuVGstzXzIj1M0WBFj5eJjrO2/DRMUK5dwM=";
           };
+
+          postInstall = ''
+            ln -s index.html $out/examples.html
+          '';
         });
       in {
         devShells.default =
