@@ -1,5 +1,6 @@
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc};
 use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State};
+use chrono::format;
 use leptos::*;
 use std::rc::Rc;
 
@@ -51,8 +52,8 @@ pub struct Marker {
 pub enum MarkerShape {
     None,
     Circle,
-    //Triangle,
     #[default]
+    Triangle,
     Square,
     //Diamond,
     //Plus,
@@ -212,7 +213,8 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
         let shape = line.marker.shape.get();
         let colour = line.marker.colour.get().unwrap_or(colour.get());
         let colour = Signal::derive(move || colour.to_string());
-        let size = line.marker.size.get().unwrap_or(line.width.get() * 6.0);
+        let diameter = line.marker.size.get().unwrap_or(line.width.get() * 6.0);
+        let radius = diameter / 2.0;
 
         positions.with(|positions| {
             positions
@@ -224,17 +226,27 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                     <circle
                         cx=x
                         cy=y
-                        r=move || size / 2.0
+                        r=move || diameter / 2.0
                         fill=colour
                         stroke="none" />
                     }
                     .into_view(),
+                    MarkerShape::Triangle => view! {
+                        <polygon
+                            points=format!("{},{} {},{} {},{}",
+                                x, y - radius,
+                                x - radius, y + radius,
+                                x + radius, y + radius)
+                            fill=colour
+                            stroke="none" />
+                    }
+                    .into_view(),
                     MarkerShape::Square => view! {
                     <rect
-                        x=x - size / 2.0
-                        y=y - size / 2.0
-                        width=size
-                        height=size
+                        x=x - radius
+                        y=y - radius
+                        width=diameter
+                        height=diameter
                         fill=colour
                         stroke="none" />
                     }
