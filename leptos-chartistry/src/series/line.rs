@@ -51,10 +51,10 @@ pub struct Marker {
 pub enum MarkerShape {
     None,
     Circle,
-    #[default]
     Triangle,
     Square,
-    //Diamond,
+    #[default]
+    Diamond,
     //Plus,
     //Cross,
 }
@@ -224,6 +224,7 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
             positions
                 .iter()
                 .filter(|(x, y)| !x.is_nan() && !y.is_nan())
+                // Draw shape around centre (x, y)
                 .map(|&(x, y)| match shape {
                     MarkerShape::None => ().into_view(),
                     MarkerShape::Circle => view! {
@@ -247,6 +248,15 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                         y=y - radius
                         width=diameter
                         height=diameter />
+                    }
+                    .into_view(),
+                    MarkerShape::Diamond => view! {
+                        <polygon
+                            points=format!("{},{} {},{} {},{} {},{}",
+                                x, y - radius,
+                                x - radius, y,
+                                x, y + radius,
+                                x + radius, y) />
                     }
                     .into_view(),
                 })
