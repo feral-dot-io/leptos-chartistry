@@ -34,6 +34,29 @@ pub struct Line<T, Y> {
     pub colour: RwSignal<Option<Colour>>,
     /// Width of the line.
     pub width: RwSignal<f64>,
+    /// Line point marker.
+    pub marker: Marker,
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Marker {
+    pub shape: RwSignal<MarkerShape>,
+    pub size: RwSignal<Option<f64>>,
+    pub spacing: RwSignal<f64>,
+    pub colour: RwSignal<Option<Colour>>,
+}
+
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
+pub enum MarkerShape {
+    None,
+    Circle,
+    //Triangle,
+    #[default]
+    Square,
+    //Diamond,
+    //Plus,
+    //Cross,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -42,6 +65,7 @@ pub struct UseLine {
     pub name: RwSignal<String>,
     colour: Signal<Colour>,
     width: RwSignal<f64>,
+    marker: Marker,
 }
 
 impl<T, Y> Line<T, Y> {
@@ -54,6 +78,7 @@ impl<T, Y> Line<T, Y> {
             name: RwSignal::default(),
             colour: RwSignal::default(),
             width: 1.0.into(),
+            marker: Marker::default(),
         }
     }
 
@@ -83,6 +108,7 @@ impl<T, Y> Clone for Line<T, Y> {
             name: self.name,
             colour: self.colour,
             width: self.width,
+            marker: self.marker.clone(),
         }
     }
 }
@@ -119,6 +145,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
             name: self.name,
             colour,
             width: self.width,
+            marker: self.marker,
         };
         (line, self.get_y.clone())
     }
@@ -179,7 +206,44 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                 .collect::<String>()
         })
     };
+
     let colour = line.colour;
+    let markers = move || {
+        let shape = line.marker.shape.get();
+        let colour = line.marker.colour.get().unwrap_or(colour.get());
+        let colour = Signal::derive(move || colour.to_string());
+        let size = line.marker.size.get().unwrap_or(line.width.get() * 6.0);
+
+        positions.with(|positions| {
+            positions
+                .iter()
+                .filter(|(x, y)| !x.is_nan() && !y.is_nan())
+                .map(|&(x, y)| match shape {
+                    MarkerShape::None => ().into_view(),
+                    MarkerShape::Circle => view! {
+                    <circle
+                        cx=x
+                        cy=y
+                        r=move || size / 2.0
+                        fill=colour
+                        stroke="none" />
+                    }
+                    .into_view(),
+                    MarkerShape::Square => view! {
+                    <rect
+                        x=x - size / 2.0
+                        y=y - size / 2.0
+                        width=size
+                        height=size
+                        fill=colour
+                        stroke="none" />
+                    }
+                    .into_view(),
+                })
+                .collect_view()
+        })
+    };
+
     view! {
         <g class="_chartistry_line">
             <path
@@ -188,6 +252,9 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                 stroke=move || colour.get().to_string()
                 stroke-width=line.width
             />
+            <g class="_chartistry_line_markers">
+                {markers}
+            </g>
         </g>
     }
 }
