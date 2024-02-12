@@ -54,9 +54,9 @@ pub enum MarkerShape {
     Triangle,
     Square,
     Diamond,
-    #[default]
     Plus,
-    //Cross,
+    #[default]
+    Cross,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -217,8 +217,9 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
 
     let markers = move || {
         let shape = line.marker.shape.get();
-        let diameter = line.marker.size.get().unwrap_or(line.width.get() * 7.0);
+        let diameter = line.marker.size.get().unwrap_or(line.width.get() * 6.0);
         let radius = diameter / 2.0;
+        let third = diameter / 3.0;
 
         positions.with(|positions| {
             positions
@@ -260,7 +261,6 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                     }
                     .into_view(),
                     MarkerShape::Plus => {
-                        let third = diameter / 3.0;
                         view! {
                             // Outline of a big plus (like the Swiss flag) up against the edge
                             <path
@@ -280,6 +280,24 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                         }
                         .into_view()
                     }
+                    MarkerShape::Cross => view! {
+                        // Same as Plus, but rotated 45 degrees
+                        <path
+                            transform=format!("rotate(45 {x} {y})")
+                            d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
+                                x - radius + third, y - radius, // Top-most left
+                                third, // Top-most right
+                                third,
+                                third, // Right-most top
+                                third, // Right-most bottom
+                                -third,
+                                third, // Bottom-most right
+                                -third, // Bottom-most left
+                                -third,
+                                -third, // Left-most bottom
+                                -third, // Left-most top
+                                third) />
+                    }.into_view(),
                 })
                 .collect_view()
         })
