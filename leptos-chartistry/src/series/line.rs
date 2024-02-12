@@ -1,6 +1,5 @@
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc};
 use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State};
-use chrono::format;
 use leptos::*;
 use std::rc::Rc;
 
@@ -208,11 +207,16 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
         })
     };
 
+    // Derive colours
     let colour = line.colour;
+    let marker_colour = {
+        let marker_colour = line.marker.colour;
+        Signal::derive(move || marker_colour.get().unwrap_or(colour.get()).to_string())
+    };
+    let line_colour = Signal::derive(move || colour.get().to_string());
+
     let markers = move || {
         let shape = line.marker.shape.get();
-        let colour = line.marker.colour.get().unwrap_or(colour.get());
-        let colour = Signal::derive(move || colour.to_string());
         let diameter = line.marker.size.get().unwrap_or(line.width.get() * 6.0);
         let radius = diameter / 2.0;
 
@@ -226,9 +230,7 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                     <circle
                         cx=x
                         cy=y
-                        r=move || diameter / 2.0
-                        fill=colour
-                        stroke="none" />
+                        r=move || diameter / 2.0 />
                     }
                     .into_view(),
                     MarkerShape::Triangle => view! {
@@ -236,9 +238,7 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                             points=format!("{},{} {},{} {},{}",
                                 x, y - radius,
                                 x - radius, y + radius,
-                                x + radius, y + radius)
-                            fill=colour
-                            stroke="none" />
+                                x + radius, y + radius) />
                     }
                     .into_view(),
                     MarkerShape::Square => view! {
@@ -246,9 +246,7 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
                         x=x - radius
                         y=y - radius
                         width=diameter
-                        height=diameter
-                        fill=colour
-                        stroke="none" />
+                        height=diameter />
                     }
                     .into_view(),
                 })
@@ -261,10 +259,10 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
             <path
                 d=path
                 fill="none"
-                stroke=move || colour.get().to_string()
+                stroke=line_colour
                 stroke-width=line.width
             />
-            <g class="_chartistry_line_markers">
+            <g class="_chartistry_line_markers" fill=marker_colour>
                 {markers}
             </g>
         </g>
