@@ -3,6 +3,8 @@ use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue
 use leptos::*;
 use std::rc::Rc;
 
+pub const MARKER_SIZE: f64 = 6.0;
+
 /// Draws a line on the chart.
 ///
 /// # Simple example
@@ -38,24 +40,25 @@ pub struct Line<T, Y> {
     pub marker: Marker,
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Marker {
     pub shape: RwSignal<MarkerShape>,
-    pub size: RwSignal<Option<f64>>,
-    pub spacing: RwSignal<f64>,
+    pub size: RwSignal<f64>,
     pub colour: RwSignal<Option<Colour>>,
+    pub border: RwSignal<Option<Colour>>,
+    pub border_width: RwSignal<f64>,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum MarkerShape {
     None,
+    #[default]
     Circle,
     Triangle,
     Square,
     Diamond,
     Plus,
-    #[default]
     Cross,
 }
 
@@ -109,6 +112,18 @@ impl<T, Y> Clone for Line<T, Y> {
             colour: self.colour,
             width: self.width,
             marker: self.marker.clone(),
+        }
+    }
+}
+
+impl Default for Marker {
+    fn default() -> Self {
+        Self {
+            shape: MarkerShape::Circle.into(),
+            size: MARKER_SIZE.into(),
+            colour: RwSignal::default(),
+            border: RwSignal::default(),
+            border_width: RwSignal::default(),
         }
     }
 }
@@ -188,14 +203,18 @@ fn LineTaster(line: UseLine, bounds: Memo<Bounds>) -> impl IntoView {
 #[component]
 fn RenderMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
     // Colours
+    let line_colour = line.colour;
     let fill_colour = {
-        let line_colour = line.colour;
         let marker_colour = line.marker.colour;
         Signal::derive(move || marker_colour.get().unwrap_or(line_colour.get()).to_string())
     };
+    let stroke_colour = {
+        let marker_border = line.marker.border;
+        Signal::derive(move || marker_border.get().unwrap_or(line_colour.get()).to_string())
+    };
 
     // Dimensions
-    let diameter = line.marker.size.get().unwrap_or(line.width.get() * 6.0);
+    let diameter = line.marker.size.get();
     let radius = diameter / 2.0;
     let third = diameter / 3.0;
 
@@ -285,7 +304,10 @@ fn RenderMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Into
             .collect_view()
     });
     view! {
-        <g class="_chartistry_line_markers" fill=fill_colour>
+        <g
+            class="_chartistry_line_markers"
+            fill=fill_colour
+            stroke=stroke_colour>
             {markers}
         </g>
     }
