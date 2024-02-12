@@ -1,4 +1,4 @@
-name: Deploy flake to Pages
+name: Run all checks and deploys demo site to Pages
 
 on:
   push:
@@ -20,8 +20,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v25
-      - name: Build demo site
-        run: nix build --print-build-logs .#demo
+      - run: nix flake check . --print-build-logs
+      - run: nix build .#demo --print-build-logs
+      - name: Adjust permissions
+        run: |
+          chown -R $(id -u):$(id -g) ./result
+          chmod -R a+rwx ./result
       - uses: actions/upload-pages-artifact@v1
         with:
           path: ./result
@@ -32,6 +36,5 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     needs: build
     steps:
-      - name: Deploy to GitHub Pages
+      - uses: actions/deploy-pages@v4
         id: deployment
-        uses: actions/deploy-pages@v4
