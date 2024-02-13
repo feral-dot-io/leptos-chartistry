@@ -132,6 +132,14 @@ example!(
     "../examples/feature_colours.rs"
 );
 
+example!(
+    MarkersExample,
+    feature_markers::Example,
+    "Point markers",
+    "Add point markers to your lines.",
+    "../examples/feature_markers.rs"
+);
+
 #[derive(Clone)]
 struct Context {
     debug: RwSignal<bool>,
@@ -197,6 +205,7 @@ pub fn Examples() -> impl IntoView {
                     <TooltipExample />
                 </div>
                 <ColoursExample />
+                <MarkersExample />
             </div>
 
             <section id="aspect-ratio" class="background-box">
