@@ -39,18 +39,19 @@ pub struct Line<T, Y> {
     /// Marker at each point on the line.
     pub marker: RwSignal<Marker>,
     pub border: RwSignal<Option<Colour>>,
+    pub border_width: RwSignal<f64>,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum Marker {
     None,
+    #[default]
     Circle,
     Triangle,
     Square,
     Diamond,
     Plus,
-    #[default]
     Cross,
 }
 
@@ -72,6 +73,7 @@ pub struct UseLine {
     width: RwSignal<f64>,
     marker: RwSignal<Marker>,
     border: RwSignal<Option<Colour>>,
+    border_width: RwSignal<f64>,
 }
 
 impl<T, Y> Line<T, Y> {
@@ -85,7 +87,8 @@ impl<T, Y> Line<T, Y> {
             colour: RwSignal::default(),
             width: 1.0.into(),
             marker: RwSignal::default(),
-            border: RwSignal::default(),
+            border: create_rw_signal(Some(Colour::new(255, 255, 255))),
+            border_width: create_rw_signal(1.0),
         }
     }
 
@@ -117,6 +120,7 @@ impl<T, Y> Clone for Line<T, Y> {
             width: self.width,
             marker: self.marker,
             border: self.border,
+            border_width: self.border_width,
         }
     }
 }
@@ -155,6 +159,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
             width: self.width,
             marker: self.marker,
             border: self.border,
+            border_width: self.border_width,
         };
         (line, self.get_y.clone())
     }
@@ -246,18 +251,27 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
 
 #[component]
 fn MarkerDefs(line: UseLine, border: Signal<String>) -> impl IntoView {
-    let _ = border; // TODO
-    let width = Signal::derive(move || line.width.get() * WIDTH_TO_MARKER);
+    let viewBox = move || {
+        let border = line.border_width.get();
+        format!(
+            "{min} {min} {size} {size}",
+            min = -1.0 - border,
+            size = 2.0 + border * 2.0
+        )
+    };
+    let width =
+        Signal::derive(move || line.width.get() * WIDTH_TO_MARKER + line.border_width.get() * 4.0);
     ALL_MARKERS
         .iter()
         .map(|&shape| {
             view! {
                 <marker
                     id=shape.id(line.id)
+                    viewBox=viewBox
                     markerUnits="userSpaceOnUse"
                     markerWidth=width
-                    markerHeight=width
-                    viewBox="-1 -1 2 2">
+                    markerHeight=width>
+                    <circle cx=0 cy=0 r=2 fill=border stroke="none" />
                     <RenderMarkerShape shape=shape />
                 </marker>
             }
