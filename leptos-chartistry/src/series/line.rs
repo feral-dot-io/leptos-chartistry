@@ -297,7 +297,7 @@ fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoVi
         <g
             fill=move || marker.colour.get().unwrap_or_else(|| line.colour.get()).to_string()
             stroke=move || marker.border.get().to_string()
-            stroke-width=move || border_width.get()
+            stroke-width=move || border_width.get() * 2.0 // Half of the stroke is inside
             class="_chartistry_line_markers">
             {markers}
         </g>
@@ -344,7 +344,12 @@ fn RenderMarkerShape(shape: MarkerShape, x: f64, y: f64, diameter: f64) -> impl 
 
         MarkerShape::Circle => view! {
             // Radius to fit inside our square / diamond -- not the viewbox rect
-            <circle cx=x cy=y r=(45.0_f64).to_radians().sin() * radius />
+            <circle
+                cx=x
+                cy=y
+                r=(45.0_f64).to_radians().sin() * radius
+                paint-order="stroke fill"
+            />
         }
         .into_view(),
 
@@ -359,10 +364,12 @@ fn RenderMarkerShape(shape: MarkerShape, x: f64, y: f64, diameter: f64) -> impl 
         .into_view(),
 
         MarkerShape::Triangle => view! {
-            <polygon points=format!("{},{} {},{} {},{}",
-                x, y - radius,
-                x - radius, y + radius,
-                x + radius, y + radius) />
+            <polygon
+                points=format!("{},{} {},{} {},{}",
+                    x, y - radius,
+                    x - radius, y + radius,
+                    x + radius, y + radius)
+                paint-order="stroke fill"/>
         }
         .into_view(),
 
@@ -383,6 +390,7 @@ fn Diamond(x: f64, y: f64, radius: f64, #[prop(into, optional)] rotate: f64) -> 
     view! {
         <polygon
             transform=format!("rotate({rotate} {x} {y})")
+            paint-order="stroke fill"
             points=format!("{},{} {},{} {},{} {},{}",
                 x, y - radius,
                 x - radius, y,
@@ -399,6 +407,7 @@ fn PlusPath(x: f64, y: f64, diameter: f64, #[prop(into, optional)] rotate: f64) 
     view! {
         <path
             transform=format!("rotate({rotate} {x} {y})")
+            paint-order="stroke fill"
             d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
                 x - width / 2.0, y - offset, // Top-most left
                 width, // Top-most right
