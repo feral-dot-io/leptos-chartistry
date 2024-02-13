@@ -9,7 +9,8 @@ use crate::{
 use leptos::*;
 use std::rc::Rc;
 
-const WIDTH_TO_MARKER: f64 = 7.0;
+// Scales our marker (drawn -1 to 1) to a 1.0 line width
+const WIDTH_TO_MARKER: f64 = 8.0;
 
 /// Draws a line on the chart.
 ///
@@ -342,7 +343,8 @@ fn RenderMarkerShape(shape: MarkerShape, x: f64, y: f64, diameter: f64) -> impl 
         MarkerShape::None => ().into_view(),
 
         MarkerShape::Circle => view! {
-            <circle cx=x cy=y r=radius />
+            // Radius to fit inside our square / diamond -- not the viewbox rect
+            <circle cx=x cy=y r=(45.0_f64).to_radians().sin() * radius />
         }
         .into_view(),
 
@@ -380,7 +382,7 @@ fn RenderMarkerShape(shape: MarkerShape, x: f64, y: f64, diameter: f64) -> impl 
 fn Diamond(x: f64, y: f64, radius: f64, #[prop(into, optional)] rotate: f64) -> impl IntoView {
     view! {
         <polygon
-            transform=format!("rotate({})", rotate)
+            transform=format!("rotate({rotate} {x} {y})")
             points=format!("{},{} {},{} {},{} {},{}",
                 x, y - radius,
                 x - radius, y,
@@ -396,7 +398,7 @@ fn PlusPath(x: f64, y: f64, diameter: f64, #[prop(into, optional)] rotate: f64) 
     let width: f64 = offset * 0.6;
     view! {
         <path
-            transform=format!("rotate({})", rotate)
+            transform=format!("rotate({rotate} {x} {y})")
             d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
                 x - width / 2.0, y - offset, // Top-most left
                 width, // Top-most right
