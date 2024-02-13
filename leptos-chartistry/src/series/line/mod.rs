@@ -81,6 +81,12 @@ impl<T, Y> Line<T, Y> {
         self.width.set(width.into());
         self
     }
+
+    /// Set the marker at each point on the line.
+    pub fn with_marker(mut self, marker: impl Into<Marker>) -> Self {
+        self.marker = marker.into();
+        self
+    }
 }
 
 impl<T, Y> Clone for Line<T, Y> {

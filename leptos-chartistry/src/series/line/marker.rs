@@ -53,6 +53,46 @@ impl Default for Marker {
     }
 }
 
+impl From<MarkerShape> for Marker {
+    fn from(shape: MarkerShape) -> Self {
+        Self::new(shape)
+    }
+}
+
+impl Marker {
+    /// Create a new marker with the given shape.
+    pub fn new(shape: impl Into<MarkerShape>) -> Self {
+        Self {
+            shape: create_rw_signal(shape.into()),
+            ..Default::default()
+        }
+    }
+
+    /// Set the colour of the marker. Default is line colour.
+    pub fn with_colour(self, colour: impl Into<Option<Colour>>) -> Self {
+        self.colour.set(colour.into());
+        self
+    }
+
+    /// Set the size of the marker relative to the line width. Default is 1.0.
+    pub fn with_scale(self, scale: impl Into<f64>) -> Self {
+        self.scale.set(scale.into());
+        self
+    }
+
+    /// Set the colour of the marker border. Set to the same as the background to separate the marker from the line. Default is white.
+    pub fn with_border(self, border: impl Into<Colour>) -> Self {
+        self.border.set(border.into());
+        self
+    }
+
+    /// Set the width of the marker border. Set to zero to remove the border. Default is zero.
+    pub fn with_border_width(self, border_width: impl Into<f64>) -> Self {
+        self.border_width.set(border_width.into());
+        self
+    }
+}
+
 #[component]
 pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
     let marker = line.marker.clone();
