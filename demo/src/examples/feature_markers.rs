@@ -24,8 +24,6 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
                         .with_colour(WHITE)
                         // Note: default border colour is the line colour
                         .with_border_width(1.0),
-                    // Another idea is to set the border width to give a gap
-                    // between the line and the marker.
                 ),
         );
 
