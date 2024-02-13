@@ -54,8 +54,8 @@ pub enum Marker {
     None,
     #[default]
     Circle,
-    Triangle,
     Square,
+    Triangle,
     Diamond,
     Plus,
     Cross,
@@ -64,8 +64,8 @@ pub enum Marker {
 const ALL_MARKERS: &[Marker] = &[
     Marker::None,
     Marker::Circle,
-    Marker::Triangle,
     Marker::Square,
+    Marker::Triangle,
     Marker::Diamond,
     Marker::Plus,
     Marker::Cross,

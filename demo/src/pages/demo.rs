@@ -32,8 +32,8 @@ const ALL_SORT_BYS: &[TooltipSortBy] = &[
 const ALL_MARKERS: &[Marker] = &[
     Marker::None,
     Marker::Circle,
-    Marker::Triangle,
     Marker::Square,
+    Marker::Triangle,
     Marker::Diamond,
     Marker::Plus,
     Marker::Cross,
