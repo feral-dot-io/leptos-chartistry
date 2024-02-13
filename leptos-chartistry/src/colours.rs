@@ -11,6 +11,8 @@ Reading material:
 
 use std::str::FromStr;
 
+pub const WHITE: Colour = Colour::new(255, 255, 255);
+
 /// A colour scheme with at least one colour.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColourScheme {

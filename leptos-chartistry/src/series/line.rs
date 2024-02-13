@@ -1,5 +1,11 @@
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc};
-use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State};
+use crate::{
+    bounds::Bounds,
+    colours::{self, Colour},
+    debug::DebugRect,
+    series::GetYValue,
+    state::State,
+};
 use leptos::*;
 use std::rc::Rc;
 
@@ -38,7 +44,7 @@ pub struct Line<T, Y> {
     pub width: RwSignal<f64>,
     /// Marker at each point on the line.
     pub marker: RwSignal<Marker>,
-    pub marker_border: RwSignal<Option<Colour>>,
+    pub marker_border: RwSignal<Colour>,
     pub marker_border_width: RwSignal<f64>,
 }
 
@@ -72,7 +78,7 @@ pub struct UseLine {
     colour: Signal<Colour>,
     width: RwSignal<f64>,
     marker: RwSignal<Marker>,
-    border: RwSignal<Option<Colour>>,
+    border: RwSignal<Colour>,
     border_width: RwSignal<f64>,
 }
 
@@ -87,7 +93,7 @@ impl<T, Y> Line<T, Y> {
             colour: RwSignal::default(),
             width: 1.0.into(),
             marker: RwSignal::default(),
-            marker_border: create_rw_signal(Some(Colour::new(255, 255, 255))),
+            marker_border: create_rw_signal(colours::WHITE),
             marker_border_width: create_rw_signal(1.0),
         }
     }
@@ -224,17 +230,11 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
     let width = line.width;
     let colour = line.colour;
     let colour = Signal::derive(move || colour.get().to_string());
-    let border = Signal::derive(move || {
-        line.border
-            .get()
-            .map(|c| c.to_string())
-            .unwrap_or("none".to_string())
-    });
     let marker_url = Signal::derive(move || format!("url(#{})", line.marker.get().id(line.id)));
     view! {
         <g class="_chartistry_line" stroke=colour>
             <defs>
-                <MarkerDefs line=line border=border />
+                <MarkerDefs line=line />
             </defs>
             <path
                 d=path
@@ -250,7 +250,7 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
 }
 
 #[component]
-fn MarkerDefs(line: UseLine, border: Signal<String>) -> impl IntoView {
+fn MarkerDefs(line: UseLine) -> impl IntoView {
     let viewBox = move || {
         let border = line.border_width.get();
         format!(
@@ -261,6 +261,7 @@ fn MarkerDefs(line: UseLine, border: Signal<String>) -> impl IntoView {
     };
     let width =
         Signal::derive(move || line.width.get() * WIDTH_TO_MARKER + line.border_width.get() * 4.0);
+    let border = Signal::derive(move || line.border.get().to_string());
     ALL_MARKERS
         .iter()
         .map(|&shape| {
