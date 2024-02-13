@@ -2,7 +2,7 @@ mod line;
 mod stack;
 mod use_data;
 
-pub use line::{Line, Snippet, UseLine};
+pub use line::{Line, Marker, Snippet, UseLine};
 pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
 
