@@ -251,17 +251,29 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
 
 #[component]
 fn MarkerDefs(line: UseLine) -> impl IntoView {
+    let border_colour = Signal::derive(move || line.border.get().to_string());
+    // Do we have a border? Yes if >0 and not Marker::None.
+    let border_width = create_memo(move |_| {
+        if line.marker.get() == Marker::None {
+            0.0
+        } else {
+            line.border_width.get()
+        }
+    });
+
+    // Our view box is around -1 to 1. Add a border around that.
     let viewBox = move || {
-        let border = line.border_width.get();
+        let border = border_width.get();
         format!(
             "{min} {min} {size} {size}",
             min = -1.0 - border,
             size = 2.0 + border * 2.0
         )
     };
+    // Calculate width as line + border
     let width =
-        Signal::derive(move || line.width.get() * WIDTH_TO_MARKER + line.border_width.get() * 4.0);
-    let border = Signal::derive(move || line.border.get().to_string());
+        Signal::derive(move || line.width.get() * WIDTH_TO_MARKER + border_width.get() * 4.0);
+
     ALL_MARKERS
         .iter()
         .map(|&shape| {
@@ -272,7 +284,7 @@ fn MarkerDefs(line: UseLine) -> impl IntoView {
                     markerUnits="userSpaceOnUse"
                     markerWidth=width
                     markerHeight=width>
-                    <circle cx=0 cy=0 r=2 fill=border stroke="none" />
+                    <circle cx=0 cy=0 r=border_width fill=border_colour stroke="none" />
                     <RenderMarkerShape shape=shape />
                 </marker>
             }
