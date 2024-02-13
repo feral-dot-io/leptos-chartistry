@@ -41,6 +41,8 @@ const ALL_MARKER_SHAPES: &[MarkerShape] = &[
 
 const JS_TIMESTAMP_FMT: &str = "%FT%R";
 
+const WHITE: Colour = Colour::new(255, 255, 255);
+
 #[derive(Clone)]
 struct Options<Opt>(Vec<Opt>);
 
@@ -125,9 +127,17 @@ pub fn Demo() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
+    let scheme: ColourScheme = SERIES_COLOUR_SCHEME.into();
     let lines = vec![
-        Line::new(|w: &Wave| w.sine).with_name("sine"),
-        Line::new(|w: &Wave| w.cosine).with_name("cosine"),
+        Line::new(|w: &Wave| w.sine).with_name("sine").with_marker(
+            Marker::new(MarkerShape::Circle)
+                .with_colour(WHITE)
+                .with_border(scheme.by_index(0))
+                .with_border_width(1.0),
+        ),
+        Line::new(|w: &Wave| w.cosine)
+            .with_name("cosine")
+            .with_marker(MarkerShape::Circle),
     ];
     let edit_lines = lines.clone();
     let (line_tab, set_line_tab) = create_signal(0);
