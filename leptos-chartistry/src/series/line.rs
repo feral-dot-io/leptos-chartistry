@@ -43,14 +43,20 @@ pub struct Line<T, Y> {
     /// Width of the line.
     pub width: RwSignal<f64>,
     /// Marker at each point on the line.
-    pub marker: RwSignal<Marker>,
-    pub marker_border: RwSignal<Colour>,
-    pub marker_border_width: RwSignal<f64>,
+    pub marker: Marker,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Marker {
+    pub shape: RwSignal<MarkerShape>,
+    pub scale: RwSignal<f64>,
+    pub border: RwSignal<Colour>,
+    pub border_width: RwSignal<f64>,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
-pub enum Marker {
+pub enum MarkerShape {
     None,
     #[default]
     Circle,
@@ -61,14 +67,14 @@ pub enum Marker {
     Cross,
 }
 
-const ALL_MARKERS: &[Marker] = &[
-    Marker::None,
-    Marker::Circle,
-    Marker::Square,
-    Marker::Triangle,
-    Marker::Diamond,
-    Marker::Plus,
-    Marker::Cross,
+const ALL_MARKER_SHAPES: &[MarkerShape] = &[
+    MarkerShape::None,
+    MarkerShape::Circle,
+    MarkerShape::Square,
+    MarkerShape::Triangle,
+    MarkerShape::Diamond,
+    MarkerShape::Plus,
+    MarkerShape::Cross,
 ];
 
 #[derive(Clone, Debug, PartialEq)]
@@ -77,9 +83,7 @@ pub struct UseLine {
     pub name: RwSignal<String>,
     colour: Signal<Colour>,
     width: RwSignal<f64>,
-    marker: RwSignal<Marker>,
-    border: RwSignal<Colour>,
-    border_width: RwSignal<f64>,
+    marker: Marker,
 }
 
 impl<T, Y> Line<T, Y> {
@@ -92,9 +96,7 @@ impl<T, Y> Line<T, Y> {
             name: RwSignal::default(),
             colour: RwSignal::default(),
             width: 1.0.into(),
-            marker: RwSignal::default(),
-            marker_border: create_rw_signal(colours::WHITE),
-            marker_border_width: create_rw_signal(1.0),
+            marker: Marker::default(),
         }
     }
 
@@ -117,6 +119,17 @@ impl<T, Y> Line<T, Y> {
     }
 }
 
+impl Default for Marker {
+    fn default() -> Self {
+        Self {
+            shape: RwSignal::default(),
+            scale: create_rw_signal(1.0),
+            border: create_rw_signal(colours::WHITE),
+            border_width: create_rw_signal(1.0),
+        }
+    }
+}
+
 impl<T, Y> Clone for Line<T, Y> {
     fn clone(&self) -> Self {
         Self {
@@ -124,9 +137,7 @@ impl<T, Y> Clone for Line<T, Y> {
             name: self.name,
             colour: self.colour,
             width: self.width,
-            marker: self.marker,
-            marker_border: self.marker_border,
-            marker_border_width: self.marker_border_width,
+            marker: self.marker.clone(),
         }
     }
 }
@@ -163,9 +174,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
             name: self.name,
             colour,
             width: self.width,
-            marker: self.marker,
-            border: self.marker_border,
-            border_width: self.marker_border_width,
+            marker: self.marker.clone(),
         };
         (line, self.get_y.clone())
     }
@@ -230,7 +239,8 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
     let width = line.width;
     let colour = line.colour;
     let colour = Signal::derive(move || colour.get().to_string());
-    let marker_url = Signal::derive(move || format!("url(#{})", line.marker.get().id(line.id)));
+    let marker_url =
+        Signal::derive(move || format!("url(#{})", line.marker.shape.get().id(line.id)));
     view! {
         <g class="_chartistry_line" stroke=colour>
             <defs>
@@ -251,13 +261,14 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
 
 #[component]
 fn MarkerDefs(line: UseLine) -> impl IntoView {
-    let border_colour = Signal::derive(move || line.border.get().to_string());
+    let marker = line.marker;
+    let border_colour = Signal::derive(move || marker.border.get().to_string());
     // Do we have a border? Yes if >0 and not Marker::None.
     let border_width = create_memo(move |_| {
-        if line.marker.get() == Marker::None {
+        if marker.shape.get() == MarkerShape::None {
             0.0
         } else {
-            line.border_width.get()
+            marker.border_width.get()
         }
     });
 
@@ -274,7 +285,7 @@ fn MarkerDefs(line: UseLine) -> impl IntoView {
     let width =
         Signal::derive(move || line.width.get() * WIDTH_TO_MARKER + border_width.get() * 4.0);
 
-    ALL_MARKERS
+    ALL_MARKER_SHAPES
         .iter()
         .map(|&shape| {
             view! {
@@ -292,7 +303,7 @@ fn MarkerDefs(line: UseLine) -> impl IntoView {
         .collect_view()
 }
 
-impl Marker {
+impl MarkerShape {
     fn id(self, line_id: usize) -> String {
         format!("line_{}_marker_{}", line_id, self.label())
     }
@@ -310,70 +321,70 @@ impl Marker {
     }
 }
 
-impl std::str::FromStr for Marker {
+impl std::str::FromStr for MarkerShape {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "none" => Ok(Marker::None),
-            "circle" => Ok(Marker::Circle),
-            "triangle" => Ok(Marker::Triangle),
-            "square" => Ok(Marker::Square),
-            "diamond" => Ok(Marker::Diamond),
-            "plus" => Ok(Marker::Plus),
-            "cross" => Ok(Marker::Cross),
+            "none" => Ok(MarkerShape::None),
+            "circle" => Ok(MarkerShape::Circle),
+            "triangle" => Ok(MarkerShape::Triangle),
+            "square" => Ok(MarkerShape::Square),
+            "diamond" => Ok(MarkerShape::Diamond),
+            "plus" => Ok(MarkerShape::Plus),
+            "cross" => Ok(MarkerShape::Cross),
             _ => Err("unknown marker"),
         }
     }
 }
 
-impl std::fmt::Display for Marker {
+impl std::fmt::Display for MarkerShape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Marker::None => write!(f, "None"),
-            Marker::Circle => write!(f, "Circle"),
-            Marker::Triangle => write!(f, "Triangle"),
-            Marker::Square => write!(f, "Square"),
-            Marker::Diamond => write!(f, "Diamond"),
-            Marker::Plus => write!(f, "Plus"),
-            Marker::Cross => write!(f, "Cross"),
+            MarkerShape::None => write!(f, "None"),
+            MarkerShape::Circle => write!(f, "Circle"),
+            MarkerShape::Triangle => write!(f, "Triangle"),
+            MarkerShape::Square => write!(f, "Square"),
+            MarkerShape::Diamond => write!(f, "Diamond"),
+            MarkerShape::Plus => write!(f, "Plus"),
+            MarkerShape::Cross => write!(f, "Cross"),
         }
     }
 }
 
 /// Renders the marker shape in -1 to 1 space.
 #[component]
-fn RenderMarkerShape(shape: Marker) -> impl IntoView {
+fn RenderMarkerShape(shape: MarkerShape) -> impl IntoView {
     match shape {
-        Marker::None => ().into_view(),
+        MarkerShape::None => ().into_view(),
 
-        Marker::Circle => view! {
+        MarkerShape::Circle => view! {
             <circle cx=0 cy=0 r=1 fill="context-stroke" stroke="none" />
         }
         .into_view(),
 
-        Marker::Triangle => view! {
+        MarkerShape::Triangle => view! {
             <polygon points="0,-1 -1,1 1,1" fill="context-stroke" stroke="none" />
         }
         .into_view(),
 
-        Marker::Square => view! {
+        MarkerShape::Square => view! {
             <rect x="-1" y="-1" width="2" height="2" fill="context-stroke" stroke="none" />
         }
         .into_view(),
 
-        Marker::Diamond => view! {
+        MarkerShape::Diamond => view! {
             <polygon points="0,-1 -1,0 0,1 1,0" fill="context-stroke" stroke="none" />
         }
         .into_view(),
 
-        Marker::Plus => view! {
+        MarkerShape::Plus => view! {
             <line x1="-1" y1="0" x2="1" y2="0" fill="none" stroke="context-stroke" stroke-width="0.5" />
             <line x1="0" y1="-1" x2="0" y2="1" fill="none" stroke="context-stroke" stroke-width="0.5" />
         }
         .into_view(),
 
-        Marker::Cross => view! {
+        MarkerShape::Cross => view! {
             <line x1="-1" y1="-1" x2="1" y2="1" fill="none" stroke="context-stroke" stroke-width="0.5" />
             <line x1="-1" y1="1" x2="1" y2="-1" fill="none" stroke="context-stroke" stroke-width="0.5" />
         }
