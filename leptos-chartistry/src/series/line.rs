@@ -61,8 +61,8 @@ pub enum MarkerShape {
     #[default]
     Circle,
     Square,
-    Triangle,
     Diamond,
+    Triangle,
     Plus,
     Cross,
 }
@@ -71,8 +71,8 @@ const ALL_MARKER_SHAPES: &[MarkerShape] = &[
     MarkerShape::None,
     MarkerShape::Circle,
     MarkerShape::Square,
-    MarkerShape::Triangle,
     MarkerShape::Diamond,
+    MarkerShape::Triangle,
     MarkerShape::Plus,
     MarkerShape::Cross,
 ];

@@ -33,8 +33,8 @@ const ALL_MARKER_SHAPES: &[MarkerShape] = &[
     MarkerShape::None,
     MarkerShape::Circle,
     MarkerShape::Square,
-    MarkerShape::Triangle,
     MarkerShape::Diamond,
+    MarkerShape::Triangle,
     MarkerShape::Plus,
     MarkerShape::Cross,
 ];
@@ -705,7 +705,7 @@ where
 }
 
 macro_rules! select_impl {
-    ($fn:ident, $label:literal, $input:ident, $signal:ty, $all:ident) => {
+    ($fn:ident, $label:literal, $input:ident, $signal:ty, $all:path) => {
         #[component]
         fn $fn(#[prop(into, optional)] id: Option<AttributeValue>, $input: RwSignal<$signal>) -> impl IntoView {
             view!(<SelectOption id=id label=$label value=$input all=$all />)
