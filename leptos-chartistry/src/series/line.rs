@@ -38,8 +38,8 @@ pub struct Line<T, Y> {
     pub width: RwSignal<f64>,
     /// Marker at each point on the line.
     pub marker: RwSignal<Marker>,
-    pub border: RwSignal<Option<Colour>>,
-    pub border_width: RwSignal<f64>,
+    pub marker_border: RwSignal<Option<Colour>>,
+    pub marker_border_width: RwSignal<f64>,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
@@ -87,8 +87,8 @@ impl<T, Y> Line<T, Y> {
             colour: RwSignal::default(),
             width: 1.0.into(),
             marker: RwSignal::default(),
-            border: create_rw_signal(Some(Colour::new(255, 255, 255))),
-            border_width: create_rw_signal(1.0),
+            marker_border: create_rw_signal(Some(Colour::new(255, 255, 255))),
+            marker_border_width: create_rw_signal(1.0),
         }
     }
 
@@ -119,8 +119,8 @@ impl<T, Y> Clone for Line<T, Y> {
             colour: self.colour,
             width: self.width,
             marker: self.marker,
-            border: self.border,
-            border_width: self.border_width,
+            marker_border: self.marker_border,
+            marker_border_width: self.marker_border_width,
         }
     }
 }
@@ -158,8 +158,8 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
             colour,
             width: self.width,
             marker: self.marker,
-            border: self.border,
-            border_width: self.border_width,
+            border: self.marker_border,
+            border_width: self.marker_border_width,
         };
         (line, self.get_y.clone())
     }
@@ -293,6 +293,37 @@ impl Marker {
             Self::Diamond => "diamond",
             Self::Plus => "plus",
             Self::Cross => "cross",
+        }
+    }
+}
+
+impl std::str::FromStr for Marker {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "none" => Ok(Marker::None),
+            "circle" => Ok(Marker::Circle),
+            "triangle" => Ok(Marker::Triangle),
+            "square" => Ok(Marker::Square),
+            "diamond" => Ok(Marker::Diamond),
+            "plus" => Ok(Marker::Plus),
+            "cross" => Ok(Marker::Cross),
+            _ => Err("unknown marker"),
+        }
+    }
+}
+
+impl std::fmt::Display for Marker {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Marker::None => write!(f, "None"),
+            Marker::Circle => write!(f, "Circle"),
+            Marker::Triangle => write!(f, "Triangle"),
+            Marker::Square => write!(f, "Square"),
+            Marker::Diamond => write!(f, "Diamond"),
+            Marker::Plus => write!(f, "Plus"),
+            Marker::Cross => write!(f, "Cross"),
         }
     }
 }
