@@ -129,7 +129,7 @@ pub fn Demo() -> impl IntoView {
     let (data, _) = create_signal(load_data());
     let lines = vec![
         Line::new(|w: &Wave| w.sine).with_name("sine").with_marker(
-            Marker::new(MarkerShape::Circle)
+            Marker::from_shape(MarkerShape::Circle)
                 .with_colour(WHITE)
                 .with_border_width(1.0),
         ),

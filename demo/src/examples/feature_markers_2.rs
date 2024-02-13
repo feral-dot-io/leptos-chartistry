@@ -11,7 +11,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
             Line::new(|data: &MyData| data.y1)
                 .with_name("lions")
                 .with_marker(
-                    Marker::new(MarkerShape::Cross)
+                    Marker::from_shape(MarkerShape::Cross)
                         .with_border(BACKGROUND)
                         .with_border_width(3.0),
                 ),
@@ -20,7 +20,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
             Line::new(|data: &MyData| data.y2)
                 .with_name("tigers")
                 .with_marker(
-                    Marker::new(MarkerShape::Plus)
+                    Marker::from_shape(MarkerShape::Plus)
                         .with_border(BACKGROUND)
                         .with_border_width(3.0),
                 ),

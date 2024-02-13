@@ -55,13 +55,13 @@ impl Default for Marker {
 
 impl From<MarkerShape> for Marker {
     fn from(shape: MarkerShape) -> Self {
-        Self::new(shape)
+        Self::from_shape(shape)
     }
 }
 
 impl Marker {
     /// Create a new marker with the given shape.
-    pub fn new(shape: impl Into<MarkerShape>) -> Self {
+    pub fn from_shape(shape: impl Into<MarkerShape>) -> Self {
         Self {
             shape: create_rw_signal(shape.into()),
             ..Default::default()

@@ -20,7 +20,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
                     // We can also decorate our markers. Here we put a border on
                     // the marker that's the same as the line and then set the
                     // marker colour to white. This gives a hollow marker.
-                    Marker::new(MarkerShape::Circle)
+                    Marker::from_shape(MarkerShape::Circle)
                         .with_colour(WHITE)
                         // Note: default border colour is the line colour
                         .with_border_width(1.0),
