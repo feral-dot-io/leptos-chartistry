@@ -141,7 +141,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
 
 impl UseLine {
     fn taster_bounds(font_height: Memo<f64>, font_width: Memo<f64>) -> Memo<Bounds> {
-        create_memo(move |_| Bounds::new(font_width.get() * 2.0, font_height.get()))
+        create_memo(move |_| Bounds::new(font_width.get() * 2.5, font_height.get()))
     }
 
     pub fn snippet_width(font_height: Memo<f64>, font_width: Memo<f64>) -> Signal<f64> {
@@ -214,6 +214,7 @@ fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl I
     const Y_OFFSET: f64 = 2.0;
     let debug = state.pre.debug;
     let font_width = state.pre.font_width;
+    let right_padding = Signal::derive(move || font_width.get() / 2.0);
     let bounds = UseLine::taster_bounds(state.pre.font_height, font_width);
     // Mock positions from left to right of our bounds
     let positions = Signal::derive(move || {
@@ -229,11 +230,12 @@ fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl I
     view! {
         <svg
             viewBox=move || format!("0 0 {} {}", bounds.get().width(), bounds.get().height())
-            width=move || bounds.get().width() + font_width.get()
+            width=move || bounds.get().width() + right_padding.get()
             height=move || bounds.get().height()
             class="_chartistry_taster"
             style="box-sizing: border-box;"
-            style:padding-right=move || format!("{}px", font_width.get())>
+            style:padding-right=move || format!("{}px", right_padding.get())
+            >
             <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
             <RenderLine line=series positions=positions markers=markers />
         </svg>

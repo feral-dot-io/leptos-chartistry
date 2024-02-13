@@ -3,6 +3,7 @@ use leptos::*;
 use leptos_chartistry::*;
 
 const BACKGROUND: Colour = Colour::new(255, 255, 255);
+const BORDER_WIDTH: f64 = 2.0;
 
 #[component]
 pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
@@ -12,8 +13,9 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
                 .with_name("lions")
                 .with_marker(
                     Marker::from_shape(MarkerShape::Cross)
+                        // Creating a border around the marker creates a small gap
                         .with_border(BACKGROUND)
-                        .with_border_width(3.0),
+                        .with_border_width(BORDER_WIDTH),
                 ),
         )
         .line(
@@ -22,7 +24,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
                 .with_marker(
                     Marker::from_shape(MarkerShape::Plus)
                         .with_border(BACKGROUND)
-                        .with_border_width(3.0),
+                        .with_border_width(BORDER_WIDTH),
                 ),
         );
 

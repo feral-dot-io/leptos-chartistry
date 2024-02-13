@@ -162,7 +162,11 @@ fn HorizontalBody<X: Clone + 'static, Y: Clone + 'static>(
     series: Memo<Vec<UseLine>>,
     state: State<X, Y>,
 ) -> impl IntoView {
-    let padding_left = move |i| (i != 0).then_some(state.pre.padding.get().left);
+    let padding_left = move |i| {
+        (i != 0)
+            .then_some(state.pre.padding.get().left)
+            .map(|p| format!("{}px", p))
+    };
     view! {
         <tr>
             <For
