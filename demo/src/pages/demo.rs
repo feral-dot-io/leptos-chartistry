@@ -257,9 +257,11 @@ pub fn Demo() -> impl IntoView {
                         <span>
                             <SelectMarkerShape marker=sine.marker.shape />
                             " "
+                            <StepInput value=sine.marker.scale step="0.1" min="0.0" />
+                            " "
                             <SelectColour colour=sine.marker.border />
                             " "
-                            <StepInput value=sine.marker.border_width step="0.1" min="0.1" />
+                            <StepInput value=sine.marker.border_width step="0.1" min="0.0" />
                         </span>
                     </p>
 
@@ -273,16 +275,6 @@ pub fn Demo() -> impl IntoView {
                     <p>
                         <label for="cosine_width">"Width"</label>
                         <span><StepInput id="cosine_width" value=cosine.width step="0.1" min="0.1" /></span>
-                    </p>
-                    <p>
-                        <label for="cosine_marker">"Marker"</label>
-                        <span>
-                            <SelectMarkerShape marker=cosine.marker.shape />
-                            " "
-                            <SelectColour colour=cosine.marker.border />
-                            " "
-                            <StepInput value=cosine.marker.border_width step="0.1" min="0.1" />
-                        </span>
                     </p>
 
                     <p>
@@ -678,7 +670,7 @@ fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
             min=min
             max=max
             value=value
-            on:change=on_change />
+            on:input=on_change />
     }
 }
 

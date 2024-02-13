@@ -46,36 +46,39 @@ pub struct Line<T, Y> {
     pub marker: Marker,
 }
 
+/// Describes a line point marker.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Marker {
+    /// Shape of the marker. Default is no marker.
     pub shape: RwSignal<MarkerShape>,
+    /// Size of the marker relative to the line width. Default is 1.0.
     pub scale: RwSignal<f64>,
+    /// Colour of the marker border. Set to the same as the background to separate the marker from the line. Default is white.
     pub border: RwSignal<Colour>,
+    /// Width of the marker border. Set to zero to remove the border. Default is zero.
     pub border_width: RwSignal<f64>,
 }
 
+/// Shape of a line marker.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum MarkerShape {
+    /// No marker.
     None,
-    #[default]
+    /// Circle marker.
+    #[default] // TODO
     Circle,
+    /// Square marker.
     Square,
+    /// Diamond marker.
     Diamond,
+    /// Triangle marker.
     Triangle,
+    /// Plus marker.
     Plus,
+    /// Cross marker.
     Cross,
 }
-
-const ALL_MARKER_SHAPES: &[MarkerShape] = &[
-    MarkerShape::None,
-    MarkerShape::Circle,
-    MarkerShape::Square,
-    MarkerShape::Diamond,
-    MarkerShape::Triangle,
-    MarkerShape::Plus,
-    MarkerShape::Cross,
-];
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
@@ -124,8 +127,8 @@ impl Default for Marker {
         Self {
             shape: RwSignal::default(),
             scale: create_rw_signal(1.0),
-            border: create_rw_signal(colours::WHITE),
-            border_width: create_rw_signal(1.0),
+            border: create_rw_signal(Colour::new(0, 0, 255)), // TODO
+            border_width: create_rw_signal(0.0),              // TODO
         }
     }
 }
@@ -239,85 +242,80 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
     let width = line.width;
     let colour = line.colour;
     let colour = Signal::derive(move || colour.get().to_string());
-    let marker_url =
-        Signal::derive(move || format!("url(#{})", line.marker.shape.get().id(line.id)));
     view! {
         <g class="_chartistry_line" stroke=colour>
-            <defs>
-                <MarkerDefs line=line />
-            </defs>
             <path
                 d=path
                 fill="none"
                 stroke=colour
                 stroke-width=width
-                marker-start=marker_url
-                marker-mid=marker_url
-                marker-end=marker_url
             />
+            <LineMarkers line=line positions=positions />
         </g>
     }
 }
 
 #[component]
-fn MarkerDefs(line: UseLine) -> impl IntoView {
-    let marker = line.marker;
-    let border_colour = Signal::derive(move || marker.border.get().to_string());
-    // Do we have a border? Yes if >0 and not Marker::None.
-    let border_width = create_memo(move |_| {
+fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
+    let marker = line.marker.clone();
+    let marker_id = format!("line_{}_marker", line.id);
+
+    // Disable border if no marker
+    let border_width = Signal::derive(move || {
         if marker.shape.get() == MarkerShape::None {
             0.0
         } else {
             marker.border_width.get()
         }
     });
-
     // Our view box is around -1 to 1. Add a border around that.
     let viewBox = move || {
         let border = border_width.get();
+        // -1 -1 2 2 with border
         format!(
             "{min} {min} {size} {size}",
             min = -1.0 - border,
             size = 2.0 + border * 2.0
         )
     };
-    // Calculate width as line + border
-    let width =
-        Signal::derive(move || line.width.get() * WIDTH_TO_MARKER + border_width.get() * 4.0);
+    // Size of our marker: proportionate to our line width plus border
+    let size = create_memo(move |_| {
+        line.width.get() * WIDTH_TO_MARKER * marker.scale.get() + border_width.get() * 2.0
+    });
 
-    ALL_MARKER_SHAPES
-        .iter()
-        .map(|&shape| {
-            view! {
-                <marker
-                    id=shape.id(line.id)
-                    viewBox=viewBox
-                    markerUnits="userSpaceOnUse"
-                    markerWidth=width
-                    markerHeight=width>
-                    <circle cx=0 cy=0 r=border_width fill=border_colour stroke="none" />
-                    <RenderMarkerShape shape=shape />
-                </marker>
-            }
-        })
-        .collect_view()
-}
-
-impl MarkerShape {
-    fn id(self, line_id: usize) -> String {
-        format!("line_{}_marker_{}", line_id, self.label())
-    }
-
-    fn label(self) -> &'static str {
-        match self {
-            Self::None => "none",
-            Self::Circle => "circle",
-            Self::Triangle => "triangle",
-            Self::Square => "square",
-            Self::Diamond => "diamond",
-            Self::Plus => "plus",
-            Self::Cross => "cross",
+    let markers = {
+        let marker_id = marker_id.clone();
+        move || {
+            positions.with(|positions| {
+                positions
+                    .iter()
+                    .filter(|(x, y)| !(x.is_nan() || y.is_nan()))
+                    .map(|&(x, y)| {
+                        view! {
+                            <use_
+                                href=format!("#{marker_id}")
+                                x=move || x - size.get() / 2.0
+                                y=move || y - size.get() / 2.0
+                                width=size
+                                height=size />
+                        }
+                    })
+                    .collect_view()
+            })
         }
+    };
+
+    view! {
+        <g
+            fill=move || line.colour.get().to_string()
+            stroke=move || marker.border.get().to_string()
+            stroke-width=move || border_width.get()
+            class="_chartistry_line_markers">
+            <symbol id=marker_id viewBox=viewBox>
+                {move || view!(<RenderMarkerShape shape=marker.shape.get() />)}
+            </symbol>
+            {markers}
+        </g>
     }
 }
 
@@ -359,46 +357,58 @@ fn RenderMarkerShape(shape: MarkerShape) -> impl IntoView {
         MarkerShape::None => ().into_view(),
 
         MarkerShape::Circle => view! {
-            <circle cx=0 cy=0 r=1 fill="context-stroke" stroke="none" />
+            <circle cx=0 cy=0 r=1 />
         }
         .into_view(),
 
         MarkerShape::Triangle => view! {
-            <polygon points="0,-1 -1,1 1,1" fill="context-stroke" stroke="none" />
+            <polygon points="0,-1 -1,1 1,1" />
         }
         .into_view(),
 
         MarkerShape::Square => view! {
-            <polygon points="0,-1 -1,0 0,1 1,0" transform="rotate(45)" fill="context-stroke" stroke="none" />
+            <polygon points="0,-1 -1,0 0,1 1,0" transform="rotate(45)" />
         }
         .into_view(),
 
         MarkerShape::Diamond => view! {
-            <polygon points="0,-1 -1,0 0,1 1,0" fill="context-stroke" stroke="none" />
+            <polygon points="0,-1 -1,0 0,1 1,0" />
         }
         .into_view(),
 
         MarkerShape::Plus => view! {
-            <line x1="-1" y1="0" x2="1" y2="0" fill="none" stroke="context-stroke" stroke-width="0.5" />
-            <line x1="0" y1="-1" x2="0" y2="1" fill="none" stroke="context-stroke" stroke-width="0.5" />
+            <PlusPath />
         }
         .into_view(),
 
         MarkerShape::Cross => view! {
-            <line
-                x1="-1" y1="0" x2="1" y2="0"
-                transform="rotate(45)"
-                stroke-width="0.5"
-                fill="none"
-                stroke="context-stroke" />
-            <line
-                x1="0" y1="-1" x2="0" y2="1"
-                transform="rotate(45)"
-                stroke-width="0.5"
-                fill="none"
-                stroke="context-stroke" />
+            <PlusPath rotate=45 />
         }
         .into_view(),
+    }
+}
+
+// Outline of a big plus (like the Swiss flag) up against the edge (-1 to 1)
+#[component]
+fn PlusPath(#[prop(into, optional)] rotate: f64) -> impl IntoView {
+    const OFFSET: f64 = 2.0 / 3.0;
+    const WIDTH: f64 = 0.4;
+    view! {
+        <path
+            transform=format!("rotate({})", rotate)
+            d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
+                -WIDTH / 2.0, -1, // Top-most left
+                WIDTH, // Top-most right
+                OFFSET,
+                OFFSET, // Right-most top
+                WIDTH, // Right-most bottom
+                -OFFSET,
+                OFFSET, // Bottom-most right
+                -WIDTH, // Bottom-most left
+                -OFFSET,
+                -OFFSET, // Left-most bottom
+                -WIDTH, // Left-most top
+                OFFSET) />
     }
 }
 
