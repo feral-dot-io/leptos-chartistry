@@ -139,15 +139,17 @@ fn VerticalBody<X: Clone + 'static, Y: Clone + 'static>(
     series: Memo<Vec<UseLine>>,
     state: State<X, Y>,
 ) -> impl IntoView {
-    let padding = state.pre.padding;
-    let state = state.clone();
+    let padding = move || {
+        let p = state.pre.padding.get();
+        format!("0 {}px 0 {}px", p.right, p.left)
+    };
     view! {
         <For
             each=move || series.get()
             key=|series| series.id
             let:series>
             <tr>
-                <td style:padding=move || padding.get().to_css_horizontal_style()>
+                <td style:padding=padding>
                     <Snippet series=series state=state.clone() />
                 </td>
             </tr>
@@ -160,22 +162,14 @@ fn HorizontalBody<X: Clone + 'static, Y: Clone + 'static>(
     series: Memo<Vec<UseLine>>,
     state: State<X, Y>,
 ) -> impl IntoView {
-    let padding = state.pre.padding;
-    let padding = move |i| -> Option<String> {
-        if i != 0 {
-            Some(format!("{}px", padding.get().left))
-        } else {
-            None
-        }
-    };
-    let state = state.clone();
+    let padding_left = move |i| (i != 0).then_some(state.pre.padding.get().left);
     view! {
         <tr>
             <For
                 each=move || series.get().into_iter().enumerate()
                 key=|(_, series)| series.id
                 let:series>
-                <td style:padding-left=move || padding(series.0)>
+                <td style:padding-left=move || padding_left(series.0)>
                     <Snippet series=series.1 state=state.clone() />
                 </td>
             </For>

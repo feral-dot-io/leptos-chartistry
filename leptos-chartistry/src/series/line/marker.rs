@@ -108,7 +108,8 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
 
     let markers = move || {
         // Size of our marker: proportionate to our line width
-        let diameter = line.width.get() * WIDTH_TO_MARKER * marker.scale.get();
+        let line_width = line.width.get();
+        let diameter = line_width * WIDTH_TO_MARKER * marker.scale.get();
 
         positions.with(|positions| {
             positions
@@ -120,7 +121,8 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
                             shape=marker.shape.get()
                             x=x
                             y=y
-                            diameter=diameter />
+                            diameter=diameter
+                            line_width=line_width />
                     }
                 })
                 .collect_view()
@@ -140,7 +142,13 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
 
 /// Renders the marker shape in a square. They should all be similar in size and not just extend to the edge e.g., square is a rotated diamond.
 #[component]
-fn MarkerShape(shape: MarkerShape, x: f64, y: f64, diameter: f64) -> impl IntoView {
+fn MarkerShape(
+    shape: MarkerShape,
+    x: f64,
+    y: f64,
+    diameter: f64,
+    line_width: f64,
+) -> impl IntoView {
     let radius = diameter / 2.0;
     match shape {
         MarkerShape::None => ().into_view(),
@@ -177,12 +185,12 @@ fn MarkerShape(shape: MarkerShape, x: f64, y: f64, diameter: f64) -> impl IntoVi
         .into_view(),
 
         MarkerShape::Plus => view! {
-            <PlusPath x=x y=y diameter=diameter />
+            <PlusPath x=x y=y diameter=diameter leg=line_width />
         }
         .into_view(),
 
         MarkerShape::Cross => view! {
-            <PlusPath x=x y=y diameter=diameter rotate=45 />
+            <PlusPath x=x y=y diameter=diameter leg=line_width rotate=45 />
         }
         .into_view(),
     }
@@ -204,26 +212,33 @@ fn Diamond(x: f64, y: f64, radius: f64, #[prop(into, optional)] rotate: f64) -> 
 
 // Outline of a big plus (like the Swiss flag) up against the edge (-1 to 1)
 #[component]
-fn PlusPath(x: f64, y: f64, diameter: f64, #[prop(into, optional)] rotate: f64) -> impl IntoView {
-    let offset: f64 = diameter / 3.0; // A third
-    let width: f64 = offset * 0.6;
+fn PlusPath(
+    x: f64,
+    y: f64,
+    diameter: f64,
+    leg: f64,
+    #[prop(into, optional)] rotate: f64,
+) -> impl IntoView {
+    let radius = diameter / 2.0;
+    let half_leg = leg / 2.0;
+    let to_inner = radius - half_leg;
     view! {
         <path
             transform=format!("rotate({rotate} {x} {y})")
             paint-order="stroke fill"
             d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
-                x - width / 2.0, y - offset, // Top-most left
-                width, // Top-most right
-                offset,
-                offset, // Right-most top
-                width, // Right-most bottom
-                -offset,
-                offset, // Bottom-most right
-                -width, // Bottom-most left
-                -offset,
-                -offset, // Left-most bottom
-                -width, // Left-most top
-                offset) />
+                x - half_leg, y - radius, // Top-most left
+                leg, // Top-most right
+                to_inner,
+                to_inner, // Right-most top
+                leg, // Right-most bottom
+                -to_inner,
+                to_inner, // Bottom-most right
+                -leg, // Bottom-most left
+                -to_inner,
+                -to_inner, // Left-most bottom
+                -leg, // Left-most top
+                to_inner) />
     }
 }
 
