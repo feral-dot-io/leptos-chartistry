@@ -29,6 +29,15 @@ const ALL_SORT_BYS: &[TooltipSortBy] = &[
     TooltipSortBy::Ascending,
     TooltipSortBy::Descending,
 ];
+const ALL_MARKERS: &[Marker] = &[
+    Marker::None,
+    Marker::Circle,
+    Marker::Triangle,
+    Marker::Square,
+    Marker::Diamond,
+    Marker::Plus,
+    Marker::Cross,
+];
 
 const JS_TIMESTAMP_FMT: &str = "%FT%R";
 
@@ -80,11 +89,13 @@ const Y2K: f64 = 946_684_800f64;
 const ONE_DAY: f64 = 86_400f64;
 
 fn load_data() -> Vec<Wave> {
+    const RANGE: f64 = 360.0 * 3.0;
     let mut data = Vec::new();
-    for deg in 0..(360 * 3) {
-        let rad = deg as f64 * std::f64::consts::PI / 180.0;
+    for i in 0..100 {
+        let deg = RANGE * (i as f64 / 100.0);
+        let rad = deg * std::f64::consts::PI / 180.0;
         data.push(Wave {
-            x: f64_to_dt(Y2K + ONE_DAY * deg as f64),
+            x: f64_to_dt(Y2K + ONE_DAY * deg),
             sine: rad.sin(),
             cosine: rad.cos(),
         });
@@ -241,6 +252,16 @@ pub fn Demo() -> impl IntoView {
                         <label for="sine_width">"Width"</label>
                         <span><StepInput id="sine_width" value=sine.width step="0.1" min="0.1" /></span>
                     </p>
+                    <p>
+                        <label for="sine_marker">"Marker"</label>
+                        <span>
+                            <SelectMarker marker=sine.marker />
+                            " "
+                            <SelectColour colour=sine.marker_border />
+                            " "
+                            <StepInput value=sine.marker_border_width step="0.1" min="0.1" />
+                        </span>
+                    </p>
 
                     <p>
                         <label for="cosine_name">"Cosine"</label>
@@ -253,6 +274,13 @@ pub fn Demo() -> impl IntoView {
                         <label for="cosine_width">"Width"</label>
                         <span><StepInput id="cosine_width" value=cosine.width step="0.1" min="0.1" /></span>
                     </p>
+                    <p>
+                        <label for="cosine_marker">"Marker"</label>
+                        <span>
+                            <SelectMarker marker=cosine.marker />
+                        </span>
+                    </p>
+
                     <p>
                         <label for="series_colours">"Colours"</label>
                         <span>
@@ -719,6 +747,7 @@ select_impl!(
     AspectCalc,
     ALL_ASPECT_CALCS
 );
+select_impl!(SelectMarker, "Marker", marker, Marker, ALL_MARKERS);
 
 #[component]
 fn SelectColour(colour: RwSignal<Colour>) -> impl IntoView {
