@@ -1,0 +1,219 @@
+use super::UseLine;
+use crate::colours::{self, Colour};
+use leptos::*;
+
+// Scales our marker (drawn -1 to 1) to a 1.0 line width
+const WIDTH_TO_MARKER: f64 = 8.0;
+
+/// Describes a line point marker.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Marker {
+    /// Shape of the marker. Default is no marker.
+    pub shape: RwSignal<MarkerShape>,
+    /// Colour of the marker. Default is line colour.
+    pub colour: RwSignal<Option<Colour>>,
+    /// Size of the marker relative to the line width. Default is 1.0.
+    pub scale: RwSignal<f64>,
+    /// Colour of the marker border. Set to the same as the background to separate the marker from the line. Default is white.
+    pub border: RwSignal<Colour>,
+    /// Width of the marker border. Set to zero to remove the border. Default is zero.
+    pub border_width: RwSignal<f64>,
+}
+
+/// Shape of a line marker.
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
+pub enum MarkerShape {
+    /// No marker.
+    #[default]
+    None,
+    /// Circle marker.
+    Circle,
+    /// Square marker.
+    Square,
+    /// Diamond marker.
+    Diamond,
+    /// Triangle marker.
+    Triangle,
+    /// Plus marker.
+    Plus,
+    /// Cross marker.
+    Cross,
+}
+
+impl Default for Marker {
+    fn default() -> Self {
+        Self {
+            shape: RwSignal::default(),
+            colour: RwSignal::default(),
+            scale: create_rw_signal(1.0),
+            border: create_rw_signal(colours::WHITE),
+            border_width: create_rw_signal(2.0),
+        }
+    }
+}
+
+#[component]
+pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
+    let marker = line.marker.clone();
+
+    // Disable border if no marker
+    let border_width = Signal::derive(move || {
+        if marker.shape.get() == MarkerShape::None {
+            0.0
+        } else {
+            marker.border_width.get()
+        }
+    });
+
+    let markers = move || {
+        // Size of our marker: proportionate to our line width
+        let diameter = line.width.get() * WIDTH_TO_MARKER * marker.scale.get();
+
+        positions.with(|positions| {
+            positions
+                .iter()
+                .filter(|(x, y)| !(x.is_nan() || y.is_nan()))
+                .map(|&(x, y)| {
+                    view! {
+                        <MarkerShape
+                            shape=marker.shape.get()
+                            x=x
+                            y=y
+                            diameter=diameter />
+                    }
+                })
+                .collect_view()
+        })
+    };
+
+    view! {
+        <g
+            fill=move || marker.colour.get().unwrap_or_else(|| line.colour.get()).to_string()
+            stroke=move || marker.border.get().to_string()
+            stroke-width=move || border_width.get() * 2.0 // Half of the stroke is inside
+            class="_chartistry_line_markers">
+            {markers}
+        </g>
+    }
+}
+
+/// Renders the marker shape in a square. They should all be similar in size and not just extend to the edge e.g., square is a rotated diamond.
+#[component]
+fn MarkerShape(shape: MarkerShape, x: f64, y: f64, diameter: f64) -> impl IntoView {
+    let radius = diameter / 2.0;
+    match shape {
+        MarkerShape::None => ().into_view(),
+
+        MarkerShape::Circle => view! {
+            // Radius to fit inside our square / diamond -- not the viewbox rect
+            <circle
+                cx=x
+                cy=y
+                r=(45.0_f64).to_radians().sin() * radius
+                paint-order="stroke fill"
+            />
+        }
+        .into_view(),
+
+        MarkerShape::Square => view! {
+            <Diamond x=x y=y radius=radius rotate=45 />
+        }
+        .into_view(),
+
+        MarkerShape::Diamond => view! {
+            <Diamond x=x y=y radius=radius />
+        }
+        .into_view(),
+
+        MarkerShape::Triangle => view! {
+            <polygon
+                points=format!("{},{} {},{} {},{}",
+                    x, y - radius,
+                    x - radius, y + radius,
+                    x + radius, y + radius)
+                paint-order="stroke fill"/>
+        }
+        .into_view(),
+
+        MarkerShape::Plus => view! {
+            <PlusPath x=x y=y diameter=diameter />
+        }
+        .into_view(),
+
+        MarkerShape::Cross => view! {
+            <PlusPath x=x y=y diameter=diameter rotate=45 />
+        }
+        .into_view(),
+    }
+}
+
+#[component]
+fn Diamond(x: f64, y: f64, radius: f64, #[prop(into, optional)] rotate: f64) -> impl IntoView {
+    view! {
+        <polygon
+            transform=format!("rotate({rotate} {x} {y})")
+            paint-order="stroke fill"
+            points=format!("{},{} {},{} {},{} {},{}",
+                x, y - radius,
+                x - radius, y,
+                x, y + radius,
+                x + radius, y) />
+    }
+}
+
+// Outline of a big plus (like the Swiss flag) up against the edge (-1 to 1)
+#[component]
+fn PlusPath(x: f64, y: f64, diameter: f64, #[prop(into, optional)] rotate: f64) -> impl IntoView {
+    let offset: f64 = diameter / 3.0; // A third
+    let width: f64 = offset * 0.6;
+    view! {
+        <path
+            transform=format!("rotate({rotate} {x} {y})")
+            paint-order="stroke fill"
+            d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
+                x - width / 2.0, y - offset, // Top-most left
+                width, // Top-most right
+                offset,
+                offset, // Right-most top
+                width, // Right-most bottom
+                -offset,
+                offset, // Bottom-most right
+                -width, // Bottom-most left
+                -offset,
+                -offset, // Left-most bottom
+                -width, // Left-most top
+                offset) />
+    }
+}
+
+impl std::str::FromStr for MarkerShape {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "none" => Ok(MarkerShape::None),
+            "circle" => Ok(MarkerShape::Circle),
+            "triangle" => Ok(MarkerShape::Triangle),
+            "square" => Ok(MarkerShape::Square),
+            "diamond" => Ok(MarkerShape::Diamond),
+            "plus" => Ok(MarkerShape::Plus),
+            "cross" => Ok(MarkerShape::Cross),
+            _ => Err("unknown marker"),
+        }
+    }
+}
+
+impl std::fmt::Display for MarkerShape {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MarkerShape::None => write!(f, "None"),
+            MarkerShape::Circle => write!(f, "Circle"),
+            MarkerShape::Triangle => write!(f, "Triangle"),
+            MarkerShape::Square => write!(f, "Square"),
+            MarkerShape::Diamond => write!(f, "Diamond"),
+            MarkerShape::Plus => write!(f, "Plus"),
+            MarkerShape::Cross => write!(f, "Cross"),
+        }
+    }
+}
