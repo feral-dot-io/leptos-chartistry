@@ -29,14 +29,14 @@ const ALL_SORT_BYS: &[TooltipSortBy] = &[
     TooltipSortBy::Ascending,
     TooltipSortBy::Descending,
 ];
-const ALL_MARKERS: &[Marker] = &[
-    Marker::None,
-    Marker::Circle,
-    Marker::Square,
-    Marker::Triangle,
-    Marker::Diamond,
-    Marker::Plus,
-    Marker::Cross,
+const ALL_MARKER_SHAPES: &[MarkerShape] = &[
+    MarkerShape::None,
+    MarkerShape::Circle,
+    MarkerShape::Square,
+    MarkerShape::Triangle,
+    MarkerShape::Diamond,
+    MarkerShape::Plus,
+    MarkerShape::Cross,
 ];
 
 const JS_TIMESTAMP_FMT: &str = "%FT%R";
@@ -255,11 +255,11 @@ pub fn Demo() -> impl IntoView {
                     <p>
                         <label for="sine_marker">"Marker"</label>
                         <span>
-                            <SelectMarker marker=sine.marker />
+                            <SelectMarkerShape marker=sine.marker.shape />
                             " "
-                            <SelectColour colour=sine.marker_border />
+                            <SelectColour colour=sine.marker.border />
                             " "
-                            <StepInput value=sine.marker_border_width step="0.1" min="0.1" />
+                            <StepInput value=sine.marker.border_width step="0.1" min="0.1" />
                         </span>
                     </p>
 
@@ -277,7 +277,11 @@ pub fn Demo() -> impl IntoView {
                     <p>
                         <label for="cosine_marker">"Marker"</label>
                         <span>
-                            <SelectMarker marker=cosine.marker />
+                            <SelectMarkerShape marker=cosine.marker.shape />
+                            " "
+                            <SelectColour colour=cosine.marker.border />
+                            " "
+                            <StepInput value=cosine.marker.border_width step="0.1" min="0.1" />
                         </span>
                     </p>
 
@@ -747,7 +751,13 @@ select_impl!(
     AspectCalc,
     ALL_ASPECT_CALCS
 );
-select_impl!(SelectMarker, "Marker", marker, Marker, ALL_MARKERS);
+select_impl!(
+    SelectMarkerShape,
+    "Marker",
+    marker,
+    MarkerShape,
+    ALL_MARKER_SHAPES
+);
 
 #[component]
 fn SelectColour(colour: RwSignal<Colour>) -> impl IntoView {
