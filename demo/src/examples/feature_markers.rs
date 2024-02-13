@@ -6,7 +6,6 @@ const WHITE: Colour = Colour::new(255, 255, 255);
 
 #[component]
 pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
-    // Add names to our lines for the legend to use
     let series = Series::new(|data: &MyData| data.x)
         .line(
             Line::new(|data: &MyData| data.y1)
@@ -29,12 +28,14 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
                     // between the line and the marker.
                 ),
         );
+
     view! {
         <Chart
             aspect_ratio=AspectRatio::from_outer_height(300.0, 1.2)
             debug=debug
             series=series
             data=data
+
             // Markers are also shown in the legend
             bottom=Legend::end()
         />
