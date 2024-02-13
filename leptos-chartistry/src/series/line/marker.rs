@@ -1,5 +1,5 @@
 use super::UseLine;
-use crate::colours::{self, Colour};
+use crate::colours::Colour;
 use leptos::*;
 
 // Scales our marker (drawn -1 to 1) to a 1.0 line width
@@ -12,11 +12,11 @@ pub struct Marker {
     pub shape: RwSignal<MarkerShape>,
     /// Colour of the marker. Default is line colour.
     pub colour: RwSignal<Option<Colour>>,
-    /// Size of the marker relative to the line width. Default is 1.0.
+    /// Size relative to the line width. Default is 1.0.
     pub scale: RwSignal<f64>,
-    /// Colour of the marker border. Set to the same as the background to separate the marker from the line. Default is white.
-    pub border: RwSignal<Colour>,
-    /// Width of the marker border. Set to zero to remove the border. Default is zero.
+    /// Colour of the border. Set to the same as the background to separate the marker from the line. Default is the line colour.
+    pub border: RwSignal<Option<Colour>>,
+    /// Width of the border. Zero removes the border. Default is zero.
     pub border_width: RwSignal<f64>,
 }
 
@@ -47,8 +47,8 @@ impl Default for Marker {
             shape: RwSignal::default(),
             colour: RwSignal::default(),
             scale: create_rw_signal(1.0),
-            border: create_rw_signal(colours::WHITE),
-            border_width: create_rw_signal(2.0),
+            border: RwSignal::default(),
+            border_width: create_rw_signal(0.0),
         }
     }
 }
@@ -81,7 +81,7 @@ impl Marker {
     }
 
     /// Set the colour of the marker border. Set to the same as the background to separate the marker from the line. Default is white.
-    pub fn with_border(self, border: impl Into<Colour>) -> Self {
+    pub fn with_border(self, border: impl Into<Option<Colour>>) -> Self {
         self.border.set(border.into());
         self
     }
@@ -130,7 +130,7 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
     view! {
         <g
             fill=move || marker.colour.get().unwrap_or_else(|| line.colour.get()).to_string()
-            stroke=move || marker.border.get().to_string()
+            stroke=move || marker.border.get().unwrap_or_else(|| line.colour.get()).to_string()
             stroke-width=move || border_width.get() * 2.0 // Half of the stroke is inside
             class="_chartistry_line_markers">
             {markers}

@@ -127,12 +127,10 @@ pub fn Demo() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-    let scheme: ColourScheme = SERIES_COLOUR_SCHEME.into();
     let lines = vec![
         Line::new(|w: &Wave| w.sine).with_name("sine").with_marker(
             Marker::new(MarkerShape::Circle)
                 .with_colour(WHITE)
-                .with_border(scheme.by_index(0))
                 .with_border_width(1.0),
         ),
         Line::new(|w: &Wave| w.cosine)
@@ -1067,9 +1065,9 @@ fn SeriesLineOpts<Y: Tick>(line: Line<Wave, Y>, colour: Colour) -> impl IntoView
         <p>
             <label for="line_marker_border">"Border"</label>
             <span>
-                <StepInput id="line_marker_border" value=line.marker.border_width step="0.1" min="0.0" />
+                <StepInput value=line.marker.border_width step="0.1" min="0.0" />
                 " "
-                <SelectColour colour=line.marker.border />
+                <SelectOptionColour id="line_marker_border" colour=line.marker.border default=colour none="use line" />
             </span>
         </p>
     }
