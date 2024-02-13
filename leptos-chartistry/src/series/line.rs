@@ -352,7 +352,7 @@ impl std::fmt::Display for MarkerShape {
     }
 }
 
-/// Renders the marker shape in -1 to 1 space.
+/// Renders the marker shape in -1 to 1 space. They should all be similar in size and not just extend to the edge e.g., square is a rotated diamond.
 #[component]
 fn RenderMarkerShape(shape: MarkerShape) -> impl IntoView {
     match shape {
@@ -369,7 +369,7 @@ fn RenderMarkerShape(shape: MarkerShape) -> impl IntoView {
         .into_view(),
 
         MarkerShape::Square => view! {
-            <rect x="-1" y="-1" width="2" height="2" fill="context-stroke" stroke="none" />
+            <polygon points="0,-1 -1,0 0,1 1,0" transform="rotate(45)" fill="context-stroke" stroke="none" />
         }
         .into_view(),
 
@@ -385,8 +385,18 @@ fn RenderMarkerShape(shape: MarkerShape) -> impl IntoView {
         .into_view(),
 
         MarkerShape::Cross => view! {
-            <line x1="-1" y1="-1" x2="1" y2="1" fill="none" stroke="context-stroke" stroke-width="0.5" />
-            <line x1="-1" y1="1" x2="1" y2="-1" fill="none" stroke="context-stroke" stroke-width="0.5" />
+            <line
+                x1="-1" y1="0" x2="1" y2="0"
+                transform="rotate(45)"
+                stroke-width="0.5"
+                fill="none"
+                stroke="context-stroke" />
+            <line
+                x1="0" y1="-1" x2="0" y2="1"
+                transform="rotate(45)"
+                stroke-width="0.5"
+                fill="none"
+                stroke="context-stroke" />
         }
         .into_view(),
     }
