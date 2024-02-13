@@ -200,8 +200,8 @@ pub fn Demo() -> impl IntoView {
         AxisMarker::left_edge().into_inner(),
         XGridLine::from_ticks(x_ticks).into_inner(),
         YGridLine::from_ticks(y_ticks).into_inner(),
-        XGuideLine::default().into_inner(),
-        YGuideLine::default().into_inner(),
+        XGuideLine::over_data().into_inner(),
+        YGuideLine::over_mouse().into_inner(),
     ]);
 
     view! {
