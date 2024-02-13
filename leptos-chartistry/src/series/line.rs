@@ -258,7 +258,6 @@ pub fn RenderLine(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl Int
 #[component]
 fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
     let marker = line.marker.clone();
-    let marker_id = format!("line_{}_marker", line.id);
 
     // Disable border if no marker
     let border_width = Signal::derive(move || {
@@ -268,41 +267,26 @@ fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoVi
             marker.border_width.get()
         }
     });
-    // Our view box is around -1 to 1. Add a border around that.
-    let viewBox = move || {
-        let border = border_width.get();
-        // -1 -1 2 2 with border
-        format!(
-            "{min} {min} {size} {size}",
-            min = -1.0 - border,
-            size = 2.0 + border * 2.0
-        )
-    };
-    // Size of our marker: proportionate to our line width plus border
-    let size = create_memo(move |_| {
-        line.width.get() * WIDTH_TO_MARKER * marker.scale.get() + border_width.get() * 2.0
-    });
 
-    let markers = {
-        let marker_id = marker_id.clone();
-        move || {
-            positions.with(|positions| {
-                positions
-                    .iter()
-                    .filter(|(x, y)| !(x.is_nan() || y.is_nan()))
-                    .map(|&(x, y)| {
-                        view! {
-                            <use_
-                                href=format!("#{marker_id}")
-                                x=move || x - size.get() / 2.0
-                                y=move || y - size.get() / 2.0
-                                width=size
-                                height=size />
-                        }
-                    })
-                    .collect_view()
-            })
-        }
+    let markers = move || {
+        // Size of our marker: proportionate to our line width
+        let diameter = line.width.get() * WIDTH_TO_MARKER * marker.scale.get();
+
+        positions.with(|positions| {
+            positions
+                .iter()
+                .filter(|(x, y)| !(x.is_nan() || y.is_nan()))
+                .map(|&(x, y)| {
+                    view! {
+                        <RenderMarkerShape
+                            shape=marker.shape.get()
+                            x=x
+                            y=y
+                            diameter=diameter />
+                    }
+                })
+                .collect_view()
+        })
     };
 
     view! {
@@ -311,9 +295,6 @@ fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoVi
             stroke=move || marker.border.get().to_string()
             stroke-width=move || border_width.get()
             class="_chartistry_line_markers">
-            <symbol id=marker_id viewBox=viewBox>
-                {move || view!(<RenderMarkerShape shape=marker.shape.get() />)}
-            </symbol>
             {markers}
         </g>
     }
@@ -350,65 +331,82 @@ impl std::fmt::Display for MarkerShape {
     }
 }
 
-/// Renders the marker shape in -1 to 1 space. They should all be similar in size and not just extend to the edge e.g., square is a rotated diamond.
+/// Renders the marker shape in a square. They should all be similar in size and not just extend to the edge e.g., square is a rotated diamond.
 #[component]
-fn RenderMarkerShape(shape: MarkerShape) -> impl IntoView {
+fn RenderMarkerShape(shape: MarkerShape, x: f64, y: f64, diameter: f64) -> impl IntoView {
+    let radius = diameter / 2.0;
     match shape {
         MarkerShape::None => ().into_view(),
 
         MarkerShape::Circle => view! {
-            <circle cx=0 cy=0 r=1 />
-        }
-        .into_view(),
-
-        MarkerShape::Triangle => view! {
-            <polygon points="0,-1 -1,1 1,1" />
+            <circle cx=x cy=y r=radius />
         }
         .into_view(),
 
         MarkerShape::Square => view! {
-            <polygon points="0,-1 -1,0 0,1 1,0" transform="rotate(45)" />
+            <Diamond x=x y=y radius=radius rotate=45 />
         }
         .into_view(),
 
         MarkerShape::Diamond => view! {
-            <polygon points="0,-1 -1,0 0,1 1,0" />
+            <Diamond x=x y=y radius=radius />
+        }
+        .into_view(),
+
+        MarkerShape::Triangle => view! {
+            <polygon points=format!("{},{} {},{} {},{}",
+                x, y - radius,
+                x - radius, y + radius,
+                x + radius, y + radius) />
         }
         .into_view(),
 
         MarkerShape::Plus => view! {
-            <PlusPath />
+            <PlusPath x=x y=y diameter=diameter />
         }
         .into_view(),
 
         MarkerShape::Cross => view! {
-            <PlusPath rotate=45 />
+            <PlusPath x=x y=y diameter=diameter rotate=45 />
         }
         .into_view(),
     }
 }
 
+#[component]
+fn Diamond(x: f64, y: f64, radius: f64, #[prop(into, optional)] rotate: f64) -> impl IntoView {
+    view! {
+        <polygon
+            transform=format!("rotate({})", rotate)
+            points=format!("{},{} {},{} {},{} {},{}",
+                x, y - radius,
+                x - radius, y,
+                x, y + radius,
+                x + radius, y) />
+    }
+}
+
 // Outline of a big plus (like the Swiss flag) up against the edge (-1 to 1)
 #[component]
-fn PlusPath(#[prop(into, optional)] rotate: f64) -> impl IntoView {
-    const OFFSET: f64 = 2.0 / 3.0;
-    const WIDTH: f64 = 0.4;
+fn PlusPath(x: f64, y: f64, diameter: f64, #[prop(into, optional)] rotate: f64) -> impl IntoView {
+    let offset: f64 = diameter / 3.0; // A third
+    let width: f64 = offset * 0.6;
     view! {
         <path
             transform=format!("rotate({})", rotate)
             d=format!("M {} {} h {} v {} h {} v {} h {} v {} h {} v {} h {} v {} h {} Z",
-                -WIDTH / 2.0, -1, // Top-most left
-                WIDTH, // Top-most right
-                OFFSET,
-                OFFSET, // Right-most top
-                WIDTH, // Right-most bottom
-                -OFFSET,
-                OFFSET, // Bottom-most right
-                -WIDTH, // Bottom-most left
-                -OFFSET,
-                -OFFSET, // Left-most bottom
-                -WIDTH, // Left-most top
-                OFFSET) />
+                x - width / 2.0, y - offset, // Top-most left
+                width, // Top-most right
+                offset,
+                offset, // Right-most top
+                width, // Right-most bottom
+                -offset,
+                offset, // Bottom-most right
+                -width, // Bottom-most left
+                -offset,
+                -offset, // Left-most bottom
+                -width, // Left-most top
+                offset) />
     }
 }
 
