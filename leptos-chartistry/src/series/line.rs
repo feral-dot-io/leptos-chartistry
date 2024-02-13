@@ -51,6 +51,8 @@ pub struct Line<T, Y> {
 pub struct Marker {
     /// Shape of the marker. Default is no marker.
     pub shape: RwSignal<MarkerShape>,
+    /// Colour of the marker. Default is line colour.
+    pub colour: RwSignal<Option<Colour>>,
     /// Size of the marker relative to the line width. Default is 1.0.
     pub scale: RwSignal<f64>,
     /// Colour of the marker border. Set to the same as the background to separate the marker from the line. Default is white.
@@ -64,9 +66,9 @@ pub struct Marker {
 #[non_exhaustive]
 pub enum MarkerShape {
     /// No marker.
+    #[default]
     None,
     /// Circle marker.
-    #[default] // TODO
     Circle,
     /// Square marker.
     Square,
@@ -126,9 +128,10 @@ impl Default for Marker {
     fn default() -> Self {
         Self {
             shape: RwSignal::default(),
+            colour: RwSignal::default(),
             scale: create_rw_signal(1.0),
-            border: create_rw_signal(Colour::new(0, 0, 255)), // TODO
-            border_width: create_rw_signal(0.0),              // TODO
+            border: create_rw_signal(colours::WHITE),
+            border_width: create_rw_signal(2.0),
         }
     }
 }
@@ -291,7 +294,7 @@ fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoVi
 
     view! {
         <g
-            fill=move || line.colour.get().to_string()
+            fill=move || marker.colour.get().unwrap_or_else(|| line.colour.get()).to_string()
             stroke=move || marker.border.get().to_string()
             stroke-width=move || border_width.get()
             class="_chartistry_line_markers">
