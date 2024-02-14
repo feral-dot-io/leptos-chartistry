@@ -32,13 +32,7 @@ impl Colour {
         let interpolate = |pre: u8, post: u8| {
             let pre = pre as f64;
             let post = post as f64;
-            //let max = pre.max(post);
-            //let min = pre.min(post);
             let diff = post - pre;
-            println!(
-                "pre={pre:?} post={post:?} diff={diff:?} ratio={ratio:?} => {:?}",
-                (pre + (diff * ratio)).round()
-            );
             (pre + (diff * ratio)).round() as u8
         };
         Colour {
