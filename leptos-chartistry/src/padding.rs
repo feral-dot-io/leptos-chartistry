@@ -53,10 +53,6 @@ impl Padding {
             self.top, self.right, self.bottom, self.left
         )
     }
-
-    pub(crate) fn to_css_horizontal_style(self) -> String {
-        format!("0 {}px 0 {}px", self.right, self.left)
-    }
 }
 
 impl From<f64> for Padding {

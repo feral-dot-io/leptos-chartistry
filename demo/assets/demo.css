@@ -117,7 +117,7 @@ fieldset>p> :nth-child(5) {
 }
 
 fieldset input[type=number] {
-    width: 8ch;
+    width: 6ch;
 }
 
 fieldset input[type=color] {

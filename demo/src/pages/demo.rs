@@ -29,8 +29,19 @@ const ALL_SORT_BYS: &[TooltipSortBy] = &[
     TooltipSortBy::Ascending,
     TooltipSortBy::Descending,
 ];
+const ALL_MARKER_SHAPES: &[MarkerShape] = &[
+    MarkerShape::None,
+    MarkerShape::Circle,
+    MarkerShape::Square,
+    MarkerShape::Diamond,
+    MarkerShape::Triangle,
+    MarkerShape::Plus,
+    MarkerShape::Cross,
+];
 
 const JS_TIMESTAMP_FMT: &str = "%FT%R";
+
+const WHITE: Colour = Colour::new(255, 255, 255);
 
 #[derive(Clone)]
 struct Options<Opt>(Vec<Opt>);
@@ -80,11 +91,13 @@ const Y2K: f64 = 946_684_800f64;
 const ONE_DAY: f64 = 86_400f64;
 
 fn load_data() -> Vec<Wave> {
+    const RANGE: f64 = 360.0 * 3.0;
     let mut data = Vec::new();
-    for deg in 0..(360 * 3) {
-        let rad = deg as f64 * std::f64::consts::PI / 180.0;
+    for i in 0..100 {
+        let deg = RANGE * (i as f64 / 100.0);
+        let rad = deg * std::f64::consts::PI / 180.0;
         data.push(Wave {
-            x: f64_to_dt(Y2K + ONE_DAY * deg as f64),
+            x: f64_to_dt(Y2K + ONE_DAY * deg),
             sine: rad.sin(),
             cosine: rad.cos(),
         });
@@ -114,8 +127,22 @@ pub fn Demo() -> impl IntoView {
 
     // Data
     let (data, _) = create_signal(load_data());
-    let sine = Line::new(|w: &Wave| w.sine).with_name("sine");
-    let cosine = Line::new(|w: &Wave| w.cosine).with_name("cosine");
+    let lines = vec![
+        Line::new(|w: &Wave| w.sine).with_name("sine").with_marker(
+            Marker::from_shape(MarkerShape::Circle)
+                .with_colour(WHITE)
+                .with_border_width(1.0),
+        ),
+        Line::new(|w: &Wave| w.cosine)
+            .with_name("cosine")
+            .with_marker(MarkerShape::Circle),
+    ];
+    let edit_lines = lines.clone();
+    let (line_tab, set_line_tab) = create_signal(0);
+    let set_line_tab = move |ev: ev::Event| {
+        let tab_index = event_target_value(&ev).parse().unwrap_or_default();
+        set_line_tab.set(tab_index);
+    };
 
     // Axis
     let x_periods = Timestamps::from_periods(Period::all());
@@ -123,9 +150,7 @@ pub fn Demo() -> impl IntoView {
     let y_ticks = TickLabels::aligned_floats();
 
     // Series
-    let series = Series::new(|w: &Wave| w.x)
-        .line(sine.clone())
-        .line(cosine.clone());
+    let series = Series::new(|w: &Wave| w.x).lines(lines.clone());
     let (min_x, max_x) = (series.min_x, series.max_x);
     let (min_y, max_y) = (series.min_y, series.max_y);
     let series_colours = series.colours;
@@ -173,8 +198,8 @@ pub fn Demo() -> impl IntoView {
         AxisMarker::left_edge().into_inner(),
         XGridLine::from_ticks(x_ticks).into_inner(),
         YGridLine::from_ticks(y_ticks).into_inner(),
-        XGuideLine::default().into_inner(),
-        YGuideLine::default().into_inner(),
+        XGuideLine::over_data().into_inner(),
+        YGuideLine::over_mouse().into_inner(),
     ]);
 
     view! {
@@ -231,34 +256,27 @@ pub fn Demo() -> impl IntoView {
                 <fieldset class="series">
                     <legend>"Series options"</legend>
                     <p>
-                        <label for="sine_name">"Sine"</label>
-                        <span>
-                            <input type="text" id="sine_name" value=sine.name
-                                on:input=move |ev| sine.name.set(event_target_value(&ev)) />
+                        <label for="series_scheme">"Scheme"</label>
+                        <span><SelectColourScheme colours=series_colours lines=series_len /></span>
+                    </p>
+                    <p>
+                        <label for="line_index">"Line"</label>
+                        <span class="tabs">
+                            <select id="line_index" on:change=set_line_tab>
+                                <For
+                                    each=move || lines.clone().into_iter().enumerate()
+                                    key=|(i, _)| *i
+                                    let:line>
+                                    <option value=line.0 selected=line.0 == line_tab.get()>{line.1.name}</option>
+                                </For>
+                            </select>
                         </span>
                     </p>
-                    <p>
-                        <label for="sine_width">"Width"</label>
-                        <span><StepInput id="sine_width" value=sine.width step="0.1" min="0.1" /></span>
-                    </p>
-
-                    <p>
-                        <label for="cosine_name">"Cosine"</label>
-                        <span>
-                            <input type="text" id="cosine_name" value=cosine.name
-                                on:input=move |ev| cosine.name.set(event_target_value(&ev)) />
-                        </span>
-                    </p>
-                    <p>
-                        <label for="cosine_width">"Width"</label>
-                        <span><StepInput id="cosine_width" value=cosine.width step="0.1" min="0.1" /></span>
-                    </p>
-                    <p>
-                        <label for="series_colours">"Colours"</label>
-                        <span>
-                            <SelectColourScheme colours=series_colours lines=series_len />
-                        </span>
-                    </p>
+                    {move || view!{
+                        <SeriesLineOpts
+                            line=edit_lines[line_tab.get()].clone()
+                            colour=series_colours.get().by_index(line_tab.get()) />
+                    }}
                 </fieldset>
 
                 <fieldset class="series">
@@ -646,7 +664,7 @@ fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
             min=min
             max=max
             value=value
-            on:change=on_change />
+            on:input=on_change />
     }
 }
 
@@ -673,7 +691,7 @@ where
 }
 
 macro_rules! select_impl {
-    ($fn:ident, $label:literal, $input:ident, $signal:ty, $all:ident) => {
+    ($fn:ident, $label:literal, $input:ident, $signal:ty, $all:path) => {
         #[component]
         fn $fn(#[prop(into, optional)] id: Option<AttributeValue>, $input: RwSignal<$signal>) -> impl IntoView {
             view!(<SelectOption id=id label=$label value=$input all=$all />)
@@ -719,16 +737,61 @@ select_impl!(
     AspectCalc,
     ALL_ASPECT_CALCS
 );
+select_impl!(
+    SelectMarkerShape,
+    "Marker",
+    marker,
+    MarkerShape,
+    ALL_MARKER_SHAPES
+);
 
 #[component]
-fn SelectColour(colour: RwSignal<Colour>) -> impl IntoView {
+fn SelectColour(
+    #[prop(into, optional)] id: Option<AttributeValue>,
+    colour: RwSignal<Colour>,
+) -> impl IntoView {
     let on_change = move |ev| {
         if let Ok(value) = event_target_value(&ev).parse() {
             colour.set(value);
         }
     };
     view! {
-        <input type="color" value=move || colour.get().to_string() on:input=on_change />
+        <input type="color" id=id value=move || colour.get().to_string() on:input=on_change />
+    }
+}
+
+#[component]
+fn SelectOptionColour(
+    id: &'static str,
+    colour: RwSignal<Option<Colour>>,
+    default: Colour,
+    none: &'static str,
+) -> impl IntoView {
+    // Enabled
+    let enabled = move || colour.get().is_some();
+    let toggle_enabled = move |ev| {
+        colour.set(event_target_checked(&ev).then_some(default));
+    };
+    // Set colour (when enabled)
+    let colour_str = move || colour.get().unwrap_or(default).to_string();
+    let set_colour = move |ev| {
+        if let Ok(value) = event_target_value(&ev).parse() {
+            colour.set(Some(value));
+        }
+    };
+    view! {
+        <label>
+            <input
+                type="checkbox"
+                id=move || (!enabled()).then_some(id)
+                checked=enabled
+                on:input=toggle_enabled />
+            " "
+            <Show when=move || !enabled()>{none}</Show>
+        </label>
+        <Show when=enabled>
+            <input type="color" id=id value=colour_str on:input=set_colour />
+        </Show>
     }
 }
 
@@ -961,5 +1024,51 @@ fn TooltipCard<X: Tick, Y: Tick>(tooltip: Tooltip<X, Y>) -> impl IntoView {
                 <label for="skip_missing">"Skip missing?"</label>
             </p>
         </fieldset>
+    }
+}
+
+#[component]
+fn SeriesLineOpts<Y: Tick>(line: Line<Wave, Y>, colour: Colour) -> impl IntoView {
+    view! {
+        <p>
+            <label for="line_name">"Name"</label>
+            <span>
+                <input type="text" id="line_name" style="width: 10ch;"
+                    value=line.name
+                    on:input=move |ev| line.name.set(event_target_value(&ev)) />
+                " "
+                <label>
+                    "width:"
+                    <StepInput id="line_width" value=line.width step="0.1" min="0.1" />
+                </label>
+            </span>
+        </p>
+        <p>
+            <label for="line_colour">"Colour"</label>
+            <span><SelectOptionColour id="line_colour" colour=line.colour default=colour none="use scheme" /></span>
+        </p>
+        <p>
+            <label for="line_marker">"Marker"</label>
+            <span>
+                <SelectMarkerShape marker=line.marker.shape />
+                " "
+                <label>
+                    "scale:"
+                    <StepInput id="line_marker_scale" value=line.marker.scale step="0.1" min="0.0" />
+                </label>
+            </span>
+        </p>
+        <p>
+            <label for="line_marker_colour">"Colour"</label>
+            <span><SelectOptionColour id="line_marker_colour" colour=line.marker.colour default=colour none="use line" /></span>
+        </p>
+        <p>
+            <label for="line_marker_border">"Border"</label>
+            <span>
+                <StepInput value=line.marker.border_width step="0.1" min="0.0" />
+                " "
+                <SelectOptionColour id="line_marker_border" colour=line.marker.border default=colour none="use line" />
+            </span>
+        </p>
     }
 }

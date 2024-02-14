@@ -2,7 +2,7 @@ mod line;
 mod stack;
 mod use_data;
 
-pub use line::{Line, Snippet, UseLine};
+pub use line::{Line, Marker, MarkerShape, Snippet, UseLine};
 pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
 
@@ -11,7 +11,7 @@ use leptos::signal_prelude::*;
 use std::rc::Rc;
 
 /// Arbitrary colours for a brighter palette than BATLOW
-const SERIES_COLOUR_SCHEME: [Colour; 10] = [
+pub const SERIES_COLOUR_SCHEME: [Colour; 10] = [
     Colour::new(0x12, 0xA5, 0xED), // Blue
     Colour::new(0xF5, 0x32, 0x5B), // Red
     Colour::new(0x71, 0xc6, 0x14), // Green

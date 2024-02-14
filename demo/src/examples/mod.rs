@@ -4,6 +4,8 @@ pub mod edge_legend;
 pub mod edge_rotated_label;
 pub mod edge_tick_labels;
 pub mod feature_colours;
+pub mod feature_markers;
+pub mod feature_markers_2;
 pub mod feature_tooltip;
 pub mod inner_axis_marker;
 pub mod inner_grid_line;
