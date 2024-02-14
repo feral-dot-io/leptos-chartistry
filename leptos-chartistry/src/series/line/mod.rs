@@ -1,7 +1,7 @@
 mod marker;
 pub use marker::{Marker, MarkerShape};
 
-use super::{ApplyUseSeries, IntoUseLine, SeriesAcc};
+use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData};
 use crate::{
     bounds::Bounds,
     colours::{Colour, LinearGradient, LIPARI},
@@ -171,13 +171,18 @@ impl UseLine {
         Signal::derive(move || taster_bounds.get().width() + font_width.get())
     }
 
-    pub(crate) fn render(&self, positions: Signal<Vec<(f64, f64)>>) -> View {
-        view!( <RenderLine line=self.clone() positions=positions markers=positions /> )
+    pub(crate) fn render<X: 'static, Y: 'static>(
+        &self,
+        data: UseData<X, Y>,
+        positions: Signal<Vec<(f64, f64)>>,
+    ) -> View {
+        view!( <RenderLine data=data line=self.clone() positions=positions markers=positions /> )
     }
 }
 
 #[component]
-pub fn RenderLine(
+pub fn RenderLine<X: 'static, Y: 'static>(
+    data: UseData<X, Y>,
     line: UseLine,
     positions: Signal<Vec<(f64, f64)>>,
     markers: Signal<Vec<(f64, f64)>>,
@@ -226,7 +231,10 @@ pub fn RenderLine(
         <g class="_chartistry_line" stroke=stroke>
             <defs>
                 <Show when=move || line.gradient.get().is_some()>
-                    <LinearGradient id=gradient_id.clone() colour=gradient />
+                    <LinearGradient
+                        id=gradient_id.clone()
+                        colour=gradient
+                        range=data.position_range />
                 </Show>
             </defs>
             <path d=path fill="none" stroke-width=line.width />
@@ -276,7 +284,7 @@ fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl I
             style:padding-right=move || format!("{}px", right_padding.get())
             >
             <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
-            <RenderLine line=series positions=positions markers=markers />
+            <RenderLine data=state.pre.data line=series positions=positions markers=markers />
         </svg>
     }
 }
