@@ -74,3 +74,33 @@ impl IntoAttribute for Colour {
         self.to_string().into_attribute()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_colour_interpolation() {
+        let black = Colour::from_rgb(0, 0, 0);
+        let white = Colour::from_rgb(255, 255, 255);
+        assert_eq!(black.interpolate(white, 1.0), white);
+        assert_eq!(black.interpolate(white, 0.0), black);
+        assert_eq!(white.interpolate(black, 1.0), black);
+        assert_eq!(white.interpolate(black, 0.0), white);
+        assert_eq!(black.interpolate(white, 0.2), Colour::from_rgb(51, 51, 51));
+        assert_eq!(
+            white.interpolate(black, 0.2),
+            Colour::from_rgb(204, 204, 204)
+        );
+        let other = Colour::from_rgb(34, 202, 117);
+        assert_eq!(black.interpolate(other, 0.4), Colour::from_rgb(14, 81, 47));
+        assert_eq!(
+            white.interpolate(other, 0.2),
+            Colour::from_rgb(211, 244, 227)
+        );
+        assert_eq!(
+            white.interpolate(other, 0.8),
+            Colour::from_rgb(78, 213, 145)
+        );
+    }
+}
