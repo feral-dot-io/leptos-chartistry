@@ -1,6 +1,10 @@
 name: Runs Nix flake checks
 
-on: [push, workflow_call]
+on:
+  push:
+    tags-ignore:
+      - "v*"
+  workflow_call:
 
 permissions:
   contents: read
