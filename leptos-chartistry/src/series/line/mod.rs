@@ -2,7 +2,14 @@ mod marker;
 pub use marker::{Marker, MarkerShape};
 
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc};
-use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State};
+use crate::{
+    bounds::Bounds,
+    colours::{Colour, LinearGradient},
+    debug::DebugRect,
+    series::GetYValue,
+    state::State,
+    ColourScheme, LIPARI,
+};
 use leptos::*;
 use std::rc::Rc;
 
@@ -35,6 +42,8 @@ pub struct Line<T, Y> {
     pub name: RwSignal<String>,
     /// Colour of the line. If not set, the next colour in the series will be used.
     pub colour: RwSignal<Option<Colour>>,
+    /// Use a colour scheme for the line. Interpolated in SVG by the browser, overrides [Colour]. Default is `None` with fallback to the line colour.
+    pub gradient: RwSignal<Option<ColourScheme>>,
     /// Width of the line.
     pub width: RwSignal<f64>,
     /// Marker at each point on the line.
@@ -46,6 +55,7 @@ pub struct UseLine {
     pub id: usize,
     pub name: RwSignal<String>,
     colour: Signal<Colour>,
+    gradient: RwSignal<Option<ColourScheme>>,
     width: RwSignal<f64>,
     marker: Marker,
 }
@@ -59,6 +69,7 @@ impl<T, Y> Line<T, Y> {
             get_y: Rc::new(get_y),
             name: RwSignal::default(),
             colour: RwSignal::default(),
+            gradient: RwSignal::default(),
             width: 1.0.into(),
             marker: Marker::default(),
         }
@@ -73,6 +84,12 @@ impl<T, Y> Line<T, Y> {
     /// Set the colour of the line. If not set, the next colour in the series will be used.
     pub fn with_colour(self, colour: impl Into<Option<Colour>>) -> Self {
         self.colour.set(colour.into());
+        self
+    }
+
+    /// Use a colour scheme for the line. Interpolated in SVG by the browser, overrides [Colour]. Default is `None` with fallback to the line colour.
+    pub fn with_gradient(self, scheme: impl Into<ColourScheme>) -> Self {
+        self.gradient.set(Some(scheme.into()));
         self
     }
 
@@ -95,6 +112,7 @@ impl<T, Y> Clone for Line<T, Y> {
             get_y: self.get_y.clone(),
             name: self.name,
             colour: self.colour,
+            gradient: self.gradient,
             width: self.width,
             marker: self.marker.clone(),
         }
@@ -132,6 +150,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
             id,
             name: self.name,
             colour,
+            gradient: self.gradient,
             width: self.width,
             marker: self.marker.clone(),
         };
@@ -180,17 +199,30 @@ pub fn RenderLine(
         })
     };
 
-    let width = line.width;
-    let colour = line.colour;
-    let colour = Signal::derive(move || colour.get().to_string());
+    // Line colour
+    let gradient_id = format!("line_{}_gradient", line.id);
+    let stroke = {
+        let colour = line.colour;
+        let gradient_id = gradient_id.clone();
+        Signal::derive(move || {
+            // Gradient takes precedence
+            if line.gradient.get().is_some() {
+                format!("url(#{gradient_id})")
+            } else {
+                colour.get().to_string()
+            }
+        })
+    };
+    let gradient = move || line.gradient.get().unwrap_or_else(|| LIPARI.into());
+
     view! {
-        <g class="_chartistry_line" stroke=colour>
-            <path
-                d=path
-                fill="none"
-                stroke=colour
-                stroke-width=width
-            />
+        <g class="_chartistry_line" stroke=stroke>
+            <defs>
+                <Show when=move || line.gradient.get().is_some()>
+                    <LinearGradient id=gradient_id.clone() colour=gradient />
+                </Show>
+            </defs>
+            <path d=path fill="none" stroke-width=line.width />
             <marker::LineMarkers line=line positions=markers />
         </g>
     }

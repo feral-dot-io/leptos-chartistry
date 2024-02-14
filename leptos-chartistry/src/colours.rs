@@ -9,7 +9,34 @@ Reading material:
 - Available colour schemes: https://s-ink.org/scientific-colour-maps
 */
 
+use leptos::*;
 use std::str::FromStr;
+
+pub const LAJOLLA: [Colour; 10] = [
+    Colour::new(0x19, 0x19, 0x00),
+    Colour::new(0x33, 0x22, 0x0F),
+    Colour::new(0x5B, 0x30, 0x23),
+    Colour::new(0x8F, 0x40, 0x3D),
+    Colour::new(0xC7, 0x50, 0x4B),
+    Colour::new(0xE0, 0x72, 0x4F),
+    Colour::new(0xE7, 0x94, 0x52),
+    Colour::new(0xEE, 0xB5, 0x55),
+    Colour::new(0xF8, 0xDF, 0x7C),
+    Colour::new(0xFF, 0xFE, 0xCB),
+];
+
+pub const LIPARI: [Colour; 10] = [
+    Colour::new(0x03, 0x13, 0x26),
+    Colour::new(0x13, 0x38, 0x5A),
+    Colour::new(0x47, 0x58, 0x7A),
+    Colour::new(0x6B, 0x5F, 0x76),
+    Colour::new(0x8E, 0x61, 0x6C),
+    Colour::new(0xBC, 0x64, 0x61),
+    Colour::new(0xE5, 0x7B, 0x62),
+    Colour::new(0xE7, 0xA2, 0x79),
+    Colour::new(0xE9, 0xC9, 0x9F),
+    Colour::new(0xFD, 0xF5, 0xDA),
+];
 
 /// A colour scheme with at least one colour.
 #[derive(Clone, Debug, PartialEq)]
@@ -95,6 +122,36 @@ impl ColourScheme {
     }
 }
 
+#[component]
+pub fn LinearGradient(
+    #[prop(into)] id: AttributeValue,
+    #[prop(into)] colour: Signal<ColourScheme>,
+) -> impl IntoView {
+    let stops = move || {
+        let swatches = colour.get().swatches;
+        // Spread <stop> over swatches so first is 0% and last is 100%. Use 0% if only one swatch
+        let spread = (swatches.len() - 1).max(1) as f64;
+        colour
+            .get()
+            .swatches
+            .into_iter()
+            .enumerate()
+            .map(|(i, colour)| {
+                let percent = (i as f64 / spread) * 100.0;
+                let offset = format!("{percent:.2}%");
+                view! {
+                    <stop offset=offset stop-color=colour />
+                }
+            })
+            .collect_view()
+    };
+    view! {
+        <linearGradient id=Some(id) gradientTransform="rotate(90)">
+            {stops}
+        </linearGradient>
+    }
+}
+
 impl Colour {
     /// Create a new colour with the given red, green, and blue values.
     pub const fn new(red: u8, green: u8, blue: u8) -> Self {
@@ -142,6 +199,16 @@ impl FromStr for Colour {
         let green = u8::from_str_radix(&s[2..4], 16).map_err(|e| e.to_string())?;
         let blue = u8::from_str_radix(&s[4..6], 16).map_err(|e| e.to_string())?;
         Ok(Colour { red, green, blue })
+    }
+}
+
+impl IntoAttribute for Colour {
+    fn into_attribute(self) -> Attribute {
+        self.to_string().into_attribute()
+    }
+
+    fn into_attribute_boxed(self: Box<Self>) -> Attribute {
+        self.to_string().into_attribute()
     }
 }
 
