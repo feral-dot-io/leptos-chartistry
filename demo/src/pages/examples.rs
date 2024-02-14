@@ -155,8 +155,8 @@ example!(
 example!(
     LineGradientExample,
     feature_line_gradient::Example,
-    "Line Colour scheme",
-    "Add a linear gradient to your line's colour.",
+    "Line colour scheme",
+    "Adds a Y-based gradient to the line colour.",
     "../examples/feature_line_gradient.rs"
 );
 
@@ -177,7 +177,6 @@ pub fn Examples() -> impl IntoView {
         debug,
         data: load_data(),
     });
-    let hr = heart_rate();
 
     view! {
         <article id="examples">
@@ -226,7 +225,7 @@ pub fn Examples() -> impl IntoView {
                     <TooltipExample />
                 </div>
                 <ColoursExample />
-                <LineGradientExample class="slim" data=hr />
+                <LineGradientExample class="slim" />
                 <MarkersExample />
                 <Markers2Example />
             </div>
