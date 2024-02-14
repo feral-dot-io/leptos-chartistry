@@ -3,6 +3,7 @@ name: Deploys demo site to GH pages
 on:
   push:
     branches: ["master"]
+  workflow_call:
 
 permissions:
   contents: read
@@ -14,13 +15,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  call-nix-flake-check:
-    uses: ./.github/workflows/nix-flake-check.yml
-
   build:
     runs-on: ubuntu-latest
     needs: call-nix-flake-check
     steps:
+      - uses: actions/checkout@v4
+      - uses: nixbuild/nix-quick-install-action@v25
       - run: nix build .#demo --print-build-logs
       - name: Adjust permissions
         run: |
