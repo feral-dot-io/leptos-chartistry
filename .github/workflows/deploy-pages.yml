@@ -2,7 +2,6 @@ name: Deploys demo site to GH pages
 
 on:
   push:
-    branches: ["master"]
     tags:
       - "v*"
   workflow_call:
