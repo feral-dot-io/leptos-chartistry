@@ -41,7 +41,7 @@ const ALL_MARKER_SHAPES: &[MarkerShape] = &[
 
 const JS_TIMESTAMP_FMT: &str = "%FT%R";
 
-const WHITE: Colour = Colour::new(255, 255, 255);
+const WHITE: Colour = Colour::from_rgb(255, 255, 255);
 
 #[derive(Clone)]
 struct Options<Opt>(Vec<Opt>);

@@ -17,7 +17,13 @@ pub struct Colour {
 
 impl Colour {
     /// Create a new colour with the given red, green, and blue values.
+    #[deprecated(since = "0.1.1", note = "renamed to `from_rgb`")]
     pub const fn new(red: u8, green: u8, blue: u8) -> Self {
+        Self::from_rgb(red, green, blue)
+    }
+
+    /// Create a new colour with the given red, green, and blue values.
+    pub const fn from_rgb(red: u8, green: u8, blue: u8) -> Self {
         Self { red, green, blue }
     }
 

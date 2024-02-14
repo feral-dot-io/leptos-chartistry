@@ -4,7 +4,7 @@ use leptos::*;
 use std::{rc::Rc, str::FromStr};
 
 /// Default colour for guide lines.
-pub const GUIDE_LINE_COLOUR: Colour = Colour::new(0x9A, 0x9A, 0x9A);
+pub const GUIDE_LINE_COLOUR: Colour = Colour::from_rgb(0x9A, 0x9A, 0x9A);
 
 macro_rules! impl_guide_line {
     ($name:ident) => {

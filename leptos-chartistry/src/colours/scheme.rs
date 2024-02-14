@@ -126,23 +126,23 @@ mod tests {
 
     fn scheme3() -> ColourScheme {
         ColourScheme::from([
-            Colour::new(0, 0, 0),
-            Colour::new(255, 255, 255),
-            Colour::new(0, 0, 0),
+            Colour::from_rgb(0, 0, 0),
+            Colour::from_rgb(255, 255, 255),
+            Colour::from_rgb(0, 0, 0),
         ])
     }
 
     const SCHEME10: [Colour; 10] = [
-        Colour::new(0, 0, 0),
-        Colour::new(255, 255, 255),
-        Colour::new(0, 0, 0),
-        Colour::new(255, 255, 255),
-        Colour::new(0, 0, 0),
-        Colour::new(255, 255, 255),
-        Colour::new(0, 0, 0),
-        Colour::new(255, 255, 255),
-        Colour::new(0, 0, 0),
-        Colour::new(255, 255, 255),
+        Colour::from_rgb(0, 0, 0),
+        Colour::from_rgb(255, 255, 255),
+        Colour::from_rgb(0, 0, 0),
+        Colour::from_rgb(255, 255, 255),
+        Colour::from_rgb(0, 0, 0),
+        Colour::from_rgb(255, 255, 255),
+        Colour::from_rgb(0, 0, 0),
+        Colour::from_rgb(255, 255, 255),
+        Colour::from_rgb(0, 0, 0),
+        Colour::from_rgb(255, 255, 255),
     ];
     fn scheme10() -> ColourScheme {
         ColourScheme::from(SCHEME10)
@@ -151,9 +151,9 @@ mod tests {
     #[test]
     fn test_colour_scheme() {
         let scheme = scheme3();
-        assert_eq!(scheme.by_index(0), Colour::new(0, 0, 0));
-        assert_eq!(scheme.by_index(1), Colour::new(255, 255, 255));
-        assert_eq!(scheme.by_index(2), Colour::new(0, 0, 0));
+        assert_eq!(scheme.by_index(0), Colour::from_rgb(0, 0, 0));
+        assert_eq!(scheme.by_index(1), Colour::from_rgb(255, 255, 255));
+        assert_eq!(scheme.by_index(2), Colour::from_rgb(0, 0, 0));
     }
 
     #[test]
@@ -205,43 +205,52 @@ mod tests {
         let scheme3 = scheme3();
         let scheme10 = scheme10();
         // One to one mapping of swatches to lines
-        assert_eq!(scheme3.interpolate(0, 3), Colour::new(0, 0, 0));
-        assert_eq!(scheme3.interpolate(1, 3), Colour::new(255, 255, 255));
-        assert_eq!(scheme3.interpolate(2, 3), Colour::new(0, 0, 0));
+        assert_eq!(scheme3.interpolate(0, 3), Colour::from_rgb(0, 0, 0));
+        assert_eq!(scheme3.interpolate(1, 3), Colour::from_rgb(255, 255, 255));
+        assert_eq!(scheme3.interpolate(2, 3), Colour::from_rgb(0, 0, 0));
         // More lines than swatches
-        assert_eq!(scheme3.interpolate(0, 9), Colour::new(0, 0, 0));
-        assert_eq!(scheme3.interpolate(1, 9), Colour::new(85, 85, 85));
-        assert_eq!(scheme3.interpolate(2, 9), Colour::new(170, 170, 170));
-        assert_eq!(scheme3.interpolate(3, 9), Colour::new(255, 255, 255));
-        assert_eq!(scheme3.interpolate(4, 9), Colour::new(170, 170, 170));
-        assert_eq!(scheme3.interpolate(5, 9), Colour::new(85, 85, 85));
-        assert_eq!(scheme3.interpolate(6, 9), Colour::new(0, 0, 0));
-        assert_eq!(scheme3.interpolate(7, 9), Colour::new(0, 0, 0));
-        assert_eq!(scheme3.interpolate(8, 9), Colour::new(0, 0, 0));
+        assert_eq!(scheme3.interpolate(0, 9), Colour::from_rgb(0, 0, 0));
+        assert_eq!(scheme3.interpolate(1, 9), Colour::from_rgb(85, 85, 85));
+        assert_eq!(scheme3.interpolate(2, 9), Colour::from_rgb(170, 170, 170));
+        assert_eq!(scheme3.interpolate(3, 9), Colour::from_rgb(255, 255, 255));
+        assert_eq!(scheme3.interpolate(4, 9), Colour::from_rgb(170, 170, 170));
+        assert_eq!(scheme3.interpolate(5, 9), Colour::from_rgb(85, 85, 85));
+        assert_eq!(scheme3.interpolate(6, 9), Colour::from_rgb(0, 0, 0));
+        assert_eq!(scheme3.interpolate(7, 9), Colour::from_rgb(0, 0, 0));
+        assert_eq!(scheme3.interpolate(8, 9), Colour::from_rgb(0, 0, 0));
         // More swatches than lines
-        assert_eq!(scheme10.interpolate(0, 1), Colour::new(0, 0, 0));
-        assert_eq!(scheme10.interpolate(0, 2), Colour::new(0, 0, 0));
-        assert_eq!(scheme10.interpolate(1, 2), Colour::new(255, 255, 255));
-        assert_eq!(scheme10.interpolate(0, 3), Colour::new(0, 0, 0));
-        assert_eq!(scheme10.interpolate(1, 3), Colour::new(255, 255, 255));
-        assert_eq!(scheme10.interpolate(2, 3), Colour::new(255, 255, 255));
-        assert_eq!(scheme10.interpolate(2, 5), Colour::new(255, 255, 255));
-        assert_eq!(scheme10.interpolate(2, 8), Colour::new(255, 255, 255));
+        assert_eq!(scheme10.interpolate(0, 1), Colour::from_rgb(0, 0, 0));
+        assert_eq!(scheme10.interpolate(0, 2), Colour::from_rgb(0, 0, 0));
+        assert_eq!(scheme10.interpolate(1, 2), Colour::from_rgb(255, 255, 255));
+        assert_eq!(scheme10.interpolate(0, 3), Colour::from_rgb(0, 0, 0));
+        assert_eq!(scheme10.interpolate(1, 3), Colour::from_rgb(255, 255, 255));
+        assert_eq!(scheme10.interpolate(2, 3), Colour::from_rgb(255, 255, 255));
+        assert_eq!(scheme10.interpolate(2, 5), Colour::from_rgb(255, 255, 255));
+        assert_eq!(scheme10.interpolate(2, 8), Colour::from_rgb(255, 255, 255));
     }
 
     #[test]
     fn test_colour_interpolation() {
-        let black = Colour::new(0, 0, 0);
-        let white = Colour::new(255, 255, 255);
+        let black = Colour::from_rgb(0, 0, 0);
+        let white = Colour::from_rgb(255, 255, 255);
         assert_eq!(black.interpolate(white, 1.0), white);
         assert_eq!(black.interpolate(white, 0.0), black);
         assert_eq!(white.interpolate(black, 1.0), black);
         assert_eq!(white.interpolate(black, 0.0), white);
-        assert_eq!(black.interpolate(white, 0.2), Colour::new(51, 51, 51));
-        assert_eq!(white.interpolate(black, 0.2), Colour::new(204, 204, 204));
-        let other = Colour::new(34, 202, 117);
-        assert_eq!(black.interpolate(other, 0.4), Colour::new(14, 81, 47));
-        assert_eq!(white.interpolate(other, 0.2), Colour::new(211, 244, 227));
-        assert_eq!(white.interpolate(other, 0.8), Colour::new(78, 213, 145));
+        assert_eq!(black.interpolate(white, 0.2), Colour::from_rgb(51, 51, 51));
+        assert_eq!(
+            white.interpolate(black, 0.2),
+            Colour::from_rgb(204, 204, 204)
+        );
+        let other = Colour::from_rgb(34, 202, 117);
+        assert_eq!(black.interpolate(other, 0.4), Colour::from_rgb(14, 81, 47));
+        assert_eq!(
+            white.interpolate(other, 0.2),
+            Colour::from_rgb(211, 244, 227)
+        );
+        assert_eq!(
+            white.interpolate(other, 0.8),
+            Colour::from_rgb(78, 213, 145)
+        );
     }
 }
