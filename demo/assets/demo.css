@@ -222,6 +222,10 @@ fieldset>legend,
     width: calc(300px + 2.5em);
 }
 
+#examples figure.slim {
+    width: min-content;
+}
+
 #examples figure>figcaption {
     margin-top: -2em;
 }

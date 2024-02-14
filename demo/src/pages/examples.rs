@@ -7,16 +7,20 @@ use web_sys::{HtmlDialogElement, MouseEvent};
 macro_rules! example {
     ($id:ident, $ex:path, $title:literal, $desc:literal, $path:literal) => {
         #[component]
-        fn $id() -> impl IntoView {
+        fn $id(
+            #[prop(optional, into)] class: Option<AttributeValue>,
+            #[prop(optional, into)] data: Option<Signal<Vec<MyData>>>,
+        ) -> impl IntoView {
             let ctx = use_local_context();
             let id = title_to_id($title);
+            let data = data.unwrap_or(ctx.data);
             view! {
-                <figure class="background-box">
+                <figure class=class class:background-box=true>
                     <figcaption>
                         <h3><a href=format!("#{id}")>$title</a></h3>
                         <p>$desc " " <ShowCode id=id code=include_str!($path) /></p>
                     </figcaption>
-                    <$ex debug=ctx.debug.into() data=ctx.data />
+                    <$ex debug=ctx.debug.into() data=data />
                 </figure>
             }
         }
@@ -148,6 +152,14 @@ example!(
     "../examples/feature_markers_2.rs"
 );
 
+example!(
+    LineGradientExample,
+    feature_line_gradient::Example,
+    "Line Colour scheme",
+    "Add a linear gradient to your line's colour.",
+    "../examples/feature_line_gradient.rs"
+);
+
 #[derive(Clone)]
 struct Context {
     debug: RwSignal<bool>,
@@ -165,6 +177,7 @@ pub fn Examples() -> impl IntoView {
         debug,
         data: load_data(),
     });
+    let hr = heart_rate();
 
     view! {
         <article id="examples">
@@ -213,6 +226,7 @@ pub fn Examples() -> impl IntoView {
                     <TooltipExample />
                 </div>
                 <ColoursExample />
+                <LineGradientExample class="slim" data=hr />
                 <MarkersExample />
                 <Markers2Example />
             </div>
