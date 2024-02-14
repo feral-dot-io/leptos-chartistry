@@ -1,4 +1,5 @@
 use super::Colour;
+use crate::bounds::Bounds;
 use leptos::*;
 
 /// A colour scheme with at least one colour.
@@ -81,30 +82,32 @@ impl ColourScheme {
 pub fn LinearGradient(
     #[prop(into)] id: AttributeValue,
     #[prop(into)] colour: Signal<ColourScheme>,
+    range: Memo<Bounds>,
 ) -> impl IntoView {
-    let stops = move || {
-        let swatches = colour.get().swatches;
-        // Spread <stop> over swatches so first is 0% and last is 100%. Use 0% if only one swatch
-        let spread = (swatches.len() - 1).max(1) as f64;
-        colour
-            .get()
-            .swatches
-            .into_iter()
-            .enumerate()
-            .map(|(i, colour)| {
-                let percent = (i as f64 / spread) * 100.0;
-                let offset = format!("{percent:.2}%");
-                view! {
-                    <stop offset=offset stop-color=colour />
-                }
-            })
-            .collect_view()
-    };
+    let stops = move || generate_stops(&colour.get().swatches, 0.0, 1.0);
     view! {
         <linearGradient id=Some(id) gradientTransform="rotate(90)">
             {stops}
         </linearGradient>
     }
+}
+
+// Generates `<stop>` elements whose offset values are spread over the swatches. Offset values start at `from` and end at `to` inclusive. Their values should be in the range 0.0 to 1.0. So swatches=[a, b, c], from=0.1, to=0.3 would generate stops at 0.1, 0.2, 0.3.
+fn generate_stops(swatches: &[Colour], from: f64, to: f64) -> impl IntoView {
+    let range = from - to;
+    // Spread swatches over <stop> so that first is 0% and last is 100%
+    let spread = (swatches.len() - 1).max(1) as f64;
+    swatches
+        .iter()
+        .enumerate()
+        .map(|(i, colour)| {
+            let percent = from + (i as f64 / spread * range); // Across the range
+            let offset = format!("{percent:.2}%");
+            view! {
+                <stop offset=offset stop-color=colour />
+            }
+        })
+        .collect_view()
 }
 
 macro_rules! from_array_to_colour_scheme {

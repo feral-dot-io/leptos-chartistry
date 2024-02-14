@@ -75,6 +75,16 @@ impl IntoAttribute for Colour {
     }
 }
 
+impl IntoAttribute for &Colour {
+    fn into_attribute(self) -> Attribute {
+        (*self).into_attribute()
+    }
+
+    fn into_attribute_boxed(self: Box<Self>) -> Attribute {
+        (*self).into_attribute()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
