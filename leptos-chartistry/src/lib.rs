@@ -69,7 +69,7 @@ mod use_watched_node;
 
 pub use aspect_ratio::AspectRatio;
 pub use chart::Chart;
-pub use colours::{Colour, ColourScheme, LAJOLLA, LIPARI};
+pub use colours::{Colour, ColourScheme};
 pub use edge::Edge;
 pub use inner::{
     axis_marker::{AxisMarker, AxisPlacement, AXIS_MARKER_COLOUR},
@@ -87,6 +87,7 @@ pub use layout::{
 pub use overlay::tooltip::{Tooltip, TooltipPlacement, TooltipSortBy, TOOLTIP_CURSOR_DISTANCE};
 pub use padding::Padding;
 pub use series::{
-    Line, Marker, MarkerShape, Series, Stack, SERIES_COLOUR_SCHEME, STACK_COLOUR_SCHEME,
+    Line, Marker, MarkerShape, Series, Stack, LINEAR_GRADIENT, SERIES_COLOUR_SCHEME,
+    STACK_COLOUR_SCHEME,
 };
 pub use ticks::{AlignedFloats, Period, Tick, Timestamps};

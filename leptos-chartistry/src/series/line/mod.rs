@@ -4,14 +4,17 @@ pub use marker::{Marker, MarkerShape};
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc};
 use crate::{
     bounds::Bounds,
-    colours::{Colour, LinearGradient},
+    colours::{Colour, LinearGradient, LIPARI},
     debug::DebugRect,
     series::GetYValue,
     state::State,
-    ColourScheme, LIPARI,
+    ColourScheme,
 };
 use leptos::*;
 use std::rc::Rc;
+
+/// Suggested colour scheme for linear gradient. Assumes a light background with dark values for high values.
+pub const LINEAR_GRADIENT: [Colour; 10] = LIPARI;
 
 /// Draws a line on the chart.
 ///
@@ -213,7 +216,11 @@ pub fn RenderLine(
             }
         })
     };
-    let gradient = move || line.gradient.get().unwrap_or_else(|| LIPARI.into());
+    let gradient = move || {
+        line.gradient
+            .get()
+            .unwrap_or_else(|| LINEAR_GRADIENT.into())
+    };
 
     view! {
         <g class="_chartistry_line" stroke=stroke>
