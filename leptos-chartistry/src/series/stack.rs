@@ -1,6 +1,6 @@
 use super::{line::UseLine, ApplyUseSeries, GetYValue, IntoUseLine, SeriesAcc};
 use crate::{
-    colours::{Colour, ColourScheme},
+    colours::{Colour, ColourScheme, BATLOW},
     Line,
 };
 use leptos::signal_prelude::*;
@@ -9,19 +9,6 @@ use std::rc::Rc;
 
 /// Default colour scheme for stack. Assumes a light background with dark values for high values.
 pub const STACK_COLOUR_SCHEME: [Colour; 10] = BATLOW;
-
-const BATLOW: [Colour; 10] = [
-    Colour::from_rgb(0x01, 0x19, 0x59),
-    Colour::from_rgb(0x10, 0x3F, 0x60),
-    Colour::from_rgb(0x1C, 0x5A, 0x62),
-    Colour::from_rgb(0x3C, 0x6D, 0x56),
-    Colour::from_rgb(0x68, 0x7B, 0x3E),
-    Colour::from_rgb(0x9D, 0x89, 0x2B),
-    Colour::from_rgb(0xD2, 0x93, 0x43),
-    Colour::from_rgb(0xF8, 0xA1, 0x7B),
-    Colour::from_rgb(0xFD, 0xB7, 0xBC),
-    Colour::from_rgb(0xFA, 0xCC, 0xFA),
-];
 
 /// Draws a stack of lines on top of each other.
 ///
