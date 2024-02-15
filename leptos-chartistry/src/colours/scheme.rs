@@ -112,7 +112,7 @@ pub fn LinearGradientSvg(
     range: Memo<Bounds>,
 ) -> impl IntoView {
     view! {
-        <linearGradient id=Some(id) gradientTransform="rotate(90)">
+        <linearGradient id=Some(id) x1="0%" y1="100%" x2="0%" y2="0%">
             {move || scheme.get().stops(range.get())}
         </linearGradient>
     }
@@ -175,42 +175,6 @@ fn generate_stops(swatches: &[Colour], from: f64, step: f64) -> impl IntoView {
         })
         .collect_view()
 }
-
-/*
-/// Generates a `<stop>` element for each swatch given. Offset values are calculated across [from, to] whose values are 0.0 to 1.0 (%). Example: swatches=[a, b, c], from=0.1, to=0.3 would generate stops at 0.1, 0.2, 0.3. Empty swatches will generate no stops. One swatch will generates two stops at from and to.
-fn generate_stops(swatches: &[Colour], from: f64, to: f64) -> impl IntoView {
-    let range = to - from;
-    // Spread swatches over <stop> so that first index is 0% and last is 100%
-    let spread = (swatches.len().saturating_sub(1)).max(1) as f64;
-    let mk_offset = move |i| {
-        // % of the index (0.0 - 1.0)
-        let percent = i as f64 / spread;
-        // % of the range (from - to)
-        let percent = from + (percent * range);
-        // Format as a percentage (0% - 100%)
-        format!("{:.2}%", percent * 100.0)
-    };
-
-    // Single swatch? Generate two stops at from and to
-    if swatches.len() == 1 {
-        return view! {
-            <stop offset=mk_offset(0) stop-color=swatches[0] />
-            <stop offset=mk_offset(1) stop-color=swatches[0] />
-        }
-        .into_view();
-    }
-    // Generate a stop for each swatch
-    swatches
-        .iter()
-        .enumerate()
-        .map(|(i, colour)| {
-            view! {
-                <stop offset=mk_offset(i) stop-color=colour />
-            }
-        })
-        .collect_view()
-}
- */
 
 impl From<SequentialGradient> for ColourScheme {
     fn from((first, rest): (Colour, &[Colour])) -> Self {
