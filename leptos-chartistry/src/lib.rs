@@ -69,7 +69,7 @@ mod use_watched_node;
 
 pub use aspect_ratio::AspectRatio;
 pub use chart::Chart;
-pub use colours::{Colour, ColourScheme};
+pub use colours::{Colour, ColourScheme, DivergingGradient, SequentialGradient};
 pub use edge::Edge;
 pub use inner::{
     axis_marker::{AxisMarker, AxisPlacement, AXIS_MARKER_COLOUR},
@@ -90,6 +90,7 @@ pub use overlay::{
 };
 pub use padding::Padding;
 pub use series::{
-    Line, Marker, MarkerShape, Series, Stack, SERIES_COLOUR_SCHEME, STACK_COLOUR_SCHEME,
+    Line, Marker, MarkerShape, Series, Stack, DIVERGING_GRADIENT, LINEAR_GRADIENT,
+    SERIES_COLOUR_SCHEME, STACK_COLOUR_SCHEME,
 };
 pub use ticks::{AlignedFloats, Period, Tick, Timestamps};

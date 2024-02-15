@@ -2,7 +2,7 @@ use super::MyData;
 use leptos::*;
 use leptos_chartistry::*;
 
-const WHITE: Colour = Colour::new(255, 255, 255);
+const WHITE: Colour = Colour::from_rgb(255, 255, 255);
 
 #[component]
 pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
