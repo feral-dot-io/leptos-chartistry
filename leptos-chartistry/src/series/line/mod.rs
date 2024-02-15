@@ -4,7 +4,7 @@ pub use marker::{Marker, MarkerShape};
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData};
 use crate::{
     bounds::Bounds,
-    colours::{Colour, DivergingGradient, LinearGradientSvg, BERLIN, LIPARI},
+    colours::{Colour, DivergingGradient, LinearGradientSvg, SequentialGradient, BERLIN, LIPARI},
     debug::DebugRect,
     series::GetYValue,
     state::State,
@@ -14,7 +14,7 @@ use leptos::*;
 use std::rc::Rc;
 
 /// Suggested colour scheme for a linear gradient on a line. Uses darker colours for lower values and lighter colours for higher values. Assumes a light background.
-pub const LINEAR_GRADIENT: [Colour; 10] = LIPARI;
+pub const LINEAR_GRADIENT: SequentialGradient = LIPARI;
 
 /// Suggested colour scheme for a diverging gradient on a line. Uses a blue for negative values, a dark central value and red for positive values. Assumes a light background.
 pub const DIVERGING_GRADIENT: DivergingGradient = BERLIN;

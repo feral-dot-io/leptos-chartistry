@@ -2,7 +2,9 @@ use super::Colour;
 use crate::bounds::Bounds;
 use leptos::*;
 
+/// A gradient of colours. Maps to a [ColourScheme]
 pub type SequentialGradient = (Colour, &'static [Colour]);
+/// A diverging gradient of colours i.e., a gradient that tends to a central value then a second gradient away. Maps to a [ColourScheme]. Use with [Line::with_gradient](crate::Line::with_gradient).
 pub type DivergingGradient = (SequentialGradient, SequentialGradient);
 
 /// A colour scheme with at least one colour.

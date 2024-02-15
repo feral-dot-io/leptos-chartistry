@@ -35,7 +35,7 @@ Reading material:
 - Available colour schemes: https://s-ink.org/scientific-colour-maps
 */
 
-use super::{scheme::DivergingGradient, Colour};
+use super::{scheme::DivergingGradient, Colour, SequentialGradient};
 
 pub const BATLOW: [Colour; 10] = [
     Colour::from_rgb(0x01, 0x19, 0x59),
@@ -50,18 +50,20 @@ pub const BATLOW: [Colour; 10] = [
     Colour::from_rgb(0xFA, 0xCC, 0xFA),
 ];
 
-pub const LIPARI: [Colour; 10] = [
+pub const LIPARI: SequentialGradient = (
     Colour::from_rgb(0x03, 0x13, 0x26),
-    Colour::from_rgb(0x13, 0x38, 0x5A),
-    Colour::from_rgb(0x47, 0x58, 0x7A),
-    Colour::from_rgb(0x6B, 0x5F, 0x76),
-    Colour::from_rgb(0x8E, 0x61, 0x6C),
-    Colour::from_rgb(0xBC, 0x64, 0x61),
-    Colour::from_rgb(0xE5, 0x7B, 0x62),
-    Colour::from_rgb(0xE7, 0xA2, 0x79),
-    Colour::from_rgb(0xE9, 0xC9, 0x9F),
-    Colour::from_rgb(0xFD, 0xF5, 0xDA),
-];
+    &[
+        Colour::from_rgb(0x13, 0x38, 0x5A),
+        Colour::from_rgb(0x47, 0x58, 0x7A),
+        Colour::from_rgb(0x6B, 0x5F, 0x76),
+        Colour::from_rgb(0x8E, 0x61, 0x6C),
+        Colour::from_rgb(0xBC, 0x64, 0x61),
+        Colour::from_rgb(0xE5, 0x7B, 0x62),
+        Colour::from_rgb(0xE7, 0xA2, 0x79),
+        Colour::from_rgb(0xE9, 0xC9, 0x9F),
+        Colour::from_rgb(0xFD, 0xF5, 0xDA),
+    ],
+);
 
 pub const BERLIN: DivergingGradient = (
     (
