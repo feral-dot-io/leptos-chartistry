@@ -22,11 +22,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
                 // based on the Y value except it has a central value where the
                 // gradient flips. In our case we show blue below zero and red
                 // above.
-                .with_gradient(ColourScheme::diverging_gradient(
-                    // TODO: use into???
-                    DIVERGING_GRADIENT.0.into(),
-                    DIVERGING_GRADIENT.1.into(),
-                )),
+                .with_gradient(DIVERGING_GRADIENT),
         );
     view! {
         <Chart
