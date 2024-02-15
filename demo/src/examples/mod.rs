@@ -4,6 +4,7 @@ pub mod edge_legend;
 pub mod edge_rotated_label;
 pub mod edge_tick_labels;
 pub mod feature_colours;
+pub mod feature_line_gradient;
 pub mod feature_markers;
 pub mod feature_markers_2;
 pub mod feature_tooltip;
@@ -42,6 +43,23 @@ pub fn load_data() -> Signal<Vec<MyData>> {
             MyData::new(7.0, 3.0, 5.0),
             MyData::new(8.0, 7.0, 3.5),
             MyData::new(10.0, 10.0, 3.0),
+        ]
+    })
+}
+
+pub fn heart_rate() -> Signal<Vec<MyData>> {
+    Signal::derive(|| {
+        vec![
+            MyData::new(0.0, 3.0, 0.0),
+            MyData::new(1.5, 3.0, 0.0),
+            MyData::new(1.7, 3.8, 0.0),
+            MyData::new(2.0, 2.0, 0.0),
+            MyData::new(2.4, 6.0, 0.0),
+            MyData::new(2.8, 1.0, 0.0),
+            MyData::new(3.3, 4.0, 0.0),
+            MyData::new(3.6, 2.8, 0.0),
+            MyData::new(3.8, 3.0, 0.0),
+            MyData::new(5.3, 3.0, 0.0),
         ]
     })
 }

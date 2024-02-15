@@ -2,7 +2,7 @@ mod line;
 mod stack;
 mod use_data;
 
-pub use line::{Line, Marker, MarkerShape, Snippet, UseLine};
+pub use line::{Line, Marker, MarkerShape, Snippet, UseLine, DIVERGING_GRADIENT, LINEAR_GRADIENT};
 pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
 
@@ -12,16 +12,16 @@ use std::rc::Rc;
 
 /// Arbitrary colours for a brighter palette than BATLOW
 pub const SERIES_COLOUR_SCHEME: [Colour; 10] = [
-    Colour::new(0x12, 0xA5, 0xED), // Blue
-    Colour::new(0xF5, 0x32, 0x5B), // Red
-    Colour::new(0x71, 0xc6, 0x14), // Green
-    Colour::new(0xFF, 0x84, 0x00), // Orange
-    Colour::new(0x7b, 0x4d, 0xff), // Purple
-    Colour::new(0xdb, 0x4c, 0xb2), // Magenta
-    Colour::new(0x92, 0xb4, 0x2c), // Darker green
-    Colour::new(0xFF, 0xCA, 0x00), // Yellow
-    Colour::new(0x22, 0xd2, 0xba), // Turquoise
-    Colour::new(0xea, 0x60, 0xdf), // Pink
+    Colour::from_rgb(0x12, 0xA5, 0xED), // Blue
+    Colour::from_rgb(0xF5, 0x32, 0x5B), // Red
+    Colour::from_rgb(0x71, 0xc6, 0x14), // Green
+    Colour::from_rgb(0xFF, 0x84, 0x00), // Orange
+    Colour::from_rgb(0x7b, 0x4d, 0xff), // Purple
+    Colour::from_rgb(0xdb, 0x4c, 0xb2), // Magenta
+    Colour::from_rgb(0x92, 0xb4, 0x2c), // Darker green
+    Colour::from_rgb(0xFF, 0xCA, 0x00), // Yellow
+    Colour::from_rgb(0x22, 0xd2, 0xba), // Turquoise
+    Colour::from_rgb(0xea, 0x60, 0xdf), // Pink
 ];
 
 type GetX<T, X> = Rc<dyn Fn(&T) -> X>;

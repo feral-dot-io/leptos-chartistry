@@ -2,7 +2,7 @@ use super::MyData;
 use leptos::*;
 use leptos_chartistry::*;
 
-const BACKGROUND: Colour = Colour::new(255, 255, 255);
+const BACKGROUND: Colour = Colour::from_rgb(255, 255, 255);
 const BORDER_WIDTH: f64 = 2.0;
 
 #[component]

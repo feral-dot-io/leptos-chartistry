@@ -5,11 +5,11 @@ use leptos_chartistry::*;
 #[component]
 pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
     // A variety of ways to create new colours
-    const BLACK: Colour = Colour::new(0, 0, 0);
-    const THISTLE: Colour = Colour::new(216, 191, 216);
+    const BLACK: Colour = Colour::from_rgb(0, 0, 0);
+    const THISTLE: Colour = Colour::from_rgb(216, 191, 216);
     let sea_green: Colour = "#20b2aa".parse().unwrap();
-    const RED: Colour = Colour::new(255, 0, 0);
-    const BLUE_VIOLET: Colour = Colour::new(0, 0, 255);
+    const RED: Colour = Colour::from_rgb(255, 0, 0);
+    const BLUE_VIOLET: Colour = Colour::from_rgb(0, 0, 255);
 
     // We can also describe a colour scheme for our Series:
     // For non-stacked, colours are picked one after the other and then repeat
