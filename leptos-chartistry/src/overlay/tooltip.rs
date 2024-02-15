@@ -3,7 +3,7 @@ use crate::{
     layout::Layout,
     series::{Snippet, UseLine},
     state::State,
-    Tick, TickLabels,
+    Tick, TickLabels, AXIS_MARKER_COLOUR,
 };
 use leptos::*;
 use std::cmp::{Ordering, Reverse};
@@ -304,7 +304,9 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
         <Show when=move || hover_inner.get() && placement.get() != TooltipPlacement::Hide>
             <DebugRect label="tooltip" debug=debug />
             <aside
-                style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff; white-space: pre; font-family: monospace;"
+                class="_chartistry_tooltip"
+                style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); background-color: #fff; white-space: pre; font-family: monospace;"
+                style:border=format!("1px solid {}", AXIS_MARKER_COLOUR)
                 style:top=move || format!("calc({}px)", mouse_page.get().1)
                 style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, cursor_distance.get())
                 style:padding=move || padding.get().to_css_style()>
