@@ -7,7 +7,7 @@ use leptos::*;
 use std::rc::Rc;
 
 /// Default colour for grid lines.
-pub const GRID_LINE_COLOUR: Colour = Colour::new(0xEF, 0xF2, 0xFA);
+pub const GRID_LINE_COLOUR: Colour = Colour::from_rgb(0xEF, 0xF2, 0xFA);
 
 macro_rules! impl_grid_line {
     ($name:ident) => {

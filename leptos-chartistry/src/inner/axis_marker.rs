@@ -4,7 +4,7 @@ use leptos::*;
 use std::{rc::Rc, str::FromStr};
 
 /// Default colour for axis markers.
-pub const AXIS_MARKER_COLOUR: Colour = Colour::new(0xD2, 0xD2, 0xD2);
+pub const AXIS_MARKER_COLOUR: Colour = Colour::from_rgb(0xD2, 0xD2, 0xD2);
 
 /// Builds an axis marker. This marks a boundary (e.g., zero or the chart edge) around the inner chart area.
 #[derive(Clone, Debug, PartialEq)]

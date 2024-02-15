@@ -1,10 +1,23 @@
 mod marker;
 pub use marker::{Marker, MarkerShape};
 
-use super::{ApplyUseSeries, IntoUseLine, SeriesAcc};
-use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, series::GetYValue, state::State};
+use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData};
+use crate::{
+    bounds::Bounds,
+    colours::{Colour, DivergingGradient, LinearGradientSvg, SequentialGradient, BERLIN, LIPARI},
+    debug::DebugRect,
+    series::GetYValue,
+    state::State,
+    ColourScheme,
+};
 use leptos::*;
 use std::rc::Rc;
+
+/// Suggested colour scheme for a linear gradient on a line. Uses darker colours for lower values and lighter colours for higher values. Assumes a light background.
+pub const LINEAR_GRADIENT: SequentialGradient = LIPARI;
+
+/// Suggested colour scheme for a diverging gradient on a line. Uses a blue for negative values, a dark central value and red for positive values. Assumes a light background.
+pub const DIVERGING_GRADIENT: DivergingGradient = BERLIN;
 
 /// Draws a line on the chart.
 ///
@@ -35,6 +48,8 @@ pub struct Line<T, Y> {
     pub name: RwSignal<String>,
     /// Colour of the line. If not set, the next colour in the series will be used.
     pub colour: RwSignal<Option<Colour>>,
+    /// Use a linear gradient (colour scheme) for the line. Default is `None` with fallback to the line colour.
+    pub gradient: RwSignal<Option<ColourScheme>>,
     /// Width of the line.
     pub width: RwSignal<f64>,
     /// Marker at each point on the line.
@@ -46,6 +61,7 @@ pub struct UseLine {
     pub id: usize,
     pub name: RwSignal<String>,
     colour: Signal<Colour>,
+    gradient: RwSignal<Option<ColourScheme>>,
     width: RwSignal<f64>,
     marker: Marker,
 }
@@ -59,6 +75,7 @@ impl<T, Y> Line<T, Y> {
             get_y: Rc::new(get_y),
             name: RwSignal::default(),
             colour: RwSignal::default(),
+            gradient: RwSignal::default(),
             width: 1.0.into(),
             marker: Marker::default(),
         }
@@ -73,6 +90,14 @@ impl<T, Y> Line<T, Y> {
     /// Set the colour of the line. If not set, the next colour in the series will be used.
     pub fn with_colour(self, colour: impl Into<Option<Colour>>) -> Self {
         self.colour.set(colour.into());
+        self
+    }
+
+    /// Use a colour scheme for the line. Interpolated in SVG by the browser, overrides [Colour]. Default is `None` with fallback to the line colour.
+    ///
+    /// Suggested use with [LINEAR_GRADIENT] or [DIVERGING_GRADIENT] (for data with a zero value).
+    pub fn with_gradient(self, scheme: impl Into<ColourScheme>) -> Self {
+        self.gradient.set(Some(scheme.into()));
         self
     }
 
@@ -95,6 +120,7 @@ impl<T, Y> Clone for Line<T, Y> {
             get_y: self.get_y.clone(),
             name: self.name,
             colour: self.colour,
+            gradient: self.gradient,
             width: self.width,
             marker: self.marker.clone(),
         }
@@ -132,6 +158,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
             id,
             name: self.name,
             colour,
+            gradient: self.gradient,
             width: self.width,
             marker: self.marker.clone(),
         };
@@ -149,13 +176,18 @@ impl UseLine {
         Signal::derive(move || taster_bounds.get().width() + font_width.get())
     }
 
-    pub(crate) fn render(&self, positions: Signal<Vec<(f64, f64)>>) -> View {
-        view!( <RenderLine line=self.clone() positions=positions markers=positions /> )
+    pub(crate) fn render<X: 'static, Y: 'static>(
+        &self,
+        data: UseData<X, Y>,
+        positions: Signal<Vec<(f64, f64)>>,
+    ) -> View {
+        view!( <RenderLine data=data line=self.clone() positions=positions markers=positions /> )
     }
 }
 
 #[component]
-pub fn RenderLine(
+pub fn RenderLine<X: 'static, Y: 'static>(
+    data: UseData<X, Y>,
     line: UseLine,
     positions: Signal<Vec<(f64, f64)>>,
     markers: Signal<Vec<(f64, f64)>>,
@@ -180,17 +212,37 @@ pub fn RenderLine(
         })
     };
 
-    let width = line.width;
-    let colour = line.colour;
-    let colour = Signal::derive(move || colour.get().to_string());
+    // Line colour
+    let gradient_id = format!("line_{}_gradient", line.id);
+    let stroke = {
+        let colour = line.colour;
+        let gradient_id = gradient_id.clone();
+        Signal::derive(move || {
+            // Gradient takes precedence
+            if line.gradient.get().is_some() {
+                format!("url(#{gradient_id})")
+            } else {
+                colour.get().to_string()
+            }
+        })
+    };
+    let gradient = move || {
+        line.gradient
+            .get()
+            .unwrap_or_else(|| LINEAR_GRADIENT.into())
+    };
+
     view! {
-        <g class="_chartistry_line" stroke=colour>
-            <path
-                d=path
-                fill="none"
-                stroke=colour
-                stroke-width=width
-            />
+        <g class="_chartistry_line" stroke=stroke>
+            <defs>
+                <Show when=move || line.gradient.get().is_some()>
+                    <LinearGradientSvg
+                        id=gradient_id.clone()
+                        scheme=gradient
+                        range=data.position_range />
+                </Show>
+            </defs>
+            <path d=path fill="none" stroke-width=line.width />
             <marker::LineMarkers line=line positions=markers />
         </g>
     }
@@ -237,7 +289,7 @@ fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl I
             style:padding-right=move || format!("{}px", right_padding.get())
             >
             <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
-            <RenderLine line=series positions=positions markers=markers />
+            <RenderLine data=state.pre.data line=series positions=positions markers=markers />
         </svg>
     }
 }
