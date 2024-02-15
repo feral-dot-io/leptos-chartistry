@@ -9,7 +9,7 @@ use crate::{
 };
 use leptos::*;
 
-/// Builds a legend for the chart [series](crate::Series). Orientated along the axis of its placed edge.
+/// Builds a legend for the chart [series](crate::Series). Orientated along the axis of its placed edge. Drawn in HTML.
 #[derive(Clone, Debug)]
 pub struct Legend {
     /// Anchor of the legend.
