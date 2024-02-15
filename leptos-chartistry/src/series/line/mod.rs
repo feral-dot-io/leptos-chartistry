@@ -50,6 +50,8 @@ pub struct Line<T, Y> {
     pub colour: RwSignal<Option<Colour>>,
     /// Use a linear gradient (colour scheme) for the line. Default is `None` with fallback to the line colour.
     pub gradient: RwSignal<Option<ColourScheme>>,
+    /// Y Value at which a diverging gradient (if one is given) will diverge.
+    pub gradient_offset: RwSignal<f64>,
     /// Width of the line.
     pub width: RwSignal<f64>,
     /// Marker at each point on the line.
@@ -62,6 +64,7 @@ pub struct UseLine {
     pub name: RwSignal<String>,
     colour: Signal<Colour>,
     gradient: RwSignal<Option<ColourScheme>>,
+    gradient_offset: RwSignal<f64>,
     width: RwSignal<f64>,
     marker: Marker,
 }
@@ -76,6 +79,7 @@ impl<T, Y> Line<T, Y> {
             name: RwSignal::default(),
             colour: RwSignal::default(),
             gradient: RwSignal::default(),
+            gradient_offset: 0.0.into(),
             width: 1.0.into(),
             marker: Marker::default(),
         }
@@ -101,6 +105,14 @@ impl<T, Y> Line<T, Y> {
         self
     }
 
+    /// Same as [with_gradient] but instead of diverging at 0.0 the colours diverge
+    /// at the given offset.
+    pub fn with_gradient_offset(self, scheme: impl Into<ColourScheme>, offset: f64) -> Self {
+        self.gradient.set(Some(scheme.into()));
+        self.gradient_offset.set(offset);
+        self
+    }
+
     /// Set the width of the line.
     pub fn with_width(self, width: impl Into<f64>) -> Self {
         self.width.set(width.into());
@@ -121,6 +133,7 @@ impl<T, Y> Clone for Line<T, Y> {
             name: self.name,
             colour: self.colour,
             gradient: self.gradient,
+            gradient_offset: self.gradient_offset,
             width: self.width,
             marker: self.marker.clone(),
         }
@@ -159,6 +172,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
             name: self.name,
             colour,
             gradient: self.gradient,
+            gradient_offset: self.gradient_offset,
             width: self.width,
             marker: self.marker.clone(),
         };
@@ -181,7 +195,7 @@ impl UseLine {
         data: UseData<X, Y>,
         positions: Signal<Vec<(f64, f64)>>,
     ) -> View {
-        view!( <RenderLine data=data line=self.clone() positions=positions markers=positions /> )
+        view! { <RenderLine data=data line=self.clone() positions=positions markers=positions/> }
     }
 }
 
@@ -231,6 +245,7 @@ pub fn RenderLine<X: 'static, Y: 'static>(
             .get()
             .unwrap_or_else(|| LINEAR_GRADIENT.into())
     };
+    let gradient_offset = move || line.gradient_offset.get();
 
     view! {
         <g class="_chartistry_line" stroke=stroke>
@@ -239,11 +254,13 @@ pub fn RenderLine<X: 'static, Y: 'static>(
                     <LinearGradientSvg
                         id=gradient_id.clone()
                         scheme=gradient
-                        range=data.position_range />
+                        range=data.position_range
+                        offset=gradient_offset
+                    />
                 </Show>
             </defs>
-            <path d=path fill="none" stroke-width=line.width />
-            <marker::LineMarkers line=line positions=markers />
+            <path d=path fill="none" stroke-width=line.width></path>
+            <marker::LineMarkers line=line positions=markers></marker::LineMarkers>
         </g>
     }
 }
@@ -254,8 +271,8 @@ pub fn Snippet<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> i
     let name = series.name;
     view! {
         <div class="_chartistry_snippet" style="white-space: nowrap;">
-            <DebugRect label="snippet" debug=debug />
-            <Taster series=series state=state />
+            <DebugRect label="snippet" debug=debug/>
+            <Taster series=series state=state/>
             {name}
         </div>
     }
@@ -287,9 +304,9 @@ fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl I
             class="_chartistry_taster"
             style="box-sizing: border-box;"
             style:padding-right=move || format!("{}px", right_padding.get())
-            >
-            <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
-            <RenderLine data=state.pre.data line=series positions=positions markers=markers />
+        >
+            <DebugRect label="taster" debug=debug bounds=vec![bounds.into()]/>
+            <RenderLine data=state.pre.data line=series positions=positions markers=markers/>
         </svg>
     }
 }

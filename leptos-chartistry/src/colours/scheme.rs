@@ -112,19 +112,20 @@ pub fn LinearGradientSvg(
     #[prop(into)] id: AttributeValue,
     #[prop(into)] scheme: Signal<ColourScheme>,
     range: Memo<Bounds>,
+    #[prop(into)] offset: Signal<f64>,
 ) -> impl IntoView {
     view! {
         <linearGradient id=Some(id) x1="0%" y1="100%" x2="0%" y2="0%">
-            {move || scheme.get().stops(range.get())}
+            {move || scheme.get().stops(range.get(), offset.get())}
         </linearGradient>
     }
 }
 
 impl ColourScheme {
-    fn stops(&self, range: Bounds) -> impl IntoView {
+    fn stops(&self, range: Bounds, offset: f64) -> impl IntoView {
         // TODO: collect more colour scheme uses and convert schemes into an enum / trait
         if self.zero.is_some() {
-            self.diverging_stops(range).into_view()
+            self.diverging_stops(range, offset).into_view()
         } else {
             self.sequential_stops().into_view()
         }
@@ -137,10 +138,10 @@ impl ColourScheme {
     }
 
     // Stops for a diverging gradient. Finds the zero value and spreads the swatches over 0% to zero and zero to 100%.
-    fn diverging_stops(&self, range: Bounds) -> impl IntoView {
+    fn diverging_stops(&self, range: Bounds, offset: f64) -> impl IntoView {
         // Find zero value as a % of the range (0.0 to 1.0)
-        let top_y = range.top_y();
-        let bottom_y = range.bottom_y();
+        let top_y = range.top_y() - offset;
+        let bottom_y = range.bottom_y() - offset;
         let zero = (1.0 - (-bottom_y) / (top_y - bottom_y)).clamp(0.0, 1.0);
         // Separate swatches
         let (below_zero, above_zero) = self.diverging_swatches();
@@ -179,9 +180,7 @@ fn generate_stops(swatches: &[Colour], from: f64, step: f64) -> impl IntoView {
         .map(|(percent, colour)| {
             // Format as a percentage (0% - 100%)
             let offset = format!("{:.2}%", percent * 100.0);
-            view! {
-                <stop offset=offset stop-color=colour />
-            }
+            view! { <stop offset=offset stop-color=colour></stop> }
         })
         .collect_view()
 }
