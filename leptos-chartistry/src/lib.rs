@@ -84,7 +84,10 @@ pub use layout::{
     tick_labels::TickLabels,
     EdgeLayout, IntoEdge,
 };
-pub use overlay::tooltip::{Tooltip, TooltipPlacement, TooltipSortBy, TOOLTIP_CURSOR_DISTANCE};
+pub use overlay::{
+    tooltip::{Tooltip, TooltipPlacement, TooltipSortBy, TOOLTIP_CURSOR_DISTANCE},
+    tooltip_style::TooltipStyle,
+};
 pub use padding::Padding;
 pub use series::{
     Line, Marker, MarkerShape, Series, Stack, SERIES_COLOUR_SCHEME, STACK_COLOUR_SCHEME,

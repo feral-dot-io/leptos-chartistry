@@ -8,6 +8,8 @@ use crate::{
 use leptos::*;
 use std::cmp::{Ordering, Reverse};
 
+use super::tooltip_style::TooltipStyle;
+
 /// Default gap distance from cursor to tooltip when shown.
 pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
 
@@ -29,6 +31,8 @@ pub struct Tooltip<X: 'static, Y: 'static> {
     pub x_ticks: TickLabels<X>,
     /// Y axis formatter.
     pub y_ticks: TickLabels<Y>,
+    /// Style of the tooltip.
+    pub style: RwSignal<TooltipStyle>,
 }
 
 /// Where the tooltip is place when shown.
@@ -119,6 +123,7 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
             show_x_ticks: create_rw_signal(true),
             x_ticks: TickLabels::default(),
             y_ticks: TickLabels::default(),
+            style: create_rw_signal(TooltipStyle::default()),
         }
     }
 }
@@ -211,6 +216,7 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
         show_x_ticks,
         x_ticks,
         y_ticks,
+        style,
     } = tooltip;
     let debug = state.pre.debug;
     let font_height = state.pre.font_height;
@@ -304,10 +310,11 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
         <Show when=move || hover_inner.get() && placement.get() != TooltipPlacement::Hide>
             <DebugRect label="tooltip" debug=debug />
             <aside
-                style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff; white-space: pre; font-family: monospace;"
+                style=move || style.get().css_style()
                 style:top=move || format!("calc({}px)", mouse_page.get().1)
                 style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, cursor_distance.get())
-                style:padding=move || padding.get().to_css_style()>
+                style:padding=move || padding.get().to_css_style()
+                class=move || style.get().class>
                 <h2
                     style="margin: 0; text-align: center;"
                     style:font-size=move || format!("{}px", font_height.get())>
