@@ -2,7 +2,7 @@ mod line;
 mod stack;
 mod use_data;
 
-pub use line::{Line, Marker, MarkerShape, Snippet, UseLine, LINEAR_GRADIENT};
+pub use line::{Line, Marker, MarkerShape, Snippet, UseLine, DIVERGING_GRADIENT, LINEAR_GRADIENT};
 pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
 

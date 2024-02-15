@@ -2,7 +2,7 @@ mod colourmaps;
 mod scheme;
 
 pub use colourmaps::*;
-pub use scheme::{ColourScheme, LinearGradient};
+pub use scheme::{ColourScheme, DivergingGradient, LinearGradientSvg, SequentialGradient};
 
 use leptos::*;
 use std::str::FromStr;

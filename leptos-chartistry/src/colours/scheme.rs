@@ -2,11 +2,17 @@ use super::Colour;
 use crate::bounds::Bounds;
 use leptos::*;
 
+pub type SequentialGradient = (Colour, &'static [Colour]);
+pub type DivergingGradient = (SequentialGradient, SequentialGradient);
+
 /// A colour scheme with at least one colour.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColourScheme {
     // Must have at least one colour
     swatches: Vec<Colour>,
+    // Index of the zero value in a diverging gradient. If None, the zero value is not used.
+    // TODO: collect more colour scheme uses and convert schemes into an enum / trait
+    zero: Option<usize>,
 }
 
 impl ColourScheme {
@@ -14,6 +20,24 @@ impl ColourScheme {
     pub fn new(first: Colour, rest: impl IntoIterator<Item = Colour>) -> Self {
         Self {
             swatches: std::iter::once(first).chain(rest).collect(),
+            zero: None,
+        }
+    }
+
+    /// Creates a diverging colour scheme value from two sequential gradients. For use with [Line::with_gradient](crate::Line::with_gradient).
+    ///
+    /// A diverging colour scheme is useful for data that has a central value. For example, a temperature scale with a central value of 0°C. Assuming a light background the `before` scheme could then be blue to a black while `after` could be black to red.
+    ///
+    /// Special care should be taken about passing before and after parameters. The `before` scheme should be ordered from a colour to a centric value and vice versa for `after` with centric value to a colour. The centric value should be a dark colour on a light background.
+    pub fn diverging_gradient(below_zero: Self, above_zero: Self) -> Self {
+        let zero = below_zero.swatches.len();
+        Self {
+            swatches: below_zero
+                .swatches
+                .into_iter()
+                .chain(above_zero.swatches)
+                .collect(),
+            zero: Some(zero),
         }
     }
 
@@ -40,7 +64,10 @@ impl ColourScheme {
     pub fn invert(self) -> Self {
         let mut swatches = self.swatches.clone();
         swatches.reverse();
-        Self { swatches }
+        Self {
+            swatches,
+            zero: self.zero,
+        }
     }
 
     fn line_to_prior_swatch_index(&self, line: usize, total: usize) -> usize {
@@ -79,35 +106,124 @@ impl ColourScheme {
 }
 
 #[component]
-pub fn LinearGradient(
+pub fn LinearGradientSvg(
     #[prop(into)] id: AttributeValue,
-    #[prop(into)] colour: Signal<ColourScheme>,
+    #[prop(into)] scheme: Signal<ColourScheme>,
     range: Memo<Bounds>,
 ) -> impl IntoView {
-    let stops = move || generate_stops(&colour.get().swatches, 0.0, 1.0);
     view! {
         <linearGradient id=Some(id) gradientTransform="rotate(90)">
-            {stops}
+            {move || scheme.get().stops(range.get())}
         </linearGradient>
     }
 }
 
-// Generates `<stop>` elements whose offset values are spread over the swatches. Offset values start at `from` and end at `to` inclusive. Their values should be in the range 0.0 to 1.0. So swatches=[a, b, c], from=0.1, to=0.3 would generate stops at 0.1, 0.2, 0.3.
-fn generate_stops(swatches: &[Colour], from: f64, to: f64) -> impl IntoView {
-    let range = from - to;
-    // Spread swatches over <stop> so that first is 0% and last is 100%
-    let spread = (swatches.len() - 1).max(1) as f64;
+impl ColourScheme {
+    fn stops(&self, range: Bounds) -> impl IntoView {
+        // TODO: collect more colour scheme uses and convert schemes into an enum / trait
+        if self.zero.is_some() {
+            self.diverging_stops(range).into_view()
+        } else {
+            self.sequential_stops().into_view()
+        }
+    }
+
+    // Stops for a sequential gradient. Evenly spreads the swatches over 0% to 100%.
+    fn sequential_stops(&self) -> impl IntoView {
+        let step = 1.0 / self.swatches.len().saturating_sub(1) as f64;
+        generate_stops(&self.swatches, 0.0, step)
+    }
+
+    // Stops for a diverging gradient. Finds the zero value and spreads the swatches over 0% to zero and zero to 100%.
+    fn diverging_stops(&self, range: Bounds) -> impl IntoView {
+        // Find zero value as a % of the range (0.0 to 1.0)
+        let top_y = range.top_y();
+        let bottom_y = range.bottom_y();
+        let zero = -bottom_y / (top_y - bottom_y);
+        // Separate swatches
+        let (below_zero, above_zero) = self.diverging_swatches();
+        let step = 1.0 / self.swatches.len().saturating_sub(1) as f64;
+        view! {
+            {generate_stops(below_zero, 0.0, step)}
+            {generate_stops(above_zero, below_zero.len() as f64 * step, step)}
+        }
+    }
+
+    // Separate the swatches into two halves at the zero value. The first half is below zero and the second half is the rest (zero and above). If not a diverging gradient, all swatches will be seen as above zero.
+    fn diverging_swatches(&self) -> (&[Colour], &[Colour]) {
+        if let Some(zero_index) = self.zero {
+            self.swatches.split_at(zero_index)
+        } else {
+            (&[], &self.swatches)
+        }
+    }
+}
+
+// Generates a <stop> for each swatch. Offset is generated using `from + i * step` where i is the index of the swatch. The offset is formatted as a percentage (0% to 100%). `from` and `step` must be 0.0 to 1.0.
+fn generate_stops(swatches: &[Colour], from: f64, step: f64) -> impl IntoView {
     swatches
         .iter()
         .enumerate()
         .map(|(i, colour)| {
-            let percent = from + (i as f64 / spread * range); // Across the range
-            let offset = format!("{percent:.2}%");
+            // % of the index (0.0 - 1.0)
+            let percent = from + i as f64 * step;
+            // Format as a percentage (0% - 100%)
+            let offset = format!("{:.2}%", percent * 100.0);
             view! {
                 <stop offset=offset stop-color=colour />
             }
         })
         .collect_view()
+}
+
+/*
+/// Generates a `<stop>` element for each swatch given. Offset values are calculated across [from, to] whose values are 0.0 to 1.0 (%). Example: swatches=[a, b, c], from=0.1, to=0.3 would generate stops at 0.1, 0.2, 0.3. Empty swatches will generate no stops. One swatch will generates two stops at from and to.
+fn generate_stops(swatches: &[Colour], from: f64, to: f64) -> impl IntoView {
+    let range = to - from;
+    // Spread swatches over <stop> so that first index is 0% and last is 100%
+    let spread = (swatches.len().saturating_sub(1)).max(1) as f64;
+    let mk_offset = move |i| {
+        // % of the index (0.0 - 1.0)
+        let percent = i as f64 / spread;
+        // % of the range (from - to)
+        let percent = from + (percent * range);
+        // Format as a percentage (0% - 100%)
+        format!("{:.2}%", percent * 100.0)
+    };
+
+    // Single swatch? Generate two stops at from and to
+    if swatches.len() == 1 {
+        return view! {
+            <stop offset=mk_offset(0) stop-color=swatches[0] />
+            <stop offset=mk_offset(1) stop-color=swatches[0] />
+        }
+        .into_view();
+    }
+    // Generate a stop for each swatch
+    swatches
+        .iter()
+        .enumerate()
+        .map(|(i, colour)| {
+            view! {
+                <stop offset=mk_offset(i) stop-color=colour />
+            }
+        })
+        .collect_view()
+}
+ */
+
+impl From<SequentialGradient> for ColourScheme {
+    fn from((first, rest): (Colour, &[Colour])) -> Self {
+        Self::new(first, rest.to_vec())
+    }
+}
+
+impl From<DivergingGradient> for ColourScheme {
+    fn from((below_zero, above_zero): DivergingGradient) -> Self {
+        let below_zero = below_zero.into();
+        let above_zero = above_zero.into();
+        Self::diverging_gradient(below_zero, above_zero)
+    }
 }
 
 macro_rules! from_array_to_colour_scheme {

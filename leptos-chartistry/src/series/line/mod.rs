@@ -4,7 +4,7 @@ pub use marker::{Marker, MarkerShape};
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData};
 use crate::{
     bounds::Bounds,
-    colours::{Colour, LinearGradient, LIPARI},
+    colours::{Colour, DivergingGradient, LinearGradientSvg, BERLIN, LIPARI},
     debug::DebugRect,
     series::GetYValue,
     state::State,
@@ -15,6 +15,8 @@ use std::rc::Rc;
 
 /// Suggested colour scheme for linear gradient. Assumes a light background with dark values for high values.
 pub const LINEAR_GRADIENT: [Colour; 10] = LIPARI;
+
+pub const DIVERGING_GRADIENT: DivergingGradient = BERLIN;
 
 /// Draws a line on the chart.
 ///
@@ -231,9 +233,9 @@ pub fn RenderLine<X: 'static, Y: 'static>(
         <g class="_chartistry_line" stroke=stroke>
             <defs>
                 <Show when=move || line.gradient.get().is_some()>
-                    <LinearGradient
+                    <LinearGradientSvg
                         id=gradient_id.clone()
-                        colour=gradient
+                        scheme=gradient
                         range=data.position_range />
                 </Show>
             </defs>

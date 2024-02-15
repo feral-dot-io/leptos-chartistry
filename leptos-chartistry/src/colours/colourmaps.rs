@@ -35,7 +35,7 @@ Reading material:
 - Available colour schemes: https://s-ink.org/scientific-colour-maps
 */
 
-use super::Colour;
+use super::{scheme::DivergingGradient, Colour};
 
 pub const BATLOW: [Colour; 10] = [
     Colour::from_rgb(0x01, 0x19, 0x59),
@@ -62,3 +62,24 @@ pub const LIPARI: [Colour; 10] = [
     Colour::from_rgb(0xE9, 0xC9, 0x9F),
     Colour::from_rgb(0xFD, 0xF5, 0xDA),
 ];
+
+pub const BERLIN: DivergingGradient = (
+    (
+        Colour::from_rgb(0x9E, 0xB0, 0xFF),
+        &[
+            Colour::from_rgb(0x5B, 0xA4, 0xDB),
+            Colour::from_rgb(0x2D, 0x75, 0x97),
+            Colour::from_rgb(0x1A, 0x42, 0x56),
+            Colour::from_rgb(0x11, 0x19, 0x1E),
+        ],
+    ),
+    (
+        Colour::from_rgb(0x28, 0x0D, 0x01),
+        &[
+            Colour::from_rgb(0x50, 0x18, 0x03),
+            Colour::from_rgb(0x8A, 0x3F, 0x2A),
+            Colour::from_rgb(0xC4, 0x75, 0x6A),
+            Colour::from_rgb(0xFF, 0xAD, 0xAD),
+        ],
+    ),
+);
