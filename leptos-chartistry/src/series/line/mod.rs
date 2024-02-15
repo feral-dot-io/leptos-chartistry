@@ -13,9 +13,10 @@ use crate::{
 use leptos::*;
 use std::rc::Rc;
 
-/// Suggested colour scheme for linear gradient. Assumes a light background with dark values for high values.
+/// Suggested colour scheme for a linear gradient on a line. Uses darker colours for lower values and lighter colours for higher values. Assumes a light background.
 pub const LINEAR_GRADIENT: [Colour; 10] = LIPARI;
 
+/// Suggested colour scheme for a diverging gradient on a line. Uses a blue for negative values, a dark central value and red for positive values. Assumes a light background.
 pub const DIVERGING_GRADIENT: DivergingGradient = BERLIN;
 
 /// Draws a line on the chart.
@@ -47,7 +48,7 @@ pub struct Line<T, Y> {
     pub name: RwSignal<String>,
     /// Colour of the line. If not set, the next colour in the series will be used.
     pub colour: RwSignal<Option<Colour>>,
-    /// Use a colour scheme for the line. Interpolated in SVG by the browser, overrides [Colour]. Default is `None` with fallback to the line colour.
+    /// Use a linear gradient (colour scheme) for the line. Default is `None` with fallback to the line colour.
     pub gradient: RwSignal<Option<ColourScheme>>,
     /// Width of the line.
     pub width: RwSignal<f64>,
@@ -93,6 +94,8 @@ impl<T, Y> Line<T, Y> {
     }
 
     /// Use a colour scheme for the line. Interpolated in SVG by the browser, overrides [Colour]. Default is `None` with fallback to the line colour.
+    ///
+    /// Suggested use with [LINEAR_GRADIENT] or [DIVERGING_GRADIENT] (for data with a zero value).
     pub fn with_gradient(self, scheme: impl Into<ColourScheme>) -> Self {
         self.gradient.set(Some(scheme.into()));
         self
