@@ -160,6 +160,14 @@ example!(
     "../examples/feature_line_gradient.rs"
 );
 
+example!(
+    DarkBackgroundExample,
+    feature_dark_background::Example,
+    "Dark background",
+    "A chart with a dark background.",
+    "../examples/feature_dark_background.rs"
+);
+
 #[derive(Clone)]
 struct Context {
     debug: RwSignal<bool>,
@@ -228,6 +236,7 @@ pub fn Examples() -> impl IntoView {
                 <LineGradientExample class="slim" />
                 <MarkersExample />
                 <Markers2Example />
+                <DarkBackgroundExample class="dark-mode" />
             </div>
 
             <section id="aspect-ratio" class="background-box">
