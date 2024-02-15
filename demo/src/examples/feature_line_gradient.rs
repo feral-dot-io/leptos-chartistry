@@ -3,7 +3,7 @@ use leptos::*;
 use leptos_chartistry::*;
 
 // Move Y so that values cross zero to demonstrate a diverging gradient
-const Y_OFFSET: f64 = -4.0;
+const Y_OFFSET: f64 = -6.0;
 
 #[component]
 pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
