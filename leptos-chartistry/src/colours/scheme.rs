@@ -139,13 +139,19 @@ impl ColourScheme {
         // Find zero value as a % of the range (0.0 to 1.0)
         let top_y = range.top_y();
         let bottom_y = range.bottom_y();
-        let zero = -bottom_y / (top_y - bottom_y);
+        let zero = (1.0 - (-bottom_y) / (top_y - bottom_y)).clamp(0.0, 1.0);
         // Separate swatches
         let (below_zero, above_zero) = self.diverging_swatches();
-        let step = 1.0 / self.swatches.len().saturating_sub(1) as f64;
+        // Determine step size
+        //let step = 1.0 / self.swatches.len() as f64;
+        let below_step = zero * 1.0 / below_zero.len() as f64;
+        let above_step = (1.0 - zero) * 1.0 / above_zero.len() as f64;
+        // Start at the midpoint of first step so that offset is in the middle of the step
+        let below_start = below_step / 2.0;
+        let above_start = above_step / 2.0 + below_zero.len() as f64 * below_step;
         view! {
-            {generate_stops(below_zero, 0.0, step)}
-            {generate_stops(above_zero, below_zero.len() as f64 * step, step)}
+            {generate_stops(below_zero, below_start, below_step)}
+            {generate_stops(above_zero, above_start, above_step)}
         }
     }
 
@@ -164,9 +170,11 @@ fn generate_stops(swatches: &[Colour], from: f64, step: f64) -> impl IntoView {
     swatches
         .iter()
         .enumerate()
-        .map(|(i, colour)| {
-            // % of the index (0.0 - 1.0)
-            let percent = from + i as f64 * step;
+        // % of the index (0.0 - 1.0)
+        .map(|(i, colour)| (from + i as f64 * step, colour))
+        // Keep percentages in range
+        .filter(|&(percent, _)| percent > 0.0 && percent < 1.0)
+        .map(|(percent, colour)| {
             // Format as a percentage (0% - 100%)
             let offset = format!("{:.2}%", percent * 100.0);
             view! {
