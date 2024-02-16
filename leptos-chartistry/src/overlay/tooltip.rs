@@ -3,7 +3,7 @@ use crate::{
     layout::Layout,
     series::{Snippet, UseLine},
     state::State,
-    Tick, TickLabels,
+    Tick, TickLabels, AXIS_MARKER_COLOUR,
 };
 use leptos::*;
 use std::cmp::{Ordering, Reverse};
@@ -11,7 +11,7 @@ use std::cmp::{Ordering, Reverse};
 /// Default gap distance from cursor to tooltip when shown.
 pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
 
-/// Builds a mouse tooltip that shows X and Y values for the nearest data.
+/// Builds a mouse tooltip that shows X and Y values for the nearest data. Drawn in HTML as an overlay.
 #[derive(Clone)]
 pub struct Tooltip<X: 'static, Y: 'static> {
     /// Where the tooltip is placed when shown.
@@ -22,6 +22,8 @@ pub struct Tooltip<X: 'static, Y: 'static> {
     pub cursor_distance: RwSignal<f64>,
     /// If true, skips Y values that are `f64::NAN`.
     pub skip_missing: RwSignal<bool>,
+    /// Class field for the tooltip. Prefixed with "_chartistry_tooltip ". Defaults to "" with prefix.
+    pub class: RwSignal<String>,
     /// Whether to show X ticks. Default is true.
     // TODO: move to TickLabels
     pub show_x_ticks: RwSignal<bool>,
@@ -102,6 +104,12 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
         self
     }
 
+    /// Sets the class field for the tooltip. Prefixed with "_chartistry_tooltip ".
+    pub fn with_class(self, class: impl Into<String>) -> Self {
+        self.class.set(class.into());
+        self
+    }
+
     /// Sets whether to show X ticks.
     pub fn show_x_ticks(self, show_x_ticks: impl Into<bool>) -> Self {
         self.show_x_ticks.set(show_x_ticks.into());
@@ -116,6 +124,7 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
             sort_by: RwSignal::default(),
             cursor_distance: create_rw_signal(TOOLTIP_CURSOR_DISTANCE),
             skip_missing: create_rw_signal(false),
+            class: RwSignal::default(),
             show_x_ticks: create_rw_signal(true),
             x_ticks: TickLabels::default(),
             y_ticks: TickLabels::default(),
@@ -207,6 +216,7 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
         placement,
         sort_by,
         skip_missing,
+        class,
         cursor_distance,
         show_x_ticks,
         x_ticks,
@@ -304,7 +314,9 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
         <Show when=move || hover_inner.get() && placement.get() != TooltipPlacement::Hide>
             <DebugRect label="tooltip" debug=debug />
             <aside
-                style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); border: 1px solid lightgrey; background-color: #fff; white-space: pre; font-family: monospace;"
+                class=move || format!("_chartistry_tooltip {}", class.get())
+                style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); background-color: #fff; white-space: pre; font-family: monospace;"
+                style:border=format!("1px solid {}", AXIS_MARKER_COLOUR)
                 style:top=move || format!("calc({}px)", mouse_page.get().1)
                 style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, cursor_distance.get())
                 style:padding=move || padding.get().to_css_style()>

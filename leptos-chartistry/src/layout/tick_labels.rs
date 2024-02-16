@@ -343,13 +343,14 @@ fn TickLabel<X: 'static, Y: 'static>(
     });
 
     view! {
-        <g class="_chartistry_tick_label">
+        <g
+            class="_chartistry_tick_label"
+            font-family="monospace">
             <DebugRect label="tick" debug=debug bounds=vec![bounds, content.into()] />
             <text
                 x=move || text_position.get().1
                 y=move || content.get().centre_y()
                 style="white-space: pre;"
-                font-family="monospace"
                 font-size=move || font_height.get()
                 dominant-baseline="middle"
                 text-anchor=move || text_position.get().0>

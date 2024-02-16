@@ -156,7 +156,9 @@ pub(super) fn RotatedLabel<X: 'static, Y: 'static>(
     });
 
     view! {
-        <g class="_chartistry_rotated_label">
+        <g
+            class="_chartistry_rotated_label"
+            font-family="monospace">
             <DebugRect label="RotatedLabel" debug=debug bounds=vec![bounds.into(), content] />
             <text
                 x=move || position.with(|(_, x, _)| x.to_string())
@@ -164,7 +166,6 @@ pub(super) fn RotatedLabel<X: 'static, Y: 'static>(
                 transform=move || position.with(|(rotate, x, y)| format!("rotate({rotate}, {x}, {y})"))
                 dominant-baseline="middle"
                 text-anchor=move || anchor.get().to_svg_attr()
-                font-family="monospace"
                 font-size=move || format!("{}px", font_height.get())>
                 {text}
             </text>

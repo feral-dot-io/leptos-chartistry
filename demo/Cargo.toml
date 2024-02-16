@@ -7,13 +7,15 @@ authors = [ "Joshua McQuistan <joshua.mcquistan@feral.io>" ]
 license = "MPL-2.0"
 
 [dependencies]
+leptos-chartistry = { path = "../leptos-chartistry" }
+
 chrono = "0.4"
 console_error_panic_hook = "0.1"
 console_log = "1.0"
 leptos = { version = "0.6", features = ["csr"] }
-leptos-chartistry = { path = "../leptos-chartistry" }
-leptos-use = "0.10"
+leptos_meta = { version = "0.6", features = ["csr"] }
 leptos_router = { version = "0.6", features = ["csr"] }
+leptos-use = "0.10"
 log = "0.4"
 web-sys = "0.3"
 js-sys = "0.3"

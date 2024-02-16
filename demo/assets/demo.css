@@ -149,7 +149,7 @@ fieldset>legend,
 #examples h2>a,
 #examples h3>a {
     text-decoration: none;
-    color: inherit;
+    color: #222;
 }
 
 .background-box {
@@ -252,6 +252,14 @@ fieldset>legend,
 
 #examples section>h2 {
     margin-top: -2em;
+}
+
+#examples figure.my-theme {
+    border: 1px solid #fff;
+}
+
+#examples figure.my-theme p a {
+    color: #fc7089;
 }
 
 #aspect-ratio>._chartistry:first-child {

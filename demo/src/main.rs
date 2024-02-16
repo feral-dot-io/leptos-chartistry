@@ -1,5 +1,6 @@
 use demo::pages::{demo::Demo, examples::Examples};
 use leptos::*;
+use leptos_meta::provide_meta_context;
 use leptos_router::*;
 
 fn main() {
@@ -10,6 +11,8 @@ fn main() {
 
 #[component]
 pub fn App() -> impl IntoView {
+    provide_meta_context();
+
     view! {
         <Router>
             <SiteHeader />

@@ -129,17 +129,17 @@ fn ViewXGridLine<X: Tick, Y: 'static>(line: UseXGridLine<X>, state: State<X, Y>)
                         x1=x
                         y1=move || inner.get().top_y()
                         x2=x
-                        y2=move || inner.get().bottom_y()
-                        stroke=move || colour.get().to_string()
-                        stroke-width=line.width
-                    />
+                        y2=move || inner.get().bottom_y() />
                 }
             })
             .collect_view()
     };
 
     view! {
-        <g class="_chartistry_grid_line_x">
+        <g
+            class="_chartistry_grid_line_x"
+            stroke=move || colour.get().to_string()
+            stroke-width=line.width>
             <DebugRect label="grid_line_x" debug=debug />
             {lines}
         </g>
@@ -163,17 +163,17 @@ fn ViewYGridLine<X: 'static, Y: Tick>(line: UseYGridLine<Y>, state: State<X, Y>)
                         x1=move || inner.get().left_x()
                         y1=y
                         x2=move || inner.get().right_x()
-                        y2=y
-                        stroke=move || colour.get().to_string()
-                        stroke-width=line.width
-                    />
+                        y2=y />
                 }
             })
             .collect_view()
     };
 
     view! {
-        <g class="_chartistry_grid_line_y">
+        <g
+            class="_chartistry_grid_line_y"
+            stroke=move || colour.get().to_string()
+            stroke-width=line.width>
             <DebugRect label="grid_line_y" debug=debug />
             {lines}
         </g>

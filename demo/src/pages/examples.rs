@@ -160,6 +160,14 @@ example!(
     "../examples/feature_line_gradient.rs"
 );
 
+example!(
+    CssExample,
+    feature_css::Example,
+    "CSS styles",
+    "Apply CSS styles to your chart.",
+    "../examples/feature_css.rs"
+);
+
 #[derive(Clone)]
 struct Context {
     debug: RwSignal<bool>,
@@ -228,6 +236,7 @@ pub fn Examples() -> impl IntoView {
                 <LineGradientExample class="slim" />
                 <MarkersExample />
                 <Markers2Example />
+                <CssExample class="my-theme" />
             </div>
 
             <section id="aspect-ratio" class="background-box">

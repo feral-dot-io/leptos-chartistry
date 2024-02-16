@@ -172,7 +172,10 @@ fn GuideLine<X: 'static, Y: 'static>(
     });
 
     view! {
-        <g class=format!("_chartistry_{}_guide_line", id)>
+        <g
+            class=format!("_chartistry_{}_guide_line", id)
+            stroke=move || colour.get().to_string()
+            stroke-width=width>
             <Show when=move || hover_inner.get() && have_data.get() >
                 <DebugRect label=format!("{}_guide_line", id) debug=debug />
                 <line
@@ -180,8 +183,6 @@ fn GuideLine<X: 'static, Y: 'static>(
                     y1=y1
                     x2=x2
                     y2=y2
-                    stroke=move || colour.get().to_string()
-                    stroke-width=width
                 />
             </Show>
         </g>
