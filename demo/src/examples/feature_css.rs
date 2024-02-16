@@ -33,6 +33,12 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
                 border: 1px solid #fff !important;
                 background-color: #333 !important;
             }
+
+            /* Be careful changing fonts as SVG has no layout engine so won't
+                'react' (Chartistry is doing the layout and CSS is applied after) */
+            .my-theme ._chartistry_rotated_label {
+                font-family: sans-serif;
+            }
         "</Style>
 
         <div class="my-theme">
