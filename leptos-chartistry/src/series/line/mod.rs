@@ -1,4 +1,6 @@
+mod interpolation;
 mod marker;
+pub use interpolation::{Interpolation, Step};
 pub use marker::{Marker, MarkerShape};
 
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData};
@@ -52,6 +54,8 @@ pub struct Line<T, Y> {
     pub gradient: RwSignal<Option<ColourScheme>>,
     /// Width of the line.
     pub width: RwSignal<f64>,
+    /// Interpolation method of the line, aka line smoothing (or not). Describes how the line is drawn between two points. Default is [Interpolation::Monotone].
+    pub interpolation: RwSignal<Interpolation>,
     /// Marker at each point on the line.
     pub marker: Marker,
 }
@@ -63,6 +67,7 @@ pub struct UseLine {
     colour: Signal<Colour>,
     gradient: RwSignal<Option<ColourScheme>>,
     width: RwSignal<f64>,
+    interpolation: RwSignal<Interpolation>,
     marker: Marker,
 }
 
@@ -77,6 +82,7 @@ impl<T, Y> Line<T, Y> {
             colour: RwSignal::default(),
             gradient: RwSignal::default(),
             width: 1.0.into(),
+            interpolation: RwSignal::default(),
             marker: Marker::default(),
         }
     }
@@ -107,6 +113,12 @@ impl<T, Y> Line<T, Y> {
         self
     }
 
+    /// Set the interpolation method of the line.
+    pub fn with_interpolation(self, interpolation: impl Into<Interpolation>) -> Self {
+        self.interpolation.set(interpolation.into());
+        self
+    }
+
     /// Set the marker at each point on the line.
     pub fn with_marker(mut self, marker: impl Into<Marker>) -> Self {
         self.marker = marker.into();
@@ -122,6 +134,7 @@ impl<T, Y> Clone for Line<T, Y> {
             colour: self.colour,
             gradient: self.gradient,
             width: self.width,
+            interpolation: self.interpolation,
             marker: self.marker.clone(),
         }
     }
@@ -160,6 +173,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
             colour,
             gradient: self.gradient,
             width: self.width,
+            interpolation: self.interpolation,
             marker: self.marker.clone(),
         };
         (line, self.get_y.clone())
@@ -192,25 +206,7 @@ pub fn RenderLine<X: 'static, Y: 'static>(
     positions: Signal<Vec<(f64, f64)>>,
     markers: Signal<Vec<(f64, f64)>>,
 ) -> impl IntoView {
-    let path = move || {
-        positions.with(|positions| {
-            let mut need_move = true;
-            positions
-                .iter()
-                .map(|(x, y)| {
-                    if x.is_nan() || y.is_nan() {
-                        need_move = true;
-                        "".to_string()
-                    } else if need_move {
-                        need_move = false;
-                        format!("M {} {} ", x, y)
-                    } else {
-                        format!("L {} {} ", x, y)
-                    }
-                })
-                .collect::<String>()
-        })
-    };
+    let path = move || positions.with(|positions| line.interpolation.get().path(positions));
 
     // Line colour
     let gradient_id = format!("line_{}_gradient", line.id);
@@ -233,7 +229,12 @@ pub fn RenderLine<X: 'static, Y: 'static>(
     };
 
     view! {
-        <g class="_chartistry_line" stroke=stroke>
+        <g
+            class="_chartistry_line"
+            stroke=stroke
+            stroke-linecap="round"
+            stroke-linejoin="bevel"
+            stroke-width=line.width>
             <defs>
                 <Show when=move || line.gradient.get().is_some()>
                     <LinearGradientSvg
@@ -242,7 +243,7 @@ pub fn RenderLine<X: 'static, Y: 'static>(
                         range=data.position_range />
                 </Show>
             </defs>
-            <path d=path fill="none" stroke-width=line.width />
+            <path d=path fill="none" />
             <marker::LineMarkers line=line positions=markers />
         </g>
     }
