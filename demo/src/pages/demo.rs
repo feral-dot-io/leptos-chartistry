@@ -38,6 +38,13 @@ const ALL_MARKER_SHAPES: &[MarkerShape] = &[
     MarkerShape::Plus,
     MarkerShape::Cross,
 ];
+const ALL_LINE_INTERPOLATIONS: &[Interpolation] = &[
+    Interpolation::Linear,
+    Interpolation::Step(Step::Horizontal),
+    Interpolation::Step(Step::Vertical),
+    Interpolation::Step(Step::HorizontalMiddle),
+    Interpolation::Step(Step::VerticalMiddle),
+];
 
 const JS_TIMESTAMP_FMT: &str = "%FT%R";
 
@@ -128,14 +135,16 @@ pub fn Demo() -> impl IntoView {
     // Data
     let (data, _) = create_signal(load_data());
     let lines = vec![
-        Line::new(|w: &Wave| w.sine).with_name("sine").with_marker(
-            Marker::from_shape(MarkerShape::Circle)
-                .with_colour(WHITE)
-                .with_border_width(1.0),
-        ),
+        Line::new(|w: &Wave| w.sine)
+            .with_name("sine")
+            .with_interpolation(Interpolation::Step(Step::Horizontal)),
         Line::new(|w: &Wave| w.cosine)
             .with_name("cosine")
-            .with_marker(MarkerShape::Circle),
+            .with_marker(
+                Marker::from_shape(MarkerShape::Circle)
+                    .with_colour(WHITE)
+                    .with_border_width(1.0),
+            ),
     ];
     let edit_lines = lines.clone();
     let (line_tab, set_line_tab) = create_signal(0);
@@ -744,6 +753,13 @@ select_impl!(
     MarkerShape,
     ALL_MARKER_SHAPES
 );
+select_impl!(
+    SelectLineInterpolation,
+    "Interpolation",
+    interpolation,
+    Interpolation,
+    ALL_LINE_INTERPOLATIONS
+);
 
 #[component]
 fn SelectColour(
@@ -1042,6 +1058,10 @@ fn SeriesLineOpts<Y: Tick>(line: Line<Wave, Y>, colour: Colour) -> impl IntoView
                     <StepInput id="line_width" value=line.width step="0.1" min="0.1" />
                 </label>
             </span>
+        </p>
+        <p>
+            <label for="line_interpolation">"Interpolation"</label>
+            <span><SelectLineInterpolation interpolation=line.interpolation /></span>
         </p>
         <p>
             <label for="line_colour">"Colour"</label>

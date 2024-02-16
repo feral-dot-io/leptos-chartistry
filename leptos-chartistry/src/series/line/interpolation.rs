@@ -25,6 +25,33 @@ pub enum Step {
     VerticalMiddle,
 }
 
+impl std::str::FromStr for Interpolation {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "linear" => Ok(Self::Linear),
+            "step-horizontal" => Ok(Self::Step(Step::Horizontal)),
+            "step-horizontal-middle" => Ok(Self::Step(Step::HorizontalMiddle)),
+            "step-vertical" => Ok(Self::Step(Step::Vertical)),
+            "step-vertical-middle" => Ok(Self::Step(Step::VerticalMiddle)),
+            _ => Err(format!("unknown line interpolation: `{}`", s)),
+        }
+    }
+}
+
+impl std::fmt::Display for Interpolation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Linear => write!(f, "linear"),
+            Self::Step(Step::Horizontal) => write!(f, "step-horizontal"),
+            Self::Step(Step::HorizontalMiddle) => write!(f, "step-horizontal-middle"),
+            Self::Step(Step::Vertical) => write!(f, "step-vertical"),
+            Self::Step(Step::VerticalMiddle) => write!(f, "step-vertical-middle"),
+        }
+    }
+}
+
 impl Interpolation {
     pub(super) fn path(self, points: &[(f64, f64)]) -> String {
         match self {
