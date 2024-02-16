@@ -166,7 +166,10 @@ fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) ->
     let colour = marker.colour;
     let colour = move || colour.get().to_string();
     view! {
-        <g class="_chartistry_axis_marker">
+        <g
+            class="_chartistry_axis_marker"
+            stroke=colour
+            stroke-width=marker.width>
             <Show when=move || in_bounds.get() >
                 <DebugRect label="axis_marker" debug=debug />
                 <line
@@ -174,8 +177,6 @@ fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) ->
                     y1=y1
                     x2=x2
                     y2=y2
-                    stroke=colour
-                    stroke-width=marker.width
                     marker-end=arrow
                 />
             </Show>
