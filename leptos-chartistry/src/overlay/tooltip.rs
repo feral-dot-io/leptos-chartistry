@@ -104,6 +104,12 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
         self
     }
 
+    /// Sets the class field for the tooltip. Prefixed with "_chartistry_tooltip ".
+    pub fn with_class(self, class: impl Into<String>) -> Self {
+        self.class.set(class.into());
+        self
+    }
+
     /// Sets whether to show X ticks.
     pub fn show_x_ticks(self, show_x_ticks: impl Into<bool>) -> Self {
         self.show_x_ticks.set(show_x_ticks.into());
