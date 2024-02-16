@@ -5,9 +5,14 @@ use leptos_meta::Style;
 
 #[component]
 pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView {
-    let series = Series::new(|data: &MyData| data.x)
-        .line(Line::new(|data: &MyData| data.y1).with_name("sunlight"))
-        .line(Line::new(|data: &MyData| data.y2).with_name("moonlight"));
+    let series = Series::new(|data: &MyData| data.x).line(
+        Line::new(|data: &MyData| data.y1)
+            .with_name("sunlight")
+            // The default colours assume a light background but this is easily
+            // changed with the `invert` method.
+            .with_gradient(my_scheme().invert())
+            .with_width(5.0),
+    );
     view! {
         // All elements drawn are given a class with the _chartistry_ prefix
         // which we can use to apply themes to our chart.
@@ -65,4 +70,8 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
             />
         </div>
     }
+}
+
+fn my_scheme() -> ColourScheme {
+    STACK_COLOUR_SCHEME.into()
 }
