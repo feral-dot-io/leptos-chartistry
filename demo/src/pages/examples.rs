@@ -161,11 +161,11 @@ example!(
 );
 
 example!(
-    DarkBackgroundExample,
-    feature_dark_background::Example,
+    CssExample,
+    feature_css::Example,
     "CSS styles",
     "Apply CSS styles to your chart.",
-    "../examples/feature_dark_background.rs"
+    "../examples/feature_css.rs"
 );
 
 #[derive(Clone)]
@@ -236,7 +236,7 @@ pub fn Examples() -> impl IntoView {
                 <LineGradientExample class="slim" />
                 <MarkersExample />
                 <Markers2Example />
-                <DarkBackgroundExample class="my-theme" />
+                <CssExample class="my-theme" />
             </div>
 
             <section id="aspect-ratio" class="background-box">
