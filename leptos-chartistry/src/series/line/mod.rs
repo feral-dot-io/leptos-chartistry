@@ -114,8 +114,8 @@ impl<T, Y> Line<T, Y> {
     }
 
     /// Set the interpolation method of the line.
-    pub fn with_interpolation(self, interpolation: Interpolation) -> Self {
-        self.interpolation.set(interpolation);
+    pub fn with_interpolation(self, interpolation: impl Into<Interpolation>) -> Self {
+        self.interpolation.set(interpolation.into());
         self
     }
 

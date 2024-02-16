@@ -57,6 +57,12 @@ impl std::fmt::Display for Interpolation {
     }
 }
 
+impl From<Step> for Interpolation {
+    fn from(step: Step) -> Self {
+        Self::Step(step)
+    }
+}
+
 impl Interpolation {
     pub(super) fn path(self, points: &[(f64, f64)]) -> String {
         match self {
