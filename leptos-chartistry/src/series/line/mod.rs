@@ -232,8 +232,9 @@ pub fn RenderLine<X: 'static, Y: 'static>(
         <g
             class="_chartistry_line"
             stroke=stroke
-            stroke-width=line.width
-            stroke-linecap="round">
+            stroke-linecap="round"
+            stroke-linejoin="bevel"
+            stroke-width=line.width>
             <defs>
                 <Show when=move || line.gradient.get().is_some()>
                     <LinearGradientSvg
