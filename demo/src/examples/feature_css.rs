@@ -36,9 +36,6 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
             /* The tooltip uses inline CSS styles and so must be overridden */
             .my-theme ._chartistry_tooltip {
                 border: 1px solid #fff !important;
-            }
-            /* This uses our custom CSS class but we could have merged it above */
-            .my-theme .my-tooltip {
                 background-color: #333 !important;
             }
 
@@ -69,7 +66,7 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
                     YGuideLine::over_mouse().into_inner(),
                     XGuideLine::over_data().into_inner(),
                 ]
-                tooltip=Tooltip::left_cursor().show_x_ticks(false).with_class("my-tooltip")
+                tooltip=Tooltip::left_cursor().show_x_ticks(false)
             />
         </div>
     }
