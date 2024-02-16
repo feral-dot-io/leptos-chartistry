@@ -40,6 +40,7 @@ const ALL_MARKER_SHAPES: &[MarkerShape] = &[
 ];
 const ALL_LINE_INTERPOLATIONS: &[Interpolation] = &[
     Interpolation::Linear,
+    Interpolation::Monotone,
     Interpolation::Step(Step::Horizontal),
     Interpolation::Step(Step::Vertical),
     Interpolation::Step(Step::HorizontalMiddle),
@@ -137,7 +138,7 @@ pub fn Demo() -> impl IntoView {
     let lines = vec![
         Line::new(|w: &Wave| w.sine)
             .with_name("sine")
-            .with_interpolation(Interpolation::Step(Step::Horizontal)),
+            .with_interpolation(Interpolation::Monotone),
         Line::new(|w: &Wave| w.cosine)
             .with_name("cosine")
             .with_marker(

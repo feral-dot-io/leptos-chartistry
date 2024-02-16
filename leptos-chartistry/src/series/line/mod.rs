@@ -54,7 +54,7 @@ pub struct Line<T, Y> {
     pub gradient: RwSignal<Option<ColourScheme>>,
     /// Width of the line.
     pub width: RwSignal<f64>,
-    /// Interpolation method of the line describing how the line is drawn between two points. Default is [Interpolation::Linear].
+    /// Interpolation method of the line, aka line smoothing (or not). Describes how the line is drawn between two points. Default is [Interpolation::Monotone].
     pub interpolation: RwSignal<Interpolation>,
     /// Marker at each point on the line.
     pub marker: Marker,

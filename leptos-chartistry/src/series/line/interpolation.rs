@@ -3,11 +3,14 @@
 #[non_exhaustive]
 pub enum Interpolation {
     /// Linear interpolation draws a straight line between points. The simplest of methods.
-    #[default]
     Linear,
     /// Step interpolation only uses horizontal and vertical lines to connect two points.
     Step(Step),
-    //Monotone,
+    /// Cubic monotone interpolation smooths the line between points. Avoids spurious oscillations.[^Steffen]
+    ///
+    /// [^Steffen]: Steffen, M., “A simple method for monotonic interpolation in one dimension.”, Astronomy and Astrophysics, vol. 239, pp. 443–450, 1990.
+    #[default]
+    Monotone,
 }
 
 /// Step interpolation only uses horizontal and vertical lines to connect two points. We have a choice of where to put the "corner" of the step.
@@ -35,6 +38,7 @@ impl std::str::FromStr for Interpolation {
             "step-horizontal-middle" => Ok(Self::Step(Step::HorizontalMiddle)),
             "step-vertical" => Ok(Self::Step(Step::Vertical)),
             "step-vertical-middle" => Ok(Self::Step(Step::VerticalMiddle)),
+            "monotone" => Ok(Self::Monotone),
             _ => Err(format!("unknown line interpolation: `{}`", s)),
         }
     }
@@ -48,6 +52,7 @@ impl std::fmt::Display for Interpolation {
             Self::Step(Step::HorizontalMiddle) => write!(f, "step-horizontal-middle"),
             Self::Step(Step::Vertical) => write!(f, "step-vertical"),
             Self::Step(Step::VerticalMiddle) => write!(f, "step-vertical-middle"),
+            Self::Monotone => write!(f, "monotone"),
         }
     }
 }
@@ -57,7 +62,7 @@ impl Interpolation {
         match self {
             Self::Linear => linear(points),
             Self::Step(step) => step.path(points),
-            //Self::Monotone => monotone(points),
+            Self::Monotone => monotone(points),
         }
     }
 }
@@ -108,4 +113,65 @@ impl Step {
             })
             .collect::<String>()
     }
+}
+
+/*
+    Implementation from "A simple method for monotonic interpolation in one dimension". [^Steffen]
+
+    In Fortran:
+        y1(i) = (sign(1.0, s[i-1]) + sign(1.0, s[i])) * min(abs(s[i-1]), 0.5 * abs(p[i]))
+    Where:
+        s[i] = (y[i+1] - y[i]) / (x[i+1] - x[i])
+        p[i] = (s[i-1]h[i] + s[i]h[i-1]) / (h[i-1] + h[i])
+        h[i] = x[i+1] - x[i]
+
+    In Rust:
+        y(i) = (s[i-1].signum() + s[i].signum()) * s[i-1].abs().min(0.5 * p[i].abs())
+*/
+fn monotone(points: &[(f64, f64)]) -> String {
+    let mut path = String::with_capacity(points.len());
+    for i in 0..points.len() {
+        let (x_prev, y_prev) = get_or_nan(points, i.checked_sub(1));
+        let (x, y) = points[i];
+        let (x_next, y_next) = get_or_nan(points, i.checked_add(1));
+        // Path command
+        let cmd = if x.is_nan() || y.is_nan() {
+            // Inbetween segments
+            "".to_string()
+        } else if x_prev.is_nan() || y_prev.is_nan() {
+            // Start of a new segment
+            format!("M {x},{y} ")
+        } else if x_next.is_nan() || y_next.is_nan() {
+            // End of a segment
+            format!("L {x},{y} ")
+        } else {
+            let tangent = tangent(x_prev, x, x_next, y_prev, y, y_next);
+            let dx = (x - x_prev) / 3.0;
+            let x_c = x - dx;
+            let y_c = y - dx * tangent;
+            format!("S {x_c},{y_c} {x},{y} ")
+        };
+        path.push_str(&cmd);
+    }
+    path
+}
+
+fn get_or_nan(points: &[(f64, f64)], i: Option<usize>) -> (f64, f64) {
+    i.and_then(|i| points.get(i).copied())
+        .unwrap_or((f64::NAN, f64::NAN))
+}
+
+fn slope(x: f64, y: f64, x_next: f64, y_next: f64) -> f64 {
+    (y_next - y) / (x_next - x)
+}
+
+fn tangent(x_prev: f64, x: f64, x_next: f64, y_prev: f64, y: f64, y_next: f64) -> f64 {
+    let slope_prev = slope(x_prev, y_prev, x, y);
+    let slope = slope(x, y, x_next, y_next);
+    // Parabola
+    let dist_prev = x - x_prev;
+    let dist = x_next - x;
+    let para = (slope_prev * dist + slope * dist_prev) / (dist_prev + dist);
+    // Tangent
+    (slope_prev.signum() + slope.signum()) * slope_prev.abs().min(0.5 * para.abs())
 }
