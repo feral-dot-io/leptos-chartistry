@@ -1,17 +1,35 @@
+/// Line interpolation. This is used to determine how to draw the line between points.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum Interpolation {
+    /// Linear interpolation draws a straight line between points. The simplest of methods.
     #[default]
     Linear,
-    //Step,
+    /// Step interpolation only uses horizontal and vertical lines to connect two points.
+    Step(Step),
     //Monotone,
 }
 
+/// Step interpolation only uses horizontal and vertical lines to connect two points. We have a choice of where to put the "corner" of the step.
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
+pub enum Step {
+    /// Moves across the horizontal plane first then the vertical.
+    #[default]
+    Horizontal,
+    /// Moves midway across the horizontal plane first, then all of the vertical, then the rest of the horizontal. When chained with other steps, creates a single step but could make the data point less obvious.
+    HorizontalMiddle,
+    /// Moves across the vertical plane first then the horizontal.
+    Vertical,
+    /// Similar to [Step::HorizontalMiddle] but moves midway across the vertical plane first, then all of the horizontal, then the rest of the vertical.
+    VerticalMiddle,
+}
+
 impl Interpolation {
-    pub fn path(self, points: &[(f64, f64)]) -> String {
+    pub(super) fn path(self, points: &[(f64, f64)]) -> String {
         match self {
             Self::Linear => linear(points),
-            //Self::Step => step(points),
+            Self::Step(step) => step.path(points),
             //Self::Monotone => monotone(points),
         }
     }
@@ -33,4 +51,11 @@ fn linear(points: &[(f64, f64)]) -> String {
             }
         })
         .collect::<String>()
+}
+
+impl Step {
+    fn path(self, points: &[(f64, f64)]) -> String {
+        // TODO
+        String::new()
+    }
 }

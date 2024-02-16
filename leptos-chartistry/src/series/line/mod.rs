@@ -1,6 +1,6 @@
 mod interpolation;
 mod marker;
-pub use interpolation::Interpolation;
+pub use interpolation::{Interpolation, Step};
 pub use marker::{Marker, MarkerShape};
 
 use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData};
