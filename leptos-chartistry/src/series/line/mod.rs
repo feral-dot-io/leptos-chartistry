@@ -233,7 +233,11 @@ pub fn RenderLine<X: 'static, Y: 'static>(
     };
 
     view! {
-        <g class="_chartistry_line" stroke=stroke>
+        <g
+            class="_chartistry_line"
+            stroke=stroke
+            stroke-width=line.width
+            stroke-linecap="round">
             <defs>
                 <Show when=move || line.gradient.get().is_some()>
                     <LinearGradientSvg
@@ -242,7 +246,7 @@ pub fn RenderLine<X: 'static, Y: 'static>(
                         range=data.position_range />
                 </Show>
             </defs>
-            <path d=path fill="none" stroke-width=line.width />
+            <path d=path fill="none" />
             <marker::LineMarkers line=line positions=markers />
         </g>
     }
