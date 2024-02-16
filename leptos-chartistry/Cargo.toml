@@ -1,6 +1,6 @@
 [package]
 name = "leptos-chartistry"
-version = "0.1.3"
+version = "0.1.4"
 authors = [ "Joshua McQuistan <joshua.mcquistan@feral.io>" ]
 edition = "2021"
 description = "Chartistry is a charting library for Leptos"

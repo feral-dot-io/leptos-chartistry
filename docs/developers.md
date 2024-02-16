@@ -23,7 +23,6 @@ These are mostly thoughts and internal notes (for now).
 Features to add:
 - Stacked line ordering
 - Scatter chart
-- Line smoothing
 - Bars
     - Example: https://www.ft.com/content/aa179561-47af-49de-93f8-edd2cf1c57d5
 - Stacked bars
@@ -41,6 +40,7 @@ Features to add:
 - Legend:
     - lines with gradients don't render well
     - bar chart should render a block of colour
+    - In interpolation_mixed.rs I'd like to show only the named lines
 
 - Site annoyances
     - Clicking show code scrolls to the top
@@ -49,12 +49,19 @@ Features to add:
 
 - Colours:
     - divergent gradient should be able to specify the centre point
+    - missing alpha channel
+
+- Tooltip:
+    - Expand left_cursor to a more general cursor.
+    - Add "tend to centre" cursor
 
 - 0.2 bump:
     - non_exhaustive on all structs with public fields
     - Tooltip.class + possibly elsewhere
     - Move Tooltip.show_x_ticks to TickLabels
     - Consider removing anything that can be controlled exclusively by CSS
+        - cursor_distance?
+    - Marker.scale should be independent of line width with (use px) a default relative to the line width.
 
 ## Development cycle
 
@@ -73,5 +80,7 @@ trunk serve --open
 - Commit
 - `cargo semver-checks -p leptos-chartistry`
 - `nix flake check` -- success? All systems go!
-- `git push`
+- `git push --set-upstream origin`
+- Wait for CI, review PR, squash and merge
+- `git tag -a vX.Y.Z`
 - `cargo publish -p leptos-chartistry` -- no turning back...
