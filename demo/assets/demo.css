@@ -254,10 +254,12 @@ fieldset>legend,
     margin-top: -2em;
 }
 
-#examples .dark-mode {
-    background-color: #333;
-    color: #ddd;
+#examples figure.my-theme {
     border: 1px solid #fff;
+}
+
+#examples figure.my-theme p a {
+    color: #fc7089;
 }
 
 #aspect-ratio>._chartistry:first-child {
