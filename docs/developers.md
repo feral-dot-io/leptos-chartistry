@@ -22,14 +22,39 @@ These are mostly thoughts and internal notes (for now).
 
 Features to add:
 - Stacked line ordering
-- Line dots
+- Scatter chart
+- Line smoothing
 - Bars
+    - Example: https://www.ft.com/content/aa179561-47af-49de-93f8-edd2cf1c57d5
 - Stacked bars
+    - Example: https://www.ft.com/content/66a490e3-9268-4d8d-b7df-d2f901cd0fde
 - Loading status
 - Canvas
     - Calculate font
     - Multi-line labels
     - Can we get background colour?
+- Arrow head (or big red dot) on line chart + linecap
+- Tick:
+    - f32 
+    - integers
+    - Option<Tick>
+- Legend:
+    - lines with gradients don't render well
+    - bar chart should render a block of colour
+
+- Site annoyances
+    - Clicking show code scrolls to the top
+    - Clicking show code doesn't show the chart
+    - #aspect ratio section needs a link to docs.rs for context
+
+- Colours:
+    - divergent gradient should be able to specify the centre point
+
+- 0.2 bump:
+    - non_exhaustive on all structs with public fields
+    - Tooltip.class + possibly elsewhere
+    - Move Tooltip.show_x_ticks to TickLabels
+    - Consider removing anything that can be controlled exclusively by CSS
 
 ## Development cycle
 
@@ -42,8 +67,11 @@ trunk serve --open
 
 ## Release checklist
 
-- Run `cargo update` and commit
-- Update the version in `Cargo.toml` and commit
-- Run `nix flake check` -- success? All systems go!
-- Run `./demo/release` and commit (requires Nix flakes)
-- Run `cargo publish -p leptos-chartistry` -- no turning back...
+- `git checkout -b release-vX.Y.Z`
+- Update the version in `leptos-chartistry/Cargo.toml`
+- `cargo update`
+- Commit
+- `cargo semver-checks -p leptos-chartistry`
+- `nix flake check` -- success? All systems go!
+- `git push`
+- `cargo publish -p leptos-chartistry` -- no turning back...
