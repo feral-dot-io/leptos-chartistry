@@ -82,25 +82,28 @@ fn linear(points: &[(f64, f64)]) -> String {
 
 impl Step {
     fn path(self, points: &[(f64, f64)]) -> String {
-        let mut need_move = true;
+        let mut prev: Option<(f64, f64)> = None;
         points
             .iter()
-            .map(|(x, y)| {
+            .map(|&(x, y)| {
                 if x.is_nan() || y.is_nan() {
-                    need_move = true;
+                    prev = None;
                     "".to_string()
-                } else if need_move {
-                    need_move = false;
-                    format!("M {} {} ", x, y)
-                } else {
-                    let mid_x = x / 2.0;
-                    let mid_y = y / 2.0;
+                } else if let Some((prev_x, prev_y)) = prev {
+                    prev = Some((x, y));
                     match self {
                         Self::Horizontal => format!("H {} V {} ", x, y),
-                        Self::HorizontalMiddle => format!("H {} V {} H {} ", mid_x, y, mid_x),
+                        Self::HorizontalMiddle => {
+                            format!("H {} V {} H {} ", (x + prev_x) / 2.0, y, x)
+                        }
                         Self::Vertical => format!("V {} H {} ", y, x),
-                        Self::VerticalMiddle => format!("V {} H {} V {} ", mid_y, x, mid_y),
+                        Self::VerticalMiddle => {
+                            format!("V {} H {} V {} ", (y + prev_y) / 2.0, x, y)
+                        }
                     }
+                } else {
+                    prev = Some((x, y));
+                    format!("M {} {} ", x, y)
                 }
             })
             .collect::<String>()
