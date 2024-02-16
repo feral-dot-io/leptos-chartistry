@@ -118,6 +118,24 @@ example!(
     "../examples/inner_layout.rs"
 );
 
+// Interpolation
+
+example!(
+    MixedInterpolationExample,
+    interpolation_mixed::Example,
+    "Linear and monotone",
+    "Change the interpolation of your lines.",
+    "../examples/interpolation_mixed.rs"
+);
+
+example!(
+    SteppedExample,
+    interpolation_stepped::Example,
+    "Stepped",
+    "Change the interpolation of your lines to stepped.",
+    "../examples/interpolation_stepped.rs"
+);
+
 // Features
 
 example!(
@@ -227,6 +245,12 @@ pub fn Examples() -> impl IntoView {
                 <GuideLineExample />
                 <InsetLegendExample />
                 <InnerLayoutExample />
+
+                <div class="include-right">
+                    <h2 id="interpolation"><a href="#interpolation">"Line interpolation"</a></h2>
+                    <MixedInterpolationExample />
+                </div>
+                <SteppedExample />
 
                 <div class="include-right">
                     <h2 id="features"><a href="#features">"Features"</a></h2>
