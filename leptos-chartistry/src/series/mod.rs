@@ -4,12 +4,11 @@ mod use_data;
 mod use_y;
 
 pub use line::{
-    Interpolation, Line, Marker, MarkerShape, Snippet, Step, UseLine, DIVERGING_GRADIENT,
-    LINEAR_GRADIENT,
+    Interpolation, Line, Marker, MarkerShape, Step, UseLine, DIVERGING_GRADIENT, LINEAR_GRADIENT,
 };
 pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
-pub use use_y::UseY;
+pub use use_y::{Snippet, UseY};
 
 use crate::colours::{Colour, ColourScheme};
 use leptos::signal_prelude::*;
