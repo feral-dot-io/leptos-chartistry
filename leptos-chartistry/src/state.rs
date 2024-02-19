@@ -2,7 +2,7 @@ use crate::{
     bounds::Bounds,
     layout::Layout,
     projection::Projection,
-    series::{UseData, UseLine},
+    series::{UseData, UseY},
     use_watched_node::UseWatchedNode,
     Padding,
 };
@@ -41,7 +41,7 @@ pub struct State<X: 'static, Y: 'static> {
     /// X value of nearest mouse data
     pub nearest_data_x: Memo<Option<X>>,
     /// Y values of nearest mouse data. Index corresponds to line index.
-    pub nearest_data_y: Memo<Vec<(UseLine, Option<Y>)>>,
+    pub nearest_data_y: Memo<Vec<(UseY, Option<Y>)>>,
 }
 
 impl<X, Y> PreState<X, Y> {

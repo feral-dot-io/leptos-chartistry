@@ -1,7 +1,7 @@
 use crate::{
     debug::DebugRect,
     layout::Layout,
-    series::{Snippet, UseLine},
+    series::{Snippet, UseY},
     state::State,
     Tick, TickLabels, AXIS_MARKER_COLOUR,
 };
@@ -128,7 +128,7 @@ impl TooltipSortBy {
         y.as_ref().map(|y| F64Ord(y.position()))
     }
 
-    fn sort_values<Y: Tick>(&self, values: &mut [(UseLine, Option<Y>)]) {
+    fn sort_values<Y: Tick>(&self, values: &mut [(UseY, Option<Y>)]) {
         match self {
             TooltipSortBy::Lines => values.sort_by_key(|(line, _)| line.name.get()),
             TooltipSortBy::Ascending => values.sort_by_key(|(_, y)| Self::to_ord(y)),
@@ -285,7 +285,7 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
 
     let series_tr = {
         let state = state.clone();
-        move |(series, y_value): (UseLine, String)| {
+        move |(series, y_value): (UseY, String)| {
             view! {
                 <tr>
                     <td><Snippet series=series state=state.clone() /></td>

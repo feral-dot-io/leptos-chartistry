@@ -3,13 +3,10 @@ mod marker;
 pub use interpolation::{Interpolation, Step};
 pub use marker::{Marker, MarkerShape};
 
-use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData};
+use super::{ApplyUseSeries, IntoUseY, SeriesAcc, UseData, UseY};
 use crate::{
-    bounds::Bounds,
     colours::{Colour, DivergingGradient, LinearGradientSvg, SequentialGradient, BERLIN, LIPARI},
-    debug::DebugRect,
     series::GetYValue,
-    state::State,
     ColourScheme,
 };
 use leptos::*;
@@ -62,8 +59,6 @@ pub struct Line<T, Y> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
-    pub id: usize,
-    pub name: RwSignal<String>,
     colour: Signal<Colour>,
     gradient: RwSignal<Option<ColourScheme>>,
     width: RwSignal<f64>,
@@ -163,53 +158,37 @@ impl<T, Y> ApplyUseSeries<T, Y> for Line<T, Y> {
     }
 }
 
-impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
-    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
+impl<T, Y> IntoUseY<T, Y> for Line<T, Y> {
+    fn into_use_y(self, id: usize, colour: Memo<Colour>) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
         let override_colour = self.colour;
         let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
-        let line = UseLine {
+        let line = UseY::new_line(
             id,
-            name: self.name,
-            colour,
-            gradient: self.gradient,
-            width: self.width,
-            interpolation: self.interpolation,
-            marker: self.marker.clone(),
-        };
+            self.name,
+            UseLine {
+                colour,
+                gradient: self.gradient,
+                width: self.width,
+                interpolation: self.interpolation,
+                marker: self.marker.clone(),
+            },
+        );
         (line, self.get_y.clone())
-    }
-}
-
-impl UseLine {
-    fn taster_bounds(font_height: Memo<f64>, font_width: Memo<f64>) -> Memo<Bounds> {
-        create_memo(move |_| Bounds::new(font_width.get() * 2.5, font_height.get()))
-    }
-
-    pub fn snippet_width(font_height: Memo<f64>, font_width: Memo<f64>) -> Signal<f64> {
-        let taster_bounds = Self::taster_bounds(font_height, font_width);
-        Signal::derive(move || taster_bounds.get().width() + font_width.get())
-    }
-
-    pub(crate) fn render<X: 'static, Y: 'static>(
-        &self,
-        data: UseData<X, Y>,
-        positions: Signal<Vec<(f64, f64)>>,
-    ) -> View {
-        view!( <RenderLine data=data line=self.clone() positions=positions markers=positions /> )
     }
 }
 
 #[component]
 pub fn RenderLine<X: 'static, Y: 'static>(
-    data: UseData<X, Y>,
+    use_y: UseY,
     line: UseLine,
+    data: UseData<X, Y>,
     positions: Signal<Vec<(f64, f64)>>,
     markers: Signal<Vec<(f64, f64)>>,
 ) -> impl IntoView {
     let path = move || positions.with(|positions| line.interpolation.get().path(positions));
 
     // Line colour
-    let gradient_id = format!("line_{}_gradient", line.id);
+    let gradient_id = format!("line_{}_gradient", use_y.id);
     let stroke = {
         let colour = line.colour;
         let gradient_id = gradient_id.clone();
@@ -246,51 +225,5 @@ pub fn RenderLine<X: 'static, Y: 'static>(
             <path d=path fill="none" />
             <marker::LineMarkers line=line positions=markers />
         </g>
-    }
-}
-
-#[component]
-pub fn Snippet<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
-    let debug = state.pre.debug;
-    let name = series.name;
-    view! {
-        <div class="_chartistry_snippet" style="white-space: nowrap;">
-            <DebugRect label="snippet" debug=debug />
-            <Taster series=series state=state />
-            {name}
-        </div>
-    }
-}
-
-#[component]
-fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
-    const Y_OFFSET: f64 = 2.0;
-    let debug = state.pre.debug;
-    let font_width = state.pre.font_width;
-    let right_padding = Signal::derive(move || font_width.get() / 2.0);
-    let bounds = UseLine::taster_bounds(state.pre.font_height, font_width);
-    // Mock positions from left to right of our bounds
-    let positions = Signal::derive(move || {
-        let bounds = bounds.get();
-        let y = bounds.centre_y() + Y_OFFSET;
-        vec![(bounds.left_x(), y), (bounds.right_x(), y)]
-    });
-    // One marker in the middle
-    let markers = Signal::derive(move || {
-        let bounds = bounds.get();
-        vec![(bounds.centre_x(), bounds.centre_y() + Y_OFFSET)]
-    });
-    view! {
-        <svg
-            viewBox=move || format!("0 0 {} {}", bounds.get().width(), bounds.get().height())
-            width=move || bounds.get().width() + right_padding.get()
-            height=move || bounds.get().height()
-            class="_chartistry_taster"
-            style="box-sizing: border-box;"
-            style:padding-right=move || format!("{}px", right_padding.get())
-            >
-            <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
-            <RenderLine data=state.pre.data line=series positions=positions markers=markers />
-        </svg>
     }
 }
