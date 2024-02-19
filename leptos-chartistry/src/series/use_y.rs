@@ -6,15 +6,20 @@ use leptos::*;
 pub struct UseY {
     pub id: usize,
     pub name: RwSignal<String>,
-    pub desc: UseYDesc,
+    desc: UseYDesc,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum UseYDesc {
+enum UseYDesc {
     Line(UseLine),
 }
 
 impl UseY {
+    pub(super) fn new_line(id: usize, name: RwSignal<String>, line: UseLine) -> Self {
+        let desc = UseYDesc::Line(line);
+        Self { id, name, desc }
+    }
+
     fn taster_bounds(font_height: Memo<f64>, font_width: Memo<f64>) -> Memo<Bounds> {
         create_memo(move |_| Bounds::new(font_width.get() * 2.5, font_height.get()))
     }
