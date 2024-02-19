@@ -15,23 +15,6 @@ pub enum UseYDesc {
 }
 
 impl UseY {
-    pub(crate) fn render<X: 'static, Y: 'static>(
-        &self,
-        data: UseData<X, Y>,
-        positions: Signal<Vec<(f64, f64)>>,
-    ) -> View {
-        match &self.desc {
-            UseYDesc::Line(line) => view! {
-                <RenderLine
-                    use_y=self.clone()
-                    line=line.clone()
-                    data=data
-                    positions=positions
-                    markers=positions />
-            },
-        }
-    }
-
     fn taster_bounds(font_height: Memo<f64>, font_width: Memo<f64>) -> Memo<Bounds> {
         create_memo(move |_| Bounds::new(font_width.get() * 2.5, font_height.get()))
     }
@@ -39,6 +22,25 @@ impl UseY {
     pub fn snippet_width(font_height: Memo<f64>, font_width: Memo<f64>) -> Signal<f64> {
         let taster_bounds = Self::taster_bounds(font_height, font_width);
         Signal::derive(move || taster_bounds.get().width() + font_width.get())
+    }
+}
+
+#[component]
+pub(super) fn RenderUseY<X: 'static, Y: 'static>(
+    use_y: UseY,
+    data: UseData<X, Y>,
+    positions: Signal<Vec<(f64, f64)>>,
+) -> impl IntoView {
+    let desc = use_y.desc.clone();
+    match desc {
+        UseYDesc::Line(line) => view! {
+            <RenderLine
+                use_y=use_y
+                line=line
+                data=data
+                positions=positions
+                markers=positions />
+        },
     }
 }
 

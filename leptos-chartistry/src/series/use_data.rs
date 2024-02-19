@@ -1,4 +1,9 @@
-use crate::{bounds::Bounds, series::UseY, state::State, Series, Tick};
+use crate::{
+    bounds::Bounds,
+    series::{use_y::RenderUseY, UseY},
+    state::State,
+    Series, Tick,
+};
 use leptos::*;
 use std::collections::HashMap;
 
@@ -289,8 +294,9 @@ pub fn RenderData<X: Tick, Y: Tick>(state: State<X, Y>) -> impl IntoView {
             <For
                 each=move || data.series.get()
                 key=|use_y| use_y.id
-                children=move |use_y| use_y.render(data.clone(), mk_svg_coords(use_y.id))
-            />
+                let:use_y>
+                <RenderUseY use_y=use_y.clone() data=data.clone() positions=mk_svg_coords(use_y.id) />
+            </For>
         </g>
     }
 }
