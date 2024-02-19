@@ -3,7 +3,7 @@ use crate::{
     bounds::Bounds,
     debug::DebugRect,
     edge::Edge,
-    series::{Snippet, UseLine},
+    series::{Snippet, UseLine, UseY},
     state::{PreState, State},
     Padding,
 };
@@ -136,7 +136,7 @@ pub(crate) fn Legend<X: Clone + 'static, Y: Clone + 'static>(
 
 #[component]
 fn VerticalBody<X: Clone + 'static, Y: Clone + 'static>(
-    series: Memo<Vec<UseLine>>,
+    series: Memo<Vec<UseY>>,
     state: State<X, Y>,
 ) -> impl IntoView {
     let padding = move || {
@@ -159,7 +159,7 @@ fn VerticalBody<X: Clone + 'static, Y: Clone + 'static>(
 
 #[component]
 fn HorizontalBody<X: Clone + 'static, Y: Clone + 'static>(
-    series: Memo<Vec<UseLine>>,
+    series: Memo<Vec<UseY>>,
     state: State<X, Y>,
 ) -> impl IntoView {
     let padding_left = move |i| {

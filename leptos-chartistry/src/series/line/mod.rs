@@ -3,7 +3,7 @@ mod marker;
 pub use interpolation::{Interpolation, Step};
 pub use marker::{Marker, MarkerShape};
 
-use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData};
+use super::{ApplyUseSeries, IntoUseY, SeriesAcc, UseData, UseY};
 use crate::{
     bounds::Bounds,
     colours::{Colour, DivergingGradient, LinearGradientSvg, SequentialGradient, BERLIN, LIPARI},
@@ -62,8 +62,6 @@ pub struct Line<T, Y> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseLine {
-    pub id: usize,
-    pub name: RwSignal<String>,
     colour: Signal<Colour>,
     gradient: RwSignal<Option<ColourScheme>>,
     width: RwSignal<f64>,
@@ -163,18 +161,20 @@ impl<T, Y> ApplyUseSeries<T, Y> for Line<T, Y> {
     }
 }
 
-impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
-    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
+impl<T, Y> IntoUseY<T, Y> for Line<T, Y> {
+    fn into_use_y(self, id: usize, colour: Memo<Colour>) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
         let override_colour = self.colour;
         let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
-        let line = UseLine {
+        let line = UseY {
             id,
             name: self.name,
-            colour,
-            gradient: self.gradient,
-            width: self.width,
-            interpolation: self.interpolation,
-            marker: self.marker.clone(),
+            line: UseLine {
+                colour,
+                gradient: self.gradient,
+                width: self.width,
+                interpolation: self.interpolation,
+                marker: self.marker.clone(),
+            },
         };
         (line, self.get_y.clone())
     }
@@ -189,7 +189,9 @@ impl UseLine {
         let taster_bounds = Self::taster_bounds(font_height, font_width);
         Signal::derive(move || taster_bounds.get().width() + font_width.get())
     }
+}
 
+impl UseY {
     pub(crate) fn render<X: 'static, Y: 'static>(
         &self,
         data: UseData<X, Y>,
@@ -202,20 +204,20 @@ impl UseLine {
 #[component]
 pub fn RenderLine<X: 'static, Y: 'static>(
     data: UseData<X, Y>,
-    line: UseLine,
+    line: UseY,
     positions: Signal<Vec<(f64, f64)>>,
     markers: Signal<Vec<(f64, f64)>>,
 ) -> impl IntoView {
-    let path = move || positions.with(|positions| line.interpolation.get().path(positions));
+    let path = move || positions.with(|positions| line.line.interpolation.get().path(positions));
 
     // Line colour
     let gradient_id = format!("line_{}_gradient", line.id);
     let stroke = {
-        let colour = line.colour;
+        let colour = line.line.colour;
         let gradient_id = gradient_id.clone();
         Signal::derive(move || {
             // Gradient takes precedence
-            if line.gradient.get().is_some() {
+            if line.line.gradient.get().is_some() {
                 format!("url(#{gradient_id})")
             } else {
                 colour.get().to_string()
@@ -223,7 +225,8 @@ pub fn RenderLine<X: 'static, Y: 'static>(
         })
     };
     let gradient = move || {
-        line.gradient
+        line.line
+            .gradient
             .get()
             .unwrap_or_else(|| LINEAR_GRADIENT.into())
     };
@@ -234,9 +237,9 @@ pub fn RenderLine<X: 'static, Y: 'static>(
             stroke=stroke
             stroke-linecap="round"
             stroke-linejoin="bevel"
-            stroke-width=line.width>
+            stroke-width=line.line.width>
             <defs>
-                <Show when=move || line.gradient.get().is_some()>
+                <Show when=move || line.line.gradient.get().is_some()>
                     <LinearGradientSvg
                         id=gradient_id.clone()
                         scheme=gradient
@@ -250,7 +253,7 @@ pub fn RenderLine<X: 'static, Y: 'static>(
 }
 
 #[component]
-pub fn Snippet<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
+pub fn Snippet<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
     let name = series.name;
     view! {
@@ -263,7 +266,7 @@ pub fn Snippet<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> i
 }
 
 #[component]
-fn Taster<X: 'static, Y: 'static>(series: UseLine, state: State<X, Y>) -> impl IntoView {
+fn Taster<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl IntoView {
     const Y_OFFSET: f64 = 2.0;
     let debug = state.pre.debug;
     let font_width = state.pre.font_width;

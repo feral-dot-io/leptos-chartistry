@@ -1,10 +1,10 @@
-use crate::{bounds::Bounds, series::UseLine, state::State, Series, Tick};
+use crate::{bounds::Bounds, series::UseY, state::State, Series, Tick};
 use leptos::*;
 use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {
-    pub series: Memo<Vec<UseLine>>,
+    pub series: Memo<Vec<UseY>>,
 
     pub data_x: Memo<Vec<X>>,
     data_y: Memo<Vec<HashMap<usize, Y>>>,
@@ -240,7 +240,7 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
         create_memo(move |_| index.get().map(|index| positions_x.with(|pos| pos[index])))
     }
 
-    pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Memo<Vec<(UseLine, Option<Y>)>>
+    pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Memo<Vec<(UseY, Option<Y>)>>
     where
         Y: Clone + PartialEq,
     {

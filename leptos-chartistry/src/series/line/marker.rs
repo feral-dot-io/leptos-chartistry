@@ -1,4 +1,4 @@
-use super::UseLine;
+use super::UseY;
 use crate::colours::Colour;
 use leptos::*;
 
@@ -94,8 +94,8 @@ impl Marker {
 }
 
 #[component]
-pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
-    let marker = line.marker.clone();
+pub(super) fn LineMarkers(line: UseY, positions: Signal<Vec<(f64, f64)>>) -> impl IntoView {
+    let marker = line.line.marker.clone();
 
     // Disable border if no marker
     let border_width = Signal::derive(move || {
@@ -108,7 +108,7 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
 
     let markers = move || {
         // Size of our marker: proportionate to our line width
-        let line_width = line.width.get();
+        let line_width = line.line.width.get();
         let diameter = line_width * WIDTH_TO_MARKER * marker.scale.get();
 
         positions.with(|positions| {
@@ -131,8 +131,8 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
 
     view! {
         <g
-            fill=move || marker.colour.get().unwrap_or_else(|| line.colour.get()).to_string()
-            stroke=move || marker.border.get().unwrap_or_else(|| line.colour.get()).to_string()
+            fill=move || marker.colour.get().unwrap_or_else(|| line.line.colour.get()).to_string()
+            stroke=move || marker.border.get().unwrap_or_else(|| line.line.colour.get()).to_string()
             stroke-width=move || border_width.get() * 2.0 // Half of the stroke is inside
             class="_chartistry_line_markers">
             {markers}
