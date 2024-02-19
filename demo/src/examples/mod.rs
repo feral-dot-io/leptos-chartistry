@@ -16,6 +16,7 @@ pub mod inner_layout;
 pub mod inner_legend;
 pub mod interpolation_mixed;
 pub mod interpolation_stepped;
+pub mod series_bar;
 pub mod series_line;
 pub mod series_line_stack;
 
