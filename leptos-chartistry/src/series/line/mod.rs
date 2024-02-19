@@ -3,7 +3,7 @@ mod marker;
 pub use interpolation::{Interpolation, Step};
 pub use marker::{Marker, MarkerShape};
 
-use super::{ApplyUseSeries, IntoUseY, SeriesAcc, UseData, UseY};
+use super::{use_y::UseYDesc, ApplyUseSeries, IntoUseY, SeriesAcc, UseData, UseY};
 use crate::{
     bounds::Bounds,
     colours::{Colour, DivergingGradient, LinearGradientSvg, SequentialGradient, BERLIN, LIPARI},
@@ -168,13 +168,13 @@ impl<T, Y> IntoUseY<T, Y> for Line<T, Y> {
         let line = UseY {
             id,
             name: self.name,
-            line: UseLine {
+            desc: UseYDesc::Line(UseLine {
                 colour,
                 gradient: self.gradient,
                 width: self.width,
                 interpolation: self.interpolation,
                 marker: self.marker.clone(),
-            },
+            }),
         };
         (line, self.get_y.clone())
     }
@@ -191,33 +191,24 @@ impl UseLine {
     }
 }
 
-impl UseY {
-    pub(crate) fn render<X: 'static, Y: 'static>(
-        &self,
-        data: UseData<X, Y>,
-        positions: Signal<Vec<(f64, f64)>>,
-    ) -> View {
-        view!( <RenderLine data=data line=self.clone() positions=positions markers=positions /> )
-    }
-}
-
 #[component]
 pub fn RenderLine<X: 'static, Y: 'static>(
+    use_y: UseY,
+    line: UseLine,
     data: UseData<X, Y>,
-    line: UseY,
     positions: Signal<Vec<(f64, f64)>>,
     markers: Signal<Vec<(f64, f64)>>,
 ) -> impl IntoView {
-    let path = move || positions.with(|positions| line.line.interpolation.get().path(positions));
+    let path = move || positions.with(|positions| line.interpolation.get().path(positions));
 
     // Line colour
-    let gradient_id = format!("line_{}_gradient", line.id);
+    let gradient_id = format!("line_{}_gradient", use_y.id);
     let stroke = {
-        let colour = line.line.colour;
+        let colour = line.colour;
         let gradient_id = gradient_id.clone();
         Signal::derive(move || {
             // Gradient takes precedence
-            if line.line.gradient.get().is_some() {
+            if line.gradient.get().is_some() {
                 format!("url(#{gradient_id})")
             } else {
                 colour.get().to_string()
@@ -225,8 +216,7 @@ pub fn RenderLine<X: 'static, Y: 'static>(
         })
     };
     let gradient = move || {
-        line.line
-            .gradient
+        line.gradient
             .get()
             .unwrap_or_else(|| LINEAR_GRADIENT.into())
     };
@@ -237,9 +227,9 @@ pub fn RenderLine<X: 'static, Y: 'static>(
             stroke=stroke
             stroke-linecap="round"
             stroke-linejoin="bevel"
-            stroke-width=line.line.width>
+            stroke-width=line.width>
             <defs>
-                <Show when=move || line.line.gradient.get().is_some()>
+                <Show when=move || line.gradient.get().is_some()>
                     <LinearGradientSvg
                         id=gradient_id.clone()
                         scheme=gradient
@@ -283,6 +273,18 @@ fn Taster<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl Into
         let bounds = bounds.get();
         vec![(bounds.centre_x(), bounds.centre_y() + Y_OFFSET)]
     });
+
+    let render_desc = match &series.desc {
+        UseYDesc::Line(line) => view! {
+            <RenderLine
+                use_y=series.clone()
+                line=line.clone()
+                data=state.pre.data
+                positions=positions
+                markers=markers />
+        },
+    };
+
     view! {
         <svg
             viewBox=move || format!("0 0 {} {}", bounds.get().width(), bounds.get().height())
@@ -293,7 +295,7 @@ fn Taster<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl Into
             style:padding-right=move || format!("{}px", right_padding.get())
             >
             <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
-            <RenderLine data=state.pre.data line=series positions=positions markers=markers />
+            {render_desc}
         </svg>
     }
 }

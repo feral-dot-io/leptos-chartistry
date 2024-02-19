@@ -288,8 +288,8 @@ pub fn RenderData<X: Tick, Y: Tick>(state: State<X, Y>) -> impl IntoView {
         <g class="_chartistry_series">
             <For
                 each=move || data.series.get()
-                key=|line| line.id
-                children=move |line| line.render(data.clone(), mk_svg_coords(line.id))
+                key=|use_y| use_y.id
+                children=move |use_y| use_y.render(data.clone(), mk_svg_coords(use_y.id))
             />
         </g>
     }

@@ -1,6 +1,7 @@
 mod line;
 mod stack;
 mod use_data;
+mod use_y;
 
 pub use line::{
     Interpolation, Line, Marker, MarkerShape, Snippet, Step, UseLine, DIVERGING_GRADIENT,
@@ -8,6 +9,7 @@ pub use line::{
 };
 pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
+pub use use_y::UseY;
 
 use crate::colours::{Colour, ColourScheme};
 use leptos::signal_prelude::*;
@@ -125,13 +127,6 @@ trait ApplyUseSeries<T, Y> {
 
 trait IntoUseY<T, Y> {
     fn into_use_y(self, id: usize, colour: Memo<Colour>) -> (UseY, GetY<T, Y>);
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct UseY {
-    pub id: usize,
-    pub name: RwSignal<String>,
-    line: UseLine,
 }
 
 struct SeriesAcc<T, Y> {
