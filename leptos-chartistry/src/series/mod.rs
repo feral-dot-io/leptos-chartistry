@@ -106,7 +106,7 @@ trait GetYValue<T, Y> {
 #[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
-    lines: Vec<Rc<dyn ApplyUseSeries<T, Y>>>,
+    series: Vec<Rc<dyn ApplyUseSeries<T, Y>>>,
     /// Optional minimum X value. Extends the lower bound of the X axis if set.
     pub min_x: RwSignal<Option<X>>,
     /// Optional maximum X value. Extends the upper bound of the X axis if set.
@@ -147,7 +147,7 @@ impl<T, X, Y> Series<T, X, Y> {
             min_y: RwSignal::default(),
             max_y: RwSignal::default(),
             colours: create_rw_signal(SERIES_COLOUR_SCHEME.into()),
-            lines: Vec::new(),
+            series: Vec::new(),
         }
     }
 
@@ -193,7 +193,7 @@ impl<T, X, Y> Series<T, X, Y> {
 
     /// Adds a line to the series. See [Line] for more details.
     pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
-        self.lines.push(Rc::new(line.into()));
+        self.series.push(Rc::new(line.into()));
         self
     }
 
@@ -207,18 +207,18 @@ impl<T, X, Y> Series<T, X, Y> {
 
     /// Gets the current size of the series (number of lines and stacks).
     pub fn len(&self) -> usize {
-        self.lines.len()
+        self.series.len()
     }
 
     /// Returns true if the series is empty.
     pub fn is_empty(&self) -> bool {
-        self.lines.is_empty()
+        self.series.is_empty()
     }
 
     fn to_use_lines(&self) -> Vec<(UseLine, GetY<T, Y>)> {
         let mut series = SeriesAcc::new(self.colours);
-        for line in self.lines.clone() {
-            line.apply_use_series(&mut series);
+        for seq in self.series.clone() {
+            seq.apply_use_series(&mut series);
         }
         series.lines
     }
@@ -227,7 +227,7 @@ impl<T, X, Y> Series<T, X, Y> {
 impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
     /// Adds a stack to the series. See [Stack] for more details.
     pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
-        self.lines.push(Rc::new(stack.into()));
+        self.series.push(Rc::new(stack.into()));
         self
     }
 }
