@@ -1,5 +1,8 @@
-use super::{UseData, UseLine};
-use crate::{bounds::Bounds, debug::DebugRect, series::line::RenderLine, state::State};
+use super::{
+    bar::{RenderBar, UseBar},
+    line::{RenderLine, UseLine},
+};
+use crate::{bounds::Bounds, debug::DebugRect, state::State};
 use leptos::*;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -12,12 +15,25 @@ pub struct UseY {
 #[derive(Clone, Debug, PartialEq)]
 enum UseYDesc {
     Line(UseLine),
+    Bar(UseBar),
 }
 
 impl UseY {
     pub(super) fn new_line(id: usize, name: RwSignal<String>, line: UseLine) -> Self {
         let desc = UseYDesc::Line(line);
         Self { id, name, desc }
+    }
+
+    pub(super) fn new_bar(id: usize, name: RwSignal<String>, bar: UseBar) -> Self {
+        let desc = UseYDesc::Bar(bar);
+        Self { id, name, desc }
+    }
+
+    pub(super) fn bar(&self) -> Option<&UseBar> {
+        match &self.desc {
+            UseYDesc::Bar(bar) => Some(bar),
+            _ => None,
+        }
     }
 
     fn taster_bounds(font_height: Memo<f64>, font_width: Memo<f64>) -> Memo<Bounds> {
@@ -33,7 +49,7 @@ impl UseY {
 #[component]
 pub(super) fn RenderUseY<X: 'static, Y: 'static>(
     use_y: UseY,
-    data: UseData<X, Y>,
+    state: State<X, Y>,
     positions: Signal<Vec<(f64, f64)>>,
 ) -> impl IntoView {
     let desc = use_y.desc.clone();
@@ -42,9 +58,16 @@ pub(super) fn RenderUseY<X: 'static, Y: 'static>(
             <RenderLine
                 use_y=use_y
                 line=line
-                data=data
+                data=state.pre.data
                 positions=positions
                 markers=positions />
+        },
+        UseYDesc::Bar(bar) => view! {
+            <RenderBar
+                use_y=use_y
+                bar=bar
+                state=state
+                positions=positions />
         },
     }
 }
@@ -75,20 +98,29 @@ fn Taster<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl Into
         let y = bounds.centre_y() + Y_OFFSET;
         vec![(bounds.left_x(), y), (bounds.right_x(), y)]
     });
-    // One marker in the middle
-    let markers = Signal::derive(move || {
-        let bounds = bounds.get();
-        vec![(bounds.centre_x(), bounds.centre_y() + Y_OFFSET)]
-    });
 
     let desc = match &series.desc {
-        UseYDesc::Line(line) => view! {
-            <RenderLine
+        UseYDesc::Line(line) => {
+            // One marker in the middle
+            let markers = Signal::derive(move || {
+                let bounds = bounds.get();
+                vec![(bounds.centre_x(), bounds.centre_y() + Y_OFFSET)]
+            });
+            view! {
+                <RenderLine
+                    use_y=series.clone()
+                    line=line.clone()
+                    data=state.pre.data
+                    positions=positions
+                    markers=markers />
+            }
+        }
+        UseYDesc::Bar(bar) => view! {
+            <RenderBar
                 use_y=series.clone()
-                line=line.clone()
-                data=state.pre.data
-                positions=positions
-                markers=markers />
+                bar=bar.clone()
+                state=state
+                positions=positions />
         },
     };
 

@@ -3,7 +3,7 @@ mod marker;
 pub use interpolation::{Interpolation, Step};
 pub use marker::{Marker, MarkerShape};
 
-use super::{ApplyUseSeries, IntoUseY, SeriesAcc, UseData, UseY};
+use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData, UseY};
 use crate::{
     colours::{Colour, DivergingGradient, LinearGradientSvg, SequentialGradient, BERLIN, LIPARI},
     series::GetYValue,
@@ -154,12 +154,12 @@ impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
 impl<T, Y> ApplyUseSeries<T, Y> for Line<T, Y> {
     fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
         let colour = series.next_colour();
-        _ = series.push(colour, (*self).clone());
+        _ = series.push_line(colour, (*self).clone());
     }
 }
 
-impl<T, Y> IntoUseY<T, Y> for Line<T, Y> {
-    fn into_use_y(self, id: usize, colour: Memo<Colour>) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
+impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
         let override_colour = self.colour;
         let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
         let line = UseY::new_line(

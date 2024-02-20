@@ -1,10 +1,12 @@
+mod bar;
 mod line;
 mod stack;
 mod use_data;
 mod use_y;
 
+pub use bar::Bar;
 pub use line::{
-    Interpolation, Line, Marker, MarkerShape, Step, UseLine, DIVERGING_GRADIENT, LINEAR_GRADIENT,
+    Interpolation, Line, Marker, MarkerShape, Step, DIVERGING_GRADIENT, LINEAR_GRADIENT,
 };
 pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
@@ -124,13 +126,19 @@ trait ApplyUseSeries<T, Y> {
     fn apply_use_series(self: Rc<Self>, _: &mut SeriesAcc<T, Y>);
 }
 
-trait IntoUseY<T, Y> {
-    fn into_use_y(self, id: usize, colour: Memo<Colour>) -> (UseY, GetY<T, Y>);
+trait IntoUseLine<T, Y> {
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, GetY<T, Y>);
+}
+
+trait IntoUseBar<T, Y> {
+    fn into_use_bar(self, id: usize, group_id: usize, colour: Memo<Colour>) -> (UseY, GetY<T, Y>);
 }
 
 struct SeriesAcc<T, Y> {
     colour_id: usize,
     colours: RwSignal<ColourScheme>,
+    next_id: usize,
+    next_group_id: usize,
     lines: Vec<(UseY, GetY<T, Y>)>,
 }
 
@@ -206,6 +214,18 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
+    pub fn bar(mut self, bar: impl Into<Bar<T, Y>>) -> Self {
+        self.series.push(Rc::new(bar.into()));
+        self
+    }
+
+    pub fn bars(mut self, bars: impl IntoIterator<Item = impl Into<Bar<T, Y>>>) -> Self {
+        for bar in bars {
+            self = self.bar(bar.into());
+        }
+        self
+    }
+
     /// Gets the current size of the series (number of lines and stacks).
     pub fn len(&self) -> usize {
         self.series.len()
@@ -238,6 +258,8 @@ impl<T, Y> SeriesAcc<T, Y> {
         Self {
             colour_id: 0,
             colours,
+            next_id: 0,
+            next_group_id: 0,
             lines: Vec::new(),
         }
     }
@@ -249,12 +271,25 @@ impl<T, Y> SeriesAcc<T, Y> {
         create_memo(move |_| colours.get().by_index(id))
     }
 
-    fn push(&mut self, colour: Memo<Colour>, line: impl IntoUseY<T, Y>) -> GetY<T, Y> {
+    fn push_line(&mut self, colour: Memo<Colour>, line: impl IntoUseLine<T, Y>) -> GetY<T, Y> {
         // Create line
-        let id = self.lines.len();
-        let (line, get_y) = line.into_use_y(id, colour);
+        let id = self.next_id;
+        self.next_id += 1;
+        let (line, get_y) = line.into_use_line(id, colour);
         // Insert line
         self.lines.push((line, get_y.clone()));
+        get_y
+    }
+
+    fn push_bar(&mut self, colour: Memo<Colour>, bar: impl IntoUseBar<T, Y>) -> GetY<T, Y> {
+        // Create bar
+        let id = self.next_id;
+        let group_id = self.next_group_id;
+        self.next_id += 1;
+        self.next_group_id += 1;
+        let (bar, get_y) = bar.into_use_bar(id, group_id, colour);
+        // Insert bar
+        self.lines.push((bar, get_y.clone()));
         get_y
     }
 }

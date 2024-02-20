@@ -269,7 +269,7 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
 
 #[component]
 pub fn RenderData<X: Tick, Y: Tick>(state: State<X, Y>) -> impl IntoView {
-    let data = state.pre.data;
+    let data = state.pre.data.clone();
     let pos_x = data.positions_x;
     let pos_y = data.positions_y;
     let proj = state.projection;
@@ -295,7 +295,7 @@ pub fn RenderData<X: Tick, Y: Tick>(state: State<X, Y>) -> impl IntoView {
                 each=move || data.series.get()
                 key=|use_y| use_y.id
                 let:use_y>
-                <RenderUseY use_y=use_y.clone() data=data.clone() positions=mk_svg_coords(use_y.id) />
+                <RenderUseY use_y=use_y.clone() state=state.clone() positions=mk_svg_coords(use_y.id) />
             </For>
         </g>
     }
