@@ -1,8 +1,8 @@
+mod data;
 mod range;
-mod values;
 
+pub use data::Data;
 pub use range::Range;
-pub use values::Data;
 
 use crate::{
     series::{use_y::RenderUseY, UseY},
