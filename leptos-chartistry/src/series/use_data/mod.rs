@@ -1,43 +1,58 @@
+mod values;
+
+use self::values::{Range, Values};
 use crate::{
-    bounds::Bounds,
     series::{use_y::RenderUseY, UseY},
     state::State,
     Series, Tick,
 };
 use leptos::*;
-use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {
     pub series: Memo<Vec<UseY>>,
 
-    pub data_x: Memo<Vec<X>>,
-    data_y: Memo<Vec<HashMap<usize, Y>>>,
-
-    pub range_x: Memo<Option<(X, X)>>,
-    /// Yields the min / max Y values. Still returns a range if min / max are set and no data.
-    pub range_y: Memo<Option<(Y, Y)>>,
-
-    pub positions_x: Memo<Vec<f64>>,
-    positions_y: Memo<Vec<HashMap<usize, f64>>>,
-    pub position_range: Memo<Bounds>,
+    values: Memo<Values<X, Y>>,
+    range_x: Memo<Range<X>>,
+    range_y: Memo<Range<Y>>,
 }
 
 impl<X: Tick, Y: Tick> UseData<X, Y> {
     pub fn new<T: 'static>(series: Series<T, X, Y>, data: Signal<Vec<T>>) -> UseData<X, Y> {
         let lines = series.to_use_lines();
-        let Series {
-            get_x,
-            min_x,
-            max_x,
-            min_y,
-            max_y,
-            ..
-        } = series;
+
+        // Data -> values
+        let values = {
+            create_memo(move |_| {
+                data.with(move |data| {
+                    Values::new(
+                        series.get_x,
+                        lines
+                            .clone()
+                            .into_iter()
+                            .map(|(use_y, get_y)| (use_y.id, get_y))
+                            .collect(),
+                        data,
+                    )
+                })
+            })
+        };
+
+        // Range signals
+        let range_x: Memo<Range<X>> = create_memo(move |_| {
+            values
+                .with(|values| values.range_x.clone())
+                .maybe_update(vec![series.min_x.get(), series.max_x.get()])
+        });
+        let range_y: Memo<Range<Y>> = create_memo(move |_| {
+            values
+                .with(|values| values.range_y.clone())
+                .maybe_update(vec![series.min_y.get(), series.max_y.get()])
+        });
 
         // Sort series by name
         let series = {
-            let (lines, _): (Vec<_>, Vec<_>) = lines.clone().into_iter().unzip();
+            let (lines, _): (Vec<_>, Vec<_>) = lines.into_iter().unzip();
             create_memo(move |_| {
                 let mut lines = lines.clone();
                 lines.sort_by_key(|line| line.name.get());
@@ -45,109 +60,11 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
             })
         };
 
-        // Data signals
-        let data_x = create_memo(move |_| {
-            data.with(|data| data.iter().map(|datum| (get_x)(datum)).collect::<Vec<_>>())
-        });
-        let y_maker = |which: bool| {
-            let lines = lines.clone();
-            create_memo(move |_| {
-                data.with(|data| {
-                    data.iter()
-                        .map(|datum| {
-                            lines
-                                .iter()
-                                .map(|(line, get_y)| {
-                                    let y = if which {
-                                        get_y.value(datum)
-                                    } else {
-                                        get_y.cumulative_value(datum)
-                                    };
-                                    (line.id, y)
-                                })
-                                .collect::<HashMap<_, _>>()
-                        })
-                        .collect::<Vec<_>>()
-                })
-            })
-        };
-        // Generate two sets of Ys: original and cumulative value. They can differ when stacked
-        let data_y = y_maker(true);
-        let data_y_cumulative = y_maker(false);
-
-        // Position signals
-        let positions_x = create_memo(move |_| {
-            data_x.with(move |data_x| data_x.iter().map(|x| x.position()).collect::<Vec<_>>())
-        });
-        let positions_y = create_memo(move |_| {
-            data_y_cumulative
-                .get()
-                .into_iter()
-                .map(|ys| {
-                    ys.into_iter()
-                        .map(|(id, y)| (id, y.position()))
-                        .collect::<HashMap<_, _>>()
-                })
-                .collect::<Vec<_>>()
-        });
-
-        // Range signals
-        let range_x: Memo<Option<(X, X)>> = create_memo(move |_| {
-            let range = with!(|positions_x, data_x| {
-                positions_x
-                    .iter()
-                    .enumerate()
-                    .fold(None, range_minmax_acc)
-                    .map(|((min_i, _), (max_i, _))| {
-                        let min_x = data_x[min_i].clone();
-                        let max_x = data_x[max_i].clone();
-                        (min_x, max_x)
-                    })
-            });
-            extend_range(range, min_x.get(), max_x.get())
-        });
-        let range_y: Memo<Option<(Y, Y)>> = create_memo(move |_| {
-            let range = with!(|positions_y| {
-                positions_y
-                    .iter()
-                    .enumerate()
-                    .fold(None, |acc, (i, ys)| {
-                        ys.iter()
-                            .map(|(j, y)| ((i, j), y))
-                            .fold(acc, range_minmax_acc)
-                    })
-                    .map(|(((min_i, min_j), _), ((max_i, max_j), _))| {
-                        data_y_cumulative.with(|data_y| {
-                            let min_y = data_y[min_i].get(min_j).unwrap().clone();
-                            let max_y = data_y[max_i].get(max_j).unwrap().clone();
-                            (min_y, max_y)
-                        })
-                    })
-            });
-            extend_range(range, min_y.get(), max_y.get())
-        });
-        // Position range signal
-        let position_range = create_memo(move |_| {
-            let (min_x, max_x) = range_x
-                .get()
-                .map(|(min, max)| (min.position(), max.position()))
-                .unwrap_or_default();
-            let (min_y, max_y) = range_y
-                .get()
-                .map(|(min, max)| (min.position(), max.position()))
-                .unwrap_or_default();
-            Bounds::from_points(min_x, min_y, max_x, max_y)
-        });
-
         UseData {
             series,
-            data_x,
-            data_y,
+            values,
             range_x,
             range_y,
-            positions_x,
-            positions_y,
-            position_range,
         }
     }
 }
