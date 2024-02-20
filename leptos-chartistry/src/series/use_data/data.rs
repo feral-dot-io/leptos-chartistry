@@ -17,12 +17,8 @@ pub struct Data<X, Y> {
     pub range_y: Range<Y>,
 }
 
-impl<X, Y> Data<X, Y> {
-    pub fn new<T>(get_x: GetX<T, X>, get_ys: HashMap<usize, GetY<T, Y>>, data: &[T]) -> Self
-    where
-        X: Tick,
-        Y: Tick,
-    {
+impl<X: Tick, Y: Tick> Data<X, Y> {
+    pub fn new<T>(get_x: GetX<T, X>, get_ys: HashMap<usize, GetY<T, Y>>, data: &[T]) -> Self {
         let cap = data.len();
         let y_cap = get_ys.len();
 
@@ -89,6 +85,17 @@ impl<X, Y> Data<X, Y> {
         } else {
             Some(index - 1)
         }
+    }
+
+    pub fn nearest_data_x(&self, pos_x: f64) -> Option<X> {
+        self.nearest_index(pos_x)
+            .map(|index| self.data_x[index].clone())
+    }
+
+    /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
+    pub fn nearest_aligned_position_x(&self, pos_x: f64) -> Option<f64> {
+        self.nearest_index(pos_x)
+            .map(|index| self.positions_x[index])
     }
 }
 
@@ -173,5 +180,23 @@ mod tests {
     fn test_nearest_index_empty() {
         let data = test_data(&[]);
         assert_eq!(data.nearest_index(0.5), None);
+    }
+
+    #[test]
+    fn test_nearest_data_x() {
+        let data = test_data(DATA);
+        assert_eq!(data.nearest_data_x(0.5), Some(1.0));
+        assert_eq!(data.nearest_data_x(8.0), Some(7.0));
+        assert_eq!(data.nearest_data_x(3.0), Some(4.0));
+        assert_eq!(data.nearest_data_x(4.0), Some(4.0));
+    }
+
+    #[test]
+    fn test_nearest_aligned_position_x() {
+        let data = test_data(DATA);
+        assert_eq!(data.nearest_aligned_position_x(0.5), Some(1.0));
+        assert_eq!(data.nearest_aligned_position_x(8.0), Some(7.0));
+        assert_eq!(data.nearest_aligned_position_x(3.0), Some(4.0));
+        assert_eq!(data.nearest_aligned_position_x(4.0), Some(4.0));
     }
 }

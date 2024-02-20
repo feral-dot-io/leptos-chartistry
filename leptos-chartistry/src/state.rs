@@ -4,7 +4,7 @@ use crate::{
     projection::Projection,
     series::{UseData, UseY},
     use_watched_node::UseWatchedNode,
-    Padding,
+    Padding, Tick,
 };
 use leptos::signal_prelude::*;
 
@@ -62,7 +62,7 @@ impl<X, Y> PreState<X, Y> {
     }
 }
 
-impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y> {
+impl<X: Tick, Y: Tick> State<X, Y> {
     pub fn new(
         pre: PreState<X, Y>,
         node: &UseWatchedNode,
@@ -80,7 +80,7 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
         });
         let hover_data_x = Signal::derive(move || hover_data.get().0);
 
-        let nearest_pos_x = pre.data.nearest_position_x(hover_data_x);
+        let nearest_pos_x = pre.data.nearest_aligned_position_x(hover_data_x);
         let nearest_svg_x = create_memo(move |_| {
             nearest_pos_x.get().map(|pos_x| {
                 let (svg_x, _) = proj.get().position_to_svg(pos_x, 0.0);

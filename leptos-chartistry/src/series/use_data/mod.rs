@@ -1,7 +1,6 @@
 mod data;
 mod range;
 
-pub use data::Data;
 pub use range::Range;
 
 use crate::{
@@ -9,6 +8,7 @@ use crate::{
     state::State,
     Series, Tick,
 };
+use data::Data;
 use leptos::*;
 
 #[derive(Clone)]
@@ -71,46 +71,29 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
     }
 }
 
-impl<X: 'static, Y: 'static> UseData<X, Y> {
-    pub fn nearest_data_x(&self, pos_x: Signal<f64>) -> Memo<Option<X>>
-    where
-        X: Clone + PartialEq,
-    {
+impl<X: Tick, Y: Tick> UseData<X, Y> {
+    pub fn nearest_data_x(&self, pos_x: Signal<f64>) -> Memo<Option<X>> {
         let data = self.data;
-        create_memo(move |_| {
-            data.with(|data| {
-                data.nearest_index(pos_x.get())
-                    .map(|index| data.data_x[index].clone())
-            })
-        })
+        create_memo(move |_| data.with(|data| data.nearest_data_x(pos_x.get())))
     }
 
-    /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
-    pub fn nearest_position_x(&self, pos_x: Signal<f64>) -> Memo<Option<f64>> {
+    pub fn nearest_aligned_position_x(&self, pos_x: Signal<f64>) -> Memo<Option<f64>> {
         let data = self.data;
-        create_memo(move |_| {
-            data.with(|data| {
-                data.nearest_index(pos_x.get())
-                    .map(|index| data.positions_x[index])
-            })
-        })
+        create_memo(move |_| data.with(|data| data.nearest_aligned_position_x(pos_x.get())))
     }
 
-    pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Memo<Vec<(UseY, Option<Y>)>>
-    where
-        Y: Clone + PartialEq,
-    {
+    pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Memo<Vec<(UseY, Option<Y>)>> {
         let series = self.series;
         let data = self.data;
         create_memo(move |_| {
             data.with(|data| {
+                let index = data.nearest_index(pos_x.get());
                 series
                     .get()
                     .into_iter()
                     .map(|line| {
-                        let y_value = data
-                            .nearest_index(pos_x.get())
-                            .and_then(|index_x| data.data_y[index_x].get(&line.id).cloned());
+                        let y_value =
+                            index.and_then(|index_x| data.data_y[index_x].get(&line.id).cloned());
                         (line, y_value)
                     })
                     .collect::<Vec<_>>()
