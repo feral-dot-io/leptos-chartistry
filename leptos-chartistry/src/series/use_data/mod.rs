@@ -2,7 +2,7 @@ mod range;
 mod values;
 
 pub use range::Range;
-pub use values::Values;
+pub use values::Data;
 
 use crate::{
     series::{use_y::RenderUseY, UseY},
@@ -13,9 +13,8 @@ use leptos::*;
 
 #[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {
+    data: Memo<Data<X, Y>>,
     pub series: Memo<Vec<UseY>>,
-
-    values: Memo<Values<X, Y>>,
     pub range_x: Memo<Range<X>>,
     pub range_y: Memo<Range<Y>>,
 }
@@ -24,13 +23,13 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
     pub fn new<T: 'static>(series: Series<T, X, Y>, data: Signal<Vec<T>>) -> UseData<X, Y> {
         let lines = series.to_use_lines();
 
-        // Data -> values
-        let values = {
+        // Data values
+        let data = {
             let lines = lines.clone();
             create_memo(move |_| {
                 let get_x = series.get_x.clone();
                 data.with(|data| {
-                    Values::new(
+                    Data::new(
                         get_x,
                         lines
                             .clone()
@@ -45,13 +44,11 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 
         // Range signals
         let range_x: Memo<Range<X>> = create_memo(move |_| {
-            values
-                .with(|values| values.range_x.clone())
+            data.with(|data| data.range_x.clone())
                 .maybe_update(vec![series.min_x.get(), series.max_x.get()])
         });
         let range_y: Memo<Range<Y>> = create_memo(move |_| {
-            values
-                .with(|values| values.range_y.clone())
+            data.with(|data| data.range_y.clone())
                 .maybe_update(vec![series.min_y.get(), series.max_y.get()])
         });
 
@@ -67,7 +64,7 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 
         UseData {
             series,
-            values,
+            data,
             range_x,
             range_y,
         }
@@ -76,10 +73,10 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 
 impl<X: 'static, Y: 'static> UseData<X, Y> {
     fn nearest_index(&self, pos_x: Signal<f64>) -> Signal<Option<usize>> {
-        let values = self.values;
+        let data = self.data;
         Signal::derive(move || {
-            values.with(move |values| {
-                let positions_x = &values.positions_x;
+            data.with(move |data| {
+                let positions_x = &data.positions_x;
                 // No values
                 if positions_x.is_empty() {
                     return None;
@@ -111,23 +108,23 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
     where
         X: Clone + PartialEq,
     {
-        let values = self.values;
+        let data = self.data;
         let index = self.nearest_index(pos_x);
         create_memo(move |_| {
             index
                 .get()
-                .map(|index| values.with(|values| values.data_x[index].clone()))
+                .map(|index| data.with(|data| data.data_x[index].clone()))
         })
     }
 
     /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
     pub fn nearest_position_x(&self, pos_x: Signal<f64>) -> Memo<Option<f64>> {
-        let values = self.values;
+        let data = self.data;
         let index = self.nearest_index(pos_x);
         create_memo(move |_| {
             index
                 .get()
-                .map(|index| values.with(|values| values.positions_x[index]))
+                .map(|index| data.with(|data| data.positions_x[index]))
         })
     }
 
@@ -136,7 +133,7 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
         Y: Clone + PartialEq,
     {
         let series = self.series;
-        let values = self.values;
+        let data = self.data;
         let index_x = self.nearest_index(pos_x);
         create_memo(move |_| {
             let index_x = index_x.get();
@@ -145,7 +142,7 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
                 .into_iter()
                 .map(|line| {
                     let y_value = index_x.and_then(|index_x| {
-                        values.with(|values| values.data_y[index_x].get(&line.id).cloned())
+                        data.with(|data| data.data_y[index_x].get(&line.id).cloned())
                     });
                     (line, y_value)
                 })
@@ -160,7 +157,7 @@ pub fn RenderData<X: Tick, Y: Tick>(state: State<X, Y>) -> impl IntoView {
     let mk_svg_coords = move |id| {
         Signal::derive(move || {
             let proj = state.projection.get();
-            data.values.with(|data| {
+            data.data.with(|data| {
                 data.positions_x
                     .iter()
                     .enumerate()

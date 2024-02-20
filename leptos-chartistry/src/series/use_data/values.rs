@@ -6,7 +6,7 @@ use crate::{
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Values<X, Y> {
+pub struct Data<X, Y> {
     pub data_x: Vec<X>,
     pub data_y: Vec<HashMap<usize, Y>>,
 
@@ -17,7 +17,7 @@ pub struct Values<X, Y> {
     pub range_y: Range<Y>,
 }
 
-impl<X: Tick, Y: Tick> Values<X, Y> {
+impl<X: Tick, Y: Tick> Data<X, Y> {
     pub fn new<T>(get_x: GetX<T, X>, get_ys: HashMap<usize, GetY<T, Y>>, data: &[T]) -> Self {
         let cap = data.len();
         let y_cap = get_ys.len();
@@ -86,7 +86,7 @@ mod tests {
         get_ys.insert(66, Rc::new(|d: &MyData| d.y1));
         get_ys.insert(5, Rc::new(|d: &MyData| d.y2));
 
-        let pos = Values::new(
+        let pos = Data::new(
             Rc::new(|d: &MyData| d.x),
             get_ys,
             &[
