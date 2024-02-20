@@ -9,7 +9,7 @@ pub const BAR_GAP_INNER: f64 = 0.05;
 pub struct Bar<T, Y> {
     get_y: Rc<dyn GetYValue<T, Y>>,
     pub name: RwSignal<String>,
-    pub placement: RwSignal<Placement>,
+    pub placement: RwSignal<BarPlacement>,
     pub gap: RwSignal<f64>,
     pub group_gap: RwSignal<f64>,
     pub colour: RwSignal<Option<Colour>>,
@@ -17,7 +17,7 @@ pub struct Bar<T, Y> {
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
-pub enum Placement {
+pub enum BarPlacement {
     #[default]
     Zero,
     Edge,
@@ -26,7 +26,7 @@ pub enum Placement {
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseBar {
     group_id: usize,
-    placement: RwSignal<Placement>,
+    placement: RwSignal<BarPlacement>,
     gap: RwSignal<f64>,
     group_gap: RwSignal<f64>,
     colour: Signal<Colour>,
@@ -44,7 +44,7 @@ impl<T, Y> Bar<T, Y> {
         }
     }
 
-    pub fn with_placement(mut self, placement: Placement) -> Self {
+    pub fn with_placement(mut self, placement: BarPlacement) -> Self {
         self.placement.set(placement);
         self
     }
@@ -117,8 +117,8 @@ pub fn RenderBar<X: 'static, Y: 'static>(
         positions.with(|positions| {
             // Find the bottom Y position of each bar
             let bottom_y = match bar.placement.get() {
-                Placement::Zero => state.svg_zero.get().1,
-                Placement::Edge => state.layout.inner.get().bottom_y(),
+                BarPlacement::Zero => state.svg_zero.get().1,
+                BarPlacement::Edge => state.layout.inner.get().bottom_y(),
             };
 
             let gap = bar.gap.get().clamp(0.0, 1.0);

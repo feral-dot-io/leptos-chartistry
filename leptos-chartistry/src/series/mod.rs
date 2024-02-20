@@ -4,7 +4,7 @@ mod stack;
 mod use_data;
 mod use_y;
 
-pub use bar::Bar;
+pub use bar::{Bar, BarPlacement, BAR_GAP, BAR_GAP_INNER};
 pub use line::{
     Interpolation, Line, Marker, MarkerShape, Step, DIVERGING_GRADIENT, LINEAR_GRADIENT,
 };

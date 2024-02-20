@@ -87,7 +87,7 @@ pub use layout::{
 pub use overlay::tooltip::{Tooltip, TooltipPlacement, TooltipSortBy, TOOLTIP_CURSOR_DISTANCE};
 pub use padding::Padding;
 pub use series::{
-    Bar, Interpolation, Line, Marker, MarkerShape, Series, Stack, Step, DIVERGING_GRADIENT,
-    LINEAR_GRADIENT, SERIES_COLOUR_SCHEME, STACK_COLOUR_SCHEME,
+    Bar, BarPlacement, Interpolation, Line, Marker, MarkerShape, Series, Stack, Step, BAR_GAP,
+    BAR_GAP_INNER, DIVERGING_GRADIENT, LINEAR_GRADIENT, SERIES_COLOUR_SCHEME, STACK_COLOUR_SCHEME,
 };
 pub use ticks::{AlignedFloats, Period, Tick, Timestamps};
