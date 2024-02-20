@@ -219,7 +219,7 @@ pub fn RenderLine<X: 'static, Y: 'static>(
                     <LinearGradientSvg
                         id=gradient_id.clone()
                         scheme=gradient
-                        range=data.position_range />
+                        range_y=move || data.range_y.with(|range_y| range_y.positions()) />
                 </Show>
             </defs>
             <path d=path fill="none" />

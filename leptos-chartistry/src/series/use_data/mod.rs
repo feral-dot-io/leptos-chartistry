@@ -13,8 +13,8 @@ pub struct UseData<X: 'static, Y: 'static> {
     pub series: Memo<Vec<UseY>>,
 
     values: Memo<Values<X, Y>>,
-    range_x: Memo<Range<X>>,
-    range_y: Memo<Range<Y>>,
+    pub range_x: Memo<Range<X>>,
+    pub range_y: Memo<Range<Y>>,
 }
 
 impl<X: Tick, Y: Tick> UseData<X, Y> {
@@ -23,10 +23,12 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 
         // Data -> values
         let values = {
+            let lines = lines.clone();
             create_memo(move |_| {
-                data.with(move |data| {
+                let get_x = series.get_x.clone();
+                data.with(|data| {
                     Values::new(
-                        series.get_x,
+                        get_x,
                         lines
                             .clone()
                             .into_iter()
@@ -69,52 +71,12 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
     }
 }
 
-fn range_minmax_acc<K: Copy>(
-    acc: Option<((K, f64), (K, f64))>,
-    (key, &pos): (K, &f64),
-) -> Option<((K, f64), (K, f64))> {
-    if pos.is_finite() {
-        acc.map(|(min @ (_, min_pos), max @ (_, max_pos))| {
-            (
-                if pos < min_pos { (key, pos) } else { min },
-                if pos > max_pos { (key, pos) } else { max },
-            )
-        })
-        .or(Some(((key, pos), (key, pos))))
-    } else {
-        acc
-    }
-}
-
-/// If upper / lower are set, extends the given range (even if range is None).
-fn extend_range<V: Tick>(
-    range: Option<(V, V)>,
-    lower: Option<V>,
-    upper: Option<V>,
-) -> Option<(V, V)> {
-    // Find a V value
-    let (r0, r1) = range.clone().unzip();
-    let v = lower.clone().or(upper.clone()).or(r0).or(r1);
-    v.map(|v| {
-        // Unravel options
-        let (min, max) = range.unwrap_or_else(|| (v.clone(), v.clone()));
-        let lower = lower.unwrap_or_else(|| v.clone());
-        let upper = upper.unwrap_or_else(|| v.clone());
-        let lower_p = lower.position();
-        let upper_p = upper.position();
-        // Extend range?
-        (
-            if min.position() < lower_p { min } else { lower },
-            if max.position() > upper_p { max } else { upper },
-        )
-    })
-}
-
 impl<X: 'static, Y: 'static> UseData<X, Y> {
     fn nearest_index(&self, pos_x: Signal<f64>) -> Signal<Option<usize>> {
-        let positions_x = self.positions_x;
+        let values = self.values;
         Signal::derive(move || {
-            positions_x.with(move |positions_x| {
+            values.with(move |values| {
+                let positions_x = &values.positions_x;
                 // No values
                 if positions_x.is_empty() {
                     return None;
@@ -146,20 +108,24 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
     where
         X: Clone + PartialEq,
     {
-        let data_x = self.data_x;
+        let values = self.values;
         let index = self.nearest_index(pos_x);
         create_memo(move |_| {
             index
                 .get()
-                .map(|index| with!(|data_x| data_x[index].clone()))
+                .map(|index| values.with(|values| values.data_x[index].clone()))
         })
     }
 
     /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
     pub fn nearest_position_x(&self, pos_x: Signal<f64>) -> Memo<Option<f64>> {
-        let positions_x = self.positions_x;
+        let values = self.values;
         let index = self.nearest_index(pos_x);
-        create_memo(move |_| index.get().map(|index| positions_x.with(|pos| pos[index])))
+        create_memo(move |_| {
+            index
+                .get()
+                .map(|index| values.with(|values| values.positions_x[index]))
+        })
     }
 
     pub fn nearest_data_y(&self, pos_x: Signal<f64>) -> Memo<Vec<(UseY, Option<Y>)>>
@@ -167,7 +133,7 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
         Y: Clone + PartialEq,
     {
         let series = self.series;
-        let data_y = self.data_y;
+        let values = self.values;
         let index_x = self.nearest_index(pos_x);
         create_memo(move |_| {
             let index_x = index_x.get();
@@ -175,8 +141,9 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
                 .get()
                 .into_iter()
                 .map(|line| {
-                    let y_value = index_x
-                        .and_then(|index_x| with!(|data_y| data_y[index_x].get(&line.id).cloned()));
+                    let y_value = index_x.and_then(|index_x| {
+                        values.with(|values| values.data_y[index_x].get(&line.id).cloned())
+                    });
                     (line, y_value)
                 })
                 .collect::<Vec<_>>()
@@ -187,22 +154,19 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
 #[component]
 pub fn RenderData<X: Tick, Y: Tick>(state: State<X, Y>) -> impl IntoView {
     let data = state.pre.data;
-    let pos_x = data.positions_x;
-    let pos_y = data.positions_y;
-    let proj = state.projection;
     let mk_svg_coords = move |id| {
         Signal::derive(move || {
-            let proj = proj.get();
-            pos_x
-                .get()
-                .into_iter()
-                .enumerate()
-                .map(|(i, x)| {
-                    // TODO: our data model guarantees unwrap always succeeds but this doesn't hold true if we move to separated data iterators
-                    let y = pos_y.with(|pos_y| *pos_y[i].get(&id).unwrap());
-                    proj.position_to_svg(x, y)
-                })
-                .collect::<Vec<_>>()
+            let proj = state.projection.get();
+            data.values.with(|data| {
+                data.positions_x
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &x)| {
+                        let y = data.positions_y[i][&id];
+                        proj.position_to_svg(x, y)
+                    })
+                    .collect::<Vec<_>>()
+            })
         })
     };
 

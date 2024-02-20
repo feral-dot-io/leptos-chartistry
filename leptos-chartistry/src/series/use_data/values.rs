@@ -45,7 +45,7 @@ impl<X: Tick, Y: Tick> Values<X, Y> {
 
         for datum in data {
             // X
-            let x = (get_x)(&datum);
+            let x = (get_x)(datum);
             let x_position = x.position();
             built.range_x.update(&x, x_position);
 
@@ -56,8 +56,8 @@ impl<X: Tick, Y: Tick> Values<X, Y> {
             let mut y_data = HashMap::with_capacity(y_cap);
             let mut y_positions = HashMap::with_capacity(y_cap);
             for (&id, get_y) in get_ys.iter() {
-                let y = get_y.value(&datum);
-                let y_cumulative = get_y.cumulative_value(&datum);
+                let y = get_y.value(datum);
+                let y_cumulative = get_y.cumulative_value(datum);
                 // Note: cumulative can differ from Y when stacked
                 let y_position = y_cumulative.position();
                 built.range_y.update(&y, y_position);
@@ -79,20 +79,36 @@ impl<T> Default for Range<T> {
     }
 }
 
-impl<T: Tick> Range<T> {
-    pub fn update(&mut self, t: &T, pos: f64) {
-        if let Some(mut range) = self.0 {
+impl<T> Range<T> {
+    pub fn update(&mut self, t: &T, pos: f64)
+    where
+        T: Tick,
+    {
+        if let Some(range) = self.0.as_mut() {
             range.update(t, pos);
         } else {
             *self = Range(Some(InnerRange::new(t, pos)));
         }
     }
 
-    pub fn maybe_update(mut self, ts: Vec<Option<T>>) -> Self {
-        ts.into_iter().filter_map(|t| t).for_each(|t| {
+    pub fn maybe_update(mut self, ts: Vec<Option<T>>) -> Self
+    where
+        T: Tick,
+    {
+        ts.into_iter().flatten().for_each(|t| {
             self.update(&t, t.position());
         });
         self
+    }
+
+    // Returns the (min, max) of T if it exists
+    pub fn range(&self) -> Option<(&T, &T)> {
+        self.0.as_ref().map(|r| (&r.min, &r.max))
+    }
+
+    // Returns the (min, max) of T's position if it exists
+    pub fn positions(&self) -> Option<(f64, f64)> {
+        self.0.as_ref().map(|r| (r.min_position, r.max_position))
     }
 }
 

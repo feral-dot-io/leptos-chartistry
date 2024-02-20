@@ -250,11 +250,14 @@ fn RenderChart<'a, X: Tick, Y: Tick>(
     let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre_state);
 
     // Finalise state
-    let projection = {
-        let inner = layout.inner;
-        let position_range = pre_state.data.position_range;
-        create_memo(move |_| Projection::new(inner.get(), position_range.get())).into()
-    };
+    let projection = create_memo(move |_| {
+        Projection::new(
+            layout.inner.get(),
+            pre_state.data.range_x.get().positions(),
+            pre_state.data.range_y.get().positions(),
+        )
+    })
+    .into();
     let state = State::new(pre_state, &watch, layout, projection);
 
     // Render edges
