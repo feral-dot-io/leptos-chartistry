@@ -1,5 +1,5 @@
 use super::UseInner;
-use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State};
+use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State, Tick};
 use leptos::*;
 use std::{rc::Rc, str::FromStr};
 
@@ -73,7 +73,7 @@ struct UseXGuideLine(XGuideLine);
 struct UseYGuideLine(YGuideLine);
 
 impl XGuideLine {
-    pub(crate) fn use_horizontal<X, Y>(self) -> Rc<dyn UseInner<X, Y>> {
+    pub(crate) fn use_horizontal<X: Tick, Y: Tick>(self) -> Rc<dyn UseInner<X, Y>> {
         Rc::new(UseXGuideLine(self))
     }
 }
@@ -104,7 +104,7 @@ impl FromStr for AlignOver {
     }
 }
 
-impl<X, Y> UseInner<X, Y> for UseXGuideLine {
+impl<X: Tick, Y: Tick> UseInner<X, Y> for UseXGuideLine {
     fn render(self: Rc<Self>, state: State<X, Y>) -> View {
         view!( <XGuideLine line=self.0.clone() state=state /> )
     }
@@ -117,10 +117,18 @@ impl<X, Y> UseInner<X, Y> for UseYGuideLine {
 }
 
 #[component]
-fn XGuideLine<X: 'static, Y: 'static>(line: XGuideLine, state: State<X, Y>) -> impl IntoView {
+fn XGuideLine<X: Tick, Y: Tick>(line: XGuideLine, state: State<X, Y>) -> impl IntoView {
     let inner = state.layout.inner;
     let mouse_chart = state.mouse_chart;
-    let nearest_svg_x = state.nearest_svg_x;
+
+    // Data alignment
+    let nearest_pos_x = state.pre.data.nearest_position_x(state.hover_position_x);
+    let nearest_svg_x = create_memo(move |_| {
+        nearest_pos_x
+            .get()
+            .map(|pos_x| state.projection.get().position_to_svg(pos_x, 0.0).0)
+    });
+
     let pos = Signal::derive(move || {
         let (mouse_x, _) = mouse_chart.get();
         let x = match line.align.get() {
@@ -130,6 +138,7 @@ fn XGuideLine<X: 'static, Y: 'static>(line: XGuideLine, state: State<X, Y>) -> i
         let inner = inner.get();
         Bounds::from_points(x, inner.top_y(), x, inner.bottom_y())
     });
+
     view! {
         <GuideLine id="x" width=line.width colour=line.colour state=state pos=pos />
     }

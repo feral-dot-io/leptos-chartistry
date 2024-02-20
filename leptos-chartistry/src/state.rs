@@ -35,9 +35,6 @@ pub struct State<X: 'static, Y: 'static> {
     pub hover_position_x: Memo<f64>,
     /// Y mouse coord in data position space
     pub hover_position_y: Memo<f64>,
-
-    /// X coord of nearest mouse data in SVG space
-    pub nearest_svg_x: Memo<Option<f64>>,
 }
 
 impl<X, Y> PreState<X, Y> {
@@ -77,14 +74,6 @@ impl<X: Tick, Y: Tick> State<X, Y> {
         let hover_position_x = create_memo(move |_| hover_position.get().0);
         let hover_position_y = create_memo(move |_| hover_position.get().1);
 
-        let nearest_pos_x = pre.data.nearest_aligned_position_x(hover_position_x);
-        let nearest_svg_x = create_memo(move |_| {
-            nearest_pos_x.get().map(|pos_x| {
-                let (svg_x, _) = proj.get().position_to_svg(pos_x, 0.0);
-                svg_x
-            })
-        });
-
         Self {
             pre,
             layout,
@@ -98,8 +87,6 @@ impl<X: Tick, Y: Tick> State<X, Y> {
             hover_inner,
             hover_position_x,
             hover_position_y,
-
-            nearest_svg_x,
         }
     }
 }
