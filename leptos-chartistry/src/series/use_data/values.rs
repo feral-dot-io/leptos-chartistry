@@ -12,12 +12,15 @@ pub struct Values<X, Y> {
     pub positions_x: Vec<f64>,
     pub positions_y: Vec<HashMap<usize, f64>>,
 
-    pub range_x: Option<Range<X>>,
-    pub range_y: Option<Range<Y>>,
+    pub range_x: Range<X>,
+    pub range_y: Range<Y>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Range<T> {
+pub struct Range<T>(Option<InnerRange<T>>);
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct InnerRange<T> {
     pub min: T,
     pub max: T,
 
@@ -36,15 +39,15 @@ impl<X: Tick, Y: Tick> Values<X, Y> {
             data_y: Vec::with_capacity(cap),
             positions_x: Vec::with_capacity(cap),
             positions_y: Vec::with_capacity(cap),
-            range_x: None,
-            range_y: None,
+            range_x: Range::default(),
+            range_y: Range::default(),
         };
 
         for datum in data {
             // X
             let x = (get_x)(&datum);
             let x_position = x.position();
-            Range::option_update(&mut built.range_x, &x, x_position);
+            built.range_x.update(&x, x_position);
 
             built.data_x.push(x.clone());
             built.positions_x.push(x_position);
@@ -55,8 +58,9 @@ impl<X: Tick, Y: Tick> Values<X, Y> {
             for (&id, get_y) in get_ys.iter() {
                 let y = get_y.value(&datum);
                 let y_cumulative = get_y.cumulative_value(&datum);
+                // Note: cumulative can differ from Y when stacked
                 let y_position = y_cumulative.position();
-                Range::option_update(&mut built.range_y, &y, y_position);
+                built.range_y.update(&y, y_position);
 
                 y_data.insert(id, y);
                 y_positions.insert(id, y_position);
@@ -69,15 +73,30 @@ impl<X: Tick, Y: Tick> Values<X, Y> {
     }
 }
 
+impl<T> Default for Range<T> {
+    fn default() -> Self {
+        Self(None)
+    }
+}
+
 impl<T: Tick> Range<T> {
-    pub fn option_update(opt: &mut Option<Self>, t: &T, pos: f64) {
-        if let Some(range) = opt {
+    pub fn update(&mut self, t: &T, pos: f64) {
+        if let Some(mut range) = self.0 {
             range.update(t, pos);
         } else {
-            *opt = Some(Range::new(t, pos));
+            *self = Range(Some(InnerRange::new(t, pos)));
         }
     }
 
+    pub fn maybe_update(mut self, ts: Vec<Option<T>>) -> Self {
+        ts.into_iter().filter_map(|t| t).for_each(|t| {
+            self.update(&t, t.position());
+        });
+        self
+    }
+}
+
+impl<T: Tick> InnerRange<T> {
     pub fn new(t: &T, pos: f64) -> Self {
         Self {
             min: t.clone(),
@@ -157,21 +176,21 @@ mod tests {
         // Ranges
         assert_eq!(
             pos.range_x,
-            Some(Range {
+            Range(Some(InnerRange {
                 min: 1.0,
                 max: 7.0,
                 min_position: 1.0,
                 max_position: 7.0,
-            })
+            }))
         );
         assert_eq!(
             pos.range_y,
-            Some(Range {
+            Range(Some(InnerRange {
                 min: 2.0,
                 max: 9.0,
                 min_position: 2.0,
                 max_position: 9.0,
-            })
+            }))
         );
     }
 }
