@@ -1,6 +1,9 @@
+mod range;
 mod values;
 
-use self::values::{Range, Values};
+pub use range::Range;
+pub use values::Values;
+
 use crate::{
     series::{use_y::RenderUseY, UseY},
     state::State,
