@@ -17,8 +17,12 @@ pub struct Data<X, Y> {
     pub range_y: Range<Y>,
 }
 
-impl<X: Tick, Y: Tick> Data<X, Y> {
-    pub fn new<T>(get_x: GetX<T, X>, get_ys: HashMap<usize, GetY<T, Y>>, data: &[T]) -> Self {
+impl<X, Y> Data<X, Y> {
+    pub fn new<T>(get_x: GetX<T, X>, get_ys: HashMap<usize, GetY<T, Y>>, data: &[T]) -> Self
+    where
+        X: Tick,
+        Y: Tick,
+    {
         let cap = data.len();
         let y_cap = get_ys.len();
 
@@ -60,6 +64,32 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
         }
         built
     }
+
+    /// Finds the index of the _nearest_ position to the given X. Returns None if no data.
+    pub fn nearest_index(&self, pos_x: f64) -> Option<usize> {
+        // No values
+        if self.positions_x.is_empty() {
+            return None;
+        }
+        // Find index after pos
+        let index = self.positions_x.partition_point(|&v| v < pos_x);
+        // No value before
+        if index == 0 {
+            return Some(0);
+        }
+        // No value ahead
+        if index == self.positions_x.len() {
+            return Some(index - 1);
+        }
+        // Find closest index
+        let ahead = self.positions_x[index] - pos_x;
+        let before = pos_x - self.positions_x[index - 1];
+        if ahead < before {
+            Some(index)
+        } else {
+            Some(index - 1)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -75,30 +105,32 @@ mod tests {
     }
 
     impl MyData {
-        pub fn new(x: f64, y1: f64, y2: f64) -> Self {
+        const fn new(x: f64, y1: f64, y2: f64) -> Self {
             Self { x, y1, y2 }
         }
     }
 
-    #[test]
-    fn test_positions_new() {
+    const DATA: &[MyData] = &[
+        MyData::new(1.0, 2.0, 3.0),
+        MyData::new(4.0, 5.0, 6.0),
+        MyData::new(7.0, 8.0, 9.0),
+    ];
+
+    fn test_data(data: &[MyData]) -> Data<f64, f64> {
         let mut get_ys = HashMap::<usize, GetY<_, _>>::new();
         get_ys.insert(66, Rc::new(|d: &MyData| d.y1));
         get_ys.insert(5, Rc::new(|d: &MyData| d.y2));
 
-        let pos = Data::new(
-            Rc::new(|d: &MyData| d.x),
-            get_ys,
-            &[
-                MyData::new(1.0, 2.0, 3.0),
-                MyData::new(4.0, 5.0, 6.0),
-                MyData::new(7.0, 8.0, 9.0),
-            ],
-        );
+        Data::new(Rc::new(|d: &MyData| d.x), get_ys, data)
+    }
+
+    #[test]
+    fn test_data_new() {
+        let data = test_data(DATA);
         // Data
-        assert_eq!(pos.data_x, vec![1.0, 4.0, 7.0]);
+        assert_eq!(data.data_x, vec![1.0, 4.0, 7.0]);
         assert_eq!(
-            pos.data_y,
+            data.data_y,
             vec![
                 HashMap::from([(66, 2.0), (5, 3.0)]),
                 HashMap::from([(66, 5.0), (5, 6.0)]),
@@ -106,9 +138,9 @@ mod tests {
             ]
         );
         // Positions
-        assert_eq!(pos.positions_x, vec![1.0, 4.0, 7.0]);
+        assert_eq!(data.positions_x, vec![1.0, 4.0, 7.0]);
         assert_eq!(
-            pos.positions_y,
+            data.positions_y,
             vec![
                 HashMap::from([(66, 2.0), (5, 3.0)]),
                 HashMap::from([(66, 5.0), (5, 6.0)]),
@@ -116,9 +148,30 @@ mod tests {
             ]
         );
         // Ranges
-        assert_eq!(pos.range_x.range(), Some((&1.0, &7.0)));
-        assert_eq!(pos.range_x.positions(), Some((1.0, 7.0)));
-        assert_eq!(pos.range_y.range(), Some((&2.0, &9.0)));
-        assert_eq!(pos.range_y.positions(), Some((2.0, 9.0)));
+        assert_eq!(data.range_x.range(), Some((&1.0, &7.0)));
+        assert_eq!(data.range_x.positions(), Some((1.0, 7.0)));
+        assert_eq!(data.range_y.range(), Some((&2.0, &9.0)));
+        assert_eq!(data.range_y.positions(), Some((2.0, 9.0)));
+    }
+
+    #[test]
+    fn test_nearest_index() {
+        let data = test_data(DATA);
+        // Before data
+        assert_eq!(data.nearest_index(0.5), Some(0));
+        // After data
+        assert_eq!(data.nearest_index(8.0), Some(2));
+        // Closest
+        assert_eq!(data.nearest_index(3.0), Some(1));
+        assert_eq!(data.nearest_index(4.0), Some(1));
+        assert_eq!(data.nearest_index(5.0), Some(1));
+        assert_eq!(data.nearest_index(2.0), Some(0));
+        assert_eq!(data.nearest_index(6.5), Some(2));
+    }
+
+    #[test]
+    fn test_nearest_index_empty() {
+        let data = test_data(&[]);
+        assert_eq!(data.nearest_index(0.5), None);
     }
 }

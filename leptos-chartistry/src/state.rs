@@ -82,8 +82,8 @@ impl<X: Clone + PartialEq + 'static, Y: Clone + PartialEq + 'static> State<X, Y>
 
         let nearest_pos_x = pre.data.nearest_position_x(hover_data_x);
         let nearest_svg_x = create_memo(move |_| {
-            nearest_pos_x.get().map(|data_x| {
-                let (svg_x, _) = proj.get().position_to_svg(data_x, 0.0);
+            nearest_pos_x.get().map(|pos_x| {
+                let (svg_x, _) = proj.get().position_to_svg(pos_x, 0.0);
                 svg_x
             })
         });

@@ -72,59 +72,27 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 }
 
 impl<X: 'static, Y: 'static> UseData<X, Y> {
-    fn nearest_index(&self, pos_x: Signal<f64>) -> Signal<Option<usize>> {
-        let data = self.data;
-        Signal::derive(move || {
-            data.with(move |data| {
-                let positions_x = &data.positions_x;
-                // No values
-                if positions_x.is_empty() {
-                    return None;
-                }
-                // Find index after pos
-                let pos_x = pos_x.get();
-                let index = positions_x.partition_point(|&v| v < pos_x);
-                // No value before
-                if index == 0 {
-                    return Some(0);
-                }
-                // No value ahead
-                if index == positions_x.len() {
-                    return Some(index - 1);
-                }
-                // Find closest index
-                let ahead = positions_x[index] - pos_x;
-                let before = pos_x - positions_x[index - 1];
-                if ahead < before {
-                    Some(index)
-                } else {
-                    Some(index - 1)
-                }
-            })
-        })
-    }
-
     pub fn nearest_data_x(&self, pos_x: Signal<f64>) -> Memo<Option<X>>
     where
         X: Clone + PartialEq,
     {
         let data = self.data;
-        let index = self.nearest_index(pos_x);
         create_memo(move |_| {
-            index
-                .get()
-                .map(|index| data.with(|data| data.data_x[index].clone()))
+            data.with(|data| {
+                data.nearest_index(pos_x.get())
+                    .map(|index| data.data_x[index].clone())
+            })
         })
     }
 
     /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
     pub fn nearest_position_x(&self, pos_x: Signal<f64>) -> Memo<Option<f64>> {
         let data = self.data;
-        let index = self.nearest_index(pos_x);
         create_memo(move |_| {
-            index
-                .get()
-                .map(|index| data.with(|data| data.positions_x[index]))
+            data.with(|data| {
+                data.nearest_index(pos_x.get())
+                    .map(|index| data.positions_x[index])
+            })
         })
     }
 
@@ -134,19 +102,19 @@ impl<X: 'static, Y: 'static> UseData<X, Y> {
     {
         let series = self.series;
         let data = self.data;
-        let index_x = self.nearest_index(pos_x);
         create_memo(move |_| {
-            let index_x = index_x.get();
-            series
-                .get()
-                .into_iter()
-                .map(|line| {
-                    let y_value = index_x.and_then(|index_x| {
-                        data.with(|data| data.data_y[index_x].get(&line.id).cloned())
-                    });
-                    (line, y_value)
-                })
-                .collect::<Vec<_>>()
+            data.with(|data| {
+                series
+                    .get()
+                    .into_iter()
+                    .map(|line| {
+                        let y_value = data
+                            .nearest_index(pos_x.get())
+                            .and_then(|index_x| data.data_y[index_x].get(&line.id).cloned());
+                        (line, y_value)
+                    })
+                    .collect::<Vec<_>>()
+            })
         })
     }
 }
