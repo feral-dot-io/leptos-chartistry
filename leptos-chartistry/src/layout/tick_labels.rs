@@ -124,7 +124,6 @@ impl<X: Tick> TickLabels<X> {
         state: &PreState<X, Y>,
         avail_width: Signal<f64>,
     ) -> Signal<GeneratedTicks<X>> {
-        // TODO guide-lines
         let font_width = state.font_width;
         let padding = state.padding;
         let range_x = state.data.range_x;
