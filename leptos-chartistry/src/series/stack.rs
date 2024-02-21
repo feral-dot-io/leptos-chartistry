@@ -4,7 +4,6 @@ use crate::{
     Line,
 };
 use leptos::signal_prelude::*;
-use std::ops::Add;
 use std::rc::Rc;
 
 /// Default colour scheme for stack. Assumes a light background with dark values for high values.
@@ -76,7 +75,7 @@ impl<T, Y, I: IntoIterator<Item = Line<T, Y>>> From<I> for Stack<T, Y> {
     }
 }
 
-impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> for Stack<T, Y> {
+impl<T: 'static, Y: 'static> ApplyUseSeries<T, Y> for Stack<T, Y> {
     fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
         let colours = self.colours;
         let mut previous = None;
@@ -109,7 +108,7 @@ impl<T, Y> StackedLine<T, Y> {
     }
 }
 
-impl<T: 'static, Y: Add<Output = Y> + 'static> IntoUseLine<T, Y> for StackedLine<T, Y> {
+impl<T: 'static, Y: 'static> IntoUseLine<T, Y> for StackedLine<T, Y> {
     fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
         let (line, get_y) = self.line.into_use_line(id, colour);
         let get_y = Rc::new(UseStackLine {
@@ -120,15 +119,17 @@ impl<T: 'static, Y: Add<Output = Y> + 'static> IntoUseLine<T, Y> for StackedLine
     }
 }
 
-impl<T, Y: Add<Output = Y>> GetYValue<T, Y> for UseStackLine<T, Y> {
+impl<T, Y> GetYValue<T, Y> for UseStackLine<T, Y> {
     fn value(&self, t: &T) -> Y {
         self.current.value(t)
     }
 
-    fn cumulative_value(&self, t: &T) -> Y {
-        self.previous.as_ref().map_or_else(
-            || self.current.cumulative_value(t),
-            |prev| self.current.cumulative_value(t) + prev.cumulative_value(t),
-        )
+    fn y_position(&self, t: &T) -> f64 {
+        self.current.y_position(t)
+            + self
+                .previous
+                .as_ref()
+                .map(|prev| prev.y_position(t))
+                .unwrap_or_default()
     }
 }

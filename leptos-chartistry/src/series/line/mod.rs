@@ -7,7 +7,7 @@ use super::{ApplyUseSeries, IntoUseLine, SeriesAcc, UseData, UseY};
 use crate::{
     colours::{Colour, DivergingGradient, LinearGradientSvg, SequentialGradient, BERLIN, LIPARI},
     series::GetYValue,
-    ColourScheme,
+    ColourScheme, Tick,
 };
 use leptos::*;
 use std::rc::Rc;
@@ -70,7 +70,10 @@ impl<T, Y> Line<T, Y> {
     /// Create a new line. The `get_y` function is used to extract the Y value from your struct.
     ///
     /// See the module documentation for examples.
-    pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self {
+    pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self
+    where
+        Y: Tick,
+    {
         Self {
             get_y: Rc::new(get_y),
             name: RwSignal::default(),
@@ -135,19 +138,19 @@ impl<T, Y> Clone for Line<T, Y> {
     }
 }
 
-impl<T, Y, F: Fn(&T) -> Y + 'static> From<F> for Line<T, Y> {
+impl<T, Y: Tick, F: Fn(&T) -> Y + 'static> From<F> for Line<T, Y> {
     fn from(f: F) -> Self {
         Self::new(f)
     }
 }
 
-impl<T, Y, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
+impl<T, Y: Tick, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
     fn value(&self, t: &T) -> Y {
         self(t)
     }
 
-    fn cumulative_value(&self, t: &T) -> Y {
-        self(t)
+    fn y_position(&self, t: &T) -> f64 {
+        self(t).position()
     }
 }
 

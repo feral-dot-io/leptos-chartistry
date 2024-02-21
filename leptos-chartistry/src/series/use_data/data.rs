@@ -46,9 +46,8 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
             let mut y_positions = HashMap::with_capacity(y_cap);
             for (&id, get_y) in get_ys.iter() {
                 let y = get_y.value(datum);
-                let y_cumulative = get_y.cumulative_value(datum);
                 // Note: cumulative can differ from Y when stacked
-                let y_position = y_cumulative.position();
+                let y_position = get_y.y_position(datum).position();
                 built.range_y.update(&y, y_position);
 
                 y_data.insert(id, y);

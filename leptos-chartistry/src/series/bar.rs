@@ -1,5 +1,5 @@
 use super::{ApplyUseSeries, GetYValue, IntoUseBar, SeriesAcc, UseY};
-use crate::{state::State, Colour};
+use crate::{state::State, Colour, Tick};
 use leptos::*;
 use std::rc::Rc;
 
@@ -33,7 +33,10 @@ pub struct UseBar {
 }
 
 impl<T, Y> Bar<T, Y> {
-    pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self {
+    pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self
+    where
+        Y: Tick,
+    {
         Self {
             get_y: Rc::new(get_y),
             placement: RwSignal::default(),
