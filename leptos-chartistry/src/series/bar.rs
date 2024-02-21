@@ -109,6 +109,12 @@ impl<T, Y> Clone for Bar<T, Y> {
     }
 }
 
+impl<T, Y: Tick, F: Fn(&T) -> Y + 'static> From<F> for Bar<T, Y> {
+    fn from(f: F) -> Self {
+        Self::new(f)
+    }
+}
+
 impl<T, Y> ApplyUseSeries<T, Y> for Bar<T, Y> {
     fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
         let colour = series.next_colour();
