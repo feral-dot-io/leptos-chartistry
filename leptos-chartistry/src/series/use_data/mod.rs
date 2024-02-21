@@ -79,7 +79,7 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 
     pub fn nearest_position_x(&self, pos_x: Memo<f64>) -> Memo<Option<f64>> {
         let data = self.data;
-        create_memo(move |_| data.with(|data| data.nearest_aligned_position_x(pos_x.get())))
+        create_memo(move |_| data.with(|data| data.nearest_position_x(pos_x.get())))
     }
 
     pub fn nearest_data_y(&self, pos_x: Memo<f64>) -> Memo<Vec<(UseY, Option<Y>)>> {

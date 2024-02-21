@@ -93,7 +93,7 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
     }
 
     /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
-    pub fn nearest_aligned_position_x(&self, pos_x: f64) -> Option<f64> {
+    pub fn nearest_position_x(&self, pos_x: f64) -> Option<f64> {
         self.nearest_index(pos_x)
             .map(|index| self.positions_x[index])
     }
@@ -194,9 +194,9 @@ mod tests {
     #[test]
     fn test_nearest_aligned_position_x() {
         let data = test_data(DATA);
-        assert_eq!(data.nearest_aligned_position_x(0.5), Some(1.0));
-        assert_eq!(data.nearest_aligned_position_x(8.0), Some(7.0));
-        assert_eq!(data.nearest_aligned_position_x(3.0), Some(4.0));
-        assert_eq!(data.nearest_aligned_position_x(4.0), Some(4.0));
+        assert_eq!(data.nearest_position_x(0.5), Some(1.0));
+        assert_eq!(data.nearest_position_x(8.0), Some(7.0));
+        assert_eq!(data.nearest_position_x(3.0), Some(4.0));
+        assert_eq!(data.nearest_position_x(4.0), Some(4.0));
     }
 }
