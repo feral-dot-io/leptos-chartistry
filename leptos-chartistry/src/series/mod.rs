@@ -226,6 +226,12 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
+    /// Adds a stack to the series. See [Stack] for more details.
+    pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
+        self.series.push(Rc::new(stack.into()));
+        self
+    }
+
     /// Gets the current size of the series (number of lines and stacks).
     pub fn len(&self) -> usize {
         self.series.len()
@@ -242,14 +248,6 @@ impl<T, X, Y> Series<T, X, Y> {
             seq.apply_use_series(&mut series);
         }
         series.lines
-    }
-}
-
-impl<T, X, Y> Series<T, X, Y> {
-    /// Adds a stack to the series. See [Stack] for more details.
-    pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
-        self.series.push(Rc::new(stack.into()));
-        self
     }
 }
 
