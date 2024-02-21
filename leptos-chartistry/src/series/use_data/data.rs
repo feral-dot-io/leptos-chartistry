@@ -10,8 +10,8 @@ pub struct Data<X, Y> {
     data_x: Vec<X>,
     data_y: Vec<HashMap<usize, Y>>,
 
-    pub positions_x: Vec<f64>,
-    pub positions_y: Vec<HashMap<usize, f64>>,
+    positions_x: Vec<f64>,
+    positions_y: Vec<HashMap<usize, f64>>,
 
     range_x: Range<X>,
     range_y: Range<Y>,
@@ -110,6 +110,14 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
         self.nearest_index(pos_x)
             .map(|index| self.data_y[index].clone())
             .unwrap_or_default()
+    }
+
+    pub fn y_positions(&self, id: usize) -> Vec<(f64, f64)> {
+        self.positions_x
+            .iter()
+            .enumerate()
+            .map(|(i, &x)| (x, self.positions_y[i][&id]))
+            .collect::<Vec<_>>()
     }
 }
 
