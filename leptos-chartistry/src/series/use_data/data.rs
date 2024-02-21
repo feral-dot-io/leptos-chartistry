@@ -69,7 +69,7 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
     }
 
     /// Finds the index of the _nearest_ position to the given X. Returns None if no data.
-    pub fn nearest_index(&self, pos_x: f64) -> Option<usize> {
+    fn nearest_index(&self, pos_x: f64) -> Option<usize> {
         // No values
         if self.positions_x.is_empty() {
             return None;
