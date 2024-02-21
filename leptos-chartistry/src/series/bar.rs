@@ -124,22 +124,25 @@ pub fn RenderBar<X: 'static, Y: 'static>(
                 BarPlacement::Edge => state.layout.inner.get().bottom_y(),
             };
 
+            // Find width of each X position
+            // Note: this should possibly be on Layout
             let gap = bar.gap.get().clamp(0.0, 1.0);
             let width = state.layout.inner.get().width() / positions.len() as f64 * (1.0 - gap);
-            let gap = width * gap;
-
+            // Find width of each group in an X position
+            let group_gap = bar.group_gap.get().clamp(0.0, 1.0);
             let group_width = width / bars.get() as f64;
-            let group_gap = width * bar.group_gap.get().clamp(0.0, 1.0);
+            let group_width_inner = group_width * (1.0 - group_gap);
+            let group_gap = group_width * group_gap;
 
-            let offset = gap / 2.0 + group_gap / 2.0;
+            let offset = group_gap / 2.0 - width / 2.0;
             positions
                 .iter()
                 .map(|&(x, y)| {
                     view! {
                         <rect
-                            x=x + offset + group_width * bar.group_id as f64
+                            x=x + group_width * bar.group_id as f64 + offset
                             y=y
-                            width=group_width - group_gap
+                            width=group_width_inner
                             height=bottom_y - y />
                     }
                 })
