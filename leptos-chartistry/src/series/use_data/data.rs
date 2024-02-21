@@ -11,7 +11,7 @@ pub struct Data<X, Y> {
     data_y: Vec<HashMap<usize, Y>>,
 
     // Data index: X position to data
-    x_to_data: Vec<(f64, usize)>,
+    x_to_data: Vec<f64>,
     // Rendering data
     coords: HashMap<usize, Vec<(f64, f64)>>,
 
@@ -34,23 +34,22 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
             range_y: Range::default(),
         };
 
-        for (i, datum) in data.iter().enumerate() {
+        for datum in data {
             // X
             let x = (get_x)(datum);
             let x_position = x.position();
             built.range_x.update(&x, x_position);
+            built.x_to_data.push(x_position);
 
             // Y
             let mut y_data = HashMap::with_capacity(y_cap);
-            for (&id, get_y) in get_ys.iter() {
+            for (&id, get_y) in &get_ys {
                 let y = get_y.value(datum);
                 // Note: cumulative can differ from Y when stacked
                 let y_position = get_y.y_position(datum).position();
                 built.range_y.update(&y, y_position);
-                // Insert Y
+                // Insert
                 y_data.insert(id, y);
-                // Insert X -- TODO pass to line / bar to determine
-                built.x_to_data.push((x_position, i));
                 built
                     .coords
                     .entry(id)
@@ -62,8 +61,6 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
             built.data_x.push(x);
             built.data_y.push(y_data);
         }
-        // Reduce our index
-        built.x_to_data.dedup_by_key(|(x, _)| *x);
 
         built
     }
@@ -83,7 +80,7 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
             return None;
         }
         // Find index after pos
-        let index = self.x_to_data.partition_point(|&(v, _)| v < pos_x);
+        let index = self.x_to_data.partition_point(|&v| v < pos_x);
         // No value before
         if index == 0 {
             return Some(0);
@@ -93,10 +90,13 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
             return Some(index - 1);
         }
         // Find closest index
-        let ahead = self.x_to_data[index].0 - pos_x;
-        let before = pos_x - self.x_to_data[index - 1].0;
-        let index = if ahead < before { index } else { index - 1 };
-        Some(self.x_to_data[index].1)
+        let ahead = self.x_to_data[index] - pos_x;
+        let before = pos_x - self.x_to_data[index - 1];
+        if ahead < before {
+            Some(index)
+        } else {
+            Some(index - 1)
+        }
     }
 
     pub fn nearest_data_x(&self, pos_x: f64) -> Option<X> {
@@ -110,10 +110,9 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
             .unwrap_or_default()
     }
 
-    /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
+    /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data. Note a position covers a range dependent on the chart width.
     pub fn nearest_position_x(&self, pos_x: f64) -> Option<f64> {
-        self.nearest_index(pos_x)
-            .map(|index| self.x_to_data[index].0)
+        self.nearest_index(pos_x).map(|index| self.x_to_data[index])
     }
 
     pub fn series_positions(&self, id: usize) -> Vec<(f64, f64)> {
@@ -167,7 +166,7 @@ mod tests {
             ]
         );
         // Positions
-        assert_eq!(data.x_to_data, vec![(1.0, 0), (4.0, 1), (7.0, 2)]);
+        assert_eq!(data.x_to_data, vec![1.0, 4.0, 7.0]);
         assert_eq!(
             data.coords,
             HashMap::from([
