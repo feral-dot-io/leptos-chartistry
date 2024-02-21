@@ -3,52 +3,95 @@ use crate::{state::State, Colour, Tick};
 use leptos::*;
 use std::rc::Rc;
 
+/// Default gap ratio between bars.
 pub const BAR_GAP: f64 = 0.1;
+/// Default gap ratio inside a group of bars.
 pub const BAR_GAP_INNER: f64 = 0.05;
 
+#[non_exhaustive]
 pub struct Bar<T, Y> {
     get_y: Rc<dyn GetYValue<T, Y>>,
+    /// Set the name of the bar as used in the legend and tooltip.
     pub name: RwSignal<String>,
-    pub placement: RwSignal<BarPlacement>,
-    pub gap: RwSignal<f64>,
-    pub group_gap: RwSignal<f64>,
+    /// Set the colour of the bar. If not set, the next colour in the series will be used. Default is `None`.
     pub colour: RwSignal<Option<Colour>>,
+    /// Sets where the bar's bottom is placed. Defaults to the zero line.
+    pub placement: RwSignal<BarPlacement>,
+    /// Set the gap between group bars. Clamped to 0.0 and 1.0. Defaults to 0.1.
+    ///
+    /// The gap is the ratio of the available width for an X value. For example if the chart has a width of 200px and 5 items (`T`) that leaves 40px per item. So a gap of 0.1 (10%) would leave 4px between each item with 2px on either side.
+    pub gap: RwSignal<f64>,
+    /// Set the gap inside a group of bars. Clamped to 0.0 and 1.0. Defaults to 0.05.
+    ///
+    /// The group gap is the ratio of the available width for a single bar in a group of bars (for a single X value). Carrying on the example from [gap](Self::gap) a group gap of 0.05 (5%) and two bars would result in 1px (40 / 2 * 0.05). This group gap becomes the space inbetween each bar.
+    pub group_gap: RwSignal<f64>,
 }
 
+/// The location of where the bar extends from.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub enum BarPlacement {
+    /// The bar extends from the zero line.
     #[default]
     Zero,
+    /// The bar extends from the edge of the chart.
     Edge,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseBar {
     group_id: usize,
+    colour: Signal<Colour>,
     placement: RwSignal<BarPlacement>,
     gap: RwSignal<f64>,
     group_gap: RwSignal<f64>,
-    colour: Signal<Colour>,
 }
 
 impl<T, Y> Bar<T, Y> {
+    /// Create a new bar. Use `get_y` to extract the Y value from your struct.
+    ///
+    /// See the module documentation for examples.
     pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self
     where
         Y: Tick,
     {
         Self {
             get_y: Rc::new(get_y),
+            name: RwSignal::default(),
+            colour: RwSignal::default(),
             placement: RwSignal::default(),
             gap: create_rw_signal(BAR_GAP),
             group_gap: create_rw_signal(BAR_GAP_INNER),
-            name: RwSignal::default(),
-            colour: RwSignal::default(),
         }
     }
 
-    pub fn with_placement(mut self, placement: BarPlacement) -> Self {
-        self.placement.set(placement);
+    /// Set the name of the bar. Used in the legend.
+    pub fn with_name(self, name: impl Into<String>) -> Self {
+        self.name.set(name.into());
+        self
+    }
+
+    /// Set the colour of the bar. If not set, the next colour in the series will be used.
+    pub fn with_colour(self, colour: impl Into<Option<Colour>>) -> Self {
+        self.colour.set(colour.into());
+        self
+    }
+
+    /// Set the placement of the bar.
+    pub fn with_placement(self, placement: impl Into<BarPlacement>) -> Self {
+        self.placement.set(placement.into());
+        self
+    }
+
+    /// Set the gap between a group of bars. Clamped to 0.0 and 1.0. Defaults to 0.1.
+    pub fn with_gap(self, gap: f64) -> Self {
+        self.gap.set(gap);
+        self
+    }
+
+    /// Set the gap inside a group of bars. Clamped to 0.0 and 1.0. Defaults to 0.05.
+    pub fn with_group_gap(self, group_gap: f64) -> Self {
+        self.group_gap.set(group_gap);
         self
     }
 }
@@ -87,10 +130,10 @@ impl<T, Y> IntoUseBar<T, Y> for Bar<T, Y> {
             self.name,
             UseBar {
                 group_id,
+                colour,
                 placement: self.placement,
                 gap: self.gap,
                 group_gap: self.group_gap,
-                colour,
             },
         );
         (bar, self.get_y.clone())
