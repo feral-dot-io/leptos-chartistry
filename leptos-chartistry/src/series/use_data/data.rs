@@ -10,8 +10,10 @@ pub struct Data<X, Y> {
     data_x: Vec<X>,
     data_y: Vec<HashMap<usize, Y>>,
 
-    positions_x: Vec<f64>,
-    positions_y: Vec<HashMap<usize, f64>>,
+    // Data index: X position to data
+    x_to_data: Vec<(f64, usize)>,
+    // Rendering data
+    coords: HashMap<usize, Vec<(f64, f64)>>,
 
     range_x: Range<X>,
     range_y: Range<Y>,
@@ -26,37 +28,43 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
         let mut built = Self {
             data_x: Vec::with_capacity(cap),
             data_y: Vec::with_capacity(cap),
-            positions_x: Vec::with_capacity(cap),
-            positions_y: Vec::with_capacity(cap),
+            x_to_data: Vec::with_capacity(cap * y_cap),
+            coords: HashMap::with_capacity(cap),
             range_x: Range::default(),
             range_y: Range::default(),
         };
 
-        for datum in data {
+        for (i, datum) in data.iter().enumerate() {
             // X
             let x = (get_x)(datum);
             let x_position = x.position();
             built.range_x.update(&x, x_position);
 
-            built.data_x.push(x.clone());
-            built.positions_x.push(x_position);
-
             // Y
             let mut y_data = HashMap::with_capacity(y_cap);
-            let mut y_positions = HashMap::with_capacity(y_cap);
             for (&id, get_y) in get_ys.iter() {
                 let y = get_y.value(datum);
                 // Note: cumulative can differ from Y when stacked
                 let y_position = get_y.y_position(datum).position();
                 built.range_y.update(&y, y_position);
-
+                // Insert Y
                 y_data.insert(id, y);
-                y_positions.insert(id, y_position);
+                // Insert X -- TODO pass to line / bar to determine
+                built.x_to_data.push((x_position, i));
+                built
+                    .coords
+                    .entry(id)
+                    .or_insert_with(|| Vec::with_capacity(cap))
+                    .push((x_position, y_position));
             }
 
+            // Insert
+            built.data_x.push(x);
             built.data_y.push(y_data);
-            built.positions_y.push(y_positions);
         }
+        // Reduce our index
+        built.x_to_data.dedup_by_key(|(x, _)| *x);
+
         built
     }
 
@@ -71,38 +79,29 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
     /// Finds the index of the _nearest_ position to the given X. Returns None if no data.
     fn nearest_index(&self, pos_x: f64) -> Option<usize> {
         // No values
-        if self.positions_x.is_empty() {
+        if self.x_to_data.is_empty() {
             return None;
         }
         // Find index after pos
-        let index = self.positions_x.partition_point(|&v| v < pos_x);
+        let index = self.x_to_data.partition_point(|&(v, _)| v < pos_x);
         // No value before
         if index == 0 {
             return Some(0);
         }
         // No value ahead
-        if index == self.positions_x.len() {
+        if index == self.x_to_data.len() {
             return Some(index - 1);
         }
         // Find closest index
-        let ahead = self.positions_x[index] - pos_x;
-        let before = pos_x - self.positions_x[index - 1];
-        if ahead < before {
-            Some(index)
-        } else {
-            Some(index - 1)
-        }
+        let ahead = self.x_to_data[index].0 - pos_x;
+        let before = pos_x - self.x_to_data[index - 1].0;
+        let index = if ahead < before { index } else { index - 1 };
+        Some(self.x_to_data[index].1)
     }
 
     pub fn nearest_data_x(&self, pos_x: f64) -> Option<X> {
         self.nearest_index(pos_x)
             .map(|index| self.data_x[index].clone())
-    }
-
-    /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
-    pub fn nearest_position_x(&self, pos_x: f64) -> Option<f64> {
-        self.nearest_index(pos_x)
-            .map(|index| self.positions_x[index])
     }
 
     pub fn nearest_data_y(&self, pos_x: f64) -> HashMap<usize, Y> {
@@ -111,12 +110,14 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
             .unwrap_or_default()
     }
 
-    pub fn y_positions(&self, id: usize) -> Vec<(f64, f64)> {
-        self.positions_x
-            .iter()
-            .enumerate()
-            .map(|(i, &x)| (x, self.positions_y[i][&id]))
-            .collect::<Vec<_>>()
+    /// Given an arbitrary (unaligned to data) X position, find the nearest X position aligned to data. Returns `f64::NAN` if no data.
+    pub fn nearest_position_x(&self, pos_x: f64) -> Option<f64> {
+        self.nearest_index(pos_x)
+            .map(|index| self.x_to_data[index].0)
+    }
+
+    pub fn series_positions(&self, id: usize) -> Vec<(f64, f64)> {
+        self.coords.get(&id).cloned().unwrap_or_default()
     }
 }
 
@@ -166,14 +167,13 @@ mod tests {
             ]
         );
         // Positions
-        assert_eq!(data.positions_x, vec![1.0, 4.0, 7.0]);
+        assert_eq!(data.x_to_data, vec![(1.0, 0), (4.0, 1), (7.0, 2)]);
         assert_eq!(
-            data.positions_y,
-            vec![
-                HashMap::from([(66, 2.0), (5, 3.0)]),
-                HashMap::from([(66, 5.0), (5, 6.0)]),
-                HashMap::from([(66, 8.0), (5, 9.0)]),
-            ]
+            data.coords,
+            HashMap::from([
+                (66, vec![(1.0, 2.0), (4.0, 5.0), (7.0, 8.0)]),
+                (5, vec![(1.0, 3.0), (4.0, 6.0), (7.0, 9.0)]),
+            ])
         );
         // Ranges
         assert_eq!(data.range_x.range(), Some((&1.0, &7.0)));

@@ -107,7 +107,7 @@ pub fn RenderData<X: Tick, Y: Tick>(state: State<X, Y>) -> impl IntoView {
         Signal::derive(move || {
             let proj = state.projection.get();
             data.data.with(|data| {
-                data.y_positions(id)
+                data.series_positions(id)
                     .into_iter()
                     .map(|(x, y)| proj.position_to_svg(x, y))
                     .collect::<Vec<_>>()
