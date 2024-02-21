@@ -44,11 +44,11 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 
         // Range signals
         let range_x: Memo<Range<X>> = create_memo(move |_| {
-            data.with(|data| data.range_x.clone())
+            data.with(|data| data.range_x())
                 .maybe_update(vec![series.min_x.get(), series.max_x.get()])
         });
         let range_y: Memo<Range<Y>> = create_memo(move |_| {
-            data.with(|data| data.range_y.clone())
+            data.with(|data| data.range_y())
                 .maybe_update(vec![series.min_y.get(), series.max_y.get()])
         });
 
@@ -82,22 +82,20 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
         create_memo(move |_| data.with(|data| data.nearest_position_x(pos_x.get())))
     }
 
+    // TODO: this can never be None
     pub fn nearest_data_y(&self, pos_x: Memo<f64>) -> Memo<Vec<(UseY, Option<Y>)>> {
         let series = self.series;
         let data = self.data;
         create_memo(move |_| {
-            data.with(|data| {
-                let index = data.nearest_index(pos_x.get());
-                series
-                    .get()
-                    .into_iter()
-                    .map(|line| {
-                        let y_value =
-                            index.and_then(|index_x| data.data_y[index_x].get(&line.id).cloned());
-                        (line, y_value)
-                    })
-                    .collect::<Vec<_>>()
-            })
+            let y_values = data.with(|data| data.nearest_data_y(pos_x.get()));
+            series
+                .get()
+                .into_iter()
+                .map(|line| {
+                    let y_value = y_values.get(&line.id).cloned();
+                    (line, y_value)
+                })
+                .collect::<Vec<_>>()
         })
     }
 }

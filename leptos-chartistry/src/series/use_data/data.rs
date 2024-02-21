@@ -7,14 +7,14 @@ use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Data<X, Y> {
-    pub data_x: Vec<X>,
-    pub data_y: Vec<HashMap<usize, Y>>,
+    data_x: Vec<X>,
+    data_y: Vec<HashMap<usize, Y>>,
 
     pub positions_x: Vec<f64>,
     pub positions_y: Vec<HashMap<usize, f64>>,
 
-    pub range_x: Range<X>,
-    pub range_y: Range<Y>,
+    range_x: Range<X>,
+    range_y: Range<Y>,
 }
 
 impl<X: Tick, Y: Tick> Data<X, Y> {
@@ -61,6 +61,14 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
         built
     }
 
+    pub fn range_x(&self) -> Range<X> {
+        self.range_x.clone()
+    }
+
+    pub fn range_y(&self) -> Range<Y> {
+        self.range_y.clone()
+    }
+
     /// Finds the index of the _nearest_ position to the given X. Returns None if no data.
     pub fn nearest_index(&self, pos_x: f64) -> Option<usize> {
         // No values
@@ -96,6 +104,12 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
     pub fn nearest_position_x(&self, pos_x: f64) -> Option<f64> {
         self.nearest_index(pos_x)
             .map(|index| self.positions_x[index])
+    }
+
+    pub fn nearest_data_y(&self, pos_x: f64) -> HashMap<usize, Y> {
+        self.nearest_index(pos_x)
+            .map(|index| self.data_y[index].clone())
+            .unwrap_or_default()
     }
 }
 
