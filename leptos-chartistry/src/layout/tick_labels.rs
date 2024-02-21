@@ -133,27 +133,20 @@ impl<X: Tick> TickLabels<X> {
             generator,
         } = self.clone();
         create_memo(move |_| {
-            let font_width = font_width.get();
-            let padding_width = padding.get().width();
-            let min_chars = min_chars.get();
-            let format = format.get();
-            let generator = generator.get();
-            let avail_width = avail_width.get();
-            range_x.with(|range_x| {
-                range_x
-                    .as_ref()
-                    .map(|(first, last)| {
-                        let span = HorizontalSpan::new(
-                            font_width,
-                            min_chars,
-                            padding_width,
-                            avail_width,
-                            format,
-                        );
-                        generator.generate(first, last, &span)
-                    })
-                    .unwrap_or_else(GeneratedTicks::none)
-            })
+            range_x
+                .get()
+                .range()
+                .map(|(first, last)| {
+                    let span = HorizontalSpan::new(
+                        font_width.get(),
+                        min_chars.get(),
+                        padding.get().width(),
+                        avail_width.get(),
+                        format.get(),
+                    );
+                    generator.get().generate(first, last, &span)
+                })
+                .unwrap_or_else(GeneratedTicks::none)
         })
         .into()
     }
@@ -186,18 +179,17 @@ impl<Y: Tick> TickLabels<Y> {
         let range_y = state.data.range_y;
         let generator = self.generator;
         create_memo(move |_| {
-            let line_height = font_height.get() + padding.get().height();
-            let generator = generator.get();
-            let avail_height = avail_height.get();
-            range_y.with(|range_y| {
-                range_y
-                    .as_ref()
-                    .map(|(first, last)| {
-                        let span = VerticalSpan::new(line_height, avail_height);
-                        generator.generate(first, last, &span)
-                    })
-                    .unwrap_or_else(GeneratedTicks::none)
-            })
+            range_y
+                .get()
+                .range()
+                .map(|(first, last)| {
+                    let span = VerticalSpan::new(
+                        font_height.get() + padding.get().height(),
+                        avail_height.get(),
+                    );
+                    generator.get().generate(first, last, &span)
+                })
+                .unwrap_or_else(GeneratedTicks::none)
         })
         .into()
     }
