@@ -35,7 +35,7 @@ type GetY<T, Y> = Rc<dyn GetYValue<T, Y>>;
 
 trait GetYValue<T, Y> {
     fn value(&self, t: &T) -> Y;
-    fn y_position(&self, t: &T) -> f64;
+    fn cumulative_value(&self, t: &T) -> Y;
 }
 
 /// Describes how to render a series of data. A series is a collection of lines, bars, etc. that share the same X and Y axes.
@@ -226,12 +226,6 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    /// Adds a stack to the series. See [Stack] for more details.
-    pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
-        self.series.push(Rc::new(stack.into()));
-        self
-    }
-
     /// Gets the current size of the series (number of lines and stacks).
     pub fn len(&self) -> usize {
         self.series.len()
@@ -248,6 +242,14 @@ impl<T, X, Y> Series<T, X, Y> {
             seq.apply_use_series(&mut series);
         }
         series.lines
+    }
+}
+
+impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
+    /// Adds a stack to the series. See [Stack] for more details.
+    pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
+        self.series.push(Rc::new(stack.into()));
+        self
     }
 }
 

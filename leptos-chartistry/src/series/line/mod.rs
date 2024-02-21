@@ -149,8 +149,8 @@ impl<T, Y: Tick, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
         self(t)
     }
 
-    fn y_position(&self, t: &T) -> f64 {
-        self(t).position()
+    fn cumulative_value(&self, t: &T) -> Y {
+        self(t)
     }
 }
 
