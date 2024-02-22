@@ -22,11 +22,7 @@ These are mostly thoughts and internal notes (for now).
 
 Features to add:
 - Stacked line ordering
-- Scatter chart
-- Bars
-    - Example: https://www.ft.com/content/aa179561-47af-49de-93f8-edd2cf1c57d5
 - Stacked bars
-    - Example: https://www.ft.com/content/66a490e3-9268-4d8d-b7df-d2f901cd0fde
 - Loading status
 - Canvas
     - Calculate font
@@ -41,9 +37,9 @@ Features to add:
     - lines with gradients don't render well
     - bar chart should render a block of colour
     - In interpolation_mixed.rs I'd like to show only the named lines
+    - Render in pure SVG, not HTML
 
 - Site annoyances
-    - Clicking show code scrolls to the top
     - Clicking show code doesn't show the chart
     - #aspect ratio section needs a link to docs.rs for context
 
@@ -80,7 +76,7 @@ trunk serve --open
 - Commit
 - `cargo semver-checks -p leptos-chartistry`
 - `nix flake check` -- success? All systems go!
-- `git push --set-upstream origin`
+- `git push --set-upstream origin release-vX.Y.Z`
 - Wait for CI, review PR, squash and merge
-- `git tag -a vX.Y.Z`
+- `git pull; git tag -a vX.Y.Z; git push --tags`
 - `cargo publish -p leptos-chartistry` -- no turning back...
