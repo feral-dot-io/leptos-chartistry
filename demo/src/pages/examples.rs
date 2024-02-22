@@ -240,8 +240,6 @@ pub fn Examples() -> impl IntoView {
                     <BarExample />
                 </div>
 
-                <h2 id="scatter">"Scatter charts: " <em>"planned"</em></h2>
-
                 <div class="include-right">
                     <h2 id="edge"><a href="#edge">"Edge layout options"</a></h2>
                     <LegendExample />
