@@ -53,15 +53,6 @@ example!(
     "../examples/series_bar.rs"
 );
 
-// Bars
-example!(
-    BarExample,
-    series_bar::Example,
-    "Bar chart",
-    "A simple bar chart.",
-    "../examples/series_bar.rs"
-);
-
 // Edge layout options
 example!(
     LegendExample,
