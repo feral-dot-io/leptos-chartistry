@@ -1,4 +1,4 @@
-use super::{line::UseLine, ApplyUseSeries, GetYValue, IntoUseLine, SeriesAcc};
+use super::{ApplyUseSeries, GetYValue, IntoUseLine, SeriesAcc, UseY};
 use crate::{
     colours::{Colour, ColourScheme, BATLOW},
     Line,
@@ -84,7 +84,7 @@ impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> fo
         for (id, line) in self.lines.clone().into_iter().enumerate() {
             let colour = create_memo(move |_| colours.get().interpolate(id, total_lines));
             let line = StackedLine::new(line, previous.clone());
-            let get_y = series.push(colour, line);
+            let get_y = series.push_line(colour, line);
             // Sum next line with this one
             previous = Some(get_y);
         }
@@ -110,7 +110,7 @@ impl<T, Y> StackedLine<T, Y> {
 }
 
 impl<T: 'static, Y: Add<Output = Y> + 'static> IntoUseLine<T, Y> for StackedLine<T, Y> {
-    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseLine, Rc<dyn GetYValue<T, Y>>) {
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
         let (line, get_y) = self.line.into_use_line(id, colour);
         let get_y = Rc::new(UseStackLine {
             current: get_y,

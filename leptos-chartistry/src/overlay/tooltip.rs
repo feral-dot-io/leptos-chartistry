@@ -1,7 +1,6 @@
 use crate::{
     debug::DebugRect,
-    layout::Layout,
-    series::{Snippet, UseLine},
+    series::{Snippet, UseY},
     state::State,
     Tick, TickLabels, AXIS_MARKER_COLOUR,
 };
@@ -128,7 +127,7 @@ impl TooltipSortBy {
         y.as_ref().map(|y| F64Ord(y.position()))
     }
 
-    fn sort_values<Y: Tick>(&self, values: &mut [(UseLine, Option<Y>)]) {
+    fn sort_values<Y: Tick>(&self, values: &mut [(UseY, Option<Y>)]) {
         match self {
             TooltipSortBy::Lines => values.sort_by_key(|(line, _)| line.name.get()),
             TooltipSortBy::Ascending => values.sort_by_key(|(_, y)| Self::to_ord(y)),
@@ -216,47 +215,45 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
     let font_height = state.pre.font_height;
     let font_width = state.pre.font_width;
     let padding = state.pre.padding;
-    let State {
-        layout: Layout { inner, .. },
-        mouse_page,
-        hover_inner,
-        nearest_data_x,
-        ..
-    } = state;
+    let inner = state.layout.inner;
 
-    let avail_width = Signal::derive(move || with!(|inner| inner.width()));
-    let avail_height = Signal::derive(move || with!(|inner| inner.height()));
-    let x_format = x_ticks.format;
-    let y_format = y_ticks.format;
-    let x_ticks = x_ticks.generate_x(&state.pre, avail_width);
-    let y_ticks = y_ticks.generate_y(&state.pre, avail_height);
-
-    let x_body = move || {
-        // Hide ticks?
-        if !show_x_ticks.get() {
-            return "".to_string();
+    let x_body = {
+        let nearest_data_x = state.pre.data.nearest_data_x(state.hover_position_x);
+        let x_format = x_ticks.format;
+        let avail_width = Signal::derive(move || with!(|inner| inner.width()));
+        let x_ticks = x_ticks.generate_x(&state.pre, avail_width);
+        move || {
+            // Hide ticks?
+            if !show_x_ticks.get() {
+                return "".to_string();
+            }
+            let x_format = x_format.get();
+            with!(|nearest_data_x, x_ticks| {
+                nearest_data_x.as_ref().map_or_else(
+                    || "no data".to_string(),
+                    |x_value| (x_format)(x_value, x_ticks.state.as_ref()),
+                )
+            })
         }
-        let x_format = x_format.get();
-        with!(|nearest_data_x, x_ticks| {
-            nearest_data_x.as_ref().map_or_else(
-                || "no data".to_string(),
-                |x_value| (x_format)(x_value, x_ticks.state.as_ref()),
-            )
-        })
     };
 
-    let format_y_value = move |y_value: Option<Y>| {
-        let y_format = y_format.get();
-        y_ticks.with(|y_ticks| {
-            y_value.as_ref().map_or_else(
-                || "-".to_string(),
-                |y_value| (y_format)(y_value, y_ticks.state.as_ref()),
-            )
-        })
+    let format_y_value = {
+        let avail_height = Signal::derive(move || with!(|inner| inner.height()));
+        let y_format = y_ticks.format;
+        let y_ticks = y_ticks.generate_y(&state.pre, avail_height);
+        move |y_value: Option<Y>| {
+            let y_format = y_format.get();
+            y_ticks.with(|y_ticks| {
+                y_value.as_ref().map_or_else(
+                    || "-".to_string(),
+                    |y_value| (y_format)(y_value, y_ticks.state.as_ref()),
+                )
+            })
+        }
     };
 
     let nearest_y_values = {
-        let nearest_data_y = state.nearest_data_y;
+        let nearest_data_y = state.pre.data.nearest_data_y(state.hover_position_x);
         create_memo(move |_| {
             let mut y_values = nearest_data_y.get();
             // Skip missing?
@@ -285,7 +282,7 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
 
     let series_tr = {
         let state = state.clone();
-        move |(series, y_value): (UseLine, String)| {
+        move |(series, y_value): (UseY, String)| {
             view! {
                 <tr>
                     <td><Snippet series=series state=state.clone() /></td>
@@ -301,14 +298,14 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
     };
 
     view! {
-        <Show when=move || hover_inner.get() && placement.get() != TooltipPlacement::Hide>
+        <Show when=move || state.hover_inner.get() && placement.get() != TooltipPlacement::Hide>
             <DebugRect label="tooltip" debug=debug />
             <aside
                 class="_chartistry_tooltip"
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); background-color: #fff; white-space: pre; font-family: monospace;"
                 style:border=format!("1px solid {}", AXIS_MARKER_COLOUR)
-                style:top=move || format!("calc({}px)", mouse_page.get().1)
-                style:right=move || format!("calc(100% - {}px + {}px)", mouse_page.get().0, cursor_distance.get())
+                style:top=move || format!("calc({}px)", state.mouse_page.get().1)
+                style:right=move || format!("calc(100% - {}px + {}px)", state.mouse_page.get().0, cursor_distance.get())
                 style:padding=move || padding.get().to_css_style()>
                 <h2
                     style="margin: 0; text-align: center;"

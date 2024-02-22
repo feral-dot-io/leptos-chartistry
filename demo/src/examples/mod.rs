@@ -16,6 +16,7 @@ pub mod inner_layout;
 pub mod inner_legend;
 pub mod interpolation_mixed;
 pub mod interpolation_stepped;
+pub mod series_bar;
 pub mod series_line;
 pub mod series_line_stack;
 
@@ -45,6 +46,7 @@ pub fn load_data() -> Signal<Vec<MyData>> {
             MyData::new(6.0, 2.25, 9.0),
             MyData::new(7.0, 3.0, 5.0),
             MyData::new(8.0, 7.0, 3.5),
+            MyData::new(9.0, 8.5, 3.2),
             MyData::new(10.0, 10.0, 3.0),
         ]
     })

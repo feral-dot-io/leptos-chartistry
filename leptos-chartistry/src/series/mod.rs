@@ -1,13 +1,16 @@
+mod bar;
 mod line;
 mod stack;
 mod use_data;
+mod use_y;
 
+pub use bar::{Bar, BarPlacement, BAR_GAP, BAR_GAP_INNER};
 pub use line::{
-    Interpolation, Line, Marker, MarkerShape, Snippet, Step, UseLine, DIVERGING_GRADIENT,
-    LINEAR_GRADIENT,
+    Interpolation, Line, Marker, MarkerShape, Step, DIVERGING_GRADIENT, LINEAR_GRADIENT,
 };
 pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
+pub use use_y::{Snippet, UseY};
 
 use crate::colours::{Colour, ColourScheme};
 use leptos::signal_prelude::*;
@@ -106,7 +109,7 @@ trait GetYValue<T, Y> {
 #[derive(Clone)]
 pub struct Series<T: 'static, X: 'static, Y: 'static> {
     get_x: GetX<T, X>,
-    lines: Vec<Rc<dyn ApplyUseSeries<T, Y>>>,
+    series: Vec<Rc<dyn ApplyUseSeries<T, Y>>>,
     /// Optional minimum X value. Extends the lower bound of the X axis if set.
     pub min_x: RwSignal<Option<X>>,
     /// Optional maximum X value. Extends the upper bound of the X axis if set.
@@ -124,13 +127,19 @@ trait ApplyUseSeries<T, Y> {
 }
 
 trait IntoUseLine<T, Y> {
-    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseLine, GetY<T, Y>);
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, GetY<T, Y>);
+}
+
+trait IntoUseBar<T, Y> {
+    fn into_use_bar(self, id: usize, group_id: usize, colour: Memo<Colour>) -> (UseY, GetY<T, Y>);
 }
 
 struct SeriesAcc<T, Y> {
     colour_id: usize,
     colours: RwSignal<ColourScheme>,
-    lines: Vec<(UseLine, GetY<T, Y>)>,
+    next_id: usize,
+    next_group_id: usize,
+    lines: Vec<(UseY, GetY<T, Y>)>,
 }
 
 impl<T, X, Y> Series<T, X, Y> {
@@ -147,7 +156,7 @@ impl<T, X, Y> Series<T, X, Y> {
             min_y: RwSignal::default(),
             max_y: RwSignal::default(),
             colours: create_rw_signal(SERIES_COLOUR_SCHEME.into()),
-            lines: Vec::new(),
+            series: Vec::new(),
         }
     }
 
@@ -193,11 +202,11 @@ impl<T, X, Y> Series<T, X, Y> {
 
     /// Adds a line to the series. See [Line] for more details.
     pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
-        self.lines.push(Rc::new(line.into()));
+        self.series.push(Rc::new(line.into()));
         self
     }
 
-    /// Adds multiple lines to the series at once. This is equivalent to calling [Series::line] multiple times.
+    /// Adds multiple lines to the series at once. This is equivalent to calling [line](fn@Self::line) multiple times.
     pub fn lines(mut self, lines: impl IntoIterator<Item = impl Into<Line<T, Y>>>) -> Self {
         for line in lines {
             self = self.line(line.into());
@@ -205,20 +214,34 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
+    /// Adds a bar to the series. See [Bar] for more details.
+    pub fn bar(mut self, bar: impl Into<Bar<T, Y>>) -> Self {
+        self.series.push(Rc::new(bar.into()));
+        self
+    }
+
+    /// Adds multiple bars to the series at once. This is equivalent to calling [bar](Self::bar) multiple times.
+    pub fn bars(mut self, bars: impl IntoIterator<Item = impl Into<Bar<T, Y>>>) -> Self {
+        for bar in bars {
+            self = self.bar(bar.into());
+        }
+        self
+    }
+
     /// Gets the current size of the series (number of lines and stacks).
     pub fn len(&self) -> usize {
-        self.lines.len()
+        self.series.len()
     }
 
     /// Returns true if the series is empty.
     pub fn is_empty(&self) -> bool {
-        self.lines.is_empty()
+        self.series.is_empty()
     }
 
-    fn to_use_lines(&self) -> Vec<(UseLine, GetY<T, Y>)> {
+    fn to_use_lines(&self) -> Vec<(UseY, GetY<T, Y>)> {
         let mut series = SeriesAcc::new(self.colours);
-        for line in self.lines.clone() {
-            line.apply_use_series(&mut series);
+        for seq in self.series.clone() {
+            seq.apply_use_series(&mut series);
         }
         series.lines
     }
@@ -227,7 +250,7 @@ impl<T, X, Y> Series<T, X, Y> {
 impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
     /// Adds a stack to the series. See [Stack] for more details.
     pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
-        self.lines.push(Rc::new(stack.into()));
+        self.series.push(Rc::new(stack.into()));
         self
     }
 }
@@ -237,6 +260,8 @@ impl<T, Y> SeriesAcc<T, Y> {
         Self {
             colour_id: 0,
             colours,
+            next_id: 0,
+            next_group_id: 0,
             lines: Vec::new(),
         }
     }
@@ -248,12 +273,25 @@ impl<T, Y> SeriesAcc<T, Y> {
         create_memo(move |_| colours.get().by_index(id))
     }
 
-    fn push(&mut self, colour: Memo<Colour>, line: impl IntoUseLine<T, Y>) -> GetY<T, Y> {
+    fn push_line(&mut self, colour: Memo<Colour>, line: impl IntoUseLine<T, Y>) -> GetY<T, Y> {
         // Create line
-        let id = self.lines.len();
+        let id = self.next_id;
+        self.next_id += 1;
         let (line, get_y) = line.into_use_line(id, colour);
         // Insert line
         self.lines.push((line, get_y.clone()));
+        get_y
+    }
+
+    fn push_bar(&mut self, colour: Memo<Colour>, bar: impl IntoUseBar<T, Y>) -> GetY<T, Y> {
+        // Create bar
+        let id = self.next_id;
+        let group_id = self.next_group_id;
+        self.next_id += 1;
+        self.next_group_id += 1;
+        let (bar, get_y) = bar.into_use_bar(id, group_id, colour);
+        // Insert bar
+        self.lines.push((bar, get_y.clone()));
         get_y
     }
 }

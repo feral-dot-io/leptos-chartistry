@@ -251,9 +251,20 @@ fn RenderChart<'a, X: Tick, Y: Tick>(
 
     // Finalise state
     let projection = {
-        let inner = layout.inner;
-        let position_range = pre_state.data.position_range;
-        create_memo(move |_| Projection::new(inner.get(), position_range.get())).into()
+        let range_x = pre_state.data.range_x;
+        let range_y = pre_state.data.range_y;
+        let includes_bars = pre_state.data.includes_bars;
+        create_memo(move |_| {
+            let mut inner = layout.inner.get();
+            // If we include bars, shrink the sides by half the width of X
+            if includes_bars.get() {
+                let half = layout.x_width.get() / 2.0;
+                inner = inner.shrink(0.0, half, 0.0, half);
+            }
+
+            Projection::new(inner, range_x.get().positions(), range_y.get().positions())
+        })
+        .into()
     };
     let state = State::new(pre_state, &watch, layout, projection);
 

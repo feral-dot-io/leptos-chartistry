@@ -1,5 +1,4 @@
 use super::Colour;
-use crate::bounds::Bounds;
 use leptos::*;
 
 /// A gradient of colours. Maps to a [ColourScheme]
@@ -111,20 +110,20 @@ impl ColourScheme {
 pub fn LinearGradientSvg(
     #[prop(into)] id: AttributeValue,
     #[prop(into)] scheme: Signal<ColourScheme>,
-    range: Memo<Bounds>,
+    #[prop(into)] range_y: Signal<Option<(f64, f64)>>,
 ) -> impl IntoView {
     view! {
         <linearGradient id=Some(id) x1="0%" y1="100%" x2="0%" y2="0%">
-            {move || scheme.get().stops(range.get())}
+            {move || scheme.get().stops(range_y.get().unwrap_or_default())}
         </linearGradient>
     }
 }
 
 impl ColourScheme {
-    fn stops(&self, range: Bounds) -> impl IntoView {
+    fn stops(&self, range_y: (f64, f64)) -> impl IntoView {
         // TODO: collect more colour scheme uses and convert schemes into an enum / trait
         if self.zero.is_some() {
-            self.diverging_stops(range).into_view()
+            self.diverging_stops(range_y).into_view()
         } else {
             self.sequential_stops().into_view()
         }
@@ -137,10 +136,8 @@ impl ColourScheme {
     }
 
     // Stops for a diverging gradient. Finds the zero value and spreads the swatches over 0% to zero and zero to 100%.
-    fn diverging_stops(&self, range: Bounds) -> impl IntoView {
+    fn diverging_stops(&self, (bottom_y, top_y): (f64, f64)) -> impl IntoView {
         // Find zero value as a % of the range (0.0 to 1.0)
-        let top_y = range.top_y();
-        let bottom_y = range.bottom_y();
         let zero = (1.0 - (-bottom_y) / (top_y - bottom_y)).clamp(0.0, 1.0);
         // Separate swatches
         let (below_zero, above_zero) = self.diverging_swatches();

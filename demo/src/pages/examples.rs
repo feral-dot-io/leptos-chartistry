@@ -44,6 +44,15 @@ example!(
     "../examples/series_line_stack.rs"
 );
 
+// Bars
+example!(
+    BarExample,
+    series_bar::Example,
+    "Bar chart",
+    "A simple bar chart.",
+    "../examples/series_bar.rs"
+);
+
 // Edge layout options
 example!(
     LegendExample,
@@ -226,7 +235,11 @@ pub fn Examples() -> impl IntoView {
                 <LineExample />
                 <StackedLineExample />
 
-                <h2 id="bar">"Bar charts: " <em>"planned"</em></h2>
+                <div class="include-right">
+                    <h2 id="bar"><a href="#bar">"Bar charts"</a></h2>
+                    <BarExample />
+                </div>
+
                 <h2 id="scatter">"Scatter charts: " <em>"planned"</em></h2>
 
                 <div class="include-right">
