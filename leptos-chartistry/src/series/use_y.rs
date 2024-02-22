@@ -63,11 +63,7 @@ pub(super) fn RenderUseY<X: 'static, Y: 'static>(
                 markers=positions />
         },
         UseYDesc::Bar(bar) => view! {
-            <RenderBar
-                use_y=use_y
-                bar=bar
-                state=state
-                positions=positions />
+            <RenderBar bar=bar state=state positions=positions />
         },
     }
 }
@@ -116,11 +112,7 @@ fn Taster<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl Into
             }
         }
         UseYDesc::Bar(bar) => view! {
-            <RenderBar
-                use_y=series.clone()
-                bar=bar.clone()
-                state=state
-                positions=positions />
+            <RenderBar bar=bar.clone() state=state positions=positions />
         },
     };
 

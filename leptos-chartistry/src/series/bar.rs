@@ -8,6 +8,18 @@ pub const BAR_GAP: f64 = 0.1;
 /// Default gap ratio inside a group of bars.
 pub const BAR_GAP_INNER: f64 = 0.05;
 
+/// Draws a bar on the chart.
+///
+/// # Example
+/// Creating a bar chart is simple. Add it to a series and pass it to a chart:
+/// ```rust
+/// # use leptos_chartistry::*;
+/// # struct MyData { x: f64, y1: f64, y2: f64 }
+/// let series = Series::new(|data: &MyData| data.x)
+///     .bar(|data: &MyData| data.y1)
+///     .bar(|data: &MyData| data.y2);
+/// ```
+/// See this in action with a [full bar chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#bar-chart).
 #[non_exhaustive]
 pub struct Bar<T, Y> {
     get_y: Rc<dyn GetYValue<T, Y>>,
@@ -148,7 +160,6 @@ impl<T, Y> IntoUseBar<T, Y> for Bar<T, Y> {
 
 #[component]
 pub fn RenderBar<X: 'static, Y: 'static>(
-    use_y: UseY,
     bar: UseBar,
     state: State<X, Y>,
     positions: Signal<Vec<(f64, f64)>>,

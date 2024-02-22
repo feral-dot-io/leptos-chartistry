@@ -206,7 +206,7 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
-    /// Adds multiple lines to the series at once. This is equivalent to calling [Series::line] multiple times.
+    /// Adds multiple lines to the series at once. This is equivalent to calling [line](fn@Self::line) multiple times.
     pub fn lines(mut self, lines: impl IntoIterator<Item = impl Into<Line<T, Y>>>) -> Self {
         for line in lines {
             self = self.line(line.into());
@@ -214,11 +214,13 @@ impl<T, X, Y> Series<T, X, Y> {
         self
     }
 
+    /// Adds a bar to the series. See [Bar] for more details.
     pub fn bar(mut self, bar: impl Into<Bar<T, Y>>) -> Self {
         self.series.push(Rc::new(bar.into()));
         self
     }
 
+    /// Adds multiple bars to the series at once. This is equivalent to calling [bar](Self::bar) multiple times.
     pub fn bars(mut self, bars: impl IntoIterator<Item = impl Into<Bar<T, Y>>>) -> Self {
         for bar in bars {
             self = self.bar(bar.into());
