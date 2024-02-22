@@ -17,7 +17,7 @@ macro_rules! example {
             view! {
                 <figure class=class class:background-box=true>
                     <figcaption>
-                        <h3><a href=format!("#{id}")>$title</a></h3>
+                        <h3 id=&id><a href=format!("#{id}")>$title</a></h3>
                         <p>$desc " " <ShowCode id=id code=include_str!($path) /></p>
                     </figcaption>
                     <$ex debug=ctx.debug.into() data=data />
