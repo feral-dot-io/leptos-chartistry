@@ -176,7 +176,7 @@ pub fn RenderBar<X: 'static, Y: 'static>(
             // Find width of each X position
             // Note: this should possibly be on Layout
             let gap = bar.gap.get().clamp(0.0, 1.0);
-            let width = state.layout.inner.get().width() / positions.len() as f64 * (1.0 - gap);
+            let width = state.layout.x_width.get() * (1.0 - gap);
             // Find width of each group in an X position
             let group_gap = bar.group_gap.get().clamp(0.0, 1.0);
             let group_width = width / bars.get() as f64;

@@ -29,7 +29,7 @@ impl UseY {
         Self { id, name, desc }
     }
 
-    pub(super) fn bar(&self) -> Option<&UseBar> {
+    pub(crate) fn bar(&self) -> Option<&UseBar> {
         match &self.desc {
             UseYDesc::Bar(bar) => Some(bar),
             _ => None,

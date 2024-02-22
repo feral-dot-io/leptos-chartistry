@@ -14,7 +14,9 @@ use leptos::*;
 #[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {
     data: Memo<Data<X, Y>>,
+    pub len: Memo<usize>,
     pub series: Memo<Vec<UseY>>,
+    pub includes_bars: Memo<bool>,
     pub range_x: Memo<Range<X>>,
     pub range_y: Memo<Range<Y>>,
 }
@@ -61,10 +63,14 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
                 lines
             })
         };
+        let includes_bars =
+            create_memo(move |_| series.get().iter().any(|use_y| use_y.bar().is_some()));
 
         UseData {
-            series,
             data,
+            len: create_memo(move |_| with!(|data| data.len())),
+            series,
+            includes_bars,
             range_x,
             range_y,
         }

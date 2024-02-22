@@ -65,6 +65,10 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
         built
     }
 
+    pub fn len(&self) -> usize {
+        self.data_x.len()
+    }
+
     pub fn range_x(&self) -> Range<X> {
         self.range_x.clone()
     }
