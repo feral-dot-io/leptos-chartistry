@@ -44,6 +44,7 @@ example!(
     "../examples/series_line_stack.rs"
 );
 
+// Bars
 example!(
     BarExample,
     series_bar::Example,
