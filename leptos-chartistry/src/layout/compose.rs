@@ -115,19 +115,6 @@ impl Layout {
         let data_len = state.data.len;
         let x_width = create_memo(move |_| inner.get().width() / data_len.get() as f64);
 
-        // Shrink inner width if there are bars
-        let includes_bars = state.data.includes_bars;
-        let inner = create_memo(move |_| {
-            let inner = inner.get();
-            // If we include bars, shrink the sides by half the width of X
-            if includes_bars.get() {
-                let half = x_width.get() / 2.0;
-                inner.shrink(0.0, half, 0.0, half)
-            } else {
-                inner
-            }
-        });
-
         // State signals
         let layout = Layout {
             outer,
