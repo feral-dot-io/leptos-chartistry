@@ -17,7 +17,7 @@ macro_rules! example {
             view! {
                 <figure class=class class:background-box=true>
                     <figcaption>
-                        <h3><a href=format!("#{id}")>$title</a></h3>
+                        <h3 id=&id><a href=format!("#{id}")>$title</a></h3>
                         <p>$desc " " <ShowCode id=id code=include_str!($path) /></p>
                     </figcaption>
                     <$ex debug=ctx.debug.into() data=data />
@@ -235,11 +235,7 @@ pub fn Examples() -> impl IntoView {
                 <LineExample />
                 <StackedLineExample />
 
-                <div class="include-right">
-                    <h2 id="bar"><a href="#bar">"Bar charts"</a></h2>
-                    <BarExample />
-                </div>
-
+                <h2 id="bar">"Bar charts: " <em>"planned"</em></h2>
                 <h2 id="scatter">"Scatter charts: " <em>"planned"</em></h2>
 
                 <div class="include-right">
