@@ -235,8 +235,10 @@ pub fn Examples() -> impl IntoView {
                 <LineExample />
                 <StackedLineExample />
 
-                <h2 id="bar">"Bar charts: " <em>"planned"</em></h2>
-                <h2 id="scatter">"Scatter charts: " <em>"planned"</em></h2>
+                <div class="include-right">
+                    <h2 id="bar"><a href="#bar">"Bar charts"</a></h2>
+                    <BarExample />
+                </div>
 
                 <div class="include-right">
                     <h2 id="edge"><a href="#edge">"Edge layout options"</a></h2>
