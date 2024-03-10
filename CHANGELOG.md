@@ -43,17 +43,21 @@ Initial release!
 ### Added
 - Aspect ratio on inner, outer, or from the env chart.
 - Debug (draw bounding boxes, print to console).
+
 Edge layout options:
 - Legends.
 - Rotated labels.
 - Tick labels (aligned floats and periodic timestamps, custom formatting).
+
 Inner layout options:
 - Axis markers (on edges and zero).
 - Grid lines (aligned to ticks).
 - Guide lines (aligned to mouse or data).
 - Inset legends.
+
 Overlay options:
 - Tooltips (with sorting and formatting).
+
 Series options:
 - Line charts.
 - Stacked line charts.
