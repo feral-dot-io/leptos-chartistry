@@ -3,7 +3,7 @@ name: Deploys demo site to GH pages
 on:
   push:
     tags:
-      - "v*"
+      - "pages*"
   workflow_call:
 
 permissions:
