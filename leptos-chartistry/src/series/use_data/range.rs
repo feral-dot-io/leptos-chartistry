@@ -23,7 +23,7 @@ impl<T> Range<T> {
         if let Some(range) = self.0.as_mut() {
             range.update(t);
         } else {
-            *self = Range(Some(InnerRange::new(t)));
+            *self = Range(InnerRange::new(t));
         }
     }
 
@@ -49,20 +49,30 @@ impl<T> Range<T> {
 }
 
 impl<T: Tick> InnerRange<T> {
-    pub fn new(t: &T) -> Self {
-        let pos = t.position();
-        Self {
+    pub fn new(t: &T) -> Option<Self> {
+        Self::position(t).map(|pos| Self {
             min: (t.clone(), pos),
             max: (t.clone(), pos),
+        })
+    }
+
+    // Gets the position of T. Returns None on f64::NaN
+    fn position(t: &T) -> Option<f64> {
+        let pos = t.position();
+        // Ignore NaN. Similar behaviour to f64::min and f64::max
+        if pos.is_nan() {
+            return None;
         }
+        Some(pos)
     }
 
     pub fn update(&mut self, t: &T) {
-        let pos = t.position();
-        if *t < self.min.0 {
-            self.min = (t.clone(), pos);
-        } else if *t > self.max.0 {
-            self.max = (t.clone(), pos);
+        if let Some(pos) = Self::position(t) {
+            if *t < self.min.0 {
+                self.min = (t.clone(), pos);
+            } else if *t > self.max.0 {
+                self.max = (t.clone(), pos);
+            }
         }
     }
 }
