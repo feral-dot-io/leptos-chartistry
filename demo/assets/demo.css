@@ -23,6 +23,10 @@ header>* {
 header>h2 {
     margin: 0 3em 0 0;
     font-size: 100%;
+    /* Remove styled heading */
+    background-color: inherit;
+    border: none;
+    padding: 0;
 }
 
 header p {
@@ -125,24 +129,19 @@ fieldset input[type=color] {
     height: 1.6em;
 }
 
-#examples h1,
-#examples section>h2,
-#examples .cards>h2,
-#examples .cards>div>h2,
-#examples .cards>div>h2,
-#examples .cards figcaption>h3,
-fieldset>legend,
-#status404 h1 {
+h1,
+h2,
+h3,
+fieldset>legend {
     background-color: #fff;
     border-bottom: 0.2em solid #fc7089;
     margin: 0;
     padding: 0.2em;
     width: fit-content;
-    font-weight: bold;
     font-size: 110%;
 }
 
-#status404 h1 {
+h1 {
     font-size: 150%;
 }
 
@@ -159,9 +158,15 @@ fieldset>legend,
     padding: 1em;
 }
 
+.connect-heading {
+    margin-top: -1.5em !important;
+    margin-bottom: 0.5em !important;
+}
+
 #examples h1 {
     border: 1px solid #000;
     border-bottom: 0.2em solid #fc7089;
+    font-size: 110%;
     text-align: center;
     width: auto;
     padding: 0.5em;
@@ -264,4 +269,19 @@ fieldset>legend,
 
 #aspect-ratio>._chartistry:first-child {
     width: 40em;
+}
+
+.example>.demo {
+    width: fit-content;
+    margin: 2em auto;
+    padding: 1em 2em;
+}
+
+.example>.code {
+    margin: 2em auto;
+    /* Keep vaguely left aligned */
+    margin-left: 0;
+    padding-left: 3em;
+    padding-right: 3em;
+    width: fit-content;
 }
