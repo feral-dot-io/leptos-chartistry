@@ -141,10 +141,6 @@ fieldset>legend {
     font-size: 110%;
 }
 
-h1 {
-    font-size: 150%;
-}
-
 #examples h2>a,
 #examples h3>a {
     text-decoration: none;
@@ -192,13 +188,13 @@ h1 {
     padding: 0.5em 0;
 }
 
-#examples .cards {
+.cards {
     display: flex;
     flex-flow: row wrap;
     gap: 2em 0.5em;
 }
 
-#examples .cards>div.include-right {
+.cards>div.include-right {
     width: fit-content;
     display: flex;
     flex-flow: row nowrap;
@@ -207,8 +203,8 @@ h1 {
     width: calc(300px + 2.5em + 4em);
 }
 
-#examples .cards>h2,
-#examples .cards>div>h2 {
+.cards>h2,
+.cards>div>h2 {
     border: 1px solid #000;
     border-right: 0.2em solid #fc7089;
     padding: 1em;
@@ -218,7 +214,7 @@ h1 {
     transform: rotate(180deg);
 }
 
-#examples .cards h2>em {
+.cards h2>em {
     font-weight: normal;
 }
 
@@ -271,17 +267,21 @@ h1 {
     width: 40em;
 }
 
-.example>.demo {
+.example .demo {
     width: fit-content;
-    margin: 2em auto;
     padding: 1em 2em;
 }
 
-.example>.code {
+.example .debug {
+    width: fit-content;
+    height: fit-content;
+}
+
+.example .code {
     margin: 2em auto;
     /* Keep vaguely left aligned */
     margin-left: 0;
-    padding-left: 3em;
+    padding-left: 2em;
     padding-right: 3em;
     width: fit-content;
 }
