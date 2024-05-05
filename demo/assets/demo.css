@@ -1,8 +1,14 @@
+body {
+    background: repeating-radial-gradient(circle at center 2em, #eee, #12a5ed);
+    min-height: 100vh;
+}
+
 p {
     max-width: 40em;
 }
 
 header {
+    background-color: #fff;
     border-bottom: 1px solid #fc7089;
     font-size: 100%;
     padding: 0.5em 1em;
@@ -54,9 +60,7 @@ header>.badges a>img {
 }
 
 main {
-    min-height: 100vh;
     padding: 2em;
-    background: repeating-radial-gradient(circle at top, #eee, #12a5ed);
 }
 
 #demo>._chartistry {
