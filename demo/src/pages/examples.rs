@@ -329,7 +329,7 @@ fn title_to_id(title: &str) -> String {
 #[component]
 fn ShowCode(#[prop(into)] id: String, #[prop(into)] code: String) -> impl IntoView {
     let dialog = create_node_ref::<Dialog>();
-    let href = format!("#{}", id);
+    let href = format!("examples.html#{}", id);
 
     // Opens dialogue on demand
     let show_modal = move |dialog: HtmlElement<Dialog>| {
