@@ -10,18 +10,25 @@ use web_sys::{HtmlDialogElement, MouseEvent};
 macro_rules! example {
     ($ex:path, $card:ident, $page:ident, $title:literal, $desc:literal, $path:literal) => {
         #[component]
-        fn $card(#[prop(optional, into)] class: Option<AttributeValue>) -> impl IntoView {
+        fn $card(
+            #[prop(optional)] h1: bool,
+            #[prop(optional, into)] class: Option<AttributeValue>,
+        ) -> impl IntoView {
             let app = use_app_context();
             let id = title_to_id($title);
             let url = format!("examples/{id}.html");
-            let data = load_data();
+            let heading = if h1 {
+                view!( <h1 id=&id><a href=&url>$title</a></h1> ).into_view()
+            } else {
+                view!( <h3 id=&id><a href=&url>$title</a></h3> ).into_view()
+            };
             view! {
                 <figure class=class class:background-box=true>
                     <figcaption>
-                        <h3 id=&id><a href=&url>$title</a></h3>
+                        {heading}
                         <p>$desc " " <a href=&url>"Show example code"</a></p>
                     </figcaption>
-                    <$ex debug=app.debug.into() data=data />
+                    <$ex debug=app.debug.into() data=load_data() />
                 </figure>
             }
         }
@@ -29,19 +36,11 @@ macro_rules! example {
         #[component]
         pub fn $page() -> impl IntoView {
             let app = use_app_context();
-            let id = title_to_id($title);
-            let data = load_data();
             let code = include_str!($path);
             view! {
                 <article class="example">
                     <div class="cards">
-                        <figure class="background-box">
-                            <figcaption>
-                                <h1 id=&id><a href="examples/{id}.html">$title</a></h1>
-                                <p>$desc</p>
-                            </figcaption>
-                            <$ex debug=app.debug.into() data=data />
-                        </figure>
+                        <$card h1=true />
                         <div class="background-box debug">
                             <label>
                                 <input type="checkbox" type="checkbox" prop:checked=app.debug
