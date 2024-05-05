@@ -7,6 +7,6 @@ pub mod pages {
         pub use all_examples::*;
 
         // Individual examples
-        pub mod series_line;
+        //pub mod series_line;
     }
 }

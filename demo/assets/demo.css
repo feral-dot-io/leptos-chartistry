@@ -212,6 +212,7 @@ fieldset>legend {
     transform: rotate(180deg);
 }
 
+.cards h1>a,
 .cards h2>a,
 .cards h3>a {
     text-decoration: none;

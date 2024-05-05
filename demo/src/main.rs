@@ -1,6 +1,6 @@
 use demo::pages::{
     demo::Demo,
-    examples::{series_line, Examples},
+    examples::{Examples, LineExamplePage},
 };
 use leptos::*;
 use leptos_meta::provide_meta_context;
@@ -23,7 +23,7 @@ pub fn App() -> impl IntoView {
                 <Routes base="/leptos-chartistry".to_string()>
                     <Route path="/index" view=Demo />
                     <Route path="/examples.html" view=Examples />
-                    <Route path="/examples/line-chart.html" view=series_line::Example />
+                    <Route path="/examples/line-chart.html" view=LineExamplePage />
                     <Route path="/*any" view=NotFound />
                 </Routes>
             </main>

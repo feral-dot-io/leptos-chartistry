@@ -5,9 +5,9 @@ use leptos_router::{use_location, use_navigate, NavigateOptions};
 use web_sys::{HtmlDialogElement, MouseEvent};
 
 macro_rules! example {
-    ($id:ident, $ex:path, $title:literal, $desc:literal, $path:literal) => {
+    ($ex:path, $card:ident, $page:ident, $title:literal, $desc:literal, $path:literal) => {
         #[component]
-        fn $id(
+        fn $card(
             #[prop(optional, into)] class: Option<AttributeValue>,
             #[prop(optional, into)] data: Option<Signal<Vec<MyData>>>,
         ) -> impl IntoView {
@@ -17,11 +17,43 @@ macro_rules! example {
             view! {
                 <figure class=class class:background-box=true>
                     <figcaption>
-                        <h3 id=&id><a href=format!("#{id}")>$title</a></h3>
+                        <h3 id=&id><a href=format!("examples/{id}.html")>$title</a></h3>
                         <p>$desc " " <ShowCode id=id code=include_str!($path) /></p>
                     </figcaption>
                     <$ex debug=ctx.debug.into() data=data />
                 </figure>
+            }
+        }
+
+        #[component]
+        pub fn $page() -> impl IntoView {
+            let debug = create_rw_signal(false);
+            let id = title_to_id($title);
+            let data = load_data();
+            let code = include_str!($path);
+            view! {
+                <article class="example">
+                    <div class="cards">
+                        <figure class="background-box">
+                            <figcaption>
+                                <h1 id=&id><a href="examples/{id}.html">$title</a></h1>
+                                <p>$desc</p>
+                            </figcaption>
+                            <$ex debug=debug.into() data=data />
+                        </figure>
+                        <div class="background-box debug">
+                            <label>
+                                <input type="checkbox" input type="checkbox"
+                                    on:input=move |ev| debug.set(event_target_checked(&ev)) />
+                                " Toggle debug mode"
+                            </label>
+                        </div>
+                    </div>
+                    <div class="background-box code">
+                        <h2 class="connect-heading">"Example code"</h2>
+                        <pre><code>{code}</code></pre>
+                    </div>
+                </article>
             }
         }
     };
@@ -29,16 +61,18 @@ macro_rules! example {
 
 // Lines
 example!(
-    LineExample,
     series_line::Example,
+    LineExampleCard,
+    LineExamplePage,
     "Line chart",
     "A simple line chart.",
     "../../examples/series_line.rs"
 );
 
 example!(
-    StackedLineExample,
     series_line_stack::Example,
+    StackedLineExampleCard,
+    StackedLineExamplePage,
     "Stacked line chart",
     "A stacked line chart.",
     "../../examples/series_line_stack.rs"
@@ -46,8 +80,9 @@ example!(
 
 // Bars
 example!(
-    BarExample,
     series_bar::Example,
+    BarExampleCard,
+    BarExamplePage,
     "Bar chart",
     "A simple bar chart.",
     "../../examples/series_bar.rs"
@@ -55,32 +90,36 @@ example!(
 
 // Edge layout options
 example!(
-    LegendExample,
     edge_legend::Example,
+    LegendExampleCard,
+    LegendExamplePage,
     "Legend",
     "Add legends to your chart edges.",
     "../../examples/edge_legend.rs"
 );
 
 example!(
-    TickLabelsExample,
     edge_tick_labels::Example,
+    TickLabelsExampleCard,
+    TickLabelsExamplePage,
     "Tick labels",
     "Add tick labels and auto-pick nice values.",
     "../../examples/edge_tick_labels.rs"
 );
 
 example!(
-    RotatedLabelExample,
     edge_rotated_label::Example,
+    RotatedLabelExampleCard,
+    RotatedLabelExamplePage,
     "Rotated label",
     "Add rotated labels to your chart.",
     "../../examples/edge_rotated_label.rs"
 );
 
 example!(
-    EdgeLayoutExample,
     edge_layout::Example,
+    EdgeLayoutExampleCard,
+    EdgeLayoutExamplePage,
     "Combined edge layout",
     "A more complete example of all edge options.",
     "../../examples/edge_layout.rs"
@@ -88,40 +127,45 @@ example!(
 
 // Inner layout options
 example!(
-    AxisMarkerExample,
     inner_axis_marker::Example,
+    AxisMarkerExampleCard,
+    AxisMarkerExamplePage,
     "Axis marker",
     "Add axis markers to the edges of your chart area.",
     "../../examples/inner_axis_marker.rs"
 );
 
 example!(
-    GridLineExample,
     inner_grid_line::Example,
+    GridLineExampleCard,
+    GridLineExamplePage,
     "Grid line",
     "Add grid lines aligned to your tick labels.",
     "../../examples/inner_grid_line.rs"
 );
 
 example!(
-    GuideLineExample,
     inner_guide_line::Example,
+    GuideLineExampleCard,
+    GuideLineExamplePage,
     "Guide line",
     "Add guide lines to your mouse.",
     "../../examples/inner_guide_line.rs"
 );
 
 example!(
-    InsetLegendExample,
     inner_legend::Example,
+    InsetLegendExampleCard,
+    InsetLegendExamplePage,
     "Inset legend",
     "Add a legend inside your chart area.",
     "../../examples/inner_legend.rs"
 );
 
 example!(
-    InnerLayoutExample,
     inner_layout::Example,
+    InnerLayoutExampleCard,
+    InnerLayoutExamplePage,
     "Combined inner layout",
     "A more complete example of all inner options.",
     "../../examples/inner_layout.rs"
@@ -130,16 +174,18 @@ example!(
 // Interpolation
 
 example!(
-    MixedInterpolationExample,
     interpolation_mixed::Example,
+    MixedInterpolationExampleCard,
+    MixedInterpolationExamplePage,
     "Linear and monotone",
     "Change the interpolation of your lines.",
     "../../examples/interpolation_mixed.rs"
 );
 
 example!(
-    SteppedExample,
     interpolation_stepped::Example,
+    SteppedExampleCard,
+    SteppedExamplePage,
     "Stepped",
     "Change the interpolation of your lines to stepped.",
     "../../examples/interpolation_stepped.rs"
@@ -148,48 +194,54 @@ example!(
 // Features
 
 example!(
-    TooltipExample,
     feature_tooltip::Example,
+    TooltipExampleCard,
+    TooltipExamplePage,
     "Tooltip",
     "Add a mouse tooltip to your chart.",
     "../../examples/feature_tooltip.rs"
 );
 
 example!(
-    ColoursExample,
     feature_colours::Example,
+    ColoursExampleCard,
+    ColoursExamplePage,
     "Colour",
     "Change the colours of your chart.",
     "../../examples/feature_colours.rs"
 );
 
 example!(
-    MarkersExample,
     feature_markers::Example,
+    MarkersExampleCard,
+    MarkersExamplePage,
     "Point markers",
     "Add point markers to your lines.",
     "../../examples/feature_markers.rs"
 );
 
 example!(
-    Markers2Example,
     feature_markers_2::Example,
+    Markers2ExampleCard,
+    Markers2ExamplePage,
     "Point markers 2",
     "Another way to add point markers to your lines.",
     "../../examples/feature_markers_2.rs"
 );
 
 example!(
-    LineGradientExample,
     feature_line_gradient::Example,
+    LineGradientExampleCard,
+    LineGradientExamplePage,
     "Line colour scheme",
     "Adds a Y-based gradient to the line colour.",
     "../../examples/feature_line_gradient.rs"
 );
 
 example!(
-    CssExample,
     feature_css::Example,
+    CssExampleCard,
+    CssExamplePage,
     "CSS styles",
     "Apply CSS styles to your chart.",
     "../../examples/feature_css.rs"
@@ -232,46 +284,46 @@ pub fn Examples() -> impl IntoView {
                     </ul>
                 </nav>
 
-                <LineExample />
-                <StackedLineExample />
+                <LineExampleCard />
+                <StackedLineExampleCard />
 
                 <div class="include-right">
                     <h2 id="bar"><a href="#bar">"Bar charts"</a></h2>
-                    <BarExample />
+                    <BarExampleCard />
                 </div>
 
                 <div class="include-right">
                     <h2 id="edge"><a href="#edge">"Edge layout options"</a></h2>
-                    <LegendExample />
+                    <LegendExampleCard />
                 </div>
-                <TickLabelsExample />
-                <RotatedLabelExample />
-                <EdgeLayoutExample />
+                <TickLabelsExampleCard />
+                <RotatedLabelExampleCard />
+                <EdgeLayoutExampleCard />
 
                 <div class="include-right">
                     <h2 id="inner"><a href="#inner">"Inner layout options"</a></h2>
-                    <AxisMarkerExample />
+                    <AxisMarkerExampleCard />
                 </div>
-                <GridLineExample />
-                <GuideLineExample />
-                <InsetLegendExample />
-                <InnerLayoutExample />
+                <GridLineExampleCard />
+                <GuideLineExampleCard />
+                <InsetLegendExampleCard />
+                <InnerLayoutExampleCard />
 
                 <div class="include-right">
                     <h2 id="interpolation"><a href="#interpolation">"Line interpolation"</a></h2>
-                    <MixedInterpolationExample />
+                    <MixedInterpolationExampleCard />
                 </div>
-                <SteppedExample />
+                <SteppedExampleCard />
 
                 <div class="include-right">
                     <h2 id="features"><a href="#features">"Features"</a></h2>
-                    <TooltipExample />
+                    <TooltipExampleCard />
                 </div>
-                <ColoursExample />
-                <LineGradientExample class="slim" />
-                <MarkersExample />
-                <Markers2Example />
-                <CssExample class="my-theme" />
+                <ColoursExampleCard />
+                <LineGradientExampleCard class="slim" />
+                <MarkersExampleCard />
+                <Markers2ExampleCard />
+                <CssExampleCard class="my-theme" />
             </div>
 
             <section id="aspect-ratio" class="background-box">
