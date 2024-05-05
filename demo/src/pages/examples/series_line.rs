@@ -7,20 +7,22 @@ pub fn Example() -> impl IntoView {
     let data = load_data();
     let code = include_str!("../../examples/series_line.rs");
     view! {
-        <article id="example-line-chart" class="example">
+        <article class="example">
             <div class="cards">
-                <div class="background-box demo">
-                    <h1 class="connect-heading">"Line chart"</h1>
-                    <p>"A simple line chart."</p>
+                <figure class="background-box">
+                    <figcaption>
+                        <h1 id="line-chart"><a href="line-chart.html">"Line chart"</a></h1>
+                        <p>"A simple line chart. "</p>
+                    </figcaption>
                     <series_line::Example debug=debug.into() data=data />
-                </div>
-                <p class="background-box debug">
+                </figure>
+                <div class="background-box debug">
                     <label>
                         <input type="checkbox" input type="checkbox"
                             on:input=move |ev| debug.set(event_target_checked(&ev)) />
                         " Toggle debug mode"
                     </label>
-                </p>
+                </div>
             </div>
             <div class="background-box code">
                 <h2 class="connect-heading">"Example code"</h2>

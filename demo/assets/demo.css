@@ -145,12 +145,6 @@ fieldset>legend {
     font-size: 110%;
 }
 
-#examples h2>a,
-#examples h3>a {
-    text-decoration: none;
-    color: #222;
-}
-
 .background-box {
     background-color: #fff;
     border: 1px solid #000;
@@ -218,21 +212,35 @@ fieldset>legend {
     transform: rotate(180deg);
 }
 
+.cards h2>a,
+.cards h3>a {
+    text-decoration: none;
+    color: #222;
+}
+
 .cards h2>em {
     font-weight: normal;
 }
 
-#examples figure {
+.cards figure {
     margin: 0;
     width: calc(300px + 2.5em);
 }
 
-#examples figure.slim {
+.cards figure.slim {
     width: min-content;
 }
 
-#examples figure>figcaption {
+.cards figure>figcaption {
     margin-top: -2em;
+}
+
+.cards figure.my-theme {
+    border: 1px solid #fff;
+}
+
+.cards figure.my-theme p a {
+    color: #fc7089;
 }
 
 #examples dialog {
@@ -257,14 +265,6 @@ fieldset>legend {
 
 #examples section>h2 {
     margin-top: -2em;
-}
-
-#examples figure.my-theme {
-    border: 1px solid #fff;
-}
-
-#examples figure.my-theme p a {
-    color: #fc7089;
 }
 
 #aspect-ratio>._chartistry:first-child {
