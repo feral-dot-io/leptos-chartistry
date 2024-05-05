@@ -66,7 +66,7 @@ example!(
     LineExamplePage,
     "Line chart",
     "A simple line chart.",
-    "../../examples/series_line.rs"
+    "../examples/series_line.rs"
 );
 
 example!(
@@ -75,7 +75,7 @@ example!(
     StackedLineExamplePage,
     "Stacked line chart",
     "A stacked line chart.",
-    "../../examples/series_line_stack.rs"
+    "../examples/series_line_stack.rs"
 );
 
 // Bars
@@ -85,7 +85,7 @@ example!(
     BarExamplePage,
     "Bar chart",
     "A simple bar chart.",
-    "../../examples/series_bar.rs"
+    "../examples/series_bar.rs"
 );
 
 // Edge layout options
@@ -95,7 +95,7 @@ example!(
     LegendExamplePage,
     "Legend",
     "Add legends to your chart edges.",
-    "../../examples/edge_legend.rs"
+    "../examples/edge_legend.rs"
 );
 
 example!(
@@ -104,7 +104,7 @@ example!(
     TickLabelsExamplePage,
     "Tick labels",
     "Add tick labels and auto-pick nice values.",
-    "../../examples/edge_tick_labels.rs"
+    "../examples/edge_tick_labels.rs"
 );
 
 example!(
@@ -113,7 +113,7 @@ example!(
     RotatedLabelExamplePage,
     "Rotated label",
     "Add rotated labels to your chart.",
-    "../../examples/edge_rotated_label.rs"
+    "../examples/edge_rotated_label.rs"
 );
 
 example!(
@@ -122,7 +122,7 @@ example!(
     EdgeLayoutExamplePage,
     "Combined edge layout",
     "A more complete example of all edge options.",
-    "../../examples/edge_layout.rs"
+    "../examples/edge_layout.rs"
 );
 
 // Inner layout options
@@ -132,7 +132,7 @@ example!(
     AxisMarkerExamplePage,
     "Axis marker",
     "Add axis markers to the edges of your chart area.",
-    "../../examples/inner_axis_marker.rs"
+    "../examples/inner_axis_marker.rs"
 );
 
 example!(
@@ -141,7 +141,7 @@ example!(
     GridLineExamplePage,
     "Grid line",
     "Add grid lines aligned to your tick labels.",
-    "../../examples/inner_grid_line.rs"
+    "../examples/inner_grid_line.rs"
 );
 
 example!(
@@ -150,7 +150,7 @@ example!(
     GuideLineExamplePage,
     "Guide line",
     "Add guide lines to your mouse.",
-    "../../examples/inner_guide_line.rs"
+    "../examples/inner_guide_line.rs"
 );
 
 example!(
@@ -159,7 +159,7 @@ example!(
     InsetLegendExamplePage,
     "Inset legend",
     "Add a legend inside your chart area.",
-    "../../examples/inner_legend.rs"
+    "../examples/inner_legend.rs"
 );
 
 example!(
@@ -168,7 +168,7 @@ example!(
     InnerLayoutExamplePage,
     "Combined inner layout",
     "A more complete example of all inner options.",
-    "../../examples/inner_layout.rs"
+    "../examples/inner_layout.rs"
 );
 
 // Interpolation
@@ -179,7 +179,7 @@ example!(
     MixedInterpolationExamplePage,
     "Linear and monotone",
     "Change the interpolation of your lines.",
-    "../../examples/interpolation_mixed.rs"
+    "../examples/interpolation_mixed.rs"
 );
 
 example!(
@@ -188,7 +188,7 @@ example!(
     SteppedExamplePage,
     "Stepped",
     "Change the interpolation of your lines to stepped.",
-    "../../examples/interpolation_stepped.rs"
+    "../examples/interpolation_stepped.rs"
 );
 
 // Features
@@ -199,7 +199,7 @@ example!(
     TooltipExamplePage,
     "Tooltip",
     "Add a mouse tooltip to your chart.",
-    "../../examples/feature_tooltip.rs"
+    "../examples/feature_tooltip.rs"
 );
 
 example!(
@@ -208,7 +208,7 @@ example!(
     ColoursExamplePage,
     "Colour",
     "Change the colours of your chart.",
-    "../../examples/feature_colours.rs"
+    "../examples/feature_colours.rs"
 );
 
 example!(
@@ -217,7 +217,7 @@ example!(
     MarkersExamplePage,
     "Point markers",
     "Add point markers to your lines.",
-    "../../examples/feature_markers.rs"
+    "../examples/feature_markers.rs"
 );
 
 example!(
@@ -226,7 +226,7 @@ example!(
     Markers2ExamplePage,
     "Point markers 2",
     "Another way to add point markers to your lines.",
-    "../../examples/feature_markers_2.rs"
+    "../examples/feature_markers_2.rs"
 );
 
 example!(
@@ -235,7 +235,7 @@ example!(
     LineGradientExamplePage,
     "Line colour scheme",
     "Adds a Y-based gradient to the line colour.",
-    "../../examples/feature_line_gradient.rs"
+    "../examples/feature_line_gradient.rs"
 );
 
 example!(
@@ -244,7 +244,7 @@ example!(
     CssExamplePage,
     "CSS styles",
     "Apply CSS styles to your chart.",
-    "../../examples/feature_css.rs"
+    "../examples/feature_css.rs"
 );
 
 #[derive(Clone)]
@@ -329,7 +329,7 @@ pub fn Examples() -> impl IntoView {
             <section id="aspect-ratio" class="background-box">
                 <h2><a href="#aspect-ratio">"Aspect ratio"</a></h2>
                 <AspectRatioSunspots debug=debug.into() />
-                <p><ShowCode id="aspect-ratio" code=include_str!("../../examples/aspect_sunspots.rs") /></p>
+                <p><ShowCode id="aspect-ratio" code=include_str!("../examples/aspect_sunspots.rs") /></p>
             </section>
         </article>
     }
