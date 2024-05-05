@@ -1,4 +1,7 @@
-use crate::examples::{aspect_sunspots::AspectRatioSunspots, *};
+use crate::{
+    examples::{aspect_sunspots::AspectRatioSunspots, *},
+    use_app_context,
+};
 use js_sys::wasm_bindgen::JsCast;
 use leptos::{html::Dialog, *};
 use leptos_router::{use_location, use_navigate, NavigateOptions};
@@ -7,27 +10,25 @@ use web_sys::{HtmlDialogElement, MouseEvent};
 macro_rules! example {
     ($ex:path, $card:ident, $page:ident, $title:literal, $desc:literal, $path:literal) => {
         #[component]
-        fn $card(
-            #[prop(optional, into)] class: Option<AttributeValue>,
-            #[prop(optional, into)] data: Option<Signal<Vec<MyData>>>,
-        ) -> impl IntoView {
-            let ctx = use_local_context();
+        fn $card(#[prop(optional, into)] class: Option<AttributeValue>) -> impl IntoView {
+            let app = use_app_context();
             let id = title_to_id($title);
-            let data = data.unwrap_or(ctx.data);
+            let url = format!("examples/{id}.html");
+            let data = load_data();
             view! {
                 <figure class=class class:background-box=true>
                     <figcaption>
-                        <h3 id=&id><a href=format!("examples/{id}.html")>$title</a></h3>
-                        <p>$desc " " <ShowCode id=id code=include_str!($path) /></p>
+                        <h3 id=&id><a href=&url>$title</a></h3>
+                        <p>$desc " " <a href=&url>"Show example code"</a></p>
                     </figcaption>
-                    <$ex debug=ctx.debug.into() data=data />
+                    <$ex debug=app.debug.into() data=data />
                 </figure>
             }
         }
 
         #[component]
         pub fn $page() -> impl IntoView {
-            let debug = create_rw_signal(false);
+            let app = use_app_context();
             let id = title_to_id($title);
             let data = load_data();
             let code = include_str!($path);
@@ -39,12 +40,12 @@ macro_rules! example {
                                 <h1 id=&id><a href="examples/{id}.html">$title</a></h1>
                                 <p>$desc</p>
                             </figcaption>
-                            <$ex debug=debug.into() data=data />
+                            <$ex debug=app.debug.into() data=data />
                         </figure>
                         <div class="background-box debug">
                             <label>
-                                <input type="checkbox" input type="checkbox"
-                                    on:input=move |ev| debug.set(event_target_checked(&ev)) />
+                                <input type="checkbox" type="checkbox" prop:checked=app.debug
+                                    on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
                                 " Toggle debug mode"
                             </label>
                         </div>
@@ -247,23 +248,9 @@ example!(
     "../examples/feature_css.rs"
 );
 
-#[derive(Clone)]
-struct Context {
-    debug: RwSignal<bool>,
-    data: Signal<Vec<MyData>>,
-}
-
-fn use_local_context() -> Context {
-    use_context::<Context>().expect("missing examples::context")
-}
-
 #[component]
 pub fn Examples() -> impl IntoView {
-    let debug = create_rw_signal(false);
-    provide_context(Context {
-        debug,
-        data: load_data(),
-    });
+    let app = use_app_context();
 
     view! {
         <article id="examples">
@@ -272,8 +259,8 @@ pub fn Examples() -> impl IntoView {
                     <h1>"Examples"</h1>
                     <p class="background-box">
                         <label>
-                            <input type="checkbox" input type="checkbox"
-                                on:input=move |ev| debug.set(event_target_checked(&ev)) />
+                            <input type="checkbox" type="checkbox" prop:checked=app.debug
+                                on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
                             " Debug mode"
                         </label>
                     </p>
@@ -328,7 +315,7 @@ pub fn Examples() -> impl IntoView {
 
             <section id="aspect-ratio" class="background-box">
                 <h2><a href="#aspect-ratio">"Aspect ratio"</a></h2>
-                <AspectRatioSunspots debug=debug.into() />
+                <AspectRatioSunspots debug=app.debug.into() />
                 <p><ShowCode id="aspect-ratio" code=include_str!("../examples/aspect_sunspots.rs") /></p>
             </section>
         </article>
