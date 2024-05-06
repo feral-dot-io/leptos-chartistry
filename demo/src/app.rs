@@ -21,7 +21,7 @@ pub fn App() -> impl IntoView {
             <SiteHeader />
             <main>
                 <Routes base="/leptos-chartistry".to_string()>
-                    <Route path="/index" view=Demo />
+                    <Route path="/" view=Demo />
                     <Route path="/examples.html" view=Examples />
                     <examples::Routes prefix="/examples/" />
                     <Route path="/*any" view=NotFound />
