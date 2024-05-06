@@ -32,6 +32,12 @@ pub enum Example {
     Css,
 }
 
+macro_rules! include_example_hl {
+    ($file:tt) => {
+        include_str!(concat!(env!("OUT_DIR"), "/examples-hl/", $file, ".rs"))
+    };
+}
+
 impl Example {
     fn title(self) -> &'static str {
         match self {
@@ -90,26 +96,26 @@ impl Example {
 
     fn code(self) -> &'static str {
         match self {
-            Self::Line => include_str!("../examples/series_line.rs"),
-            Self::StackedLine => include_str!("../examples/series_line_stack.rs"),
-            Self::Bar => include_str!("../examples/series_bar.rs"),
-            Self::Legend => include_str!("../examples/edge_legend.rs"),
-            Self::TickLabels => include_str!("../examples/edge_tick_labels.rs"),
-            Self::RotatedLabel => include_str!("../examples/edge_rotated_label.rs"),
-            Self::EdgeLayout => include_str!("../examples/edge_layout.rs"),
-            Self::AxisMarker => include_str!("../examples/inner_axis_marker.rs"),
-            Self::GridLine => include_str!("../examples/inner_grid_line.rs"),
-            Self::GuideLine => include_str!("../examples/inner_guide_line.rs"),
-            Self::InsetLegend => include_str!("../examples/inner_legend.rs"),
-            Self::InnerLayout => include_str!("../examples/inner_layout.rs"),
-            Self::MixedInterpolation => include_str!("../examples/interpolation_mixed.rs"),
-            Self::Stepped => include_str!("../examples/interpolation_stepped.rs"),
-            Self::Tooltip => include_str!("../examples/feature_tooltip.rs"),
-            Self::Colours => include_str!("../examples/feature_colours.rs"),
-            Self::Markers => include_str!("../examples/feature_markers.rs"),
-            Self::Markers2 => include_str!("../examples/feature_markers_2.rs"),
-            Self::LineGradient => include_str!("../examples/feature_line_gradient.rs"),
-            Self::Css => include_str!("../examples/feature_css.rs"),
+            Self::Line => include_example_hl!("series_line"),
+            Self::StackedLine => include_example_hl!("series_line_stack"),
+            Self::Bar => include_example_hl!("series_bar"),
+            Self::Legend => include_example_hl!("edge_legend"),
+            Self::TickLabels => include_example_hl!("edge_tick_labels"),
+            Self::RotatedLabel => include_example_hl!("edge_rotated_label"),
+            Self::EdgeLayout => include_example_hl!("edge_layout"),
+            Self::AxisMarker => include_example_hl!("inner_axis_marker"),
+            Self::GridLine => include_example_hl!("inner_grid_line"),
+            Self::GuideLine => include_example_hl!("inner_guide_line"),
+            Self::InsetLegend => include_example_hl!("inner_legend"),
+            Self::InnerLayout => include_example_hl!("inner_layout"),
+            Self::MixedInterpolation => include_example_hl!("interpolation_mixed"),
+            Self::Stepped => include_example_hl!("interpolation_stepped"),
+            Self::Tooltip => include_example_hl!("feature_tooltip"),
+            Self::Colours => include_example_hl!("feature_colours"),
+            Self::Markers => include_example_hl!("feature_markers"),
+            Self::Markers2 => include_example_hl!("feature_markers_2"),
+            Self::LineGradient => include_example_hl!("feature_line_gradient"),
+            Self::Css => include_example_hl!("feature_css"),
         }
     }
 
@@ -211,7 +217,7 @@ pub fn Example(example: Example) -> impl IntoView {
             </div>
             <div class="background-box code">
                 <h2 class="connect-heading">"Example code"</h2>
-                <pre><code>{example.code()}</code></pre>
+                <div inner_html=example.code() />
             </div>
         </article>
     }

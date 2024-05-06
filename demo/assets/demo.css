@@ -145,6 +145,14 @@ fieldset>legend {
     font-size: 110%;
 }
 
+._chartistry h2,
+._chartistry h3 {
+    /* Undo our headings in charts */
+    background-color: inherit;
+    border-bottom: 0;
+    padding: 0;
+}
+
 .background-box {
     background-color: #fff;
     border: 1px solid #000;
@@ -283,10 +291,11 @@ fieldset>legend {
 }
 
 .example .code {
+    /* From syntax theme in build.rs */
+    background-color: #2b303b;
+    border: 1px solid #fff;
     margin: 2em auto;
     /* Keep vaguely left aligned */
     margin-left: 0;
-    padding-left: 2em;
-    padding-right: 3em;
     width: fit-content;
 }
