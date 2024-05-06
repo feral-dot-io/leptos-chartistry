@@ -148,28 +148,10 @@ impl Example {
         }
     }
 
-    pub fn view(self) -> impl IntoView {
-        match self {
-            Self::Line => view!(<Example example=self />),
-            Self::StackedLine => view!(<Example example=self />),
-            Self::Bar => view!(<Example example=self />),
-            Self::Legend => view!(<Example example=self />),
-            Self::TickLabels => view!(<Example example=self />),
-            Self::RotatedLabel => view!(<Example example=self />),
-            Self::EdgeLayout => view!(<Example example=self />),
-            Self::AxisMarker => view!(<Example example=self />),
-            Self::GridLine => view!(<Example example=self />),
-            Self::GuideLine => view!(<Example example=self />),
-            Self::InsetLegend => view!(<Example example=self />),
-            Self::InnerLayout => view!(<Example example=self />),
-            Self::MixedInterpolation => view!(<Example example=self />),
-            Self::Stepped => view!(<Example example=self />),
-            Self::Tooltip => view!(<Example example=self />),
-            Self::Colours => view!(<Example example=self />),
-            Self::Markers => view!(<Example example=self />),
-            Self::Markers2 => view!(<Example example=self />),
-            Self::LineGradient => view!(<Example example=self />),
-            Self::Css => view!(<Example example=self />),
+    fn page_view(self) -> impl IntoView {
+        // Note: page-specific variants that do more than just the card view should be referenced here. Falls back to the card view if not implemented.
+        view! {
+            <Example example=self />
         }
     }
 }
@@ -182,10 +164,7 @@ pub fn Routes(prefix: &'static str) -> impl IntoView {
         .iter()
         .map(|ex| {
             view! {
-                <Route
-                    path=format!("{}.html", ex.id())
-                    view=|| view! ( <Example example=*ex /> )
-                />
+                <Route path=format!("{}.html", ex.id()) view=|| ex.page_view() />
             }
         })
         .map(|r| r.into_view())
