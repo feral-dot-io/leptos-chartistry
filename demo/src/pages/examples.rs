@@ -5,9 +5,10 @@ use crate::{
 use js_sys::wasm_bindgen::JsCast;
 use leptos::{html::Dialog, *};
 use leptos_router::{use_location, use_navigate, NavigateOptions};
+use strum::VariantArray;
 use web_sys::{HtmlDialogElement, MouseEvent};
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, VariantArray)]
 pub enum Example {
     Line,
     StackedLine,
@@ -120,7 +121,7 @@ impl Example {
         }
     }
 
-    fn view(self) -> impl IntoView {
+    fn card_view(self) -> impl IntoView {
         let de = use_app_context().debug.into();
         let da = load_data();
         match self {
@@ -146,6 +147,52 @@ impl Example {
             Self::Css => view!(<feature_css::Example debug=de data=da />),
         }
     }
+
+    pub fn view(self) -> impl IntoView {
+        match self {
+            Self::Line => view!(<Example example=self />),
+            Self::StackedLine => view!(<Example example=self />),
+            Self::Bar => view!(<Example example=self />),
+            Self::Legend => view!(<Example example=self />),
+            Self::TickLabels => view!(<Example example=self />),
+            Self::RotatedLabel => view!(<Example example=self />),
+            Self::EdgeLayout => view!(<Example example=self />),
+            Self::AxisMarker => view!(<Example example=self />),
+            Self::GridLine => view!(<Example example=self />),
+            Self::GuideLine => view!(<Example example=self />),
+            Self::InsetLegend => view!(<Example example=self />),
+            Self::InnerLayout => view!(<Example example=self />),
+            Self::MixedInterpolation => view!(<Example example=self />),
+            Self::Stepped => view!(<Example example=self />),
+            Self::Tooltip => view!(<Example example=self />),
+            Self::Colours => view!(<Example example=self />),
+            Self::Markers => view!(<Example example=self />),
+            Self::Markers2 => view!(<Example example=self />),
+            Self::LineGradient => view!(<Example example=self />),
+            Self::Css => view!(<Example example=self />),
+        }
+    }
+}
+
+#[component(transparent)]
+pub fn Routes(prefix: &'static str) -> impl IntoView {
+    use leptos_router::*;
+    // Note: this was incredibly awkward and fiddly to get right. The `Route::children` attribute requires a `Fragment` built from a `Vec<View>`. The `View` must be made up of a transparent `Route` component. It seems any deviation from this e.g., using `CollectView` results in a "tried to mount a Transparent node." error from Leptos.
+    let children = Example::VARIANTS
+        .iter()
+        .map(|ex| {
+            view! {
+                <Route
+                    path=format!("{}.html", ex.id())
+                    view=|| view! ( <Example example=*ex /> )
+                />
+            }
+        })
+        .map(|r| r.into_view())
+        .collect::<Fragment>();
+    view! {
+        <Route path=prefix view=|| view!(<Outlet />) children=Box::new(|| children) />
+    }
 }
 
 #[component]
@@ -163,7 +210,7 @@ fn Card(example: Example, #[prop(optional)] h1: bool) -> impl IntoView {
                 {heading}
                 <p>{example.description()} " " <a href=&url>"Show example code"</a></p>
             </figcaption>
-            {example.view()}
+            {example.card_view()}
         </figure>
     }
 }

@@ -17,4 +17,5 @@ leptos_meta = { version = "0.6", features = ["csr"] }
 leptos_router = { version = "0.6", features = ["csr"] }
 leptos-use = "0.10"
 log = "0.4"
+strum = { version = "0.26.2", features = ["derive"] }
 web-sys = "0.3"
