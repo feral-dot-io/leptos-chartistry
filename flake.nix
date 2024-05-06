@@ -61,6 +61,12 @@
           # Create symlinks for each of our pages. Enables a static site.
           postInstall = ''
             ln -s index.html $out/examples.html
+            mkdir -p $out/examples
+            for f in demo/src/examples/*.rs; do
+              f=''${f##*/} # Remove dir prefix
+              f=''${f%.rs} # Remove file suffix
+              ln -s index.html $out/examples/$f.html
+            done
           '';
 
           wasm-bindgen-cli = pkgs.wasm-bindgen-cli.override {
