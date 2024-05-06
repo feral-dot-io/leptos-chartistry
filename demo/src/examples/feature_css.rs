@@ -18,14 +18,14 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
         // which we can use to apply themes to our chart.
         <Style>"
             .my-theme {
-                background-color: #333;
+                background-color: #2b303b;
 
                 /* Use 'fill' for filling text colour */
-                fill: #ddd;
+                fill: #c0c5ce;
 
                 /* Some elements (e.g., legend and tooltips) use HTML so we
                     still still need to set 'color' */
-                color: #ddd;
+                color: #c0c5ce;
             }
 
             /* We can set stroke (and fill) directly too */
@@ -35,8 +35,8 @@ pub fn Example(debug: Signal<bool>, data: Signal<Vec<MyData>>) -> impl IntoView 
 
             /* The tooltip uses inline CSS styles and so must be overridden */
             .my-theme ._chartistry_tooltip {
-                border: 1px solid #fff !important;
-                background-color: #333 !important;
+                border: 1px solid #c0c5ce !important;
+                background-color: #2b303b !important;
             }
 
             /* Be careful changing fonts as SVG has no layout engine so won't
