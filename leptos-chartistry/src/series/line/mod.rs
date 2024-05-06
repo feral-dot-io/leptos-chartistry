@@ -204,11 +204,12 @@ pub fn RenderLine<X: 'static, Y: 'static>(
             }
         })
     };
-    let gradient = move || {
+    let gradient = Signal::derive(move || {
         line.gradient
             .get()
             .unwrap_or_else(|| LINEAR_GRADIENT.into())
-    };
+    });
+    let range_y = Signal::derive(move || data.range_y.with(|range_y| range_y.positions()));
 
     view! {
         <g
@@ -222,7 +223,7 @@ pub fn RenderLine<X: 'static, Y: 'static>(
                     <LinearGradientSvg
                         id=gradient_id.clone()
                         scheme=gradient
-                        range_y=move || data.range_y.with(|range_y| range_y.positions()) />
+                        range_y=range_y />
                 </Show>
             </defs>
             <path d=path fill="none" />

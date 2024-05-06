@@ -109,8 +109,8 @@ impl ColourScheme {
 #[component]
 pub fn LinearGradientSvg(
     #[prop(into)] id: AttributeValue,
-    #[prop(into)] scheme: Signal<ColourScheme>,
-    #[prop(into)] range_y: Signal<Option<(f64, f64)>>,
+    scheme: Signal<ColourScheme>,
+    range_y: Signal<Option<(f64, f64)>>,
 ) -> impl IntoView {
     view! {
         <linearGradient id=Some(id) x1="0%" y1="100%" x2="0%" y2="0%">
