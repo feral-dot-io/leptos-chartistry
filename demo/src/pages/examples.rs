@@ -112,6 +112,14 @@ impl Example {
         }
     }
 
+    pub fn extra_class(self) -> Option<AttributeValue> {
+        match self {
+            Self::LineGradient => Some("slim".into()),
+            Self::Css => Some("my-theme".into()),
+            _ => None,
+        }
+    }
+
     pub fn view(self) -> impl IntoView {
         let de = use_app_context().debug.into();
         let da = load_data();
@@ -141,11 +149,7 @@ impl Example {
 }
 
 #[component]
-fn Card(
-    example: Example,
-    #[prop(optional)] h1: bool,
-    #[prop(optional, into)] class: Option<AttributeValue>,
-) -> impl IntoView {
+fn Card(example: Example, #[prop(optional)] h1: bool) -> impl IntoView {
     let id = example.id();
     let url = format!("examples/{id}.html");
     let heading = if h1 {
@@ -154,7 +158,7 @@ fn Card(
         view!( <h3 id=&id><a href=&url>{example.title()}</a></h3> ).into_view()
     };
     view! {
-        <figure class=class class:background-box=true>
+        <figure class:background-box=true class=example.extra_class()>
             <figcaption>
                 {heading}
                 <p>{example.description()} " " <a href=&url>"Show example code"</a></p>
@@ -246,10 +250,10 @@ pub fn Examples() -> impl IntoView {
                     <Card example=Example::Tooltip />
                 </div>
                 <Card example=Example::Colours />
-                <Card example=Example::LineGradient class="slim" />
+                <Card example=Example::LineGradient />
                 <Card example=Example::Markers />
                 <Card example=Example::Markers2 />
-                <Card example=Example::Css class="my-theme" />
+                <Card example=Example::Css />
             </div>
 
             <section id="aspect-ratio" class="background-box">
