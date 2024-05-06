@@ -1,8 +1,14 @@
+body {
+    background: repeating-radial-gradient(circle at center 2em, #eee, #12a5ed);
+    min-height: 100vh;
+}
+
 p {
     max-width: 40em;
 }
 
 header {
+    background-color: #fff;
     border-bottom: 1px solid #fc7089;
     font-size: 100%;
     padding: 0.5em 1em;
@@ -23,6 +29,10 @@ header>* {
 header>h2 {
     margin: 0 3em 0 0;
     font-size: 100%;
+    /* Remove styled heading */
+    background-color: inherit;
+    border: none;
+    padding: 0;
 }
 
 header p {
@@ -50,9 +60,7 @@ header>.badges a>img {
 }
 
 main {
-    min-height: 100vh;
     padding: 2em;
-    background: repeating-radial-gradient(circle at top, #eee, #12a5ed);
 }
 
 #demo>._chartistry {
@@ -125,31 +133,16 @@ fieldset input[type=color] {
     height: 1.6em;
 }
 
-#examples h1,
-#examples section>h2,
-#examples .cards>h2,
-#examples .cards>div>h2,
-#examples .cards>div>h2,
-#examples .cards figcaption>h3,
-fieldset>legend,
-#status404 h1 {
+h1,
+h2,
+h3,
+fieldset>legend {
     background-color: #fff;
     border-bottom: 0.2em solid #fc7089;
     margin: 0;
     padding: 0.2em;
     width: fit-content;
-    font-weight: bold;
     font-size: 110%;
-}
-
-#status404 h1 {
-    font-size: 150%;
-}
-
-#examples h2>a,
-#examples h3>a {
-    text-decoration: none;
-    color: #222;
 }
 
 .background-box {
@@ -159,9 +152,15 @@ fieldset>legend,
     padding: 1em;
 }
 
+.connect-heading {
+    margin-top: -1.5em !important;
+    margin-bottom: 0.5em !important;
+}
+
 #examples h1 {
     border: 1px solid #000;
     border-bottom: 0.2em solid #fc7089;
+    font-size: 110%;
     text-align: center;
     width: auto;
     padding: 0.5em;
@@ -187,13 +186,13 @@ fieldset>legend,
     padding: 0.5em 0;
 }
 
-#examples .cards {
+.cards {
     display: flex;
     flex-flow: row wrap;
     gap: 2em 0.5em;
 }
 
-#examples .cards>div.include-right {
+.cards>div.include-right {
     width: fit-content;
     display: flex;
     flex-flow: row nowrap;
@@ -202,8 +201,8 @@ fieldset>legend,
     width: calc(300px + 2.5em + 4em);
 }
 
-#examples .cards>h2,
-#examples .cards>div>h2 {
+.cards>h2,
+.cards>div>h2 {
     border: 1px solid #000;
     border-right: 0.2em solid #fc7089;
     padding: 1em;
@@ -213,21 +212,36 @@ fieldset>legend,
     transform: rotate(180deg);
 }
 
-#examples .cards h2>em {
+.cards h1>a,
+.cards h2>a,
+.cards h3>a {
+    text-decoration: none;
+    color: #222;
+}
+
+.cards h2>em {
     font-weight: normal;
 }
 
-#examples figure {
+.cards figure {
     margin: 0;
     width: calc(300px + 2.5em);
 }
 
-#examples figure.slim {
+.cards figure.slim {
     width: min-content;
 }
 
-#examples figure>figcaption {
+.cards figure>figcaption {
     margin-top: -2em;
+}
+
+.cards figure.my-theme {
+    border: 1px solid #fff;
+}
+
+.cards figure.my-theme p a {
+    color: #fc7089;
 }
 
 #examples dialog {
@@ -254,14 +268,25 @@ fieldset>legend,
     margin-top: -2em;
 }
 
-#examples figure.my-theme {
-    border: 1px solid #fff;
-}
-
-#examples figure.my-theme p a {
-    color: #fc7089;
-}
-
 #aspect-ratio>._chartistry:first-child {
     width: 40em;
+}
+
+.example .demo {
+    width: fit-content;
+    padding: 1em 2em;
+}
+
+.example .debug {
+    width: fit-content;
+    height: fit-content;
+}
+
+.example .code {
+    margin: 2em auto;
+    /* Keep vaguely left aligned */
+    margin-left: 0;
+    padding-left: 2em;
+    padding-right: 3em;
+    width: fit-content;
 }
