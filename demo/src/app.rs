@@ -1,6 +1,6 @@
 use crate::pages::{
     demo::Demo,
-    examples::{Examples, *},
+    examples::{Example, Examples},
 };
 use leptos::*;
 use leptos_meta::provide_meta_context;
@@ -23,27 +23,27 @@ pub fn App() -> impl IntoView {
                 <Routes base="/leptos-chartistry".to_string()>
                     <Route path="/index" view=Demo />
                     <Route path="/examples.html" view=Examples />
-                    <Route path="/examples/line-chart.html" view=LineExamplePage />
-                    <Route path="/examples/line-chart.html" view=LineExamplePage />
-                    <Route path="/examples/stacked-line-chart.html" view=StackedLineExamplePage />
-                    <Route path="/examples/bar-chart.html" view=BarExamplePage />
-                    <Route path="/examples/legend-html" view=LegendExamplePage />
-                    <Route path="/examples/tick-labels.html" view=TickLabelsExamplePage />
-                    <Route path="/examples/rotated-label.html" view=RotatedLabelExamplePage />
-                    <Route path="/examples/combined-edge-layout.html" view=EdgeLayoutExamplePage />
-                    <Route path="/examples/axis-marker.html" view=AxisMarkerExamplePage />
-                    <Route path="/examples/grid-line.html" view=GridLineExamplePage />
-                    <Route path="/examples/guide-line.html" view=GuideLineExamplePage />
-                    <Route path="/examples/inset-legend.html" view=InsetLegendExamplePage />
-                    <Route path="/examples/combined-inner-layout.html" view=InnerLayoutExamplePage />
-                    <Route path="/examples/linear-and monotone.html" view=MixedInterpolationExamplePage />
-                    <Route path="/examples/stepped.html" view=SteppedExamplePage />
-                    <Route path="/examples/tooltip.html" view=TooltipExamplePage />
-                    <Route path="/examples/colour.html" view=ColoursExamplePage />
-                    <Route path="/examples/point-markers.html" view=MarkersExamplePage />
-                    <Route path="/examples/point-markers-2.html" view=Markers2ExamplePage />
-                    <Route path="/examples/line-colour-scheme.html" view=LineGradientExamplePage />
-                    <Route path="/examples/css-styles.html" view=CssExamplePage />
+                    <Route path="/examples/line-chart.html" view=|| view!(<Example example=Example::Line />) />
+                    <Route path="/examples/line-chart.html" view=|| view!(<Example example=Example::Line />) />
+                    <Route path="/examples/stacked-line-chart.html" view=|| view!(<Example example=Example::StackedLine />) />
+                    <Route path="/examples/bar-chart.html" view=|| view!(<Example example=Example::Bar />) />
+                    <Route path="/examples/legend-html" view=|| view!(<Example example=Example::Legend />) />
+                    <Route path="/examples/tick-labels.html" view=|| view!(<Example example=Example::TickLabels />) />
+                    <Route path="/examples/rotated-label.html" view=|| view!(<Example example=Example::RotatedLabel />) />
+                    <Route path="/examples/combined-edge-layout.html" view=|| view!(<Example example=Example::EdgeLayout />) />
+                    <Route path="/examples/axis-marker.html" view=|| view!(<Example example=Example::AxisMarker />) />
+                    <Route path="/examples/grid-line.html" view=|| view!(<Example example=Example::GridLine />) />
+                    <Route path="/examples/guide-line.html" view=|| view!(<Example example=Example::GuideLine />) />
+                    <Route path="/examples/inset-legend.html" view=|| view!(<Example example=Example::InsetLegend />) />
+                    <Route path="/examples/combined-inner-layout.html" view=|| view!(<Example example=Example::InnerLayout />) />
+                    <Route path="/examples/linear-and monotone.html" view=|| view!(<Example example=Example::MixedInterpolation />) />
+                    <Route path="/examples/stepped.html" view=|| view!(<Example example=Example::Stepped />) />
+                    <Route path="/examples/tooltip.html" view=|| view!(<Example example=Example::Tooltip />) />
+                    <Route path="/examples/colour.html" view=|| view!(<Example example=Example::Colours />) />
+                    <Route path="/examples/point-markers.html" view=|| view!(<Example example=Example::Markers />) />
+                    <Route path="/examples/point-markers-2.html" view=|| view!(<Example example=Example::Markers2 />) />
+                    <Route path="/examples/line-colour-scheme.html" view=|| view!(<Example example=Example::LineGradient />) />
+                    <Route path="/examples/css-styles.html" view=|| view!(<Example example=Example::Css />) />
                     <Route path="/*any" view=NotFound />
                 </Routes>
             </main>
