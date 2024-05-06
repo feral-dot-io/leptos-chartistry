@@ -32,7 +32,7 @@ pub enum Example {
 }
 
 impl Example {
-    pub fn title(self) -> &'static str {
+    fn title(self) -> &'static str {
         match self {
             Self::Line => "Line chart",
             Self::StackedLine => "Stacked line chart",
@@ -57,12 +57,12 @@ impl Example {
         }
     }
 
-    pub fn id(self) -> String {
+    fn id(self) -> String {
         // ID should not result in any encoding in a URL
         self.title().to_lowercase().replace(' ', "-")
     }
 
-    pub fn description(self) -> &'static str {
+    fn description(self) -> &'static str {
         match self {
             Self::Line => "A simple line chart.",
             Self::StackedLine => "A stacked line chart.",
@@ -87,7 +87,7 @@ impl Example {
         }
     }
 
-    pub fn code(self) -> &'static str {
+    fn code(self) -> &'static str {
         match self {
             Self::Line => include_str!("../examples/series_line.rs"),
             Self::StackedLine => include_str!("../examples/series_line_stack.rs"),
@@ -112,7 +112,7 @@ impl Example {
         }
     }
 
-    pub fn extra_class(self) -> Option<AttributeValue> {
+    fn extra_class(self) -> Option<AttributeValue> {
         match self {
             Self::LineGradient => Some("slim".into()),
             Self::Css => Some("my-theme".into()),
@@ -120,7 +120,7 @@ impl Example {
         }
     }
 
-    pub fn view(self) -> impl IntoView {
+    fn view(self) -> impl IntoView {
         let de = use_app_context().debug.into();
         let da = load_data();
         match self {
