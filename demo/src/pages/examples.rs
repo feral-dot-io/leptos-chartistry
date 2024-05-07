@@ -64,9 +64,29 @@ impl Example {
         }
     }
 
-    fn id(self) -> String {
-        // ID should not result in any encoding in a URL
-        self.title().to_lowercase().replace(' ', "-")
+    fn id(self) -> &'static str {
+        match self {
+            Self::Line => "series-line",
+            Self::StackedLine => "series-line-stack",
+            Self::Bar => "series-bar",
+            Self::Legend => "edge-legend",
+            Self::TickLabels => "edge-tick-labels",
+            Self::RotatedLabel => "edge-rotated-label",
+            Self::EdgeLayout => "edge-layout",
+            Self::AxisMarker => "inner-axis-marker",
+            Self::GridLine => "inner-grid-line",
+            Self::GuideLine => "inner-guide-line",
+            Self::InsetLegend => "inner-legend",
+            Self::InnerLayout => "inner-layout",
+            Self::MixedInterpolation => "interpolation-mixed",
+            Self::Stepped => "interpolation-stepped",
+            Self::Tooltip => "feature-tooltip",
+            Self::Colours => "feature-colours",
+            Self::Markers => "feature-markers",
+            Self::Markers2 => "feature-markers-2",
+            Self::LineGradient => "feature-line-gradient",
+            Self::Css => "feature-css",
+        }
     }
 
     fn description(self) -> &'static str {
@@ -185,9 +205,9 @@ fn Card(example: Example, #[prop(optional)] h1: bool) -> impl IntoView {
     let id = example.id();
     let url = format!("examples/{id}.html");
     let heading = if h1 {
-        view!( <h1 id=&id><a href=&url>{example.title()}</a></h1> ).into_view()
+        view!( <h1 id=id><a href=&url>{example.title()}</a></h1> ).into_view()
     } else {
-        view!( <h3 id=&id><a href=&url>{example.title()}</a></h3> ).into_view()
+        view!( <h3 id=id><a href=&url>{example.title()}</a></h3> ).into_view()
     };
     view! {
         <figure class:background-box=true class=example.extra_class()>
