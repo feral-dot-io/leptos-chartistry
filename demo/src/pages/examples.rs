@@ -170,7 +170,7 @@ pub fn Routes(prefix: &'static str) -> impl IntoView {
         .iter()
         .map(|ex| {
             view! {
-                <Route path=format!("{}.html", ex.id()) view=|| ex.page_view() />
+                <Route path=format!("/{}.html", ex.id()) view=|| ex.page_view() />
             }
         })
         .map(|r| r.into_view())

@@ -23,7 +23,7 @@ pub fn App() -> impl IntoView {
                 <Routes>
                     <Route path="/leptos-chartistry/" view=Demo />
                     <Route path="/leptos-chartistry/examples.html" view=Examples />
-                    <examples::Routes prefix="/leptos-chartistry/examples/" />
+                    <examples::Routes prefix="/leptos-chartistry/examples" />
                     <Route path="/*any" view=NotFound />
                 </Routes>
             </main>

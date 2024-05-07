@@ -65,6 +65,7 @@
             for f in demo/src/examples/*.rs; do
               f=''${f##*/} # Remove dir prefix
               f=''${f%.rs} # Remove file suffix
+              f=''${f//_/-} # Replace underscores with dashes
               ln -s ../index.html $out/examples/$f.html
             done
           '';
