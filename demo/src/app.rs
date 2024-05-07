@@ -17,13 +17,13 @@ pub fn App() -> impl IntoView {
     provide_app_context();
 
     view! {
-        <Router>
+        <Router trailing_slash=TrailingSlash::Exact>
             <SiteHeader />
             <main>
-                <Routes base="/leptos-chartistry".to_string()>
-                    <Route path="/" view=Demo />
-                    <Route path="/examples.html" view=Examples />
-                    <examples::Routes prefix="/examples/" />
+                <Routes>
+                    <Route path="/leptos-chartistry/" view=Demo />
+                    <Route path="/leptos-chartistry/examples.html" view=Examples />
+                    <examples::Routes prefix="/leptos-chartistry/examples/" />
                     <Route path="/*any" view=NotFound />
                 </Routes>
             </main>
