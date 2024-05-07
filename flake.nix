@@ -65,7 +65,7 @@
             for f in demo/src/examples/*.rs; do
               f=''${f##*/} # Remove dir prefix
               f=''${f%.rs} # Remove file suffix
-              ln -s index.html $out/examples/$f.html
+              ln -s ../index.html $out/examples/$f.html
             done
           '';
 
