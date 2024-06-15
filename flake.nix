@@ -18,9 +18,15 @@
       url = "github:rustsec/advisory-db";
       flake = false;
     };
+
+    trunk-src = {
+      url = "github:trunk-rs/trunk";
+      flake = false; # Avoid breakage if added
+    };
   };
 
-  outputs = { self, nixpkgs, utils, rust-overlay, crane, advisory-db }:
+  outputs =
+    { self, nixpkgs, utils, rust-overlay, crane, advisory-db, ... }@inputs:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs =
@@ -30,6 +36,26 @@
         };
         craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
+        # Utilities
+        wasm-bindgen-cli-local = pkgs.wasm-bindgen-cli.override {
+          version = "0.2.92"; # Note: must be kept in sync with Cargo.lock
+          hash = "sha256-1VwY8vQy7soKEgbki4LD+v259751kKxSxmo/gqE6yV0=";
+          cargoHash = "sha256-aACJ+lYNEU8FFBs158G1/JG8sc6Rq080PeKCMnwdpH0=";
+        };
+
+        trunk-local = craneLib.buildPackage {
+          src = inputs.trunk-src; # Don't clean source
+          strictDeps = true;
+          buildInputs = with pkgs; [
+            openssl
+            pkg-config
+            wasm-bindgen-cli-local
+          ];
+          cargoExtraArgs = "--no-default-features --features rustls";
+          doCheck = false;
+        };
+
+        # Build demo
         src = with pkgs;
           lib.cleanSourceWith {
             src = ./.;
@@ -54,6 +80,7 @@
           pname = "chartistry-demo";
           version = "0.0.1";
           strictDeps = true;
+          wasm-bindgen-cli = wasm-bindgen-cli-local;
 
           cargoExtraArgs = "--package=demo";
           trunkExtraBuildArgs = "--public-url /leptos-chartistry";
@@ -69,17 +96,12 @@
               ln -s ../index.html $out/examples/$f.html
             done
           '';
-
-          wasm-bindgen-cli = pkgs.wasm-bindgen-cli.override {
-            version = "0.2.90";
-            hash = "sha256-X8+DVX7dmKh7BgXqP7Fp0smhup5OO8eWEhn26ODYbkQ=";
-            cargoHash = "sha256-ckJxAR20GuVGstzXzIj1M0WBFj5eJjrO2/DRMUK5dwM=";
-          };
         });
-
       in {
-        devShells.default =
-          pkgs.mkShell { packages = with pkgs; [ trunk wasm-bindgen-cli ]; };
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [ trunk-local wasm-bindgen-cli-local ];
+        };
+
         checks = {
           inherit demo;
 
@@ -96,6 +118,7 @@
           audit = craneLib.cargoAudit { inherit src advisory-db; };
           fmt = craneLib.cargoFmt commonArgs;
         };
+
         packages.demo = demo;
       });
 }

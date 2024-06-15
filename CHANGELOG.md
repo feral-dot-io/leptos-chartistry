@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Fixed for any bug fixes. -->
 <!-- Security in case of vulnerabilities. -->
 
+## [0.1.6] - 2024-06-15
+### Fixed
+- Panic if Tick::position returns f64::NaN.
+- Compile errors with Leptos nightly.
+
 ## [0.1.5] - 2024-02-23
 ### Added
 - [Bar charts](https://feral-dot-io.github.io/leptos-chartistry/examples.html#bar-chart) in [#15].
