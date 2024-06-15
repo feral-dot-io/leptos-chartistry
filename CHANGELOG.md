@@ -81,4 +81,5 @@ Series options:
 [0.1.3]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.2...v0.1.3
 [0.1.4]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.3...v0.1.4
 [0.1.5]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.4...v0.1.5
+[0.1.6]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.5...v0.1.6
 [unreleased]: https://github.com/feral-dot-io/leptos-chartistry/compare/v1.1.5...HEAD
