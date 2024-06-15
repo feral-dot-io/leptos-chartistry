@@ -78,5 +78,5 @@ trunk serve --open
 - `nix flake check` -- success? All systems go!
 - `git push --set-upstream origin release-vX.Y.Z`
 - Wait for CI, review PR, squash and merge
-- `git pull; git tag -a vX.Y.Z; git push --tags`
+- `git checkout master; git pull; git tag -a vX.Y.Z; git push --tags`
 - `cargo publish -p leptos-chartistry` -- no turning back...
