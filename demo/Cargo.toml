@@ -20,7 +20,7 @@ leptos = { version = "=0.7.0-beta", features = ["csr"] }
 leptos-chartistry = { path = "../leptos-chartistry" }
 leptos_meta.version = "=0.7.0-beta"
 leptos_router.version = "=0.7.0-beta"
-leptos-use = { git = "https://github.com/Synphonyte/leptos-use.git", branch = "leptos-0.7" }
+leptos-use = "0.10"
 log = "0.4"
 strum = { version = "0.26.2", features = ["derive"] }
 web-sys = "0.3"
