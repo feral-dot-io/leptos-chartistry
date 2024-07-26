@@ -4,7 +4,7 @@ pub mod guide_line;
 pub mod legend;
 
 use crate::{state::State, Tick};
-use leptos::*;
+use leptos::prelude::*;
 use std::rc::Rc;
 
 /// Inner layout options for a [Chart](crate::Chart). See [IntoInner](trait@IntoInner) for details.

@@ -3,7 +3,7 @@ use super::{
     line::{RenderLine, UseLine},
 };
 use crate::{bounds::Bounds, debug::DebugRect, state::State};
-use leptos::*;
+use leptos::prelude::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseY {

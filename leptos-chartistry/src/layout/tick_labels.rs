@@ -11,7 +11,7 @@ use crate::{
     Tick,
 };
 use chrono::prelude::*;
-use leptos::*;
+use leptos::prelude::*;
 use std::rc::Rc;
 
 /// Builds tick labels for an axis.

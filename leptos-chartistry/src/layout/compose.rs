@@ -6,7 +6,7 @@ use crate::{
     state::{PreState, State},
     Tick,
 };
-use leptos::*;
+use leptos::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct Layout {

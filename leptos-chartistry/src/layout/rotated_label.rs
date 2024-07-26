@@ -7,7 +7,7 @@ use crate::{
     edge::Edge,
     state::{PreState, State},
 };
-use leptos::*;
+use leptos::prelude::*;
 
 /// Label placement on the main-axis of a component. An edge layout's main-axis runs parallel to its given edge. Similar to SVG's [text-anchor](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/text-anchor) or CSS's [justify-content](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content).
 #[derive(Copy, Clone, Debug, PartialEq)]

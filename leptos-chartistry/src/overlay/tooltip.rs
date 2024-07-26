@@ -4,7 +4,7 @@ use crate::{
     state::State,
     Tick, TickLabels, AXIS_MARKER_COLOUR,
 };
-use leptos::*;
+use leptos::prelude::*;
 use std::cmp::{Ordering, Reverse};
 
 /// Default gap distance from cursor to tooltip when shown.

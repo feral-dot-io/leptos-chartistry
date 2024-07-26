@@ -23,7 +23,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// There is an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples.html) available. See below for a quick [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#line-chart):
 /// ```rust
-/// use leptos::*;
+/// use leptos::prelude::*;
 /// use leptos_chartistry::*;
 ///
 /// # use chrono::prelude::*;
@@ -79,7 +79,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 /// You'll also have access to this API via [`RwSignals`](https://docs.rs/leptos/latest/leptos/struct.RwSignal.html) allowing you to make changes after the chart creation. This enables fine-grained reactivity.
 ///
 /// ```rust
-/// # use leptos::*;
+/// # use leptos::prelude::*;
 /// # use leptos_chartistry::*;
 /// # #[component]
 /// # fn FindGrainedComponent() -> impl IntoView {
@@ -114,7 +114,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     /// Debug mode. If enabled shows lines around components and prints render info to the console. Useful for getting an idea of how the chart is rendering itself. Below is an example of how you might use it in development. Default is false.
     ///
     /// ```rust
-    /// # use leptos::*;
+    /// # use leptos::prelude::*;
     /// # use leptos_chartistry::*;
     /// # #[component]
     /// # fn DebugComponent() -> impl IntoView {

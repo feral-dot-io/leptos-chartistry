@@ -1,5 +1,5 @@
 use super::MyData;
-use leptos::*;
+use leptos::prelude::*;
 use leptos_chartistry::*;
 use leptos_meta::Style;
 

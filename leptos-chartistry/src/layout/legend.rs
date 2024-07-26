@@ -7,7 +7,7 @@ use crate::{
     state::{PreState, State},
     Padding,
 };
-use leptos::*;
+use leptos::prelude::*;
 
 /// Builds a legend for the chart [series](crate::Series). Orientated along the axis of its placed edge. Drawn in HTML.
 #[derive(Clone, Debug)]

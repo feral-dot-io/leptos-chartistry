@@ -1,5 +1,5 @@
 use super::MyData;
-use leptos::*;
+use leptos::prelude::*;
 use leptos_chartistry::*;
 
 const WHITE: Colour = Colour::from_rgb(255, 255, 255);

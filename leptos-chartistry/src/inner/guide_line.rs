@@ -1,6 +1,6 @@
 use super::UseInner;
 use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State, Tick};
-use leptos::*;
+use leptos::prelude::*;
 use std::{rc::Rc, str::FromStr};
 
 /// Default colour for guide lines.

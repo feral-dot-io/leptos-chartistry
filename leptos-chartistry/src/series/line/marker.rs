@@ -1,6 +1,6 @@
 use super::UseLine;
 use crate::colours::Colour;
-use leptos::*;
+use leptos::prelude::*;
 
 // Scales our marker (drawn -1 to 1) to a 1.0 line width
 const WIDTH_TO_MARKER: f64 = 8.0;

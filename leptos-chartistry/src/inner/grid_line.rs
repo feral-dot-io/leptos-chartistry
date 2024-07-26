@@ -3,7 +3,7 @@ use crate::{
     colours::Colour, debug::DebugRect, projection::Projection, state::State, ticks::GeneratedTicks,
     Tick, TickLabels,
 };
-use leptos::*;
+use leptos::prelude::*;
 use std::rc::Rc;
 
 /// Default colour for grid lines.

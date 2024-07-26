@@ -1,5 +1,5 @@
 use chrono::prelude::*;
-use leptos::*;
+use leptos::prelude::*;
 use leptos_chartistry::*;
 use std::str::FromStr;
 

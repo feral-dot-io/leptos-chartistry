@@ -11,7 +11,7 @@
 //! Below is an example chart:
 //!
 //! ```rust
-//! use leptos::*;
+//! use leptos::prelude::*;
 //! use leptos_chartistry::*;
 //!
 //! # use chrono::prelude::*;

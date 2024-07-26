@@ -1,6 +1,6 @@
 use super::UseInner;
 use crate::{colours::Colour, debug::DebugRect, state::State};
-use leptos::*;
+use leptos::prelude::*;
 use std::{rc::Rc, str::FromStr};
 
 /// Default colour for axis markers.

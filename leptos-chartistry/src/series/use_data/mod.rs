@@ -9,7 +9,7 @@ use crate::{
     Series, Tick,
 };
 use data::Data;
-use leptos::*;
+use leptos::prelude::*;
 
 #[derive(Clone)]
 pub struct UseData<X: 'static, Y: 'static> {

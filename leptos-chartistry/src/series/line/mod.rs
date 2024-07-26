@@ -9,7 +9,7 @@ use crate::{
     series::GetYValue,
     ColourScheme, Tick,
 };
-use leptos::*;
+use leptos::prelude::*;
 use std::rc::Rc;
 
 /// Suggested colour scheme for a linear gradient on a line. Uses darker colours for lower values and lighter colours for higher values. Assumes a light background.

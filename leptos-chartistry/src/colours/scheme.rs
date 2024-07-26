@@ -1,5 +1,5 @@
 use super::Colour;
-use leptos::*;
+use leptos::prelude::*;
 
 /// A gradient of colours. Maps to a [ColourScheme]
 pub type SequentialGradient = (Colour, &'static [Colour]);

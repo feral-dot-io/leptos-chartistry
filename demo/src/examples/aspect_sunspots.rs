@@ -1,5 +1,5 @@
 use crate::data;
-use leptos::*;
+use leptos::prelude::*;
 use leptos_chartistry::*;
 
 #[component]

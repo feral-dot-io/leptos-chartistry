@@ -1,6 +1,6 @@
 use super::{ApplyUseSeries, GetYValue, IntoUseBar, SeriesAcc, UseY};
 use crate::{state::State, Colour, Tick};
-use leptos::*;
+use leptos::prelude::*;
 use std::rc::Rc;
 
 /// Default gap ratio between bars.

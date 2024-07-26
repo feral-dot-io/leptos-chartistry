@@ -11,7 +11,7 @@ use crate::{
     state::{PreState, State},
     Tick,
 };
-use leptos::*;
+use leptos::prelude::*;
 
 /// All possible layout options for an edge of a [Chart](crate::Chart). See [IntoEdge](trait@IntoEdge) for details.
 ///
