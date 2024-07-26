@@ -4,8 +4,11 @@ pub mod guide_line;
 pub mod legend;
 
 use crate::{state::State, Tick};
-use leptos::prelude::*;
-use std::rc::Rc;
+use axis_marker::AxisMarker;
+use grid_line::{XGridLine, YGridLine};
+use guide_line::{XGuideLine, YGuideLine};
+use legend::InsetLegend;
+use leptos::{either::EitherOf6, prelude::*};
 
 /// Inner layout options for a [Chart](crate::Chart). See [IntoInner](trait@IntoInner) for details.
 ///
@@ -34,21 +37,51 @@ pub trait IntoInner<X: Tick, Y: Tick> {
     fn into_inner(self) -> InnerLayout<X, Y>;
 }
 
+enum UseInner<X: 'static, Y: 'static> {
+    AxisMarker(axis_marker::AxisMarker),
+    XGridLine(grid_line::UseXGridLine<X>),
+    YGridLine(grid_line::UseYGridLine<Y>),
+    XGuideLine(guide_line::UseXGuideLine),
+    YGuideLine(guide_line::UseYGuideLine),
+    Legend(legend::InsetLegend),
+}
+
 impl<X: Tick, Y: Tick> InnerLayout<X, Y> {
-    pub(super) fn into_use(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+    pub(super) fn into_use(self, state: &State<X, Y>) -> UseInner<X, Y> {
         match self {
-            Self::AxisMarker(inner) => Rc::new(inner),
-            Self::XGridLine(inner) => inner.use_horizontal(state),
-            Self::YGridLine(inner) => inner.use_vertical(state),
-            Self::XGuideLine(inner) => inner.use_horizontal(),
-            Self::YGuideLine(inner) => inner.use_vertical(),
-            Self::Legend(inner) => Rc::new(inner),
+            Self::AxisMarker(inner) => UseInner::AxisMarker(inner),
+            Self::XGridLine(inner) => UseInner::AxisMarker(inner.use_horizontal(state)),
+            Self::YGridLine(inner) => UseInner::AxisMarker(inner.use_vertical(state)),
+            Self::XGuideLine(inner) => UseInner::AxisMarker(inner.use_horizontal()),
+            Self::YGuideLine(inner) => UseInner::AxisMarker(inner.use_vertical()),
+            Self::Legend(inner) => UseInner::AxisMarker(inner),
         }
     }
 }
 
-pub trait UseInner<X, Y> {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View;
+impl<X: Tick, Y: Tick> UseInner<X, Y> {
+    pub(super) fn render(self, state: State<X, Y>) -> impl IntoView {
+        match self {
+            Self::AxisMarker(inner) => EitherOf6::A(view! {
+                <AxisMarker marker=inner state=state />
+            }),
+            Self::XGridLine(inner) => EitherOf6::B(view! {
+                <XGridLine line=inner state=state />
+            }),
+            Self::YGridLine(inner) => EitherOf6::C(view! {
+                <YGridLine line=inner state=state />
+            }),
+            Self::XGuideLine(inner) => EitherOf6::D(view! {
+                <XGuideLine line=inner state=state />
+            }),
+            Self::YGuideLine(inner) => EitherOf6::E(view! {
+                <YGuideLine line=inner state=state />
+            }),
+            Self::Legend(inner) => EitherOf6::F(view! {
+                <InsetLegend legend=inner state=state />
+            }),
+        }
+    }
 }
 
 macro_rules! impl_into_inner {

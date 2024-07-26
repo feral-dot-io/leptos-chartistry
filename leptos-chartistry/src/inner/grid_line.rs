@@ -1,10 +1,8 @@
-use super::UseInner;
 use crate::{
     colours::Colour, debug::DebugRect, projection::Projection, state::State, ticks::GeneratedTicks,
     Tick, TickLabels,
 };
 use leptos::prelude::*;
-use std::rc::Rc;
 
 /// Default colour for grid lines.
 pub const GRID_LINE_COLOUR: Colour = Colour::from_rgb(0xEF, 0xF2, 0xFA);
@@ -55,7 +53,7 @@ impl_grid_line!(YGridLine);
 
 macro_rules! impl_use_grid_line {
     ($name:ident) => {
-        struct $name<Tick: 'static> {
+        pub(super) struct $name<Tick: 'static> {
             width: RwSignal<f64>,
             colour: RwSignal<Colour>,
             ticks: Signal<GeneratedTicks<Tick>>,
@@ -77,43 +75,34 @@ impl_use_grid_line!(UseXGridLine);
 impl_use_grid_line!(UseYGridLine);
 
 impl<X: Tick> XGridLine<X> {
-    pub(crate) fn use_horizontal<Y>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+    pub(crate) fn use_horizontal<Y>(self, state: &State<X, Y>) -> UseXGridLine<X> {
         let inner = state.layout.inner;
         let avail_width = Signal::derive(move || with!(|inner| inner.width()));
-        Rc::new(UseXGridLine {
+        UseXGridLine {
             width: self.width,
             colour: self.colour,
             ticks: self.ticks.generate_x(&state.pre, avail_width),
-        })
+        }
     }
 }
 
 impl<Y: Tick> YGridLine<Y> {
-    pub(crate) fn use_vertical<X>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+    pub(crate) fn use_vertical<X>(self, state: &State<X, Y>) -> UseYGridLine<Y> {
         let inner = state.layout.inner;
         let avail_height = Signal::derive(move || with!(|inner| inner.height()));
-        Rc::new(UseYGridLine {
+        UseYGridLine {
             width: self.width,
             colour: self.colour,
             ticks: self.ticks.generate_y(&state.pre, avail_height),
-        })
-    }
-}
-
-impl<X: Tick, Y> UseInner<X, Y> for UseXGridLine<X> {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <ViewXGridLine line=(*self).clone() state=state /> )
-    }
-}
-
-impl<X, Y: Tick> UseInner<X, Y> for UseYGridLine<Y> {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <ViewYGridLine line=(*self).clone() state=state /> )
+        }
     }
 }
 
 #[component]
-fn ViewXGridLine<X: Tick, Y: 'static>(line: UseXGridLine<X>, state: State<X, Y>) -> impl IntoView {
+pub(super) fn XGridLine<X: Tick, Y: 'static>(
+    line: UseXGridLine<X>,
+    state: State<X, Y>,
+) -> impl IntoView {
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
@@ -147,7 +136,10 @@ fn ViewXGridLine<X: Tick, Y: 'static>(line: UseXGridLine<X>, state: State<X, Y>)
 }
 
 #[component]
-fn ViewYGridLine<X: 'static, Y: Tick>(line: UseYGridLine<Y>, state: State<X, Y>) -> impl IntoView {
+pub(super) fn YGridLine<X: 'static, Y: Tick>(
+    line: UseYGridLine<Y>,
+    state: State<X, Y>,
+) -> impl IntoView {
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;

@@ -1,7 +1,5 @@
-use super::UseInner;
 use crate::{edge::Edge, state::State, Anchor, Legend};
 use leptos::prelude::*;
-use std::rc::Rc;
 
 /// Builds an inset legend for the chart [series](crate::Series). Differs from [Legend](struct@Legend) by being placed inside the chart area.
 #[derive(Clone, Debug)]
@@ -54,14 +52,8 @@ impl InsetLegend {
     }
 }
 
-impl<X: Clone, Y: Clone> UseInner<X, Y> for InsetLegend {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <InsetLegend legend=(*self).clone() state=state /> )
-    }
-}
-
 #[component]
-fn InsetLegend<X: Clone + 'static, Y: Clone + 'static>(
+pub(super) fn InsetLegend<X: Clone + 'static, Y: Clone + 'static>(
     legend: InsetLegend,
     state: State<X, Y>,
 ) -> impl IntoView {

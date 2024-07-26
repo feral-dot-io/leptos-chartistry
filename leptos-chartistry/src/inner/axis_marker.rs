@@ -1,7 +1,6 @@
-use super::UseInner;
 use crate::{colours::Colour, debug::DebugRect, state::State};
 use leptos::prelude::*;
-use std::{rc::Rc, str::FromStr};
+use std::str::FromStr;
 
 /// Default colour for axis markers.
 pub const AXIS_MARKER_COLOUR: Colour = Colour::from_rgb(0xD2, 0xD2, 0xD2);
@@ -116,14 +115,11 @@ impl FromStr for AxisPlacement {
     }
 }
 
-impl<X, Y> UseInner<X, Y> for AxisMarker {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <AxisMarker marker=(*self).clone() state=state /> )
-    }
-}
-
 #[component]
-fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) -> impl IntoView {
+pub(super) fn AxisMarker<X: 'static, Y: 'static>(
+    marker: AxisMarker,
+    state: State<X, Y>,
+) -> impl IntoView {
     let debug = state.pre.debug;
     let zero = state.svg_zero;
     let inner = state.layout.inner;

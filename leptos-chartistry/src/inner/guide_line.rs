@@ -1,7 +1,7 @@
 use super::UseInner;
 use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State, Tick};
 use leptos::prelude::*;
-use std::{rc::Rc, str::FromStr};
+use std::str::FromStr;
 
 /// Default colour for guide lines.
 pub const GUIDE_LINE_COLOUR: Colour = Colour::from_rgb(0x9A, 0x9A, 0x9A);
@@ -68,19 +68,19 @@ pub enum AlignOver {
 }
 
 #[derive(Clone)]
-struct UseXGuideLine(XGuideLine);
+pub(super) struct UseXGuideLine(XGuideLine);
 #[derive(Clone)]
-struct UseYGuideLine(YGuideLine);
+pub(super) struct UseYGuideLine(YGuideLine);
 
 impl XGuideLine {
-    pub(crate) fn use_horizontal<X: Tick, Y: Tick>(self) -> Rc<dyn UseInner<X, Y>> {
-        Rc::new(UseXGuideLine(self))
+    pub(crate) fn use_horizontal<X: Tick, Y: Tick>(self) -> UseInner<X, Y> {
+        UseXGuideLine(self)
     }
 }
 
 impl YGuideLine {
-    pub(crate) fn use_vertical<X, Y>(self) -> Rc<dyn UseInner<X, Y>> {
-        Rc::new(UseYGuideLine(self))
+    pub(crate) fn use_vertical<X, Y>(self) -> UseInner<X, Y> {
+        UseYGuideLine(self)
     }
 }
 
@@ -104,20 +104,12 @@ impl FromStr for AlignOver {
     }
 }
 
-impl<X: Tick, Y: Tick> UseInner<X, Y> for UseXGuideLine {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <XGuideLine line=self.0.clone() state=state /> )
-    }
-}
-
-impl<X, Y> UseInner<X, Y> for UseYGuideLine {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <YGuideLine line=self.0.clone() state=state /> )
-    }
-}
-
 #[component]
-fn XGuideLine<X: Tick, Y: Tick>(line: XGuideLine, state: State<X, Y>) -> impl IntoView {
+pub(super) fn XGuideLine<X: Tick, Y: Tick>(
+    line: UseXGuideLine,
+    state: State<X, Y>,
+) -> impl IntoView {
+    let line = line.0;
     let inner = state.layout.inner;
     let mouse_chart = state.mouse_chart;
 
@@ -145,7 +137,11 @@ fn XGuideLine<X: Tick, Y: Tick>(line: XGuideLine, state: State<X, Y>) -> impl In
 }
 
 #[component]
-fn YGuideLine<X: 'static, Y: 'static>(line: YGuideLine, state: State<X, Y>) -> impl IntoView {
+pub(super) fn YGuideLine<X: 'static, Y: 'static>(
+    line: UseYGuideLine,
+    state: State<X, Y>,
+) -> impl IntoView {
+    let line = line.0;
     let inner = state.layout.inner;
     let mouse_chart = state.mouse_chart;
     // TODO align over
