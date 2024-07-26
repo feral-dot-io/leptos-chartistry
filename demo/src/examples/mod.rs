@@ -20,7 +20,7 @@ pub mod series_bar;
 pub mod series_line;
 pub mod series_line_stack;
 
-use leptos::signal_prelude::*;
+use leptos::prelude::*;
 
 pub struct MyData {
     x: f64,

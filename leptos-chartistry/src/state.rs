@@ -2,7 +2,7 @@ use crate::{
     bounds::Bounds, layout::Layout, projection::Projection, series::UseData,
     use_watched_node::UseWatchedNode, Padding, Tick,
 };
-use leptos::signal_prelude::*;
+use leptos::prelude::*;
 
 #[derive(Clone)]
 pub struct PreState<X: 'static, Y: 'static> {

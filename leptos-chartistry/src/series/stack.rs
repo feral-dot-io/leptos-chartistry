@@ -3,7 +3,7 @@ use crate::{
     colours::{Colour, ColourScheme, BATLOW},
     Line,
 };
-use leptos::signal_prelude::*;
+use leptos::prelude::*;
 use std::ops::Add;
 use std::rc::Rc;
 

@@ -13,7 +13,7 @@ pub use use_data::{RenderData, UseData};
 pub use use_y::{Snippet, UseY};
 
 use crate::colours::{Colour, ColourScheme};
-use leptos::signal_prelude::*;
+use leptos::prelude::*;
 use std::rc::Rc;
 
 /// Arbitrary colours for a brighter palette than BATLOW
