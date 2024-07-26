@@ -22,9 +22,9 @@ macro_rules! impl_guide_line {
         impl $name {
             fn new(align: AlignOver) -> Self {
                 Self {
-                    align: create_rw_signal(align.into()),
-                    width: create_rw_signal(1.0),
-                    colour: create_rw_signal(GUIDE_LINE_COLOUR),
+                    align: RwSignal::new(align.into()),
+                    width: RwSignal::new(1.0),
+                    colour: RwSignal::new(GUIDE_LINE_COLOUR),
                 }
             }
 
@@ -123,7 +123,7 @@ fn XGuideLine<X: Tick, Y: Tick>(line: XGuideLine, state: State<X, Y>) -> impl In
 
     // Data alignment
     let nearest_pos_x = state.pre.data.nearest_position_x(state.hover_position_x);
-    let nearest_svg_x = create_memo(move |_| {
+    let nearest_svg_x = Memo::new(move |_| {
         nearest_pos_x
             .get()
             .map(|pos_x| state.projection.get().position_to_svg(pos_x, 0.0).0)
@@ -170,10 +170,10 @@ fn GuideLine<X: 'static, Y: 'static>(
     let debug = state.pre.debug;
     let hover_inner = state.hover_inner;
 
-    let x1 = create_memo(move |_| pos.get().left_x());
-    let y1 = create_memo(move |_| pos.get().top_y());
-    let x2 = create_memo(move |_| pos.get().right_x());
-    let y2 = create_memo(move |_| pos.get().bottom_y());
+    let x1 = Memo::new(move |_| pos.get().left_x());
+    let y1 = Memo::new(move |_| pos.get().top_y());
+    let x2 = Memo::new(move |_| pos.get().right_x());
+    let y2 = Memo::new(move |_| pos.get().bottom_y());
 
     // Don't render if any of the coordinates are NaN i.e., no data
     let have_data = Signal::derive(move || {

@@ -19,7 +19,7 @@ pub struct Legend {
 impl Legend {
     pub(crate) fn new(anchor: Anchor) -> Self {
         Self {
-            anchor: create_rw_signal(anchor),
+            anchor: RwSignal::new(anchor),
         }
     }
 
@@ -86,7 +86,7 @@ pub(crate) fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     let series = state.pre.data.series;
 
     // Don't apply padding on the edges of our axis i.e., maximise the space we extend over
-    let padding = create_memo(move |_| {
+    let padding = Memo::new(move |_| {
         let padding = padding.get();
         if edge.get().is_horizontal() {
             Padding::sides(padding.top, 0.0, padding.bottom, 0.0)

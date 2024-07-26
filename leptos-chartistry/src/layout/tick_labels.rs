@@ -73,7 +73,7 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
         Self {
             min_chars: RwSignal::default(),
             format: RwSignal::new(HorizontalSpan::identity_format()),
-            generator: create_rw_signal(Rc::new(gen)),
+            generator: RwSignal::new(Rc::new(gen)),
         }
     }
 
@@ -132,7 +132,7 @@ impl<X: Tick> TickLabels<X> {
             format,
             generator,
         } = self.clone();
-        create_memo(move |_| {
+        Memo::new(move |_| {
             range_x
                 .get()
                 .range()
@@ -178,7 +178,7 @@ impl<Y: Tick> TickLabels<Y> {
         let padding = state.padding;
         let range_y = state.data.range_y;
         let generator = self.generator;
-        create_memo(move |_| {
+        Memo::new(move |_| {
             range_y
                 .get()
                 .range()
@@ -315,10 +315,10 @@ fn TickLabel<X: 'static, Y: 'static>(
             }
         }
     });
-    let content = create_memo(move |_| padding.get().apply(bounds.get()));
+    let content = Memo::new(move |_| padding.get().apply(bounds.get()));
 
     // Determine text position
-    let text_position = create_memo(move |_| {
+    let text_position = Memo::new(move |_| {
         let content = content.get();
         match edge {
             Edge::Top | Edge::Bottom => ("middle", content.centre_x()),

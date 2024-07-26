@@ -118,7 +118,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     /// # use leptos_chartistry::*;
     /// # #[component]
     /// # fn DebugComponent() -> impl IntoView {
-    /// let (debug, set_debug) = create_signal(true);
+    /// let (debug, set_debug) = signal(true);
     /// view! {
     ///     <p>
     ///         <label>
@@ -176,9 +176,9 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     let watch = use_watched_node(root);
 
     // Aspect ratio signal
-    let have_dimensions = create_memo(move |_| watch.bounds.get().is_some());
-    let width = create_memo(move |_| watch.bounds.get().unwrap_or_default().width());
-    let height = create_memo(move |_| watch.bounds.get().unwrap_or_default().height());
+    let have_dimensions = Memo::new(move |_| watch.bounds.get().is_some());
+    let width = Memo::new(move |_| watch.bounds.get().unwrap_or_default().width());
+    let height = Memo::new(move |_| watch.bounds.get().unwrap_or_default().height());
     let calc = AspectRatio::known_signal(aspect_ratio.clone(), width, height);
     let env_size = move || {
         if aspect_ratio.get().is_env() {
@@ -188,10 +188,10 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
         }
     };
 
-    let debug = create_memo(move |_| debug.get());
-    let font_height = create_memo(move |_| font_height.map(|f| f.get()).unwrap_or(FONT_HEIGHT));
-    let font_width = create_memo(move |_| font_width.map(|f| f.get()).unwrap_or(FONT_WIDTH));
-    let padding = create_memo(move |_| {
+    let debug = Memo::new(move |_| debug.get());
+    let font_height = Memo::new(move |_| font_height.map(|f| f.get()).unwrap_or(FONT_HEIGHT));
+    let font_width = Memo::new(move |_| font_width.map(|f| f.get()).unwrap_or(FONT_WIDTH));
+    let padding = Memo::new(move |_| {
         padding
             .map(|p| p.get())
             .unwrap_or_else(move || Padding::from(font_width.get()))
@@ -254,7 +254,7 @@ fn RenderChart<'a, X: Tick, Y: Tick>(
         let range_x = pre_state.data.range_x;
         let range_y = pre_state.data.range_y;
         let includes_bars = pre_state.data.includes_bars;
-        create_memo(move |_| {
+        Memo::new(move |_| {
             let mut inner = layout.inner.get();
             // If we include bars, shrink the sides by half the width of X
             if includes_bars.get() {

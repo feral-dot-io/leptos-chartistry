@@ -5,6 +5,7 @@ use crate::{
 use js_sys::wasm_bindgen::JsCast;
 use leptos::{html::Dialog, *};
 use leptos_router::{use_location, use_navigate, NavigateOptions};
+use prelude::RenderEffect;
 use strum::VariantArray;
 use web_sys::{HtmlDialogElement, MouseEvent};
 
@@ -355,7 +356,7 @@ fn ShowCode(#[prop(into)] id: String, #[prop(into)] code: String) -> impl IntoVi
 
     // Show if page fragment matches ID
     // TODO investigate why this triggers a panic https://docs.rs/leptos/latest/leptos/struct.NodeRef.html#method.on_load
-    create_render_effect(move |_| {
+    RenderEffect::new(move |_| {
         if let Some(dialog) = dialog.get() {
             let hash = use_location().hash.get().trim_start_matches('#').to_owned();
             let hash: String = js_sys::decode_uri(&hash)

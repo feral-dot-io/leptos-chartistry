@@ -12,7 +12,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
         Series::new(|data: &data::Sunspots| data.year).line(|data: &data::Sunspots| data.sunspots);
 
     // Width slider
-    let (width, set_width) = create_signal(0.8);
+    let (width, set_width) = signal(0.8);
     let SLIDER_RANGE: f64 = 60.0;
     let frame_width = move || format!("{}%", (100.0 - SLIDER_RANGE) + SLIDER_RANGE * width.get());
     let change_width = move |ev| {

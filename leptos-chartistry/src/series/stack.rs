@@ -82,7 +82,7 @@ impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> fo
         let mut previous = None;
         let total_lines = self.lines.len();
         for (id, line) in self.lines.clone().into_iter().enumerate() {
-            let colour = create_memo(move |_| colours.get().interpolate(id, total_lines));
+            let colour = Memo::new(move |_| colours.get().interpolate(id, total_lines));
             let line = StackedLine::new(line, previous.clone());
             let get_y = series.push_line(colour, line);
             // Sum next line with this one

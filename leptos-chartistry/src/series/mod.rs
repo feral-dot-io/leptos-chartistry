@@ -155,7 +155,7 @@ impl<T, X, Y> Series<T, X, Y> {
             max_x: RwSignal::default(),
             min_y: RwSignal::default(),
             max_y: RwSignal::default(),
-            colours: create_rw_signal(SERIES_COLOUR_SCHEME.into()),
+            colours: RwSignal::new(SERIES_COLOUR_SCHEME.into()),
             series: Vec::new(),
         }
     }
@@ -270,7 +270,7 @@ impl<T, Y> SeriesAcc<T, Y> {
         let id = self.colour_id;
         self.colour_id += 1;
         let colours = self.colours;
-        create_memo(move |_| colours.get().by_index(id))
+        Memo::new(move |_| colours.get().by_index(id))
     }
 
     fn push_line(&mut self, colour: Memo<Colour>, line: impl IntoUseLine<T, Y>) -> GetY<T, Y> {

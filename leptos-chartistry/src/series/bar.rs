@@ -72,8 +72,8 @@ impl<T, Y> Bar<T, Y> {
             name: RwSignal::default(),
             colour: RwSignal::default(),
             placement: RwSignal::default(),
-            gap: create_rw_signal(BAR_GAP),
-            group_gap: create_rw_signal(BAR_GAP_INNER),
+            gap: RwSignal::new(BAR_GAP),
+            group_gap: RwSignal::new(BAR_GAP_INNER),
         }
     }
 
@@ -164,7 +164,7 @@ pub fn RenderBar<X: 'static, Y: 'static>(
     state: State<X, Y>,
     positions: Signal<Vec<(f64, f64)>>,
 ) -> impl IntoView {
-    let bars = create_memo(move |_| {
+    let bars = Memo::new(move |_| {
         state
             .pre
             .data

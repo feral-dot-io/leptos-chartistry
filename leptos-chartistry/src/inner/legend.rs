@@ -15,7 +15,7 @@ pub struct InsetLegend {
 impl InsetLegend {
     fn new(edge: Edge, anchor: Anchor) -> Self {
         Self {
-            edge: create_rw_signal(edge),
+            edge: RwSignal::new(edge),
             legend: Legend::new(anchor),
         }
     }
@@ -69,7 +69,7 @@ fn InsetLegend<X: Clone + 'static, Y: Clone + 'static>(
     let inner = state.layout.inner;
     let width = Legend::width(&state.pre);
     let height = legend.fixed_height(&state.pre);
-    let bounds = create_memo(move |_| {
+    let bounds = Memo::new(move |_| {
         let inner = inner.get();
         let height = height.get();
         let width = width.get();

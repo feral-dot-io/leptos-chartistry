@@ -37,7 +37,7 @@ impl UseY {
     }
 
     fn taster_bounds(font_height: Memo<f64>, font_width: Memo<f64>) -> Memo<Bounds> {
-        create_memo(move |_| Bounds::new(font_width.get() * 2.5, font_height.get()))
+        Memo::new(move |_| Bounds::new(font_width.get() * 2.5, font_height.get()))
     }
 
     pub fn snippet_width(font_height: Memo<f64>, font_width: Memo<f64>) -> Signal<f64> {

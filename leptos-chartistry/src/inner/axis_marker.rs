@@ -40,10 +40,10 @@ pub enum AxisPlacement {
 impl AxisMarker {
     fn new(placement: AxisPlacement) -> Self {
         Self {
-            placement: create_rw_signal(placement),
-            colour: create_rw_signal(AXIS_MARKER_COLOUR),
-            arrow: create_rw_signal(true),
-            width: create_rw_signal(1.0),
+            placement: RwSignal::new(placement),
+            colour: RwSignal::new(AXIS_MARKER_COLOUR),
+            arrow: RwSignal::new(true),
+            width: RwSignal::new(1.0),
         }
     }
 
@@ -128,7 +128,7 @@ fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) ->
     let zero = state.svg_zero;
     let inner = state.layout.inner;
 
-    let pos = create_memo(move |_| {
+    let pos = Memo::new(move |_| {
         let inner = inner.get();
         let (top, right, bottom, left) = (
             inner.top_y(),
@@ -149,11 +149,11 @@ fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) ->
         (in_bounds, coords)
     });
     // Check coords are within projection bounds
-    let in_bounds = create_memo(move |_| pos.get().0);
-    let x1 = create_memo(move |_| pos.get().1 .0);
-    let y1 = create_memo(move |_| pos.get().1 .1);
-    let x2 = create_memo(move |_| pos.get().1 .2);
-    let y2 = create_memo(move |_| pos.get().1 .3);
+    let in_bounds = Memo::new(move |_| pos.get().0);
+    let x1 = Memo::new(move |_| pos.get().1 .0);
+    let y1 = Memo::new(move |_| pos.get().1 .1);
+    let x2 = Memo::new(move |_| pos.get().1 .2);
+    let y2 = Memo::new(move |_| pos.get().1 .3);
 
     let arrow = move || {
         if marker.arrow.get() {

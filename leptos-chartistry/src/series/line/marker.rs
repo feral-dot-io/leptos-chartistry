@@ -46,9 +46,9 @@ impl Default for Marker {
         Self {
             shape: RwSignal::default(),
             colour: RwSignal::default(),
-            scale: create_rw_signal(1.0),
+            scale: RwSignal::new(1.0),
             border: RwSignal::default(),
-            border_width: create_rw_signal(0.0),
+            border_width: RwSignal::new(0.0),
         }
     }
 }
@@ -63,7 +63,7 @@ impl Marker {
     /// Create a new marker with the given shape.
     pub fn from_shape(shape: impl Into<MarkerShape>) -> Self {
         Self {
-            shape: create_rw_signal(shape.into()),
+            shape: RwSignal::new(shape.into()),
             ..Default::default()
         }
     }

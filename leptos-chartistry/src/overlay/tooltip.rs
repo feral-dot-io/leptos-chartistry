@@ -113,9 +113,9 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
         Self {
             placement: RwSignal::default(),
             sort_by: RwSignal::default(),
-            cursor_distance: create_rw_signal(TOOLTIP_CURSOR_DISTANCE),
-            skip_missing: create_rw_signal(false),
-            show_x_ticks: create_rw_signal(true),
+            cursor_distance: RwSignal::new(TOOLTIP_CURSOR_DISTANCE),
+            skip_missing: RwSignal::new(false),
+            show_x_ticks: RwSignal::new(true),
             x_ticks: TickLabels::default(),
             y_ticks: TickLabels::default(),
         }
@@ -254,7 +254,7 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
 
     let nearest_y_values = {
         let nearest_data_y = state.pre.data.nearest_data_y(state.hover_position_x);
-        create_memo(move |_| {
+        Memo::new(move |_| {
             let mut y_values = nearest_data_y.get();
             // Skip missing?
             if skip_missing.get() {

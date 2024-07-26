@@ -121,20 +121,20 @@ pub fn f64_to_dt(at: f64) -> DateTime<Local> {
 #[component]
 pub fn Demo() -> impl IntoView {
     // General options
-    let (debug, set_debug) = create_signal(false);
-    let padding = create_rw_signal(FONT_WIDTH);
-    let font_height = create_rw_signal(FONT_HEIGHT);
-    let font_width = create_rw_signal(FONT_WIDTH);
+    let (debug, set_debug) = signal(false);
+    let padding = RwSignal::new(FONT_WIDTH);
+    let font_height = RwSignal::new(FONT_HEIGHT);
+    let font_width = RwSignal::new(FONT_WIDTH);
 
     // Aspect ratio
-    let aspect = create_rw_signal(AspectOption::default());
-    let calc = create_rw_signal(AspectCalc::default());
-    let width = create_rw_signal(WIDTH);
-    let height = create_rw_signal(HEIGHT);
-    let ratio = create_rw_signal(1.0);
+    let aspect = RwSignal::new(AspectOption::default());
+    let calc = RwSignal::new(AspectCalc::default());
+    let width = RwSignal::new(WIDTH);
+    let height = RwSignal::new(HEIGHT);
+    let ratio = RwSignal::new(1.0);
 
     // Data
-    let (data, _) = create_signal(load_data());
+    let (data, _) = signal(load_data());
     let lines = vec![
         Line::new(|w: &Wave| w.sine)
             .with_name("sine")
@@ -148,7 +148,7 @@ pub fn Demo() -> impl IntoView {
             ),
     ];
     let edit_lines = lines.clone();
-    let (line_tab, set_line_tab) = create_signal(0);
+    let (line_tab, set_line_tab) = signal(0);
     let set_line_tab = move |ev: ev::Event| {
         let tab_index = event_target_value(&ev).parse().unwrap_or_default();
         set_line_tab.set(tab_index);
@@ -193,17 +193,17 @@ pub fn Demo() -> impl IntoView {
     };
 
     // Layout options
-    let top: RwSignal<Options<EdgeLayout<_>>> = Options::create_signal(vec![RotatedLabel::middle(
+    let top: RwSignal<Options<EdgeLayout<_>>> = Options::signal(vec![RotatedLabel::middle(
         "Hello and welcome to Chartistry!",
     )]);
-    let right = Options::create_signal(vec![Legend::middle()]);
-    let bottom = Options::create_signal(vec![
+    let right = Options::signal(vec![Legend::middle()]);
+    let bottom = Options::signal(vec![
         x_ticks.clone().into_edge(),
         RotatedLabel::middle("This demo shows most of the available options. Edit things below...")
             .into_edge(),
     ]);
-    let left = Options::create_signal(vec![y_ticks.clone().into_edge()]);
-    let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::create_signal(vec![
+    let left = Options::signal(vec![y_ticks.clone().into_edge()]);
+    let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::signal(vec![
         AxisMarker::horizontal_zero().into_inner(),
         AxisMarker::left_edge().into_inner(),
         XGridLine::from_ticks(x_ticks).into_inner(),
@@ -348,7 +348,7 @@ where
     FullIV: IntoView,
     Label: Copy + Default + From<Full> + FromStr + PartialEq + ToString + 'static,
 {
-    let (option, set_option) = create_signal(Label::default());
+    let (option, set_option) = signal(Label::default());
     let on_label_change =
         move |ev| set_option.set(event_target_value(&ev).parse().unwrap_or_default());
 
@@ -401,12 +401,12 @@ where
 }
 
 impl<Opt> Options<Opt> {
-    fn create_signal<IO>(opts: impl IntoIterator<Item = IO>) -> RwSignal<Self>
+    fn signal<IO>(opts: impl IntoIterator<Item = IO>) -> RwSignal<Self>
     where
         IO: Into<Opt>,
     {
         let opts = opts.into_iter().map(Into::into).collect();
-        create_rw_signal(Self(opts))
+        RwSignal::new(Self(opts))
     }
 
     pub fn add(mut self, opt: impl Into<Opt>) -> Self {
@@ -981,7 +981,7 @@ fn AspectRatio(
     };
 
     // When not used, our third var is just for show. Update it when the other two change.
-    create_effect(move |_| match calc.get() {
+    Effect::new(move |_| match calc.get() {
         AspectCalc::Ratio => ratio.set(width.get() / height.get()),
         AspectCalc::Width => width.set(height.get() * ratio.get()),
         AspectCalc::Height => height.set(width.get() / ratio.get()),

@@ -42,7 +42,7 @@ macro_rules! impl_grid_line {
             fn default() -> Self {
                 Self {
                     width: 1.0.into(),
-                    colour: create_rw_signal(GRID_LINE_COLOUR),
+                    colour: RwSignal::new(GRID_LINE_COLOUR),
                     ticks: TickLabels::default(),
                 }
             }

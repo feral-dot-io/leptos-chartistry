@@ -67,18 +67,18 @@ impl<X: Tick, Y: Tick> State<X, Y> {
         let hover_inner = node.mouse_hover_inner(layout.inner);
 
         // Data
-        let hover_position = create_memo(move |_| {
+        let hover_position = Memo::new(move |_| {
             let (mouse_x, mouse_y) = mouse_chart.get();
             proj.get().svg_to_position(mouse_x, mouse_y)
         });
-        let hover_position_x = create_memo(move |_| hover_position.get().0);
-        let hover_position_y = create_memo(move |_| hover_position.get().1);
+        let hover_position_x = Memo::new(move |_| hover_position.get().0);
+        let hover_position_y = Memo::new(move |_| hover_position.get().1);
 
         Self {
             pre,
             layout,
             projection: proj,
-            svg_zero: create_memo(move |_| proj.get().position_to_svg(0.0, 0.0)),
+            svg_zero: Memo::new(move |_| proj.get().position_to_svg(0.0, 0.0)),
 
             page_bounds: node.bounds,
             mouse_page: node.mouse_page,

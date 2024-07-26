@@ -35,8 +35,8 @@ pub struct RotatedLabel {
 impl RotatedLabel {
     fn new(anchor: Anchor, text: String) -> Self {
         Self {
-            text: create_rw_signal(text),
-            anchor: create_rw_signal(anchor),
+            text: RwSignal::new(text),
+            anchor: RwSignal::new(anchor),
         }
     }
 
@@ -141,7 +141,7 @@ pub(super) fn RotatedLabel<X: 'static, Y: 'static>(
     let padding = state.pre.padding;
 
     let content = Signal::derive(move || padding.get().apply(bounds.get()));
-    let position = create_memo(move |_| {
+    let position = Memo::new(move |_| {
         let c = content.get();
         let (top, right, bottom, left) = (c.top_y(), c.right_x(), c.bottom_y(), c.left_x());
         let (centre_x, centre_y) = (c.centre_x(), c.centre_y());

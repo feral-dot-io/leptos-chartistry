@@ -128,7 +128,7 @@ impl AspectRatio {
         env_width: Memo<f64>,
         env_height: Memo<f64>,
     ) -> Memo<KnownAspectRatio> {
-        create_memo(move |_| {
+        Memo::new(move |_| {
             let env_width = env_width.get();
             let env_height = env_height.get();
             match aspect_ratio.get().0 {
@@ -159,14 +159,14 @@ impl EnvCalc {
 
 impl KnownAspectRatio {
     pub fn inner_width_signal(known: Memo<Self>, left: Memo<f64>, right: Memo<f64>) -> Memo<f64> {
-        create_memo(move |_| match known.get() {
+        Memo::new(move |_| match known.get() {
             Self::Inner(vars) => vars.width(),
             Self::Outer(vars) => vars.width() - left.get() - right.get(),
         })
     }
 
     pub fn inner_height_signal(known: Memo<Self>, top: Memo<f64>, bottom: Memo<f64>) -> Memo<f64> {
-        create_memo(move |_| match known.get() {
+        Memo::new(move |_| match known.get() {
             Self::Inner(vars) => vars.height(),
             Self::Outer(vars) => vars.height() - top.get() - bottom.get(),
         })
