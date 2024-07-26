@@ -10,7 +10,7 @@ use crate::{
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Padding, Series, Tick,
 };
-use leptos::{html::Div, *};
+use leptos::{html::Div, prelude::*};
 
 pub const FONT_HEIGHT: f64 = 16.0;
 pub const FONT_WIDTH: f64 = 10.0;

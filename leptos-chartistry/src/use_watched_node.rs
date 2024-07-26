@@ -1,5 +1,5 @@
 use crate::bounds::Bounds;
-use leptos::{html::Div, *};
+use leptos::{html::Div, prelude::*};
 use leptos_use::{
     use_element_hover, use_mouse_with_options, use_resize_observer_with_options, UseMouseCoordType,
     UseMouseEventExtractorDefault, UseMouseOptions, UseMouseSourceType, UseResizeObserverOptions,
