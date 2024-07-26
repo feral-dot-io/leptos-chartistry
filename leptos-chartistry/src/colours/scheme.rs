@@ -1,5 +1,5 @@
 use super::Colour;
-use leptos::prelude::*;
+use leptos::{either::Either, prelude::*};
 
 /// A gradient of colours. Maps to a [ColourScheme]
 pub type SequentialGradient = (Colour, &'static [Colour]);
@@ -123,9 +123,9 @@ impl ColourScheme {
     fn stops(&self, range_y: (f64, f64)) -> impl IntoView {
         // TODO: collect more colour scheme uses and convert schemes into an enum / trait
         if self.zero.is_some() {
-            self.diverging_stops(range_y).into_view()
+            Either::A(self.diverging_stops(range_y))
         } else {
-            self.sequential_stops().into_view()
+            Either::B(self.sequential_stops())
         }
     }
 
