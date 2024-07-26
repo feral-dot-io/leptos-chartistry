@@ -172,7 +172,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     #[prop(into)]
     data: Signal<Vec<T>>,
 ) -> impl IntoView {
-    let root = create_node_ref::<Div>();
+    let root = NodeRef::<Div>::new();
     let watch = use_watched_node(root);
 
     // Aspect ratio signal
