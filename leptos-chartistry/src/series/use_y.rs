@@ -3,7 +3,7 @@ use super::{
     line::{RenderLine, UseLine},
 };
 use crate::{bounds::Bounds, debug::DebugRect, state::State};
-use leptos::prelude::*;
+use leptos::{either::Either, prelude::*};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UseY {
@@ -54,17 +54,17 @@ pub(super) fn RenderUseY<X: 'static, Y: 'static>(
 ) -> impl IntoView {
     let desc = use_y.desc.clone();
     match desc {
-        UseYDesc::Line(line) => view! {
+        UseYDesc::Line(line) => Either::Left(view! {
             <RenderLine
                 use_y=use_y
                 line=line
                 data=state.pre.data
                 positions=positions
                 markers=positions />
-        },
-        UseYDesc::Bar(bar) => view! {
+        }),
+        UseYDesc::Bar(bar) => Either::Right(view! {
             <RenderBar bar=bar state=state positions=positions />
-        },
+        }),
     }
 }
 
@@ -102,18 +102,18 @@ fn Taster<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl Into
                 let bounds = bounds.get();
                 vec![(bounds.centre_x(), bounds.centre_y() + Y_OFFSET)]
             });
-            view! {
+            Either::Left(view! {
                 <RenderLine
                     use_y=series.clone()
                     line=line.clone()
                     data=state.pre.data
                     positions=positions
                     markers=markers />
-            }
+            })
         }
-        UseYDesc::Bar(bar) => view! {
+        UseYDesc::Bar(bar) => Either::Right(view! {
             <RenderBar bar=bar.clone() state=state positions=positions />
-        },
+        }),
     };
 
     view! {
