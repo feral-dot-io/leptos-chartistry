@@ -220,10 +220,10 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
                     watch=watch.clone()
                     pre_state=pre.clone()
                     aspect_ratio=calc
-                    top=top.as_slice()
-                    right=right.as_slice()
-                    bottom=bottom.as_slice()
-                    left=left.as_slice()
+                    top=top.clone()
+                    right=right.clone()
+                    bottom=bottom.clone()
+                    left=left.clone()
                     inner=inner.clone()
                     tooltip=tooltip.clone()
                 />
@@ -233,21 +233,21 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
 }
 
 #[component]
-fn RenderChart<'a, X: Tick, Y: Tick>(
+fn RenderChart<X: Tick, Y: Tick>(
     watch: UseWatchedNode,
     pre_state: PreState<X, Y>,
     aspect_ratio: Memo<KnownAspectRatio>,
-    top: &'a [EdgeLayout<X>],
-    right: &'a [EdgeLayout<Y>],
-    bottom: &'a [EdgeLayout<X>],
-    left: &'a [EdgeLayout<Y>],
+    top: Vec<EdgeLayout<X>>,
+    right: Vec<EdgeLayout<Y>>,
+    bottom: Vec<EdgeLayout<X>>,
+    left: Vec<EdgeLayout<Y>>,
     inner: Vec<InnerLayout<X, Y>>,
     tooltip: Tooltip<X, Y>,
 ) -> impl IntoView {
     let debug = pre_state.debug;
 
     // Compose edges
-    let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre_state);
+    let (layout, edges) = Layout::compose(&top, &right, &bottom, &left, aspect_ratio, &pre_state);
 
     // Finalise state
     let projection = {
