@@ -407,6 +407,7 @@ impl<Opt> Options<Opt> {
     fn signal<IO>(opts: impl IntoIterator<Item = IO>) -> RwSignal<Self>
     where
         IO: Into<Opt>,
+        Opt: Send + Sync + 'static,
     {
         let opts = opts.into_iter().map(Into::into).collect();
         RwSignal::new(Self(opts))
