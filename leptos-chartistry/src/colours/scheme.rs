@@ -108,7 +108,7 @@ impl ColourScheme {
 
 #[component]
 pub fn LinearGradientSvg(
-    #[prop(into)] id: AttributeValue,
+    #[prop(into)] id: String,
     scheme: Signal<ColourScheme>,
     range_y: Signal<Option<(f64, f64)>>,
 ) -> impl IntoView {
@@ -123,9 +123,9 @@ impl ColourScheme {
     fn stops(&self, range_y: (f64, f64)) -> impl IntoView {
         // TODO: collect more colour scheme uses and convert schemes into an enum / trait
         if self.zero.is_some() {
-            Either::A(self.diverging_stops(range_y))
+            Either::Left(self.diverging_stops(range_y))
         } else {
-            Either::B(self.sequential_stops())
+            Either::Right(self.sequential_stops())
         }
     }
 
@@ -177,7 +177,7 @@ fn generate_stops(swatches: &[Colour], from: f64, step: f64) -> impl IntoView {
             // Format as a percentage (0% - 100%)
             let offset = format!("{:.2}%", percent * 100.0);
             view! {
-                <stop offset=offset stop-color=colour />
+                <stop offset=offset stop-color=colour.to_string() />
             }
         })
         .collect_view()
