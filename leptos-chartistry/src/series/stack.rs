@@ -5,7 +5,7 @@ use crate::{
 };
 use leptos::prelude::*;
 use std::ops::Add;
-use std::rc::Rc;
+use std::sync::Arc;
 
 /// Default colour scheme for stack. Assumes a light background with dark values for high values.
 pub const STACK_COLOUR_SCHEME: [Colour; 10] = BATLOW;
@@ -77,7 +77,7 @@ impl<T, Y, I: IntoIterator<Item = Line<T, Y>>> From<I> for Stack<T, Y> {
 }
 
 impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> for Stack<T, Y> {
-    fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
+    fn apply_use_series(self: Arc<Self>, series: &mut SeriesAcc<T, Y>) {
         let colours = self.colours;
         let mut previous = None;
         let total_lines = self.lines.len();
@@ -94,25 +94,25 @@ impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> fo
 #[derive(Clone)]
 struct StackedLine<T, Y> {
     line: Line<T, Y>,
-    previous: Option<Rc<dyn GetYValue<T, Y>>>,
+    previous: Option<Arc<dyn GetYValue<T, Y>>>,
 }
 
 #[derive(Clone)]
 struct UseStackLine<T, Y> {
-    current: Rc<dyn GetYValue<T, Y>>,
-    previous: Option<Rc<dyn GetYValue<T, Y>>>,
+    current: Arc<dyn GetYValue<T, Y>>,
+    previous: Option<Arc<dyn GetYValue<T, Y>>>,
 }
 
 impl<T, Y> StackedLine<T, Y> {
-    pub fn new(line: Line<T, Y>, previous: Option<Rc<dyn GetYValue<T, Y>>>) -> Self {
+    pub fn new(line: Line<T, Y>, previous: Option<Arc<dyn GetYValue<T, Y>>>) -> Self {
         Self { line, previous }
     }
 }
 
 impl<T: 'static, Y: Add<Output = Y> + 'static> IntoUseLine<T, Y> for StackedLine<T, Y> {
-    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Arc<dyn GetYValue<T, Y>>) {
         let (line, get_y) = self.line.into_use_line(id, colour);
-        let get_y = Rc::new(UseStackLine {
+        let get_y = Arc::new(UseStackLine {
             current: get_y,
             previous: self.previous.clone(),
         });

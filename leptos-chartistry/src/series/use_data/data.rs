@@ -127,7 +127,7 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::rc::Rc;
+    use std::sync::Arc;
 
     #[derive(Clone, Debug, PartialEq)]
     struct MyData {
@@ -150,10 +150,10 @@ mod tests {
 
     fn test_data(data: &[MyData]) -> Data<f64, f64> {
         let mut get_ys = HashMap::<usize, GetY<_, _>>::new();
-        get_ys.insert(66, Rc::new(|d: &MyData| d.y1));
-        get_ys.insert(5, Rc::new(|d: &MyData| d.y2));
+        get_ys.insert(66, Arc::new(|d: &MyData| d.y1));
+        get_ys.insert(5, Arc::new(|d: &MyData| d.y2));
 
-        Data::new(Rc::new(|d: &MyData| d.x), get_ys, data)
+        Data::new(Arc::new(|d: &MyData| d.x), get_ys, data)
     }
 
     #[test]

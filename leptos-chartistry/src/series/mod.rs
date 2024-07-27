@@ -14,7 +14,7 @@ pub use use_y::{Snippet, UseY};
 
 use crate::colours::{Colour, ColourScheme};
 use leptos::prelude::*;
-use std::rc::Rc;
+use std::sync::Arc;
 
 /// Arbitrary colours for a brighter palette than BATLOW
 pub const SERIES_COLOUR_SCHEME: [Colour; 10] = [
@@ -30,10 +30,10 @@ pub const SERIES_COLOUR_SCHEME: [Colour; 10] = [
     Colour::from_rgb(0xea, 0x60, 0xdf), // Pink
 ];
 
-type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
-type GetY<T, Y> = Rc<dyn GetYValue<T, Y>>;
+type GetX<T, X> = Arc<dyn Fn(&T) -> X + Send + Sync>;
+type GetY<T, Y> = Arc<dyn GetYValue<T, Y>>;
 
-trait GetYValue<T, Y> {
+trait GetYValue<T, Y>: Send + Sync {
     fn value(&self, t: &T) -> Y;
     fn cumulative_value(&self, t: &T) -> Y;
 }
@@ -109,7 +109,7 @@ trait GetYValue<T, Y> {
 #[derive(Clone)]
 pub struct Series<T: 'static, X: Send + Sync + 'static, Y: Send + Sync + 'static> {
     get_x: GetX<T, X>,
-    series: Vec<Rc<dyn ApplyUseSeries<T, Y>>>,
+    series: Vec<Arc<dyn ApplyUseSeries<T, Y>>>,
     /// Optional minimum X value. Extends the lower bound of the X axis if set.
     pub min_x: RwSignal<Option<X>>,
     /// Optional maximum X value. Extends the upper bound of the X axis if set.
@@ -123,7 +123,7 @@ pub struct Series<T: 'static, X: Send + Sync + 'static, Y: Send + Sync + 'static
 }
 
 trait ApplyUseSeries<T, Y> {
-    fn apply_use_series(self: Rc<Self>, _: &mut SeriesAcc<T, Y>);
+    fn apply_use_series(self: Arc<Self>, _: &mut SeriesAcc<T, Y>);
 }
 
 trait IntoUseLine<T, Y> {
@@ -148,9 +148,9 @@ impl<T, X: Send + Sync, Y: Send + Sync> Series<T, X, Y> {
     /// Intended to be a simple closure over your own data. For example `Series::new(|t: &MyType| t.x)`
     ///
     /// Next: add lines or stacks to the series with [Series::line] or [Series::stack].
-    pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
+    pub fn new(get_x: impl Fn(&T) -> X + Send + Sync + 'static) -> Self {
         Self {
-            get_x: Rc::new(get_x),
+            get_x: Arc::new(get_x),
             min_x: RwSignal::default(),
             max_x: RwSignal::default(),
             min_y: RwSignal::default(),
@@ -202,7 +202,7 @@ impl<T, X: Send + Sync, Y: Send + Sync> Series<T, X, Y> {
 
     /// Adds a line to the series. See [Line] for more details.
     pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
-        self.series.push(Rc::new(line.into()));
+        self.series.push(Arc::new(line.into()));
         self
     }
 
@@ -216,7 +216,7 @@ impl<T, X: Send + Sync, Y: Send + Sync> Series<T, X, Y> {
 
     /// Adds a bar to the series. See [Bar] for more details.
     pub fn bar(mut self, bar: impl Into<Bar<T, Y>>) -> Self {
-        self.series.push(Rc::new(bar.into()));
+        self.series.push(Arc::new(bar.into()));
         self
     }
 
@@ -250,7 +250,7 @@ impl<T, X: Send + Sync, Y: Send + Sync> Series<T, X, Y> {
 impl<T, X: Send + Sync, Y: std::ops::Add<Output = Y> + Send + Sync> Series<T, X, Y> {
     /// Adds a stack to the series. See [Stack] for more details.
     pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
-        self.series.push(Rc::new(stack.into()));
+        self.series.push(Arc::new(stack.into()));
         self
     }
 }

@@ -22,7 +22,10 @@ pub struct UseData<X: 'static, Y: 'static> {
 }
 
 impl<X: Tick, Y: Tick> UseData<X, Y> {
-    pub fn new<T: 'static>(series: Series<T, X, Y>, data: Signal<Vec<T>>) -> UseData<X, Y> {
+    pub fn new<T: Send + Sync + 'static>(
+        series: Series<T, X, Y>,
+        data: Signal<Vec<T>>,
+    ) -> UseData<X, Y> {
         let lines = series.to_use_lines();
 
         // Data values

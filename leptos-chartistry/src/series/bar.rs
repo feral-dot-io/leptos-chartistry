@@ -1,7 +1,7 @@
 use super::{ApplyUseSeries, GetYValue, IntoUseBar, SeriesAcc, UseY};
 use crate::{state::State, Colour, Tick};
 use leptos::prelude::*;
-use std::rc::Rc;
+use std::sync::Arc;
 
 /// Default gap ratio between bars.
 pub const BAR_GAP: f64 = 0.1;
@@ -22,7 +22,7 @@ pub const BAR_GAP_INNER: f64 = 0.05;
 /// See this in action with a [full bar chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#bar-chart).
 #[non_exhaustive]
 pub struct Bar<T, Y> {
-    get_y: Rc<dyn GetYValue<T, Y>>,
+    get_y: Arc<dyn GetYValue<T, Y>>,
     /// Set the name of the bar as used in the legend and tooltip.
     pub name: RwSignal<String>,
     /// Set the colour of the bar. If not set, the next colour in the series will be used. Default is `None`.
@@ -63,12 +63,12 @@ impl<T, Y> Bar<T, Y> {
     /// Create a new bar. Use `get_y` to extract the Y value from your struct.
     ///
     /// See the module documentation for examples.
-    pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self
+    pub fn new(get_y: impl Fn(&T) -> Y + Send + Sync + 'static) -> Self
     where
         Y: Tick,
     {
         Self {
-            get_y: Rc::new(get_y),
+            get_y: Arc::new(get_y),
             name: RwSignal::default(),
             colour: RwSignal::default(),
             placement: RwSignal::default(),
@@ -121,14 +121,14 @@ impl<T, Y> Clone for Bar<T, Y> {
     }
 }
 
-impl<T, Y: Tick, F: Fn(&T) -> Y + 'static> From<F> for Bar<T, Y> {
+impl<T, Y: Tick, F: Fn(&T) -> Y + Send + Sync + 'static> From<F> for Bar<T, Y> {
     fn from(f: F) -> Self {
         Self::new(f)
     }
 }
 
 impl<T, Y> ApplyUseSeries<T, Y> for Bar<T, Y> {
-    fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
+    fn apply_use_series(self: Arc<Self>, series: &mut SeriesAcc<T, Y>) {
         let colour = series.next_colour();
         _ = series.push_bar(colour, (*self).clone());
     }
@@ -140,7 +140,7 @@ impl<T, Y> IntoUseBar<T, Y> for Bar<T, Y> {
         id: usize,
         group_id: usize,
         colour: Memo<Colour>,
-    ) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
+    ) -> (UseY, Arc<dyn GetYValue<T, Y>>) {
         let override_colour = self.colour;
         let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
         let bar = UseY::new_bar(
