@@ -77,7 +77,7 @@ impl_use_grid_line!(UseYGridLine);
 impl<X: Tick> XGridLine<X> {
     pub(crate) fn use_horizontal<Y>(self, state: &State<X, Y>) -> UseXGridLine<X> {
         let inner = state.layout.inner;
-        let avail_width = Signal::derive(move || with!(|inner| inner.width()));
+        let avail_width = Signal::derive(move || inner.with(|inner| inner.width()));
         UseXGridLine {
             width: self.width,
             colour: self.colour,
@@ -89,7 +89,7 @@ impl<X: Tick> XGridLine<X> {
 impl<Y: Tick> YGridLine<Y> {
     pub(crate) fn use_vertical<X>(self, state: &State<X, Y>) -> UseYGridLine<Y> {
         let inner = state.layout.inner;
-        let avail_height = Signal::derive(move || with!(|inner| inner.height()));
+        let avail_height = Signal::derive(move || inner.with(|inner| inner.height()));
         UseYGridLine {
             width: self.width,
             colour: self.colour,

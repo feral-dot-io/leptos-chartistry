@@ -285,7 +285,7 @@ fn RenderChart<'a, X: Tick, Y: Tick>(
         <svg
             width=move || format!("{}px", outer.get().width())
             height=move || format!("{}px", outer.get().height())
-            viewBox=move || with!(|outer| format!("0 0 {} {}", outer.width(), outer.height()))
+            viewBox=move || outer.with(|outer| format!("0 0 {} {}", outer.width(), outer.height()))
             style="display: block; overflow: visible;">
             <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
             <CommonDefs />

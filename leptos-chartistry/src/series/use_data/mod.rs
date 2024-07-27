@@ -68,7 +68,7 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 
         UseData {
             data,
-            len: Memo::new(move |_| with!(|data| data.len())),
+            len: Memo::new(move |_| data.with(|data| data.len())),
             series,
             includes_bars,
             range_x,

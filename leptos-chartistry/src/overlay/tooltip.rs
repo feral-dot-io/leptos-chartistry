@@ -220,7 +220,7 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
     let x_body = {
         let nearest_data_x = state.pre.data.nearest_data_x(state.hover_position_x);
         let x_format = x_ticks.format;
-        let avail_width = Signal::derive(move || with!(|inner| inner.width()));
+        let avail_width = Signal::derive(move || inner.with(|inner| inner.width()));
         let x_ticks = x_ticks.generate_x(&state.pre, avail_width);
         move || {
             // Hide ticks?
@@ -228,17 +228,19 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
                 return "".to_string();
             }
             let x_format = x_format.get();
-            with!(|nearest_data_x, x_ticks| {
-                nearest_data_x.as_ref().map_or_else(
-                    || "no data".to_string(),
-                    |x_value| (x_format)(x_value, x_ticks.state.as_ref()),
-                )
+            x_ticks.with(|x_ticks| {
+                nearest_data_x.with(|nearest_data_x| {
+                    nearest_data_x.as_ref().map_or_else(
+                        || "no data".to_string(),
+                        |x_value| (x_format)(x_value, |x_ticks| x_ticks.state.as_ref()),
+                    )
+                })
             })
         }
     };
 
     let format_y_value = {
-        let avail_height = Signal::derive(move || with!(|inner| inner.height()));
+        let avail_height = Signal::derive(move || inner.with(|inner| inner.height()));
         let y_format = y_ticks.format;
         let y_ticks = y_ticks.generate_y(&state.pre, avail_height);
         move |y_value: Option<Y>| {
