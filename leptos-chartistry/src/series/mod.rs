@@ -107,7 +107,7 @@ trait GetYValue<T, Y> {
 ///
 /// Finally, like most other components, you can control aspects such as the colour scheme and data ranges of X and Y.
 #[derive(Clone)]
-pub struct Series<T: 'static, X: 'static, Y: 'static> {
+pub struct Series<T: 'static, X: Send + Sync + 'static, Y: Send + Sync + 'static> {
     get_x: GetX<T, X>,
     series: Vec<Rc<dyn ApplyUseSeries<T, Y>>>,
     /// Optional minimum X value. Extends the lower bound of the X axis if set.
@@ -142,7 +142,7 @@ struct SeriesAcc<T, Y> {
     lines: Vec<(UseY, GetY<T, Y>)>,
 }
 
-impl<T, X, Y> Series<T, X, Y> {
+impl<T, X: Send + Sync, Y: Send + Sync> Series<T, X, Y> {
     /// Create a new series. The `get_x` function is used to extract the X value from your struct.
     ///
     /// Intended to be a simple closure over your own data. For example `Series::new(|t: &MyType| t.x)`
@@ -247,7 +247,7 @@ impl<T, X, Y> Series<T, X, Y> {
     }
 }
 
-impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
+impl<T, X: Send + Sync, Y: std::ops::Add<Output = Y> + Send + Sync> Series<T, X, Y> {
     /// Adds a stack to the series. See [Stack] for more details.
     pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
         self.series.push(Rc::new(stack.into()));
