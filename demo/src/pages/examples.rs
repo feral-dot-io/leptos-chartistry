@@ -148,11 +148,11 @@ impl Example {
         }
     }
 
-    fn extra_class(self) -> Option<AttributeValue> {
+    fn extra_class(self) -> (&'static str, bool) {
         match self {
-            Self::LineGradient => Some("slim".into()),
-            Self::Css => Some("my-theme".into()),
-            _ => None,
+            Self::LineGradient => ("slim", true),
+            Self::Css => ("my-theme", true),
+            _ => ("", false),
         }
     }
 
@@ -268,18 +268,18 @@ fn Card(example: Example, #[prop(optional)] h1: bool) -> impl IntoView {
     let url = format!("examples/{id}.html");
     let heading = if h1 {
         Either::Left(view! {
-            <h1 id=id><a href=&url>{example.title()}</a></h1>
+            <h1 id=id><a href=url.clone()>{example.title()}</a></h1>
         })
     } else {
         Either::Right(view! {
-            <h3 id=id><a href=&url>{example.title()}</a></h3>
+            <h3 id=id><a href=url.clone()>{example.title()}</a></h3>
         })
     };
     view! {
         <figure class:background-box=true class=example.extra_class()>
             <figcaption>
                 {heading}
-                <p>{example.description()} " " <a href=&url>"Show example code"</a></p>
+                <p>{example.description()} " " <a href=url>"Show example code"</a></p>
             </figcaption>
             {example.card_view()}
         </figure>
