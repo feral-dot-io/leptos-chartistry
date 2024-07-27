@@ -8,7 +8,7 @@ pub use gen::{
 use chrono::prelude::*;
 
 /// A type that can be used as a tick on an axis. Try to rely on provided implementations.
-pub trait Tick: Clone + PartialEq + PartialOrd + std::fmt::Debug + 'static {
+pub trait Tick: Clone + PartialEq + PartialOrd + Send + Sync + 'static {
     /// Default tick generator used in tick labels.
     fn tick_label_generator() -> impl TickGen<Tick = Self>;
 
@@ -33,8 +33,8 @@ impl Tick for f64 {
 
 impl<Tz> Tick for DateTime<Tz>
 where
-    Tz: TimeZone + 'static,
-    Tz::Offset: std::fmt::Display,
+    Tz: TimeZone + Send + Sync + 'static,
+    Tz::Offset: std::fmt::Display + Send + Sync,
 {
     fn tick_label_generator() -> impl TickGen<Tick = Self> {
         Timestamps::default()
