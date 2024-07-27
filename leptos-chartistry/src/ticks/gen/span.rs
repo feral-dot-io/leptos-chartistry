@@ -1,5 +1,5 @@
 use super::{Format, Span};
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct VerticalSpan {
     avail_height: f64,
@@ -32,7 +32,7 @@ pub struct HorizontalSpan<Tick: 'static> {
     min_chars: usize,
     padding_width: f64,
     avail_width: f64,
-    format: Rc<TickFormatFn<Tick>>,
+    format: Arc<TickFormatFn<Tick>>,
 }
 
 impl<Tick> HorizontalSpan<Tick> {
@@ -41,7 +41,7 @@ impl<Tick> HorizontalSpan<Tick> {
         min_chars: usize,
         padding_width: f64,
         avail_width: f64,
-        format: Rc<TickFormatFn<Tick>>,
+        format: Arc<TickFormatFn<Tick>>,
     ) -> Self {
         Self {
             font_width,
@@ -52,8 +52,8 @@ impl<Tick> HorizontalSpan<Tick> {
         }
     }
 
-    pub fn identity_format() -> Rc<TickFormatFn<Tick>> {
-        Rc::new(|tick, state| state.format(tick))
+    pub fn identity_format() -> Arc<TickFormatFn<Tick>> {
+        Arc::new(|tick, state| state.format(tick))
     }
 }
 

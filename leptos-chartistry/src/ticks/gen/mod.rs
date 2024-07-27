@@ -6,9 +6,9 @@ pub use aligned_floats::AlignedFloats;
 pub use span::{HorizontalSpan, TickFormatFn, VerticalSpan};
 pub use timestamps::{Period, Timestamps};
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
-pub trait Generator {
+pub trait Generator: Send + Sync {
     type Tick;
 
     fn generate(
@@ -36,15 +36,15 @@ pub struct GeneratedTicks<Tick> {
 }
 
 impl<Tick> GeneratedTicks<Tick> {
-    pub fn new(state: impl Format<Tick = Tick> + 'static, ticks: Vec<Tick>) -> Self {
+    pub fn new(state: impl Format<Tick = Tick> + Send + Sync + 'static, ticks: Vec<Tick>) -> Self {
         GeneratedTicks {
-            state: Rc::new(state),
+            state: Arc::new(state),
             ticks,
         }
     }
 }
 
-impl<Tick: 'static> GeneratedTicks<Tick> {
+impl<Tick: Send + Sync + 'static> GeneratedTicks<Tick> {
     pub fn none() -> GeneratedTicks<Tick> {
         Self::new(NilState(std::marker::PhantomData), vec![])
     }

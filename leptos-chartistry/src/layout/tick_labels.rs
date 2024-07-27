@@ -12,7 +12,7 @@ use crate::{
 };
 use chrono::prelude::*;
 use leptos::prelude::*;
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 /// Builds tick labels for an axis.
 ///
@@ -25,12 +25,12 @@ pub struct TickLabels<Tick: 'static> {
     /// Format function for the tick labels. See [TickLabels::with_format] for details.
     pub format: RwSignal<Arc<TickFormatFn<Tick>>>,
     /// Tick generator for the labels.
-    pub generator: RwSignal<Rc<dyn TickGen<Tick = Tick>>>,
+    pub generator: RwSignal<Arc<dyn TickGen<Tick = Tick> + Send + Sync>>,
 }
 
 #[derive(Clone)]
 pub struct UseTickLabels {
-    ticks: Memo<Vec<(f64, String)>>,
+    ticks: Signal<Vec<(f64, String)>>,
 }
 
 impl<Tick> Clone for TickLabels<Tick> {
@@ -58,8 +58,8 @@ impl TickLabels<f64> {
 
 impl<Tz> TickLabels<DateTime<Tz>>
 where
-    Tz: TimeZone + 'static,
-    Tz::Offset: std::fmt::Display,
+    Tz: TimeZone + Send + Sync + 'static,
+    Tz::Offset: std::fmt::Display + Send + Sync,
 {
     /// Creates a new tick label generator for timestamps. See [Timestamps] for details.
     pub fn timestamps() -> Self {
@@ -69,11 +69,11 @@ where
 
 impl<Tick: crate::Tick> TickLabels<Tick> {
     /// Creates a new tick label generator from a tick generator.
-    pub fn from_generator(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
+    pub fn from_generator(gen: impl TickGen<Tick = Tick> + Send + Sync + 'static) -> Self {
         Self {
             min_chars: RwSignal::default(),
             format: RwSignal::new(HorizontalSpan::identity_format()),
-            generator: RwSignal::new(Rc::new(gen)),
+            generator: RwSignal::new(Arc::new(gen)),
         }
     }
 
@@ -88,13 +88,13 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
     /// This is a function that takes a `Tick` and a formatter and returns a `String`. It gives an opportunity to customise tick label format. The formatter is the resulting state of the tick generator and does the default aciton. For example if aligned floats decides to use "1000s" then the formatter will use that.
     pub fn with_format(
         self,
-        format: impl Fn(&Tick, &dyn TickFormat<Tick = Tick>) -> String + 'static,
+        format: impl Fn(&Tick, &dyn TickFormat<Tick = Tick>) -> String + Send + Sync + 'static,
     ) -> Self {
-        self.format.set(Rc::new(format));
+        self.format.set(Arc::new(format));
         self
     }
 
-    fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
+    fn map_ticks(&self, gen: Memo<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
         let format = self.format;
         Signal::derive(move || {
             let format = format.get();
