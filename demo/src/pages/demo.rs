@@ -649,9 +649,9 @@ fn WidthInput(width: RwSignal<f64>) -> impl IntoView {
 }
 
 #[component]
-fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
+fn StepInput<T: Clone + Default + ToString + FromStr + Send + Sync + 'static>(
     value: RwSignal<T>,
-    #[prop(into, optional)] id: Option<AttributeValue>,
+    #[prop(into, optional)] id: Option<String>,
     #[prop(into)] step: String,
     #[prop(into, optional)] min: Option<String>,
     #[prop(into, optional)] max: Option<String>,
@@ -667,7 +667,7 @@ fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
             step=step
             min=min
             max=max
-            value=value
+            value=move || value.get().to_string()
             on:input=on_change />
     }
 }
@@ -675,12 +675,12 @@ fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
 #[component]
 fn SelectOption<Opt>(
     #[prop(into)] label: String,
-    #[prop(into, optional)] id: Option<AttributeValue>,
+    id: Option<String>,
     value: RwSignal<Opt>,
     all: &'static [Opt],
 ) -> impl IntoView
 where
-    Opt: Clone + FromStr + PartialEq + ToString + 'static,
+    Opt: Clone + FromStr + PartialEq + ToString + Send + Sync + 'static,
 {
     let on_change = move |ev| value.set(event_target_value(&ev).parse().unwrap_or(all[0].clone()));
     view! {
@@ -697,7 +697,7 @@ where
 macro_rules! select_impl {
     ($fn:ident, $label:literal, $input:ident, $signal:ty, $all:path) => {
         #[component]
-        fn $fn(#[prop(into, optional)] id: Option<AttributeValue>, $input: RwSignal<$signal>) -> impl IntoView {
+        fn $fn(#[prop(into, optional)] id: Option<String>, $input: RwSignal<$signal>) -> impl IntoView {
             view!(<SelectOption id=id label=$label value=$input all=$all />)
         }
     };
@@ -758,7 +758,7 @@ select_impl!(
 
 #[component]
 fn SelectColour(
-    #[prop(into, optional)] id: Option<AttributeValue>,
+    #[prop(into, optional)] id: Option<String>,
     colour: RwSignal<Colour>,
 ) -> impl IntoView {
     let on_change = move |ev| {
@@ -869,7 +869,7 @@ fn AxisMarkerOpts(marker: AxisMarker) -> impl IntoView {
 #[component]
 fn InsetLegendOpts(legend: InsetLegend) -> impl IntoView {
     view! {
-        <SelectOption label="Edge" value=legend.edge all=ALL_EDGES />
+        <SelectOption label="Edge" id=None value=legend.edge all=ALL_EDGES />
         " "
         <LegendOpts legend=legend.legend />
     }
