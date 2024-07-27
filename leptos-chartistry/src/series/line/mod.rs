@@ -211,13 +211,14 @@ pub fn RenderLine<X: 'static, Y: Send + Sync + 'static>(
     });
     let range_y = Signal::derive(move || data.range_y.read().positions());
 
+    let width = line.width;
     view! {
         <g
             class="_chartistry_line"
             stroke=stroke
             stroke-linecap="round"
             stroke-linejoin="bevel"
-            stroke-width=line.width>
+            stroke-width=width>
             <defs>
                 <Show when=move || line.gradient.get().is_some()>
                     <LinearGradientSvg
