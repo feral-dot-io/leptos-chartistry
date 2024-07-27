@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 use leptos::{
-    either::{EitherOf3, EitherOf4, EitherOf7},
+    either::{EitherOf4, EitherOf7},
     prelude::*,
 };
 use leptos_chartistry::*;

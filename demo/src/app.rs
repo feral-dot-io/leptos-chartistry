@@ -4,7 +4,10 @@ use crate::pages::{
 };
 use leptos::prelude::*;
 use leptos_meta::provide_meta_context;
-use leptos_router::*;
+use leptos_router::{
+    components::{Route, Router, Routes, A},
+    StaticSegment,
+};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct State {
@@ -17,14 +20,13 @@ pub fn App() -> impl IntoView {
     provide_app_context();
 
     view! {
-        <Router trailing_slash=TrailingSlash::Exact>
+        <Router>
             <SiteHeader />
             <main>
-                <Routes>
-                    <Route path="/leptos-chartistry/" view=Demo />
-                    <Route path="/leptos-chartistry/examples.html" view=Examples />
-                    <examples::Routes prefix="/leptos-chartistry/examples" />
-                    <Route path="/*any" view=NotFound />
+                <Routes fallback=NotFound>
+                    <Route path=StaticSegment("/leptos-chartistry/") view=Demo />
+                    <Route path=StaticSegment("/leptos-chartistry/examples.html") view=Examples />
+                    <examples::Routes />
                 </Routes>
             </main>
         </Router>

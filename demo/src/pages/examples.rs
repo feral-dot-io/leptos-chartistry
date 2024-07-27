@@ -8,7 +8,11 @@ use leptos::{
     html::Dialog,
     prelude::*,
 };
-use leptos_router::{use_location, use_navigate, NavigateOptions};
+use leptos_router::{
+    components::{Outlet, ParentRoute, Route},
+    hooks::{use_location, use_navigate},
+    MatchNestedRoutes, NavigateOptions, StaticSegment,
+};
 use prelude::RenderEffect;
 use strum::VariantArray;
 use web_sys::{HtmlDialogElement, MouseEvent};
@@ -227,6 +231,18 @@ impl Example {
     }
 }
 
+// TODO: this is a partial static re-implementation of Routes
+#[component]
+pub fn Routes() -> impl MatchNestedRoutes<Dom> + Clone {
+    view! {
+        <ParentRoute path=StaticSegment("/leptos-chartistry/examples") view=|| view!(<Outlet />)>
+            <Route path=StaticSegment("/leptos-chartistry/examples/series-line.html") view=|| Example::Line.page_view() />
+            <Route path=StaticSegment("/leptos-chartistry/examples/stacked-line.html") view=|| Example::StackedLine.page_view() />
+        </ParentRoute>
+    }
+}
+
+/*
 #[component(transparent)]
 pub fn Routes(prefix: &'static str) -> impl IntoView {
     use leptos_router::*;
@@ -244,6 +260,7 @@ pub fn Routes(prefix: &'static str) -> impl IntoView {
         <Route path=prefix view=|| view!(<Outlet />) children=Box::new(|| children) />
     }
 }
+*/
 
 #[component]
 fn Card(example: Example, #[prop(optional)] h1: bool) -> impl IntoView {
