@@ -50,11 +50,11 @@ impl<X: Tick, Y: Tick> InnerLayout<X, Y> {
     pub(super) fn into_use(self, state: &State<X, Y>) -> UseInner<X, Y> {
         match self {
             Self::AxisMarker(inner) => UseInner::AxisMarker(inner),
-            Self::XGridLine(inner) => UseInner::AxisMarker(inner.use_horizontal(state)),
-            Self::YGridLine(inner) => UseInner::AxisMarker(inner.use_vertical(state)),
-            Self::XGuideLine(inner) => UseInner::AxisMarker(inner.use_horizontal()),
-            Self::YGuideLine(inner) => UseInner::AxisMarker(inner.use_vertical()),
-            Self::Legend(inner) => UseInner::AxisMarker(inner),
+            Self::XGridLine(inner) => UseInner::XGridLine(inner.use_horizontal(state)),
+            Self::YGridLine(inner) => UseInner::YGridLine(inner.use_vertical(state)),
+            Self::XGuideLine(inner) => UseInner::XGuideLine(inner.use_horizontal()),
+            Self::YGuideLine(inner) => UseInner::YGuideLine(inner.use_vertical()),
+            Self::Legend(inner) => UseInner::Legend(inner),
         }
     }
 }

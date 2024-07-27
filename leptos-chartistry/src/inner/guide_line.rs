@@ -1,4 +1,3 @@
-use super::UseInner;
 use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State, Tick};
 use leptos::prelude::*;
 use std::str::FromStr;
@@ -73,13 +72,13 @@ pub(super) struct UseXGuideLine(XGuideLine);
 pub(super) struct UseYGuideLine(YGuideLine);
 
 impl XGuideLine {
-    pub(crate) fn use_horizontal<X: Tick, Y: Tick>(self) -> UseInner<X, Y> {
+    pub(crate) fn use_horizontal(self) -> UseXGuideLine {
         UseXGuideLine(self)
     }
 }
 
 impl YGuideLine {
-    pub(crate) fn use_vertical<X, Y>(self) -> UseInner<X, Y> {
+    pub(crate) fn use_vertical(self) -> UseYGuideLine {
         UseYGuideLine(self)
     }
 }
