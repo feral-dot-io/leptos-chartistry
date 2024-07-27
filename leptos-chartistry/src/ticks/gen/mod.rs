@@ -6,7 +6,7 @@ pub use aligned_floats::AlignedFloats;
 pub use span::{HorizontalSpan, TickFormatFn, VerticalSpan};
 pub use timestamps::{Period, Timestamps};
 
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 pub trait Generator {
     type Tick;
@@ -31,7 +31,7 @@ pub trait Format {
 
 #[derive(Clone)]
 pub struct GeneratedTicks<Tick> {
-    pub state: Rc<dyn Format<Tick = Tick>>,
+    pub state: Arc<dyn Format<Tick = Tick> + Send + Sync>,
     pub ticks: Vec<Tick>,
 }
 

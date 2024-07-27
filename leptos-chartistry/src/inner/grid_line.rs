@@ -56,7 +56,7 @@ macro_rules! impl_use_grid_line {
         pub(super) struct $name<Tick: 'static> {
             width: RwSignal<f64>,
             colour: RwSignal<Colour>,
-            ticks: Signal<GeneratedTicks<Tick>>,
+            ticks: Memo<GeneratedTicks<Tick>>,
         }
 
         impl<Tick> Clone for $name<Tick> {
@@ -173,7 +173,7 @@ pub(super) fn YGridLine<X: 'static, Y: Tick>(
 }
 
 fn for_ticks<Tick: crate::Tick>(
-    ticks: Signal<GeneratedTicks<Tick>>,
+    ticks: Memo<GeneratedTicks<Tick>>,
     proj: Signal<Projection>,
     is_x: bool,
 ) -> Vec<(f64, String)> {

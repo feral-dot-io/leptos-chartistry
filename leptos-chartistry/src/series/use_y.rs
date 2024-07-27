@@ -47,7 +47,7 @@ impl UseY {
 }
 
 #[component]
-pub(super) fn RenderUseY<X: 'static, Y: 'static>(
+pub(super) fn RenderUseY<X: 'static, Y: Send + Sync + 'static>(
     use_y: UseY,
     state: State<X, Y>,
     positions: Signal<Vec<(f64, f64)>>,
@@ -69,7 +69,10 @@ pub(super) fn RenderUseY<X: 'static, Y: 'static>(
 }
 
 #[component]
-pub fn Snippet<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl IntoView {
+pub fn Snippet<X: 'static, Y: Send + Sync + 'static>(
+    series: UseY,
+    state: State<X, Y>,
+) -> impl IntoView {
     let debug = state.pre.debug;
     let name = series.name;
     view! {
@@ -82,7 +85,7 @@ pub fn Snippet<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl
 }
 
 #[component]
-fn Taster<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl IntoView {
+fn Taster<X: 'static, Y: Send + Sync + 'static>(series: UseY, state: State<X, Y>) -> impl IntoView {
     const Y_OFFSET: f64 = 2.0;
     let debug = state.pre.debug;
     let font_width = state.pre.font_width;

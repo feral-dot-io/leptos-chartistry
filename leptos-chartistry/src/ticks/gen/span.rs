@@ -25,7 +25,7 @@ impl<Tick> Span<Tick> for VerticalSpan {
     }
 }
 
-pub type TickFormatFn<Tick> = dyn Fn(&Tick, &dyn Format<Tick = Tick>) -> String;
+pub type TickFormatFn<Tick> = dyn (Fn(&Tick, &dyn Format<Tick = Tick>) -> String) + Send + Sync;
 
 pub struct HorizontalSpan<Tick: 'static> {
     font_width: f64,

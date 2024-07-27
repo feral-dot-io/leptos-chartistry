@@ -12,7 +12,7 @@ use crate::{
 };
 use chrono::prelude::*;
 use leptos::prelude::*;
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 /// Builds tick labels for an axis.
 ///
@@ -23,14 +23,14 @@ pub struct TickLabels<Tick: 'static> {
     /// Helpful for giving a fixed width to labels e.g., if your graph can display 0-100 then it might show a shorter label on "0" or "42" to "100". Needed to have the same inner chart ratio when using an outer chart ratio. Can also be useful for aligning a list of charts.
     pub min_chars: RwSignal<usize>,
     /// Format function for the tick labels. See [TickLabels::with_format] for details.
-    pub format: RwSignal<Rc<TickFormatFn<Tick>>>,
+    pub format: RwSignal<Arc<TickFormatFn<Tick>>>,
     /// Tick generator for the labels.
     pub generator: RwSignal<Rc<dyn TickGen<Tick = Tick>>>,
 }
 
 #[derive(Clone)]
 pub struct UseTickLabels {
-    ticks: Signal<Vec<(f64, String)>>,
+    ticks: Memo<Vec<(f64, String)>>,
 }
 
 impl<Tick> Clone for TickLabels<Tick> {
@@ -123,7 +123,7 @@ impl<X: Tick> TickLabels<X> {
         &self,
         state: &PreState<X, Y>,
         avail_width: Signal<f64>,
-    ) -> Signal<GeneratedTicks<X>> {
+    ) -> Memo<GeneratedTicks<X>> {
         let font_width = state.font_width;
         let padding = state.padding;
         let range_x = state.data.range_x;
@@ -148,7 +148,6 @@ impl<X: Tick> TickLabels<X> {
                 })
                 .unwrap_or_else(GeneratedTicks::none)
         })
-        .into()
     }
 
     pub(super) fn fixed_height<Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
@@ -173,7 +172,7 @@ impl<Y: Tick> TickLabels<Y> {
         &self,
         state: &PreState<X, Y>,
         avail_height: Signal<f64>,
-    ) -> Signal<GeneratedTicks<Y>> {
+    ) -> Memo<GeneratedTicks<Y>> {
         let font_height = state.font_height;
         let padding = state.padding;
         let range_y = state.data.range_y;
@@ -191,7 +190,6 @@ impl<Y: Tick> TickLabels<Y> {
                 })
                 .unwrap_or_else(GeneratedTicks::none)
         })
-        .into()
     }
 
     pub(super) fn to_vertical_use<X>(

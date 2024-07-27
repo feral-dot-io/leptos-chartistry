@@ -181,7 +181,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
 }
 
 #[component]
-pub fn RenderLine<X: 'static, Y: 'static>(
+pub fn RenderLine<X: 'static, Y: Send + Sync + 'static>(
     use_y: UseY,
     line: UseLine,
     data: UseData<X, Y>,
@@ -209,7 +209,7 @@ pub fn RenderLine<X: 'static, Y: 'static>(
             .get()
             .unwrap_or_else(|| LINEAR_GRADIENT.into())
     });
-    let range_y = Signal::derive(move || data.range_y.with(|range_y| range_y.positions()));
+    let range_y = Signal::derive(move || data.range_y.read().positions());
 
     view! {
         <g
