@@ -1,5 +1,8 @@
 use chrono::prelude::*;
-use leptos::prelude::*;
+use leptos::{
+    either::{EitherOf3, EitherOf4, EitherOf7},
+    prelude::*,
+};
 use leptos_chartistry::*;
 use std::str::FromStr;
 
@@ -601,49 +604,40 @@ impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
 
 fn edge_layout_opts<Tick: 'static>(option: EdgeLayout<Tick>) -> impl IntoView {
     match option {
-        EdgeLayout::RotatedLabel(label) => view! {
+        EdgeLayout::RotatedLabel(label) => EitherOf4::A(view! {
             <RotatedLabelOpts label=label />
-        }
-        .into_view(),
-        EdgeLayout::Legend(legend) => view! {
+        }),
+        EdgeLayout::Legend(legend) => EitherOf4::B(view! {
             <LegendOpts legend=legend />
-        }
-        .into_view(),
-        EdgeLayout::TickLabels(ticks) => view! {
+        }),
+        EdgeLayout::TickLabels(ticks) => EitherOf4::C(view! {
             <TickLabelsOpts ticks=ticks />
-        }
-        .into_view(),
-        _ => ().into_view(),
+        }),
+        _ => EitherOf4::D(()),
     }
 }
 
 fn inner_layout_opts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoView {
     match option {
-        InnerLayout::AxisMarker(marker) => view! {
+        InnerLayout::AxisMarker(marker) => EitherOf7::A(view! {
             <AxisMarkerOpts marker=marker />
-        }
-        .into_view(),
-        InnerLayout::Legend(legend) => view! {
+        }),
+        InnerLayout::Legend(legend) => EitherOf7::B(view! {
             <InsetLegendOpts legend=legend />
-        }
-        .into_view(),
-        InnerLayout::XGridLine(line) => view! {
+        }),
+        InnerLayout::XGridLine(line) => EitherOf7::C(view! {
             <GridLineOpts width=line.width colour=line.colour />
-        }
-        .into_view(),
-        InnerLayout::YGridLine(line) => view! {
+        }),
+        InnerLayout::YGridLine(line) => EitherOf7::D(view! {
             <GridLineOpts width=line.width colour=line.colour />
-        }
-        .into_view(),
-        InnerLayout::XGuideLine(line) => view! {
+        }),
+        InnerLayout::XGuideLine(line) => EitherOf7::E(view! {
             <GuideLineOpts align=line.align width=line.width colour=line.colour />
-        }
-        .into_view(),
-        InnerLayout::YGuideLine(line) => view! {
+        }),
+        InnerLayout::YGuideLine(line) => EitherOf7::F(view! {
             <GuideLineOpts align=line.align width=line.width colour=line.colour />
-        }
-        .into_view(),
-        _ => ().into_view(),
+        }),
+        _ => EitherOf7::G(()),
     }
 }
 
