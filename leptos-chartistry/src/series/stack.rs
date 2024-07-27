@@ -61,7 +61,7 @@ impl<T, Y> Default for Stack<T, Y> {
     fn default() -> Self {
         Self {
             lines: Vec::new(),
-            colours: ColourScheme::from(STACK_COLOUR_SCHEME).invert().into(),
+            colours: RwSignal::new(ColourScheme::from(STACK_COLOUR_SCHEME).invert()),
         }
     }
 }
