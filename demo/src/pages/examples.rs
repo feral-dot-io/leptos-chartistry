@@ -13,7 +13,6 @@ use leptos_router::{
     hooks::{use_location, use_navigate},
     MatchNestedRoutes, NavigateOptions, StaticSegment,
 };
-use prelude::RenderEffect;
 use strum::VariantArray;
 use web_sys::{HtmlDialogElement, MouseEvent};
 
@@ -389,7 +388,7 @@ fn ShowCode(#[prop(into)] id: String, #[prop(into)] code: String) -> impl IntoVi
     let href = format!("examples.html#{}", id);
 
     // Opens dialogue on demand
-    let show_modal = move |dialog: HtmlElement<Dialog>| {
+    let show_modal = move |dialog: HtmlDialogElement| {
         dialog
             .show_modal()
             .expect("unable to show example code dialog")
@@ -428,7 +427,7 @@ fn ShowCode(#[prop(into)] id: String, #[prop(into)] code: String) -> impl IntoVi
                 .map(|s| s.into())
                 .unwrap_or_default();
             if hash == id {
-                let _ = dialog.on_mount(show_modal);
+                show_modal(dialog);
             }
         }
     });
