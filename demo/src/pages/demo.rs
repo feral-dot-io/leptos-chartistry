@@ -346,10 +346,10 @@ fn OptionsCard<Full, FullView, FullIV, Label>(
     detail: FullView,
 ) -> impl IntoView
 where
-    Full: Clone + From<Label> + 'static,
+    Full: Clone + From<Label> + Send + Sync + 'static,
     FullView: Fn(Full) -> FullIV + 'static,
-    FullIV: IntoView,
-    Label: Copy + Default + From<Full> + FromStr + PartialEq + ToString + 'static,
+    FullIV: Send + Sync + IntoView,
+    Label: Copy + Default + From<Full> + FromStr + PartialEq + ToString + Send + Sync + 'static,
 {
     let (option, set_option) = signal(Label::default());
     let on_label_change =
@@ -358,7 +358,7 @@ where
     let on_move_up = move |index| move |_| options.set(options.get().move_up(index));
     let on_move_down = move |index| move |_| options.set(options.get().move_down(index));
     let on_remove = move |index| move |_| options.set(options.get().remove(index));
-    let on_new_line = move |ev: ev::MouseEvent| {
+    let on_new_line = move |ev| {
         ev.prevent_default();
         options.set(options.get().add(option.get()));
     };
