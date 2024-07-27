@@ -53,7 +53,7 @@ impl InsetLegend {
 }
 
 #[component]
-pub(super) fn InsetLegend<X: Clone + 'static, Y: Clone + 'static>(
+pub(super) fn InsetLegend<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
     legend: InsetLegend,
     state: State<X, Y>,
 ) -> impl IntoView {

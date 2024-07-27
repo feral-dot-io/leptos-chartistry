@@ -73,7 +73,7 @@ impl Legend {
 }
 
 #[component]
-pub(crate) fn Legend<X: Clone + 'static, Y: Clone + 'static>(
+pub(crate) fn Legend<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
     legend: Legend,
     #[prop(into)] edge: MaybeSignal<Edge>,
     bounds: Memo<Bounds>,
@@ -139,7 +139,7 @@ pub(crate) fn Legend<X: Clone + 'static, Y: Clone + 'static>(
 }
 
 #[component]
-fn VerticalBody<X: Clone + 'static, Y: Clone + 'static>(
+fn VerticalBody<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
     series: Memo<Vec<UseY>>,
     state: State<X, Y>,
 ) -> impl IntoView {
@@ -162,7 +162,7 @@ fn VerticalBody<X: Clone + 'static, Y: Clone + 'static>(
 }
 
 #[component]
-fn HorizontalBody<X: Clone + 'static, Y: Clone + 'static>(
+fn HorizontalBody<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
     series: Memo<Vec<UseY>>,
     state: State<X, Y>,
 ) -> impl IntoView {

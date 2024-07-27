@@ -31,7 +31,7 @@ pub struct DeferredRender {
 }
 
 impl DeferredRender {
-    pub fn render<X: Clone, Y: Clone>(self, state: State<X, Y>) -> impl IntoView {
+    pub fn render<X: Clone, Y: Clone + Send + Sync>(self, state: State<X, Y>) -> impl IntoView {
         self.layout.render(self.edge, self.bounds, state)
     }
 }

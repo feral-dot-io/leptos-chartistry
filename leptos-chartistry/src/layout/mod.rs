@@ -41,7 +41,7 @@ enum UseLayout {
 }
 
 impl UseLayout {
-    fn render<X: Clone, Y: Clone>(
+    fn render<X: Clone, Y: Clone + Send + Sync>(
         self,
         edge: Edge,
         bounds: Memo<Bounds>,
