@@ -79,7 +79,7 @@ impl<T, Y> Line<T, Y> {
             name: RwSignal::default(),
             colour: RwSignal::default(),
             gradient: RwSignal::default(),
-            width: 1.0.into(),
+            width: RwSignal::new(1.0),
             interpolation: RwSignal::default(),
             marker: Marker::default(),
         }

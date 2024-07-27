@@ -39,7 +39,7 @@ macro_rules! impl_grid_line {
         impl<Tick: crate::Tick> Default for $name<Tick> {
             fn default() -> Self {
                 Self {
-                    width: 1.0.into(),
+                    width: RwSignal::new(1.0),
                     colour: RwSignal::new(GRID_LINE_COLOUR),
                     ticks: TickLabels::default(),
                 }
