@@ -170,6 +170,7 @@ fn HorizontalBody<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
         (i != 0)
             .then_some(state.pre.padding.get().left)
             .map(|p| format!("{}px", p))
+            .unwrap_or_default()
     };
     view! {
         <tr>
