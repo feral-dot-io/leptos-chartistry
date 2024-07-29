@@ -46,7 +46,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
                 tooltip=Tooltip::left_cursor()
 
                 series=series.clone()
-                data=data::daily_sunspots />
+                data=Signal::derive(data::daily_sunspots) />
         </div>
 
         <p>"Try changing the chart width and see how the chart looks different "
@@ -71,7 +71,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
                 tooltip=Tooltip::left_cursor()
 
                 series=series
-                data=data::daily_sunspots />
+                data=Signal::derive(data::daily_sunspots) />
         </div>
 
         <p>"Source: "<a href="https://www.sidc.be/silso/">"Sunspot data from "
