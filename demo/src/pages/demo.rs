@@ -152,7 +152,7 @@ pub fn Demo() -> impl IntoView {
     ];
     let edit_lines = lines.clone();
     let (line_tab, set_line_tab) = signal(0);
-    let set_line_tab = move |ev: ev::Event| {
+    let set_line_tab = move |ev: web_sys::Event| {
         let tab_index = event_target_value(&ev).parse().unwrap_or_default();
         set_line_tab.set(tab_index);
     };
@@ -233,7 +233,7 @@ pub fn Demo() -> impl IntoView {
                     series=series.clone()
                     data=data
                 />
-            }}
+            }.into_any()}
 
             <div class="outer">
                 <fieldset class="options">
@@ -339,17 +339,17 @@ pub fn Demo() -> impl IntoView {
 }
 
 #[component]
-fn OptionsCard<Full, FullView, FullIV, Label>(
+fn OptionsCard<Opt, OptView, OptIV, Label>(
     title: &'static str,
-    options: RwSignal<Options<Full>>,
+    options: RwSignal<Options<Opt>>,
     labels: &'static [Label],
-    detail: FullView,
+    detail: OptView,
 ) -> impl IntoView
 where
-    Full: Clone + From<Label> + Send + Sync + 'static,
-    FullView: Fn(Full) -> FullIV + 'static,
-    FullIV: Send + Sync + IntoView,
-    Label: Copy + Default + From<Full> + FromStr + PartialEq + ToString + Send + Sync + 'static,
+    Opt: Clone + From<Label> + Send + Sync + 'static,
+    OptView: Fn(Opt) -> OptIV + Send + Sync + 'static,
+    OptIV: Send + Sync + IntoView + 'static,
+    Label: Copy + Default + From<Opt> + FromStr + PartialEq + ToString + Send + Sync + 'static,
 {
     let (option, set_option) = signal(Label::default());
     let on_label_change =
@@ -358,12 +358,12 @@ where
     let on_move_up = move |index| move |_| options.set(options.get().move_up(index));
     let on_move_down = move |index| move |_| options.set(options.get().move_down(index));
     let on_remove = move |index| move |_| options.set(options.get().remove(index));
-    let on_new_line = move |ev| {
+    let on_new_line = move |ev: web_sys::MouseEvent| {
         ev.prevent_default();
         options.set(options.get().add(option.get()));
     };
 
-    let existing_rows = Signal::derive(move || {
+    let existing_rows = move || {
         let options = options.get().into_inner();
         let last = options.len().saturating_sub(1);
         options
@@ -381,12 +381,13 @@ where
                 }
             })
             .collect_view()
-    });
+            .into_any()
+    };
 
     view! {
         <fieldset class=title.to_lowercase()>
             <legend>{title}</legend>
-            {move || existing_rows}
+            {existing_rows}
             <p>
                 <span></span>
                 <span>
