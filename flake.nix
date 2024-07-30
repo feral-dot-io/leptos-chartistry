@@ -19,6 +19,11 @@
       flake = false;
     };
 
+    semver-checks-src = {
+      url = "github:obi1kenobi/cargo-semver-checks";
+      flake = false;
+    };
+
     trunk-src = {
       url = "github:trunk-rs/trunk?tag=v0.20.2";
       flake = false; # Avoid breakage if added
@@ -114,6 +119,7 @@
       {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
+            cargo-semver-checks
             trunk-local
             wasm-bindgen-cli-local
           ];
