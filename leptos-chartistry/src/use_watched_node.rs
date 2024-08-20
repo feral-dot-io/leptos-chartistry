@@ -2,8 +2,9 @@ use crate::bounds::Bounds;
 use leptos::{html::Div, *};
 use leptos_use::{
     use_element_hover, use_mouse_with_options, use_resize_observer_with_options, UseMouseCoordType,
-    UseMouseEventExtractorDefault, UseMouseOptions, UseMouseSourceType, UseResizeObserverOptions,
+    UseMouseOptions, UseMouseSourceType, UseResizeObserverOptions,
 };
+use std::convert::Infallible;
 use web_sys::ResizeObserverBoxOptions;
 
 #[derive(Clone, Debug)]
@@ -36,7 +37,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     let mouse_page = use_mouse_with_options(
         UseMouseOptions::default()
             .target(node)
-            .coord_type(UseMouseCoordType::<UseMouseEventExtractorDefault>::Page)
+            .coord_type(UseMouseCoordType::<Infallible>::Page)
             .reset_on_touch_ends(true),
     );
 
@@ -52,7 +53,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     let mouse_client = use_mouse_with_options(
         UseMouseOptions::default()
             .target(node)
-            .coord_type(UseMouseCoordType::<UseMouseEventExtractorDefault>::Client)
+            .coord_type(UseMouseCoordType::<Infallible>::Client)
             .reset_on_touch_ends(true),
     );
     let mouse_chart: Signal<_> = create_memo(move |_| {
