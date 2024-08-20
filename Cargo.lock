@@ -385,6 +385,7 @@ dependencies = [
  "log",
  "strum",
  "syntect",
+ "wasm-bindgen",
  "web-sys",
 ]
 
