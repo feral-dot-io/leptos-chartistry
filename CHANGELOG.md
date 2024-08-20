@@ -6,9 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Changed
-- Updated [leptos-use dependency](https://github.com/Synphonyte/leptos-use) to 0.12.
-- Skip generating empty line markers with `MarkerShape::None` for a small performance improvement.
 
 <!-- Added for new features. -->
 <!-- Changed for changes in existing functionality. -->
@@ -16,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Removed for now removed features. -->
 <!-- Fixed for any bug fixes. -->
 <!-- Security in case of vulnerabilities. -->
+
+## [0.1.7] - 2024-08-20
+### Changed
+- Updated [leptos-use dependency](https://github.com/Synphonyte/leptos-use) to 0.12.
+- Skip generating empty line markers with `MarkerShape::None` for a small performance improvement.
 
 ## [0.1.6] - 2024-06-15
 ### Fixed
@@ -85,4 +87,5 @@ Series options:
 [0.1.4]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.3...v0.1.4
 [0.1.5]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.4...v0.1.5
 [0.1.6]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.5...v0.1.6
+[0.1.7]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.6...v0.1.7
 [unreleased]: https://github.com/feral-dot-io/leptos-chartistry/compare/v1.1.5...HEAD
