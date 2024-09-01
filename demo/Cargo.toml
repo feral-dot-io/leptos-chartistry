@@ -16,11 +16,11 @@ chrono = "0.4"
 console_error_panic_hook = "0.1"
 console_log = "1.0"
 js-sys = "0.3"
-leptos = { version = "=0.7.0-beta", features = ["csr"] }
+leptos = { version = "=0.7.0-beta4", features = ["csr"] }
 leptos-chartistry = { path = "../leptos-chartistry" }
 leptos_meta.version = "=0.7.0-beta"
 leptos_router.version = "=0.7.0-beta"
-leptos-use = "0.10"
+leptos-use = { git = "https://github.com/Synphonyte/leptos-use.git", branch = "leptos-0.7" }
 log = "0.4"
 strum = { version = "0.26.2", features = ["derive"] }
 web-sys = "0.3"
