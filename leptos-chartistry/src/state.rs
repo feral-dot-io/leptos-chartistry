@@ -1,6 +1,6 @@
 use crate::{
-    bounds::Bounds, layout::Layout, projection::Projection, series::UseData,
-    use_watched_node::UseWatchedNode, Padding, Tick,
+    layout::Layout, projection::Projection, series::UseData, use_watched_node::UseWatchedNode,
+    Padding, Tick,
 };
 use leptos::prelude::*;
 
@@ -21,20 +21,14 @@ pub struct State<X: Tick, Y: Tick> {
 
     pub svg_zero: Memo<(f64, f64)>,
 
-    /// Size of chart on page (left and top are 0)
-    pub page_bounds: Signal<Option<Bounds>>,
     /// Mouse page position
     pub mouse_page: Signal<(f64, f64)>,
     /// Mouse page position relative to chart
     pub mouse_chart: Signal<(f64, f64)>,
-    /// Mouse over chart?
-    pub hover_chart: Signal<bool>,
     /// Mouse over inner chart?
     pub hover_inner: Signal<bool>,
     /// X mouse coord in data position space
     pub hover_position_x: Memo<f64>,
-    /// Y mouse coord in data position space
-    pub hover_position_y: Memo<f64>,
 }
 
 impl<X: Tick, Y: Tick> PreState<X, Y> {
@@ -72,7 +66,6 @@ impl<X: Tick, Y: Tick> State<X, Y> {
             proj.get().svg_to_position(mouse_x, mouse_y)
         });
         let hover_position_x = Memo::new(move |_| hover_position.get().0);
-        let hover_position_y = Memo::new(move |_| hover_position.get().1);
 
         Self {
             pre,
@@ -80,13 +73,10 @@ impl<X: Tick, Y: Tick> State<X, Y> {
             projection: proj,
             svg_zero: Memo::new(move |_| proj.get().position_to_svg(0.0, 0.0)),
 
-            page_bounds: node.bounds,
             mouse_page: node.mouse_page,
             mouse_chart,
-            hover_chart: node.mouse_chart_hover,
             hover_inner,
             hover_position_x,
-            hover_position_y,
         }
     }
 }

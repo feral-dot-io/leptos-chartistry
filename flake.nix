@@ -14,16 +14,6 @@
       url = "github:rustsec/advisory-db";
       flake = false;
     };
-
-    semver-checks-src = {
-      url = "github:obi1kenobi/cargo-semver-checks";
-      flake = false;
-    };
-
-    trunk-src = {
-      url = "github:trunk-rs/trunk?tag=v0.20.2";
-      flake = false; # Avoid breakage if added
-    };
   };
 
   outputs =
@@ -47,21 +37,9 @@
 
         # Utilities
         wasm-bindgen-cli-local = pkgs.wasm-bindgen-cli.override {
-          version = "0.2.92"; # Note: must be kept in sync with Cargo.lock
-          hash = "sha256-1VwY8vQy7soKEgbki4LD+v259751kKxSxmo/gqE6yV0=";
-          cargoHash = "sha256-aACJ+lYNEU8FFBs158G1/JG8sc6Rq080PeKCMnwdpH0=";
-        };
-
-        trunk-local = craneLib.buildPackage {
-          src = inputs.trunk-src; # Don't clean source
-          strictDeps = true;
-          buildInputs = with pkgs; [
-            openssl
-            pkg-config
-            wasm-bindgen-cli-local
-          ];
-          cargoExtraArgs = "--no-default-features --features rustls";
-          doCheck = false;
+          version = "0.2.93"; # Note: must be kept in sync with Cargo.lock
+          hash = "sha256-DDdu5mM3gneraM85pAepBXWn3TMofarVR4NbjMdz3r0=";
+          cargoHash = "sha256-birrg+XABBHHKJxfTKAMSlmTVYLmnmqMDfRnmG6g/YQ=";
         };
 
         # Build demo
@@ -115,8 +93,7 @@
       {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
-            cargo-semver-checks
-            trunk-local
+            trunk
             wasm-bindgen-cli-local
           ];
         };

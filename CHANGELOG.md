@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Fixed for any bug fixes. -->
 <!-- Security in case of vulnerabilities. -->
 
+## [0.1.7] - 2024-08-20
+### Changed
+- Updated [leptos-use dependency](https://github.com/Synphonyte/leptos-use) to 0.12.
+- Skip generating empty line markers with `MarkerShape::None` for a small performance improvement.
+
 ## [0.1.6] - 2024-06-15
 ### Fixed
 - Panic if Tick::position returns f64::NaN.
@@ -82,4 +87,5 @@ Series options:
 [0.1.4]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.3...v0.1.4
 [0.1.5]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.4...v0.1.5
 [0.1.6]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.5...v0.1.6
+[0.1.7]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.6...v0.1.7
 [unreleased]: https://github.com/feral-dot-io/leptos-chartistry/compare/v1.1.5...HEAD

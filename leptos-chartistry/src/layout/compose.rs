@@ -12,13 +12,9 @@ use leptos::prelude::*;
 pub struct Layout {
     pub outer: Memo<Bounds>,
     pub top: Vec<Memo<Bounds>>,
-    pub top_bounds: Memo<Bounds>,
     pub right: Vec<Memo<Bounds>>,
-    pub right_bounds: Memo<Bounds>,
     pub bottom: Vec<Memo<Bounds>>,
-    pub bottom_bounds: Memo<Bounds>,
     pub left: Vec<Memo<Bounds>>,
-    pub left_bounds: Memo<Bounds>,
     pub inner: Memo<Bounds>,
     pub x_width: Memo<f64>,
 }
@@ -119,13 +115,9 @@ impl Layout {
         let layout = Layout {
             outer,
             top: option_bounds(Edge::Top, top_bounds, top_heights),
-            top_bounds,
             right: option_bounds(Edge::Right, right_bounds, right_widths),
-            right_bounds,
             bottom: option_bounds(Edge::Bottom, bottom_bounds, bottom_heights),
-            bottom_bounds,
             left: option_bounds(Edge::Left, left_bounds, left_widths),
-            left_bounds,
             inner,
             x_width,
         };
