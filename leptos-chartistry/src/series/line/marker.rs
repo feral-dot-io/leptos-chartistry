@@ -107,14 +107,15 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
     });
 
     let markers = move || {
-        // Avoid the cost of empty nodes
-        if marker.shape.get() == MarkerShape::None {
-            return ().into_view();
-        }
-
+        let shape = marker.shape.get();
         // Size of our marker: proportionate to our line width
         let line_width = line.width.get();
         let diameter = line_width * WIDTH_TO_MARKER * marker.scale.get();
+
+        // Avoid the cost of empty nodes
+        if shape != MarkerShape::None {
+            return vec![].collect_view();
+        };
 
         positions.with(|positions| {
             positions
@@ -123,7 +124,7 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
                 .map(|&(x, y)| {
                     view! {
                         <MarkerShape
-                            shape=marker.shape.get()
+                            shape=shape
                             x=x
                             y=y
                             diameter=diameter
