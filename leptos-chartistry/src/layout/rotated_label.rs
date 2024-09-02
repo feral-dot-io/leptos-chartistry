@@ -6,6 +6,7 @@ use crate::{
     debug::DebugRect,
     edge::Edge,
     state::{PreState, State},
+    Tick,
 };
 use leptos::prelude::*;
 
@@ -53,7 +54,7 @@ impl RotatedLabel {
         Self::new(Anchor::End, text.into())
     }
 
-    fn size<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    fn size<X: Tick, Y: Tick>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         let text = self.text;
         let font_height = state.font_height;
         let padding = state.padding;
@@ -66,7 +67,7 @@ impl RotatedLabel {
         })
     }
 
-    pub(super) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    pub(super) fn fixed_height<X: Tick, Y: Tick>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         self.size(state)
     }
 
@@ -74,7 +75,10 @@ impl RotatedLabel {
         UseLayout::RotatedLabel(self.clone())
     }
 
-    pub(super) fn to_vertical_use<X, Y>(&self, state: &PreState<X, Y>) -> UseVerticalLayout {
+    pub(super) fn to_vertical_use<X: Tick, Y: Tick>(
+        &self,
+        state: &PreState<X, Y>,
+    ) -> UseVerticalLayout {
         // Note: width is height because it's rotated
         UseVerticalLayout {
             width: self.size(state),
@@ -129,7 +133,7 @@ impl std::fmt::Display for Anchor {
 }
 
 #[component]
-pub(super) fn RotatedLabel<X: 'static, Y: 'static>(
+pub(super) fn RotatedLabel<X: Tick, Y: Tick>(
     label: RotatedLabel,
     edge: Edge,
     bounds: Memo<Bounds>,

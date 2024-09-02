@@ -1,4 +1,4 @@
-use crate::{colours::Colour, debug::DebugRect, state::State};
+use crate::{colours::Colour, debug::DebugRect, state::State, Tick};
 use leptos::prelude::*;
 use std::str::FromStr;
 
@@ -116,7 +116,7 @@ impl FromStr for AxisPlacement {
 }
 
 #[component]
-pub(super) fn AxisMarker<X: 'static, Y: 'static>(
+pub(super) fn AxisMarker<X: Tick, Y: Tick>(
     marker: AxisMarker,
     state: State<X, Y>,
 ) -> impl IntoView {

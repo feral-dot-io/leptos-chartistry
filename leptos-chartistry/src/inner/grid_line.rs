@@ -11,13 +11,13 @@ macro_rules! impl_grid_line {
     ($name:ident) => {
         /// Builds a tick-aligned grid line across the inner chart area.
         #[derive(Clone)]
-        pub struct $name<Tick: 'static> {
+        pub struct $name<XY: Tick> {
             /// Width of the grid line.
             pub width: RwSignal<f64>,
             /// Colour of the grid line.
             pub colour: RwSignal<Colour>,
             /// Ticks to align the grid line to.
-            pub ticks: TickLabels<Tick>,
+            pub ticks: TickLabels<XY>,
         }
 
         impl<Tick: crate::Tick> $name<Tick> {
@@ -53,13 +53,13 @@ impl_grid_line!(YGridLine);
 
 macro_rules! impl_use_grid_line {
     ($name:ident) => {
-        pub(super) struct $name<Tick: 'static> {
+        pub(super) struct $name<XY: Tick> {
             width: RwSignal<f64>,
             colour: RwSignal<Colour>,
-            ticks: Memo<GeneratedTicks<Tick>>,
+            ticks: Memo<GeneratedTicks<XY>>,
         }
 
-        impl<Tick> Clone for $name<Tick> {
+        impl<XY: Tick> Clone for $name<XY> {
             fn clone(&self) -> Self {
                 Self {
                     width: self.width,
@@ -75,7 +75,7 @@ impl_use_grid_line!(UseXGridLine);
 impl_use_grid_line!(UseYGridLine);
 
 impl<X: Tick> XGridLine<X> {
-    pub(crate) fn use_horizontal<Y>(self, state: &State<X, Y>) -> UseXGridLine<X> {
+    pub(crate) fn use_horizontal<Y: Tick>(self, state: &State<X, Y>) -> UseXGridLine<X> {
         let inner = state.layout.inner;
         let avail_width = Signal::derive(move || inner.with(|inner| inner.width()));
         UseXGridLine {
@@ -87,7 +87,7 @@ impl<X: Tick> XGridLine<X> {
 }
 
 impl<Y: Tick> YGridLine<Y> {
-    pub(crate) fn use_vertical<X>(self, state: &State<X, Y>) -> UseYGridLine<Y> {
+    pub(crate) fn use_vertical<X: Tick>(self, state: &State<X, Y>) -> UseYGridLine<Y> {
         let inner = state.layout.inner;
         let avail_height = Signal::derive(move || inner.with(|inner| inner.height()));
         UseYGridLine {
@@ -99,7 +99,7 @@ impl<Y: Tick> YGridLine<Y> {
 }
 
 #[component]
-pub(super) fn XGridLine<X: Tick, Y: 'static>(
+pub(super) fn XGridLine<X: Tick, Y: Tick>(
     line: UseXGridLine<X>,
     state: State<X, Y>,
 ) -> impl IntoView {
@@ -136,7 +136,7 @@ pub(super) fn XGridLine<X: Tick, Y: 'static>(
 }
 
 #[component]
-pub(super) fn YGridLine<X: 'static, Y: Tick>(
+pub(super) fn YGridLine<X: Tick, Y: Tick>(
     line: UseYGridLine<Y>,
     state: State<X, Y>,
 ) -> impl IntoView {

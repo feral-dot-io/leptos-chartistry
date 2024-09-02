@@ -181,7 +181,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
 }
 
 #[component]
-pub fn RenderLine<X: 'static, Y: Send + Sync + 'static>(
+pub fn RenderLine<X: Tick, Y: Tick>(
     use_y: UseY,
     line: UseLine,
     data: UseData<X, Y>,

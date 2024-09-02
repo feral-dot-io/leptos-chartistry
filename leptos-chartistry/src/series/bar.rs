@@ -159,7 +159,7 @@ impl<T, Y> IntoUseBar<T, Y> for Bar<T, Y> {
 }
 
 #[component]
-pub fn RenderBar<X: 'static, Y: 'static>(
+pub fn RenderBar<X: Tick, Y: Tick>(
     bar: UseBar,
     state: State<X, Y>,
     positions: Signal<Vec<(f64, f64)>>,

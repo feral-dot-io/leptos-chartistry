@@ -37,7 +37,7 @@ pub trait IntoInner<X: Tick, Y: Tick> {
     fn into_inner(self) -> InnerLayout<X, Y>;
 }
 
-enum UseInner<X: 'static, Y: 'static> {
+enum UseInner<X: Tick, Y: Tick> {
     AxisMarker(axis_marker::AxisMarker),
     XGridLine(grid_line::UseXGridLine<X>),
     YGridLine(grid_line::UseYGridLine<Y>),

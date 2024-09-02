@@ -12,7 +12,7 @@ pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
 
 /// Builds a mouse tooltip that shows X and Y values for the nearest data. Drawn in HTML as an overlay.
 #[derive(Clone)]
-pub struct Tooltip<X: 'static, Y: 'static> {
+pub struct Tooltip<X: Tick, Y: Tick> {
     /// Where the tooltip is placed when shown.
     pub placement: RwSignal<TooltipPlacement>,
     /// How the tooltip Y value table is sorted.

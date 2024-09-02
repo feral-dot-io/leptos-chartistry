@@ -420,6 +420,7 @@ impl<Tz: TimeZone> Add<Period> for DateTime<Tz> {
 mod tests {
     use super::super::HorizontalSpan;
     use super::*;
+    use crate::Tick;
 
     fn assert_ticks<Tick>(ticks: GeneratedTicks<Tick>, expected: Vec<&'static str>) {
         let GeneratedTicks { ticks, state } = ticks;
@@ -429,7 +430,7 @@ mod tests {
         assert_eq!(check, expected);
     }
 
-    fn mk_span<Tick: 'static>(width: f64) -> impl Span<Tick> {
+    fn mk_span<XY: Tick>(width: f64) -> impl Span<XY> {
         HorizontalSpan::new(6.0, 0, 2.0, width, HorizontalSpan::identity_format())
     }
 

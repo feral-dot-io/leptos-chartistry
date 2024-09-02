@@ -604,7 +604,7 @@ impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     }
 }
 
-fn edge_layout_opts<Tick: 'static>(option: EdgeLayout<Tick>) -> impl IntoView {
+fn edge_layout_opts<Tick: Tick>(option: EdgeLayout<Tick>) -> impl IntoView {
     match option {
         EdgeLayout::RotatedLabel(label) => EitherOf4::A(view! {
             <RotatedLabelOpts label=label />
@@ -845,7 +845,7 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 }
 
 #[component]
-fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
+fn TickLabelsOpts<Tick: Tick>(ticks: TickLabels<Tick>) -> impl IntoView {
     view! {
         <label>"min width:"<StepInput value=ticks.min_chars step="1" min="0" /></label>
     }

@@ -31,7 +31,7 @@ pub struct DeferredRender {
 }
 
 impl DeferredRender {
-    pub fn render<X: Clone, Y: Clone + Send + Sync>(self, state: State<X, Y>) -> impl IntoView {
+    pub fn render<X: Tick, Y: Tick>(self, state: State<X, Y>) -> impl IntoView {
         self.layout.render(self.edge, self.bounds, state)
     }
 }
@@ -168,7 +168,7 @@ impl Layout {
     }
 }
 
-fn collect_heights<X: Tick, Y>(
+fn collect_heights<X: Tick, Y: Tick>(
     items: &[EdgeLayout<X>],
     state: &PreState<X, Y>,
 ) -> Vec<Signal<f64>> {

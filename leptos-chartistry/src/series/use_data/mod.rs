@@ -12,7 +12,7 @@ use data::Data;
 use leptos::prelude::*;
 
 #[derive(Clone)]
-pub struct UseData<X: 'static, Y: 'static> {
+pub struct UseData<X: Tick, Y: Tick> {
     data: Memo<Data<X, Y>>,
     pub len: Memo<usize>,
     pub series: Memo<Vec<UseY>>,

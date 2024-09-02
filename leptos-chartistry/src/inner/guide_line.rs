@@ -136,7 +136,7 @@ pub(super) fn XGuideLine<X: Tick, Y: Tick>(
 }
 
 #[component]
-pub(super) fn YGuideLine<X: 'static, Y: 'static>(
+pub(super) fn YGuideLine<X: Tick, Y: Tick>(
     line: UseYGuideLine,
     state: State<X, Y>,
 ) -> impl IntoView {
@@ -155,7 +155,7 @@ pub(super) fn YGuideLine<X: 'static, Y: 'static>(
 }
 
 #[component]
-fn GuideLine<X: 'static, Y: 'static>(
+fn GuideLine<X: Tick, Y: Tick>(
     id: &'static str,
     width: RwSignal<f64>,
     colour: RwSignal<Colour>,

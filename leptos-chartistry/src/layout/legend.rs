@@ -5,7 +5,7 @@ use crate::{
     edge::Edge,
     series::{Snippet, UseY},
     state::{PreState, State},
-    Padding,
+    Padding, Tick,
 };
 use leptos::{either::Either, prelude::*};
 
@@ -36,7 +36,7 @@ impl Legend {
         Self::new(Anchor::End)
     }
 
-    pub(crate) fn width<X, Y>(state: &PreState<X, Y>) -> Signal<f64> {
+    pub(crate) fn width<X: Tick, Y: Tick>(state: &PreState<X, Y>) -> Signal<f64> {
         let font_height = state.font_height;
         let font_width = state.font_width;
         let padding = state.padding;
@@ -54,7 +54,7 @@ impl Legend {
         })
     }
 
-    pub(crate) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    pub(crate) fn fixed_height<X: Tick, Y: Tick>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         let font_height = state.font_height;
         let padding = state.padding;
         Signal::derive(move || font_height.get() + padding.get().height())
@@ -64,7 +64,10 @@ impl Legend {
         UseLayout::Legend(self.clone())
     }
 
-    pub(super) fn to_vertical_use<X, Y>(&self, state: &PreState<X, Y>) -> UseVerticalLayout {
+    pub(super) fn to_vertical_use<X: Tick, Y: Tick>(
+        &self,
+        state: &PreState<X, Y>,
+    ) -> UseVerticalLayout {
         UseVerticalLayout {
             width: Self::width(state),
             layout: UseLayout::Legend(self.clone()),
@@ -73,7 +76,7 @@ impl Legend {
 }
 
 #[component]
-pub(crate) fn Legend<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
+pub(crate) fn Legend<X: Tick, Y: Tick>(
     legend: Legend,
     #[prop(into)] edge: MaybeSignal<Edge>,
     bounds: Memo<Bounds>,
@@ -139,10 +142,7 @@ pub(crate) fn Legend<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
 }
 
 #[component]
-fn VerticalBody<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
-    series: Memo<Vec<UseY>>,
-    state: State<X, Y>,
-) -> impl IntoView {
+fn VerticalBody<X: Tick, Y: Tick>(series: Memo<Vec<UseY>>, state: State<X, Y>) -> impl IntoView {
     let padding = move || {
         let p = state.pre.padding.get();
         format!("0 {}px 0 {}px", p.right, p.left)
@@ -162,10 +162,7 @@ fn VerticalBody<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
 }
 
 #[component]
-fn HorizontalBody<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
-    series: Memo<Vec<UseY>>,
-    state: State<X, Y>,
-) -> impl IntoView {
+fn HorizontalBody<X: Tick, Y: Tick>(series: Memo<Vec<UseY>>, state: State<X, Y>) -> impl IntoView {
     let padding_left = move |i| {
         (i != 0)
             .then_some(state.pre.padding.get().left)

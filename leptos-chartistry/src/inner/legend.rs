@@ -1,4 +1,4 @@
-use crate::{edge::Edge, state::State, Anchor, Legend};
+use crate::{edge::Edge, state::State, Anchor, Legend, Tick};
 use leptos::prelude::*;
 
 /// Builds an inset legend for the chart [series](crate::Series). Differs from [Legend](struct@Legend) by being placed inside the chart area.
@@ -53,7 +53,7 @@ impl InsetLegend {
 }
 
 #[component]
-pub(super) fn InsetLegend<X: Clone + 'static, Y: Clone + Send + Sync + 'static>(
+pub(super) fn InsetLegend<X: Tick, Y: Tick>(
     legend: InsetLegend,
     state: State<X, Y>,
 ) -> impl IntoView {

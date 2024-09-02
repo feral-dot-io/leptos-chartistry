@@ -5,7 +5,7 @@ use crate::{
 use leptos::prelude::*;
 
 #[derive(Clone)]
-pub struct PreState<X: 'static, Y: 'static> {
+pub struct PreState<X: Tick, Y: Tick> {
     pub debug: Signal<bool>,
     pub font_height: Memo<f64>,
     pub font_width: Memo<f64>,
@@ -14,7 +14,7 @@ pub struct PreState<X: 'static, Y: 'static> {
 }
 
 #[derive(Clone)]
-pub struct State<X: 'static, Y: 'static> {
+pub struct State<X: Tick, Y: Tick> {
     pub pre: PreState<X, Y>,
     pub layout: Layout,
     pub projection: Signal<Projection>,
@@ -37,7 +37,7 @@ pub struct State<X: 'static, Y: 'static> {
     pub hover_position_y: Memo<f64>,
 }
 
-impl<X, Y> PreState<X, Y> {
+impl<X: Tick, Y: Tick> PreState<X, Y> {
     pub fn new(
         debug: Signal<bool>,
         font_height: Memo<f64>,

@@ -12,7 +12,10 @@ pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
 pub use use_y::{Snippet, UseY};
 
-use crate::colours::{Colour, ColourScheme};
+use crate::{
+    colours::{Colour, ColourScheme},
+    Tick,
+};
 use leptos::prelude::*;
 use std::sync::Arc;
 
@@ -247,7 +250,7 @@ impl<T: Send + Sync, X: Send + Sync, Y: Send + Sync> Series<T, X, Y> {
     }
 }
 
-impl<T: Send + Sync, X: Send + Sync, Y: std::ops::Add<Output = Y> + Send + Sync> Series<T, X, Y> {
+impl<T: Send + Sync, X: Tick, Y: std::ops::Add<Output = Y> + Tick> Series<T, X, Y> {
     /// Adds a stack to the series. See [Stack] for more details.
     pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
         self.series.push(Arc::new(stack.into()));

@@ -19,13 +19,13 @@ use leptos::{either::EitherOf3, prelude::*};
 #[derive(Clone)]
 #[doc(hidden)]
 #[non_exhaustive]
-pub enum EdgeLayout<Tick: 'static> {
+pub enum EdgeLayout<XY: Tick> {
     /// Legend. See [legend](struct@legend::Legend) for details.
     Legend(legend::Legend),
     /// Rotated label. See [rotated_label](struct@rotated_label::RotatedLabel) for details.
     RotatedLabel(rotated_label::RotatedLabel),
     /// Tick labels. See [tick_labels](struct@tick_labels::TickLabels) for details.
-    TickLabels(tick_labels::TickLabels<Tick>),
+    TickLabels(tick_labels::TickLabels<XY>),
 }
 
 struct UseVerticalLayout {
@@ -41,7 +41,7 @@ enum UseLayout {
 }
 
 impl UseLayout {
-    fn render<X: Clone, Y: Clone + Send + Sync>(
+    fn render<X: Tick, Y: Tick>(
         self,
         edge: Edge,
         bounds: Memo<Bounds>,
@@ -61,18 +61,20 @@ impl UseLayout {
     }
 }
 
-impl<Tick: crate::Tick> EdgeLayout<Tick> {
-    fn fixed_height<Y>(&self, state: &PreState<Tick, Y>) -> Signal<f64> {
+impl<X: Tick> EdgeLayout<X> {
+    fn fixed_height<Y: Tick>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         match self {
             Self::Legend(inner) => inner.fixed_height(state),
             Self::RotatedLabel(inner) => inner.fixed_height(state),
             Self::TickLabels(inner) => inner.fixed_height(state),
         }
     }
-}
 
-impl<X: Tick> EdgeLayout<X> {
-    fn to_horizontal_use<Y>(&self, state: &PreState<X, Y>, avail_width: Memo<f64>) -> UseLayout {
+    fn to_horizontal_use<Y: Tick>(
+        &self,
+        state: &PreState<X, Y>,
+        avail_width: Memo<f64>,
+    ) -> UseLayout {
         match self {
             Self::Legend(inner) => inner.to_horizontal_use(),
             Self::RotatedLabel(inner) => inner.to_horizontal_use(),
@@ -82,7 +84,7 @@ impl<X: Tick> EdgeLayout<X> {
 }
 
 impl<Y: Tick> EdgeLayout<Y> {
-    fn to_vertical_use<X>(
+    fn to_vertical_use<X: Tick>(
         &self,
         state: &PreState<X, Y>,
         avail_height: Memo<f64>,
@@ -96,26 +98,26 @@ impl<Y: Tick> EdgeLayout<Y> {
 }
 
 /// Convert a type (e.g., a [rotated label](struct@rotated_label::RotatedLabel)) into an edge layout for use with [Chart](crate::Chart).
-pub trait IntoEdge<Tick> {
+pub trait IntoEdge<XY: Tick> {
     /// Create an edge layout from the type. See [IntoEdge](trait@IntoEdge) for details.
-    fn into_edge(self) -> EdgeLayout<Tick>;
+    fn into_edge(self) -> EdgeLayout<XY>;
 }
 
 macro_rules! impl_into_edge {
     ($ty:ty, $enum:ident) => {
-        impl<V> IntoEdge<V> for $ty {
-            fn into_edge(self) -> EdgeLayout<V> {
+        impl<XY: Tick> IntoEdge<XY> for $ty {
+            fn into_edge(self) -> EdgeLayout<XY> {
                 EdgeLayout::$enum(self)
             }
         }
 
-        impl<V> From<$ty> for EdgeLayout<V> {
+        impl<XY: Tick> From<$ty> for EdgeLayout<XY> {
             fn from(inner: $ty) -> Self {
                 inner.into_edge()
             }
         }
 
-        impl<V> From<$ty> for Vec<EdgeLayout<V>> {
+        impl<XY: Tick> From<$ty> for Vec<EdgeLayout<XY>> {
             fn from(inner: $ty) -> Self {
                 vec![inner.into_edge()]
             }
@@ -124,4 +126,4 @@ macro_rules! impl_into_edge {
 }
 impl_into_edge!(legend::Legend, Legend);
 impl_into_edge!(rotated_label::RotatedLabel, RotatedLabel);
-impl_into_edge!(tick_labels::TickLabels<V>, TickLabels);
+impl_into_edge!(tick_labels::TickLabels<XY>, TickLabels);

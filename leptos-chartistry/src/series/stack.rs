@@ -1,7 +1,7 @@
 use super::{ApplyUseSeries, GetYValue, IntoUseLine, SeriesAcc, UseY};
 use crate::{
     colours::{Colour, ColourScheme, BATLOW},
-    Line,
+    Line, Tick,
 };
 use leptos::prelude::*;
 use std::ops::Add;
@@ -76,7 +76,7 @@ impl<T, Y, I: IntoIterator<Item = Line<T, Y>>> From<I> for Stack<T, Y> {
     }
 }
 
-impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> for Stack<T, Y> {
+impl<T: 'static, Y: std::ops::Add<Output = Y> + Tick> ApplyUseSeries<T, Y> for Stack<T, Y> {
     fn apply_use_series(self: Arc<Self>, series: &mut SeriesAcc<T, Y>) {
         let colours = self.colours;
         let mut previous = None;
@@ -109,7 +109,7 @@ impl<T, Y> StackedLine<T, Y> {
     }
 }
 
-impl<T: 'static, Y: Add<Output = Y> + 'static> IntoUseLine<T, Y> for StackedLine<T, Y> {
+impl<T: 'static, Y: Add<Output = Y> + Tick> IntoUseLine<T, Y> for StackedLine<T, Y> {
     fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Arc<dyn GetYValue<T, Y>>) {
         let (line, get_y) = self.line.into_use_line(id, colour);
         let get_y = Arc::new(UseStackLine {
