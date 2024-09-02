@@ -24,8 +24,8 @@ pub fn App() -> impl IntoView {
             <SiteHeader />
             <main>
                 <Routes fallback=NotFound>
-                    <Route path=StaticSegment("/leptos-chartistry/") view=Demo />
-                    <Route path=StaticSegment("/leptos-chartistry/examples.html") view=Examples />
+                    <Route path=StaticSegment("/") view=Demo />
+                    <Route path=StaticSegment("/examples.html") view=Examples />
                     <examples::Routes />
                 </Routes>
             </main>

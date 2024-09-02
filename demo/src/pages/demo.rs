@@ -518,8 +518,8 @@ impl FromStr for EdgeOption {
     }
 }
 
-impl<Tick> From<EdgeLayout<Tick>> for EdgeOption {
-    fn from(layout: EdgeLayout<Tick>) -> Self {
+impl<XY: Tick> From<EdgeLayout<XY>> for EdgeOption {
+    fn from(layout: EdgeLayout<XY>) -> Self {
         match layout {
             EdgeLayout::RotatedLabel(_) => Self::RotatedLabel,
             EdgeLayout::Legend(_) => Self::Legend,
@@ -529,7 +529,7 @@ impl<Tick> From<EdgeLayout<Tick>> for EdgeOption {
     }
 }
 
-impl<Tick: leptos_chartistry::Tick> From<EdgeOption> for EdgeLayout<Tick> {
+impl<XY: Tick> From<EdgeOption> for EdgeLayout<XY> {
     fn from(option: EdgeOption) -> Self {
         match option {
             EdgeOption::RotatedLabel => Self::RotatedLabel(RotatedLabel::middle("")),
@@ -604,7 +604,7 @@ impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     }
 }
 
-fn edge_layout_opts<Tick: Tick>(option: EdgeLayout<Tick>) -> impl IntoView {
+fn edge_layout_opts<XY: Tick>(option: EdgeLayout<XY>) -> impl IntoView {
     match option {
         EdgeLayout::RotatedLabel(label) => EitherOf4::A(view! {
             <RotatedLabelOpts label=label />
@@ -845,7 +845,7 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 }
 
 #[component]
-fn TickLabelsOpts<Tick: Tick>(ticks: TickLabels<Tick>) -> impl IntoView {
+fn TickLabelsOpts<XY: Tick>(ticks: TickLabels<XY>) -> impl IntoView {
     view! {
         <label>"min width:"<StepInput value=ticks.min_chars step="1" min="0" /></label>
     }

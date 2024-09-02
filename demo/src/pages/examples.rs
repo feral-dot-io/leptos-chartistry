@@ -234,11 +234,11 @@ impl Example {
 #[component]
 pub fn Routes() -> impl MatchNestedRoutes<Dom> + Clone {
     view! {
-        <ParentRoute path=StaticSegment("/leptos-chartistry/examples") view=|| view!(<Outlet />)>
-            <Route path=StaticSegment("/leptos-chartistry/examples/series-line.html") view=|| Example::Line.page_view() />
-            <Route path=StaticSegment("/leptos-chartistry/examples/stacked-line.html") view=|| Example::StackedLine.page_view() />
+        <ParentRoute path=StaticSegment("examples") view=|| view!(<Outlet />)>
+            <Route path=StaticSegment("series-line.html") view=|| Example::Line.page_view() />
+            <Route path=StaticSegment("stacked-line.html") view=|| Example::StackedLine.page_view() />
         </ParentRoute>
-    }
+    }.into_inner()
 }
 
 /*
@@ -294,7 +294,7 @@ pub fn Example(example: Example) -> impl IntoView {
                 <Card example=example h1=true />
                 <div class="background-box debug">
                     <label>
-                        <input type="checkbox" type="checkbox" prop:checked=app.debug
+                        <input type="checkbox" prop:checked=app.debug
                             on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
                         " Toggle debug mode"
                     </label>
@@ -319,7 +319,7 @@ pub fn Examples() -> impl IntoView {
                     <h1>"Examples"</h1>
                     <p class="background-box">
                         <label>
-                            <input type="checkbox" type="checkbox" prop:checked=app.debug
+                            <input type="checkbox" prop:checked=app.debug
                                 on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
                             " Debug mode"
                         </label>

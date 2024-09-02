@@ -592,27 +592,6 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "gloo-net"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43aaa242d1239a8822c15c645f02166398da4f8b5c4bae795c1f5b44e9eee173"
-dependencies = [
- "futures-channel",
- "futures-core",
- "futures-sink",
- "gloo-utils",
- "http 0.2.12",
- "js-sys",
- "pin-project",
- "serde",
- "serde_json",
- "thiserror",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "gloo-net"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c06f627b1a58ca3d42b45d6104bf1e1a03799df472df00988b6ba21accc10580"
@@ -621,7 +600,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "gloo-utils",
- "http 1.1.0",
+ "http",
  "js-sys",
  "pin-project",
  "serde",
@@ -682,17 +661,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d1ad449764d627e22bfd7cd5e8868264fc9236e07c752972b4080cd351cb476"
 dependencies = [
  "utf8-width",
-]
-
-[[package]]
-name = "http"
-version = "0.2.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "601cbb57e577e2f5ef5be8e7b83f0f63994f25aa94d673e54a92d5c516d101f1"
-dependencies = [
- "bytes",
- "fnv",
- "itoa",
 ]
 
 [[package]]
@@ -854,7 +822,7 @@ dependencies = [
 [[package]]
 name = "leptos-use"
 version = "0.14.0-beta1"
-source = "git+https://github.com/Synphonyte/leptos-use.git?branch=leptos-0.7#2ae317dccf1bd7c070430fa590807aa077d91dac"
+source = "git+https://github.com/Synphonyte/leptos-use.git?branch=leptos-0.7#e710f1752c4cad3fa6af9650e75c0f948c07dda7"
 dependencies = [
  "cfg-if",
  "codee",
@@ -944,9 +912,9 @@ dependencies = [
 
 [[package]]
 name = "leptos_meta"
-version = "0.7.0-beta"
+version = "0.7.0-beta4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adae58d1a11ee10ace004f4a8deb50dba58ccd4327c4095c92ff0f4b7ff1995b"
+checksum = "68327b651ff5ea1341faadbaefad9a5fa22160fe70651618aa2883422eee8f36"
 dependencies = [
  "futures",
  "indexmap",
@@ -954,23 +922,23 @@ dependencies = [
  "once_cell",
  "or_poisoned",
  "send_wrapper",
- "tracing",
  "wasm-bindgen",
  "web-sys",
 ]
 
 [[package]]
 name = "leptos_router"
-version = "0.7.0-beta"
+version = "0.7.0-beta4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4e16b2867426014c9f0009b50dc6cf490749e79192a3abae64c1d1277218fc"
+checksum = "810ba3c70df80581c534792fa8294a1ddef2896fedc0bd60b73bce141f7068bf"
 dependencies = [
  "any_spawner",
  "either_of",
  "futures",
- "gloo-net 0.5.0",
+ "gloo-net",
  "js-sys",
  "leptos",
+ "leptos_router_macro",
  "once_cell",
  "or_poisoned",
  "paste",
@@ -981,6 +949,17 @@ dependencies = [
  "url",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "leptos_router_macro"
+version = "0.7.0-beta4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "644f00cd2ab91b7086a5b8b339cffab247ed1a34e027758405c6881b63ed26f2"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
 ]
 
 [[package]]
@@ -1553,8 +1532,8 @@ dependencies = [
  "const_format",
  "dashmap",
  "futures",
- "gloo-net 0.6.0",
- "http 1.1.0",
+ "gloo-net",
+ "http",
  "js-sys",
  "once_cell",
  "pin-project-lite",
@@ -1848,37 +1827,6 @@ dependencies = [
  "serde_spanned",
  "toml_datetime",
  "winnow",
-]
-
-[[package]]
-name = "tracing"
-version = "0.1.40"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3523ab5a71916ccf420eebdf5521fcef02141234bbc0b8a49f2fdc4544364ef"
-dependencies = [
- "pin-project-lite",
- "tracing-attributes",
- "tracing-core",
-]
-
-[[package]]
-name = "tracing-attributes"
-version = "0.1.27"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34704c8d6ebcbc939824180af020566b01a7c01f80641264eba0999f6c2b6be7"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "tracing-core"
-version = "0.1.32"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
-dependencies = [
- "once_cell",
 ]
 
 [[package]]
