@@ -21,9 +21,9 @@ macro_rules! impl_grid_line {
             pub ticks: TickLabels<XY>,
         }
 
-        impl<Tick: crate::Tick> $name<Tick> {
+        impl<XY: Tick> $name<XY> {
             /// Creates a new grid line from a set of ticks.
-            pub fn from_ticks(ticks: impl Into<TickLabels<Tick>>) -> Self {
+            pub fn from_ticks(ticks: impl Into<TickLabels<XY>>) -> Self {
                 Self {
                     ticks: ticks.into(),
                     ..Default::default()
@@ -37,7 +37,7 @@ macro_rules! impl_grid_line {
             }
         }
 
-        impl<Tick: crate::Tick> Default for $name<Tick> {
+        impl<XY: Tick> Default for $name<XY> {
             fn default() -> Self {
                 Self {
                     width: RwSignal::new(1.0),
@@ -173,8 +173,8 @@ pub(super) fn YGridLine<X: Tick, Y: Tick>(
     }
 }
 
-fn for_ticks<Tick: crate::Tick>(
-    ticks: Memo<GeneratedTicks<Tick>>,
+fn for_ticks<XY: Tick>(
+    ticks: Memo<GeneratedTicks<XY>>,
     proj: Signal<Projection>,
     is_x: bool,
 ) -> Vec<(f64, String)> {

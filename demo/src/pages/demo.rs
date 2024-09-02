@@ -720,7 +720,6 @@ select_impl!(
     AxisPlacement,
     ALL_AXIS_PLACEMENTS
 );
-select_impl!(SelectEdge, "Edge", edge, Edge, ALL_EDGES);
 select_impl!(
     SelectTooltipPlacement,
     "Placement",

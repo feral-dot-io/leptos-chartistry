@@ -420,7 +420,7 @@ fn ShowCode(#[prop(into)] id: String, #[prop(into)] code: String) -> impl IntoVi
 
     // Show if page fragment matches ID
     // TODO investigate why this triggers a panic https://docs.rs/leptos/latest/leptos/struct.NodeRef.html#method.on_load
-    RenderEffect::new(move |_| {
+    let _ = RenderEffect::new(move |_| {
         if let Some(dialog) = dialog.get() {
             let hash = use_location().hash.get().trim_start_matches('#').to_owned();
             let hash: String = js_sys::decode_uri(&hash)

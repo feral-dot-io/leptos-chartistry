@@ -69,9 +69,9 @@ where
     }
 }
 
-impl<Tick: crate::Tick> TickLabels<Tick> {
+impl<XY: Tick> TickLabels<XY> {
     /// Creates a new tick label generator from a tick generator.
-    pub fn from_generator(gen: impl TickGen<Tick = Tick> + Send + Sync + 'static) -> Self {
+    pub fn from_generator(gen: impl TickGen<Tick = XY> + 'static) -> Self {
         Self {
             min_chars: RwSignal::default(),
             format: RwSignal::new(HorizontalSpan::identity_format()),
@@ -90,13 +90,13 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
     /// This is a function that takes a `Tick` and a formatter and returns a `String`. It gives an opportunity to customise tick label format. The formatter is the resulting state of the tick generator and does the default aciton. For example if aligned floats decides to use "1000s" then the formatter will use that.
     pub fn with_format(
         self,
-        format: impl Fn(&Tick, &dyn TickFormat<Tick = Tick>) -> String + Send + Sync + 'static,
+        format: impl Fn(&XY, &dyn TickFormat<Tick = XY>) -> String + Send + Sync + 'static,
     ) -> Self {
         self.format.set(Arc::new(format));
         self
     }
 
-    fn map_ticks(&self, gen: Memo<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
+    fn map_ticks(&self, gen: Memo<GeneratedTicks<XY>>) -> Signal<Vec<(f64, String)>> {
         let format = self.format;
         Signal::derive(move || {
             let format = format.get();
@@ -110,10 +110,10 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
     }
 }
 
-impl<Gen, Tick> From<Gen> for TickLabels<Tick>
+impl<Gen, XY> From<Gen> for TickLabels<XY>
 where
-    Gen: TickGen<Tick = Tick> + 'static,
-    Tick: crate::Tick,
+    Gen: TickGen<Tick = XY> + 'static,
+    XY: Tick,
 {
     fn from(gen: Gen) -> Self {
         Self::from_generator(gen)
