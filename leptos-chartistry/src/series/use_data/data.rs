@@ -47,15 +47,16 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
             for (&id, get_y) in &get_ys {
                 let y = get_y.value(datum);
                 // Note: cumulative can differ from Y when stacked
-                let y_cumulative = get_y.cumulative_value(datum);
-                built.range_y.update(&y_cumulative);
+                let y_stacked = get_y.stacked_value(datum);
+                built.range_y.update(&y_stacked);
+
                 // Insert
                 y_data.insert(id, y);
                 built
                     .coords
                     .entry(id)
                     .or_insert_with(|| Vec::with_capacity(cap))
-                    .push((x_position, y_cumulative.position()));
+                    .push((x_position, y_stacked.position()));
             }
 
             // Insert

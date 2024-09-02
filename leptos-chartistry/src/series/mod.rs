@@ -38,7 +38,7 @@ type GetY<T, Y> = Arc<dyn GetYValue<T, Y>>;
 
 trait GetYValue<T, Y>: Send + Sync {
     fn value(&self, t: &T) -> Y;
-    fn cumulative_value(&self, t: &T) -> Y;
+    fn stacked_value(&self, t: &T) -> Y;
 }
 
 /// Describes how to render a series of data. A series is a collection of lines, bars, etc. that share the same X and Y axes.
@@ -251,9 +251,9 @@ impl<T: Send + Sync, X: Tick, Y: Tick> Series<T, X, Y> {
     }
 }
 
-impl<T: Send + Sync, X: Tick, Y: std::ops::Add<Output = Y> + Tick> Series<T, X, Y> {
+impl<T: Send + Sync, X: Tick> Series<T, X, f64> {
     /// Adds a stack to the series. See [Stack] for more details.
-    pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
+    pub fn stack(mut self, stack: impl Into<Stack<T, f64>>) -> Self {
         self.series.push(Arc::new(stack.into()));
         self
     }
