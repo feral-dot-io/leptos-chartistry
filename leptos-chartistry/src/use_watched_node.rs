@@ -8,6 +8,7 @@ use std::convert::Infallible;
 use web_sys::ResizeObserverBoxOptions;
 
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct UseWatchedNode {
     pub bounds: Signal<Option<Bounds>>,
     pub mouse_page: Signal<(f64, f64)>,

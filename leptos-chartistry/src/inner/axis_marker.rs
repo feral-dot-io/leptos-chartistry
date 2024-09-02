@@ -7,6 +7,7 @@ pub const AXIS_MARKER_COLOUR: Colour = Colour::from_rgb(0xD2, 0xD2, 0xD2);
 
 /// Builds an axis marker. This marks a boundary (e.g., zero or the chart edge) around the inner chart area.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct AxisMarker {
     /// Placement of the marker.
     pub placement: RwSignal<AxisPlacement>,

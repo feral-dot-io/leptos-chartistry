@@ -8,7 +8,8 @@ pub const GUIDE_LINE_COLOUR: Colour = Colour::from_rgb(0x9A, 0x9A, 0x9A);
 macro_rules! impl_guide_line {
     ($name:ident) => {
         /// Builds a mouse guide line. Aligned over the mouse position or nearest data.
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq)]
+        #[non_exhaustive]
         pub struct $name {
             /// Alignment of the guide line.
             pub align: RwSignal<AlignOver>,
@@ -68,6 +69,7 @@ pub enum AlignOver {
 
 #[derive(Clone)]
 pub struct UseXGuideLine(XGuideLine);
+
 #[derive(Clone)]
 pub struct UseYGuideLine(YGuideLine);
 

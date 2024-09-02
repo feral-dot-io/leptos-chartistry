@@ -6,6 +6,7 @@ use crate::{
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Data<X, Y> {
     data_x: Vec<X>,
     data_y: Vec<HashMap<usize, Y>>,

@@ -41,6 +41,7 @@ pub const DIVERGING_GRADIENT: DivergingGradient = BERLIN;
 ///     .line(Line::new(|data: &MyData| data.y2).with_name("apples"));
 /// ```
 /// See this in action with the [legend example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#legend).
+#[non_exhaustive]
 pub struct Line<T, Y> {
     get_y: Arc<dyn GetYValue<T, Y>>,
     /// Name of the line. Used in the legend.

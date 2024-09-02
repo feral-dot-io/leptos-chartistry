@@ -5,6 +5,7 @@ use crate::{
 use leptos::prelude::*;
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct PreState<X: Tick, Y: Tick> {
     pub debug: Signal<bool>,
     pub font_height: Memo<f64>,
@@ -14,6 +15,7 @@ pub struct PreState<X: Tick, Y: Tick> {
 }
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct State<X: Tick, Y: Tick> {
     pub pre: PreState<X, Y>,
     pub layout: Layout,

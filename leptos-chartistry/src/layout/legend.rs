@@ -10,7 +10,8 @@ use crate::{
 use leptos::{either::Either, prelude::*};
 
 /// Builds a legend for the chart [series](crate::Series). Orientated along the axis of its placed edge. Drawn in HTML.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Legend {
     /// Anchor of the legend.
     pub anchor: RwSignal<Anchor>,

@@ -7,6 +7,7 @@ const WIDTH_TO_MARKER: f64 = 8.0;
 
 /// Describes a line point marker.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Marker {
     /// Shape of the marker. Default is no marker.
     pub shape: RwSignal<MarkerShape>,

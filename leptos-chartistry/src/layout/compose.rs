@@ -9,6 +9,7 @@ use crate::{
 use leptos::prelude::*;
 
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct Layout {
     pub outer: Memo<Bounds>,
     pub top: Vec<Memo<Bounds>>,

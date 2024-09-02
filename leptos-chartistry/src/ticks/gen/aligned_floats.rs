@@ -2,6 +2,7 @@ use super::{Format, GeneratedTicks, Generator, Span};
 
 /// Generates f64 ticks. Aligned to nice values (powers of 10).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct AlignedFloats {}
 
 #[derive(Clone, Debug, PartialEq)]

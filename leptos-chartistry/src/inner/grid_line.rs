@@ -10,7 +10,8 @@ pub const GRID_LINE_COLOUR: Colour = Colour::from_rgb(0xEF, 0xF2, 0xFA);
 macro_rules! impl_grid_line {
     ($name:ident) => {
         /// Builds a tick-aligned grid line across the inner chart area.
-        #[derive(Clone)]
+        #[derive(Clone, Debug, PartialEq)]
+        #[non_exhaustive]
         pub struct $name<XY: Tick> {
             /// Width of the grid line.
             pub width: RwSignal<f64>,

@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use super::{UseLayout, UseVerticalLayout};
 use crate::{
     bounds::Bounds,
@@ -9,6 +7,7 @@ use crate::{
     Tick,
 };
 use leptos::prelude::*;
+use std::str::FromStr;
 
 /// Label placement on the main-axis of a component. An edge layout's main-axis runs parallel to its given edge. Similar to SVG's [text-anchor](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/text-anchor) or CSS's [justify-content](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content).
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -25,7 +24,8 @@ pub enum Anchor {
 /// Builds a rotated label to match the orientation of the axis it's placed on.
 ///
 /// Warning: does not wrap text. Extra text will not be clipped.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct RotatedLabel {
     /// Text to display.
     pub text: RwSignal<String>,

@@ -30,6 +30,7 @@ pub trait Format {
 }
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct GeneratedTicks<Tick> {
     pub state: Arc<dyn Format<Tick = Tick> + Send + Sync>,
     pub ticks: Vec<Tick>,

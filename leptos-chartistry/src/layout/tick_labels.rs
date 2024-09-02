@@ -17,6 +17,8 @@ use std::sync::Arc;
 /// Builds tick labels for an axis.
 ///
 /// Note that ticks lack an identity resulting in generators and labels not being reactive.
+#[derive(Debug, PartialEq)]
+#[non_exhaustive]
 pub struct TickLabels<XY: Tick> {
     /// Minimum number of characters to display for each tick label.
     ///

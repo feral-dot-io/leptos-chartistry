@@ -12,6 +12,7 @@ use data::Data;
 use leptos::prelude::*;
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct UseData<X: Tick, Y: Tick> {
     data: Memo<Data<X, Y>>,
     pub len: Memo<usize>,

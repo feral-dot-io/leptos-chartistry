@@ -22,6 +22,7 @@ pub const STACK_COLOUR_SCHEME: [Colour; 10] = BATLOW;
 /// ```
 /// See this in action with the [stacked line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#stacked-line-chart).
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct Stack<T, Y> {
     lines: Vec<Line<T, Y>>,
     /// Colour scheme for the stack. Interpolates colours across the whole scheme.

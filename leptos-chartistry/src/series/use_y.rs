@@ -6,6 +6,7 @@ use crate::{bounds::Bounds, debug::DebugRect, state::State, Tick};
 use leptos::{either::Either, prelude::*};
 
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct UseY {
     pub id: usize,
     pub name: RwSignal<String>,

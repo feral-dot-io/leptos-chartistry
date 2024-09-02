@@ -11,7 +11,8 @@ use std::cmp::{Ordering, Reverse};
 pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
 
 /// Builds a mouse tooltip that shows X and Y values for the nearest data. Drawn in HTML as an overlay.
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Tooltip<X: Tick, Y: Tick> {
     /// Where the tooltip is placed when shown.
     pub placement: RwSignal<TooltipPlacement>,

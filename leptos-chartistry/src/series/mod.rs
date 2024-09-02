@@ -110,6 +110,7 @@ trait GetYValue<T, Y>: Send + Sync {
 ///
 /// Finally, like most other components, you can control aspects such as the colour scheme and data ranges of X and Y.
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct Series<T: Send + Sync + 'static, X: Send + Sync + 'static, Y: Send + Sync + 'static> {
     get_x: GetX<T, X>,
     series: Vec<Arc<dyn ApplyUseSeries<T, Y> + Send + Sync>>,
