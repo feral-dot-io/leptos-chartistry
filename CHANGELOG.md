@@ -16,8 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Updated [Leptos](https://github.com/leptos-rs/leptos) to 0.7.
-- Added `#[non_exhaustive]` to most of the API.
+- Most of the API now has `#[non_exhaustive]` on it.
 - Sealed [`Tick`](https://docs.rs/leptos-chartistry/latest/leptos_chartistry/trait.Tick.html) trait. [Open an issue](https://github.com/feral-dot-io/leptos-chartistry/issues) if you need a specific impl.
+- Most `<Tick: 'static>` generic bounds in the API have been changed to `<XY: Tick>`.
+
+### Fixed
+- Stacked lines with an `f64::NAN` point are now correctly rendered.
 
 ## [0.1.7] - 2024-08-20
 ### Changed
