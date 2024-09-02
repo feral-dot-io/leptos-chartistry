@@ -67,9 +67,9 @@ pub enum AlignOver {
 }
 
 #[derive(Clone)]
-pub(super) struct UseXGuideLine(XGuideLine);
+pub struct UseXGuideLine(XGuideLine);
 #[derive(Clone)]
-pub(super) struct UseYGuideLine(YGuideLine);
+pub struct UseYGuideLine(YGuideLine);
 
 impl XGuideLine {
     pub(crate) fn use_horizontal(self) -> UseXGuideLine {

@@ -53,7 +53,7 @@ impl_grid_line!(YGridLine);
 
 macro_rules! impl_use_grid_line {
     ($name:ident) => {
-        pub(super) struct $name<XY: Tick> {
+        pub struct $name<XY: Tick> {
             width: RwSignal<f64>,
             colour: RwSignal<Colour>,
             ticks: Memo<GeneratedTicks<XY>>,
