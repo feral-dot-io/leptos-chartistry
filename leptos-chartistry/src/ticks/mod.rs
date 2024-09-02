@@ -7,8 +7,12 @@ pub use gen::{
 
 use chrono::prelude::*;
 
+mod private {
+    pub trait Sealed {}
+}
+
 /// A type that can be used as a tick on an axis. Try to rely on provided implementations.
-pub trait Tick: Clone + PartialEq + PartialOrd + Send + Sync + 'static {
+pub trait Tick: Clone + PartialEq + PartialOrd + Send + Sync + 'static + private::Sealed {
     /// Default tick generator used in tick labels.
     fn tick_label_generator() -> impl TickGen<Tick = Self>;
 
@@ -20,6 +24,9 @@ pub trait Tick: Clone + PartialEq + PartialOrd + Send + Sync + 'static {
     /// Maps the tick to a position on the axis. Must be uniform. May return `f64::NAN` for missing data.
     fn position(&self) -> f64;
 }
+
+impl private::Sealed for f64 {}
+impl<Tz: TimeZone> private::Sealed for DateTime<Tz> {}
 
 impl Tick for f64 {
     fn tick_label_generator() -> impl TickGen<Tick = Self> {
