@@ -37,7 +37,7 @@ pub fn App() -> impl IntoView {
         .line(Line::new(|data: &MyData| data.y1).with_name("y1"))
         .line(Line::new(|data: &MyData| data.y2).with_name("y2"));
     view! {
-        <h1>"Hello, world!"</h1>
+        <h1>"Hello, SSR!"</h1>
         <Chart
             aspect_ratio=AspectRatio::from_outer_height(300.0, 1.2)
             series=series
