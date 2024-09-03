@@ -1,5 +1,4 @@
 /// Source: https://raw.githubusercontent.com/leptos-rs/leptos/v0.6.14/examples/ssr_modes_axum/src/fallback.rs
-
 use crate::app::App;
 use axum::{
     body::Body,
@@ -22,18 +21,13 @@ pub async fn file_and_error_handler(
     if res.status() == StatusCode::OK {
         res.into_response()
     } else {
-        let handler = leptos_axum::render_app_to_stream(
-            options.to_owned(),
-            move || view! { <App/> },
-        );
+        let handler =
+            leptos_axum::render_app_to_stream(options.to_owned(), move || view! { <App/> });
         handler(req).await.into_response()
     }
 }
 
-async fn get_static_file(
-    uri: Uri,
-    root: &str,
-) -> Result<Response<Body>, (StatusCode, String)> {
+async fn get_static_file(uri: Uri, root: &str) -> Result<Response<Body>, (StatusCode, String)> {
     let req = Request::builder()
         .uri(uri.clone())
         .body(Body::empty())

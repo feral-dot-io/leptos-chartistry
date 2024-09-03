@@ -9,7 +9,7 @@ async fn main() {
     let conf = get_configuration(None).await.unwrap();
     let addr = conf.leptos_options.site_addr;
     let leptos_options = conf.leptos_options;
-    
+
     let routes = generate_route_list(App);
     let app = Router::new()
         .leptos_routes(&leptos_options, routes, || view! { <App/> })
@@ -23,5 +23,4 @@ async fn main() {
 }
 
 #[cfg(not(feature = "ssr"))]
-pub fn main() {
-}
+pub fn main() {}

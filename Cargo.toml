@@ -1,7 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "demo", "leptos-chartistry" ]
-exclude = [ "examples" ]
+members = [ "demo", "examples/ssr", "leptos-chartistry" ]
 
 [profile.release]
 codegen-units = 1
