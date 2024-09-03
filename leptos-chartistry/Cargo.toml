@@ -18,3 +18,7 @@ leptos = "=0.7.0-beta4"
 leptos-use = { git = "https://github.com/Synphonyte/leptos-use.git", branch = "leptos-0.7" }
 log = "0.4"
 web-sys = { version = "0.3", features = ["DomRectReadOnly"] }
+
+[features]
+ssr = ["leptos/ssr", "leptos-use/ssr"]
+csr = ["leptos/csr"]
