@@ -35,8 +35,7 @@ dependencies = [
 [[package]]
 name = "any_spawner"
 version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9747eb01aed7603aba23f7c869d5d7e5d37aab9c3501aced42d8fdb786f1f6e3"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "futures",
  "thiserror",
@@ -253,8 +252,7 @@ dependencies = [
 [[package]]
 name = "const_str_slice_concat"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f67855af358fcb20fac58f9d714c94e2b228fe5694c1c9b4ead4a366343eda1b"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 
 [[package]]
 name = "convert_case"
@@ -426,8 +424,7 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 [[package]]
 name = "either_of"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6e22feb4d5cacf9f2c64902a1c35ef0f2d766e42db316a98b93992bbce669cb"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "pin-project-lite",
 ]
@@ -677,8 +674,7 @@ dependencies = [
 [[package]]
 name = "hydration_context"
 version = "0.2.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fd272e5549af207e00abfcbb622a7991f0a15ee12b86a7c3cfef41758a83f43"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "futures",
  "js-sys",
@@ -784,8 +780,7 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 [[package]]
 name = "leptos"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4eb1451927cce0a17cc3af6fdad18911eae7c827bb90a5117fa463b5b109ce4"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "any_spawner",
  "cfg-if",
@@ -853,8 +848,7 @@ dependencies = [
 [[package]]
 name = "leptos_config"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db9b3c211cc072b742a728a71e86969034e7ab75ae68205d604df047b9ffb87e"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "config",
  "regex",
@@ -866,8 +860,7 @@ dependencies = [
 [[package]]
 name = "leptos_dom"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d356526ed1c9be0804b297b0bf5d768490840d4669bd52e63f6b68d5693f7e7"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "js-sys",
  "or_poisoned",
@@ -881,8 +874,7 @@ dependencies = [
 [[package]]
 name = "leptos_hot_reload"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "121e56d24140488617d3554674708f0c00deaa287ff7ab01609fd590f32fafc8"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "anyhow",
  "camino",
@@ -899,8 +891,7 @@ dependencies = [
 [[package]]
 name = "leptos_macro"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5dca48e1894486f762bef0e0de24e39f1bf3a1ae84ab49915a9864856b57961"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "attribute-derive",
  "cfg-if",
@@ -921,8 +912,7 @@ dependencies = [
 [[package]]
 name = "leptos_meta"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68327b651ff5ea1341faadbaefad9a5fa22160fe70651618aa2883422eee8f36"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "futures",
  "indexmap",
@@ -937,8 +927,7 @@ dependencies = [
 [[package]]
 name = "leptos_router"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "810ba3c70df80581c534792fa8294a1ddef2896fedc0bd60b73bce141f7068bf"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "any_spawner",
  "either_of",
@@ -952,6 +941,7 @@ dependencies = [
  "paste",
  "reactive_graph",
  "send_wrapper",
+ "serde",
  "tachys",
  "thiserror",
  "url",
@@ -962,8 +952,7 @@ dependencies = [
 [[package]]
 name = "leptos_router_macro"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "644f00cd2ab91b7086a5b8b339cffab247ed1a34e027758405c6881b63ed26f2"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -973,8 +962,7 @@ dependencies = [
 [[package]]
 name = "leptos_server"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bae878288fea9931571a1a9cc471161d3c595e990aa41f4f1a9aaa0cf8d0ccdd"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "any_spawner",
  "base64",
@@ -1069,8 +1057,7 @@ dependencies = [
 [[package]]
 name = "next_tuple"
 version = "0.1.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66dadf287063ab08b1247d1be56e9656b272b10423896fb60d49881f69b2b266"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 
 [[package]]
 name = "nom"
@@ -1100,8 +1087,7 @@ dependencies = [
 [[package]]
 name = "oco_ref"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64b94982fe39a861561cf67ff17a7849f2cedadbbad960a797634032b7abb998"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "serde",
  "thiserror",
@@ -1138,8 +1124,7 @@ dependencies = [
 [[package]]
 name = "or_poisoned"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c04f5d74368e4d0dfe06c45c8627c81bd7c317d52762d118fb9b3076f6420fd"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 
 [[package]]
 name = "parking"
@@ -1365,8 +1350,7 @@ dependencies = [
 [[package]]
 name = "reactive_graph"
 version = "0.1.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "277ddf442e2675c536ff4088bae41c937ae4a3a821b53ecaa386c5f911252e2f"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "any_spawner",
  "async-lock",
@@ -1533,8 +1517,7 @@ dependencies = [
 [[package]]
 name = "server_fn"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b802f1cfb1965eb17046f23401597766fc149ffd5a904ab43b55cad41899a6f"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "bytes",
  "const_format",
@@ -1564,8 +1547,7 @@ dependencies = [
 [[package]]
 name = "server_fn_macro"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c3b2d6ea0d021a2a21ce64142d589f84e4f0b08c44318f7088d9c6e5ad24b08"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "const_format",
  "convert_case",
@@ -1578,8 +1560,7 @@ dependencies = [
 [[package]]
 name = "server_fn_macro_default"
 version = "0.7.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c3cdf66b25e36aab3a9aca2c675c60645ebbb2ab78294f88957d2870cf72020"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "server_fn_macro",
  "syn",
@@ -1691,8 +1672,7 @@ dependencies = [
 [[package]]
 name = "tachys"
 version = "0.1.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ae9c2a49cafbeacdf5991b2ab48236d7711159ede8510c2efb6be8a28665ee7"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "any_spawner",
  "const_str_slice_concat",
@@ -1743,8 +1723,7 @@ dependencies = [
 [[package]]
 name = "throw_error"
 version = "0.2.0-beta4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b3c1e41506da98dbdac683e12a2c87813d218f0540dab31c94343ef29a4c062"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
 dependencies = [
  "pin-project-lite",
 ]
@@ -2167,3 +2146,28 @@ name = "yansi"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"
+
+[[patch.unused]]
+name = "leptos_actix"
+version = "0.7.0-beta4"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
+
+[[patch.unused]]
+name = "leptos_axum"
+version = "0.7.0-beta4"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
+
+[[patch.unused]]
+name = "leptos_integration_utils"
+version = "0.7.0-beta4"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
+
+[[patch.unused]]
+name = "reactive_stores"
+version = "0.1.0-beta4"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
+
+[[patch.unused]]
+name = "reactive_stores_macro"
+version = "0.1.0-beta4"
+source = "git+https://github.com/leptos-rs/leptos.git?branch=component-erasure#3ed68235f52d357cd51044d5d83d4bb3224d1f87"
