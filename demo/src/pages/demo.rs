@@ -124,6 +124,7 @@ pub fn f64_to_dt(at: f64) -> DateTime<Local> {
 #[component]
 pub fn Demo() -> impl IntoView {
     // General options
+    /*
     let (debug, set_debug) = signal(false);
     let padding = RwSignal::new(FONT_WIDTH);
     let font_height = RwSignal::new(FONT_HEIGHT);
@@ -158,7 +159,7 @@ pub fn Demo() -> impl IntoView {
     };
 
     // Axis
-    let x_periods = Timestamps::from_periods(Period::all());
+    let x_periods: Timestamps<Utc> = Timestamps::from_periods(Period::all());
     let x_ticks = TickLabels::from_generator(x_periods.clone());
     let y_ticks = TickLabels::aligned_floats();
 
@@ -193,9 +194,10 @@ pub fn Demo() -> impl IntoView {
                 .map(|v| v.format(JS_TIMESTAMP_FMT).to_string())
                 .unwrap_or_default()
         }
-    };
+    }; */
 
     // Layout options
+    /*
     let top: RwSignal<Options<EdgeLayout<_>>> = Options::signal(vec![RotatedLabel::middle(
         "Hello and welcome to Chartistry!",
     )]);
@@ -214,9 +216,11 @@ pub fn Demo() -> impl IntoView {
         XGuideLine::over_data().into_inner(),
         YGuideLine::over_mouse().into_inner(),
     ]);
+    */
 
     view! {
         <article id="demo">
+            /*
             {move || view!{
                 <Chart
                     aspect_ratio=derive_aspect_ratio(aspect, calc, width, height, ratio)
@@ -334,6 +338,7 @@ pub fn Demo() -> impl IntoView {
                 <OptionsCard title="Left" options=left labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
                 <OptionsCard title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
             </div>
+            */
         </article>
     }
 }
