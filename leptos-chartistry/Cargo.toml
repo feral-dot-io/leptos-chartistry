@@ -15,6 +15,6 @@ categories = [ "graphics", "gui", "wasm", "web-programming" ]
 [dependencies]
 chrono = "0.4"
 leptos = "0.6"
-leptos-use = "0.12"
+leptos-use = "0.13"
 log = "0.4"
 web-sys = { version = "0.3", features = ["DomRectReadOnly"] }
