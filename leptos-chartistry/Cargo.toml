@@ -14,7 +14,8 @@ categories = [ "graphics", "gui", "wasm", "web-programming" ]
 
 [dependencies]
 chrono = "0.4"
-leptos = "=0.7.0-beta4"
+# TODO: this PR brings down compile times from hours to seconds: https://github.com/leptos-rs/leptos/pull/2905
+leptos = "=0.7.0-beta5"
 leptos-use = { git = "https://github.com/Synphonyte/leptos-use.git", branch = "leptos-0.7" }
 log = "0.4"
 web-sys = { version = "0.3", features = ["DomRectReadOnly"] }
