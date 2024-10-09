@@ -335,15 +335,6 @@ dependencies = [
 
 [[package]]
 name = "codee"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af40247be877a1e3353fb406aa27ab3ef4bd3ff18cef91e75e667bfa3fde701d"
-dependencies = [
- "thiserror",
-]
-
-[[package]]
-name = "codee"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d3ad3122b0001c7f140cf4d605ef9a9e2c24d96ab0b4fb4347b76de2425f445"
@@ -559,7 +550,7 @@ dependencies = [
  "js-sys",
  "leptos",
  "leptos-chartistry",
- "leptos-use 0.12.0",
+ "leptos-use",
  "leptos_meta",
  "leptos_router",
  "log",
@@ -1071,33 +1062,8 @@ version = "0.1.7"
 dependencies = [
  "chrono",
  "leptos",
- "leptos-use 0.13.4",
+ "leptos-use",
  "log",
- "web-sys",
-]
-
-[[package]]
-name = "leptos-use"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "268b9df23d8c68ed0518c39d6f0d3b99fcbe30190a6dce4a7e5f342027ab0033"
-dependencies = [
- "async-trait",
- "cfg-if",
- "codee 0.1.2",
- "cookie",
- "default-struct-builder",
- "futures-util",
- "gloo-timers",
- "gloo-utils",
- "js-sys",
- "lazy_static",
- "leptos",
- "paste",
- "thiserror",
- "unic-langid",
- "wasm-bindgen",
- "wasm-bindgen-futures",
  "web-sys",
 ]
 
@@ -1108,7 +1074,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "293a4efcd9c2dfc003e6a9ae39763f0d07928a995d531354dbc80276a7e9d53c"
 dependencies = [
  "cfg-if",
- "codee 0.2.0",
+ "codee",
  "cookie",
  "default-struct-builder",
  "futures-util",
@@ -1496,7 +1462,7 @@ dependencies = [
  "console_log",
  "leptos",
  "leptos-chartistry",
- "leptos-use 0.12.0",
+ "leptos-use",
  "leptos_axum",
  "leptos_router",
  "log",
