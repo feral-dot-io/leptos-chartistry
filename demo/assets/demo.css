@@ -61,12 +61,13 @@ header>.badges a>img {
 
 main {
     padding: 2em;
+    padding-top: 0;
 }
 
 #demo>._chartistry {
     background-color: #fff;
     border: 1px solid #000;
-    margin: 0 auto;
+    margin: 2em auto;
     width: fit-content;
 }
 
@@ -81,7 +82,7 @@ main {
 
 fieldset {
     background-color: #fff;
-    border: 1px solid #000;
+    border: 1px solid #999;
     border-radius: 0.5em;
     padding: 0.5em 1em 1em 1em;
     display: grid;
@@ -138,11 +139,13 @@ h2,
 h3,
 fieldset>legend {
     background-color: #fff;
-    border-bottom: 0.2em solid #fc7089;
+    border-top: 0.2em solid #fc7089;
+    border-radius: 0.5em;
     margin: 0;
-    padding: 0.2em;
+    padding: 0.5em 2em;
     width: fit-content;
     font-size: 110%;
+    font-weight: bold;
 }
 
 ._chartistry h2,
@@ -155,7 +158,7 @@ fieldset>legend {
 
 .background-box {
     background-color: #fff;
-    border: 1px solid #000;
+    border: 1px solid #999;
     border-radius: 0.5em;
     padding: 1em;
 }
@@ -165,33 +168,22 @@ fieldset>legend {
     margin-bottom: 0.5em !important;
 }
 
-#examples h1 {
-    border: 1px solid #000;
-    border-bottom: 0.2em solid #fc7089;
-    font-size: 110%;
-    text-align: center;
-    width: auto;
-    padding: 0.5em;
+#examples p.debug-box {
+    width: fit-content;
 }
 
-#examples nav p {
-    margin: 0.5em 0;
-    padding: 0;
+.cards-row {
+    display: flex;
+    flex-flow: row;
+    margin: 1.5em 0;
+    gap: 2em 0.5em;
 }
 
-#examples nav p>label {
-    display: inline-block;
+.cards-row>h2 {
+    border: 1px solid #999;
+    border-left: 0.2em solid #fc7089;
     padding: 1em;
-    width: 100%;
-}
-
-#examples nav ul {
-    margin: 0;
-    list-style-position: inside;
-}
-
-#examples nav li {
-    padding: 0.5em 0;
+    writing-mode: vertical-lr;
 }
 
 .cards {
@@ -200,29 +192,8 @@ fieldset>legend {
     gap: 2em 0.5em;
 }
 
-.cards>div.include-right {
-    width: fit-content;
-    display: flex;
-    flex-flow: row nowrap;
-    gap: 0.5em;
-    /* FF miscalculates (or I misunderstand) the width of our sideways text */
-    width: calc(300px + 2.5em + 4em);
-}
-
-.cards>h2,
-.cards>div>h2 {
-    border: 1px solid #000;
-    border-right: 0.2em solid #fc7089;
-    padding: 1em;
-    text-align: center;
-    writing-mode: vertical-rl;
-    text-orientation: sideways;
-    transform: rotate(180deg);
-}
-
-.cards h1>a,
-.cards h2>a,
-.cards h3>a {
+#examples h2 a,
+#examples h3 a {
     text-decoration: none;
     color: #222;
 }
@@ -244,8 +215,20 @@ fieldset>legend {
     margin-top: -2em;
 }
 
+.cards figure>figcaption>p {
+    margin-top: 0;
+}
+
 .cards figure.my-theme {
     border: 1px solid #fff;
+}
+
+.cards figure.my-theme figcaption h3 {
+    background-color: #2b303b;
+}
+
+.cards figure.my-theme figcaption h3>a {
+    color: #c0c5ce !important;
 }
 
 .cards figure.my-theme p a {

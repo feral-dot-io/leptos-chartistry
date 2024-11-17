@@ -314,67 +314,66 @@ pub fn Examples() -> impl IntoView {
 
     view! {
         <article id="examples">
-            <div class="cards">
-                <nav>
-                    <h1>"Examples"</h1>
-                    <p class="background-box">
-                        <label>
-                            <input type="checkbox" prop:checked=app.debug
-                                on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
-                            " Debug mode"
-                        </label>
-                    </p>
-                    <ul class="background-box">
-                        <li><a href="#edge">"Edge layout options"</a></li>
-                        <li><a href="#inner">"Inner layout options"</a></li>
-                        <li><a href="#features">"Features"</a></li>
-                    </ul>
-                </nav>
+            <p class="debug-box background-box">
+                <label>
+                    <input type="checkbox" prop:checked=app.debug
+                        on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
+                    " Toggle debug mode"
+                </label>
+            </p>
 
-                <Card example=Example::Line />
-                <Card example=Example::StackedLine />
-
-                <div class="include-right">
-                    <h2 id="bar"><a href="#bar">"Bar charts"</a></h2>
+            <div id="line" class="cards-row">
+                <h2><a href="examples.html#line">"Charts"</a></h2>
+                <div class="cards">
+                    <Card example=Example::Line />
+                    <Card example=Example::StackedLine />
                     <Card example=Example::Bar />
                 </div>
+            </div>
 
-                <div class="include-right">
-                    <h2 id="edge"><a href="#edge">"Edge layout options"</a></h2>
+            <div id="edge" class="cards-row">
+                <h2><a href="examples.html#edge">"Edge layout options"</a></h2>
+                <div class="cards">
                     <Card example=Example::Legend />
+                    <Card example=Example::TickLabels />
+                    <Card example=Example::RotatedLabel />
+                    <Card example=Example::EdgeLayout />
                 </div>
-                <Card example=Example::TickLabels />
-                <Card example=Example::RotatedLabel />
-                <Card example=Example::EdgeLayout />
+            </div>
 
-                <div class="include-right">
-                    <h2 id="inner"><a href="#inner">"Inner layout options"</a></h2>
+            <div id="inner" class="cards-row">
+                <h2><a href="examples.html#inner">"Inner layout options"</a></h2>
+                <div class="cards">
                     <Card example=Example::AxisMarker />
+                    <Card example=Example::GridLine />
+                    <Card example=Example::GuideLine />
+                    <Card example=Example::InsetLegend />
+                    <Card example=Example::InnerLayout />
                 </div>
-                <Card example=Example::GridLine />
-                <Card example=Example::GuideLine />
-                <Card example=Example::InsetLegend />
-                <Card example=Example::InnerLayout />
+            </div>
 
-                <div class="include-right">
-                    <h2 id="interpolation"><a href="#interpolation">"Line interpolation"</a></h2>
+            <div id="interpolation" class="cards-row">
+                <h2><a href="examples.html#interpolation">"Line interpolation"</a></h2>
+                <div class="cards">
                     <Card example=Example::MixedInterpolation />
+                    <Card example=Example::Stepped />
                 </div>
-                <Card example=Example::Stepped />
+            </div>
 
-                <div class="include-right">
-                    <h2 id="features"><a href="#features">"Features"</a></h2>
+            <div id="features" class="cards-row">
+                <h2><a href="examples.html#features">"Features"</a></h2>
+                <div class="cards">
                     <Card example=Example::Tooltip />
+                    <Card example=Example::Colours />
+                    <Card example=Example::LineGradient />
+                    <Card example=Example::Markers />
+                    <Card example=Example::Markers2 />
+                    <Card example=Example::Css />
                 </div>
-                <Card example=Example::Colours />
-                <Card example=Example::LineGradient />
-                <Card example=Example::Markers />
-                <Card example=Example::Markers2 />
-                <Card example=Example::Css />
             </div>
 
             <section id="aspect-ratio" class="background-box">
-                <h2><a href="#aspect-ratio">"Aspect ratio"</a></h2>
+                <h2><a href="examples.html#aspect-ratio">"Aspect ratio"</a></h2>
                 <AspectRatioSunspots debug=app.debug.into() />
                 <p><ShowCode id="aspect-ratio" code=include_str!("../examples/aspect_sunspots.rs") /></p>
             </section>

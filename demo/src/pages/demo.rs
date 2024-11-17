@@ -328,7 +328,7 @@ pub fn Demo() -> impl IntoView {
 
                 <TooltipCard tooltip=tooltip_card />
 
-                <OptionsCard title="Inner" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
+                <OptionsCard title="Inner options" options=inner labels=ALL_INNER_OPTIONS detail=inner_layout_opts />
                 <OptionsCard title="Top" options=top labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
                 <OptionsCard title="Bottom" options=bottom labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
                 <OptionsCard title="Left" options=left labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />

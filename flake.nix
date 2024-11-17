@@ -55,24 +55,27 @@
           };
 
         commonArgs = {
-          inherit src;
           pname = "leptos-chartistry-workspace";
           version = "0.0.1";
-          CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
+          inherit src;
+          strictDeps = true;
           CARGO_PROFILE = "release";
         };
+        commonWasmArgs = commonArgs // {
+          wasm-bindgen-cli = wasm-bindgen-cli-local;
+          CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
+          # Cannot run `cargo test` on wasm
+          doCheck = false;
+        };
 
-        cargoArtifacts = craneLib.buildDepsOnly (commonArgs // { doCheck = false; });
+        cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+        wasmArtifacts = craneLib.buildDepsOnly commonWasmArgs;
 
         demo = craneLib.buildTrunkPackage (
-          commonArgs
+          commonWasmArgs
           // {
-            inherit cargoArtifacts;
             pname = "chartistry-demo";
-            version = "0.0.1";
-            strictDeps = true;
-            wasm-bindgen-cli = wasm-bindgen-cli-local;
-
+            cargoArtifacts = wasmArtifacts;
             cargoExtraArgs = "--package=demo";
             trunkExtraBuildArgs = "--public-url /leptos-chartistry";
             trunkIndexPath = "demo/index.html";
@@ -89,6 +92,25 @@
             '';
           }
         );
+
+        # Build SSR example
+        ssrExampleBin = craneLib.buildPackage (
+          commonArgs
+          // {
+            pname = "chartistry-ssr-example-bin";
+            inherit src cargoArtifacts;
+            cargoExtraArgs = "-p my_example_ssr --bin=my_example_ssr --no-default-features --features=ssr";
+          }
+        );
+        ssrExampleLib = craneLib.buildPackage (
+          commonWasmArgs
+          // {
+            pname = "chartistry-ssr-example-lib";
+            inherit src;
+            cargoArtifacts = wasmArtifacts;
+            cargoExtraArgs = "-p my_example_ssr --lib --no-default-features --features=hydrate";
+          }
+        );
       in
       {
         devShells.default = pkgs.mkShell {
@@ -99,7 +121,8 @@
         };
 
         checks = {
-          inherit demo;
+          # Ensure we can build all code
+          inherit demo ssrExampleBin ssrExampleLib;
 
           clippy = craneLib.cargoClippy (
             commonArgs
