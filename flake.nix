@@ -37,9 +37,9 @@
 
         # Utilities
         wasm-bindgen-cli-local = pkgs.wasm-bindgen-cli.override {
-          version = "0.2.93"; # Note: must be kept in sync with Cargo.lock
-          hash = "sha256-DDdu5mM3gneraM85pAepBXWn3TMofarVR4NbjMdz3r0=";
-          cargoHash = "sha256-birrg+XABBHHKJxfTKAMSlmTVYLmnmqMDfRnmG6g/YQ=";
+          version = "0.2.95"; # Note: must be kept in sync with Cargo.lock
+          hash = "sha256-prMIreQeAcbJ8/g3+pMp1Wp9H5u+xLqxRxL+34hICss=";
+          cargoHash = "sha256-6iMebkD7FQvixlmghGGIvpdGwFNLfnUcFke/Rg8nPK4=";
         };
 
         # Build demo
