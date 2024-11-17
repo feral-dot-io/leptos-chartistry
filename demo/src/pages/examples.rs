@@ -232,7 +232,7 @@ impl Example {
 
 // TODO: this is a partial static re-implementation of Routes
 #[component]
-pub fn Routes() -> impl MatchNestedRoutes<Dom> + Clone {
+pub fn Routes() -> impl MatchNestedRoutes + Clone {
     view! {
         <ParentRoute path=StaticSegment("examples") view=|| view!(<Outlet />)>
             <Route path=StaticSegment("series-line.html") view=|| Example::Line.page_view() />
