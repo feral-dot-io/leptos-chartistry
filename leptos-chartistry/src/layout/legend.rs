@@ -79,7 +79,7 @@ impl Legend {
 #[component]
 pub(crate) fn Legend<X: Tick, Y: Tick>(
     legend: Legend,
-    #[prop(into)] edge: MaybeSignal<Edge>,
+    #[prop(into)] edge: Signal<Edge>,
     bounds: Memo<Bounds>,
     state: State<X, Y>,
 ) -> impl IntoView {

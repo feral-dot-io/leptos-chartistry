@@ -101,15 +101,15 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     ///
     /// See [AspectRatio](AspectRatio) for a detailed explanation.
     #[prop(into)]
-    aspect_ratio: MaybeSignal<AspectRatio>,
+    aspect_ratio: Signal<AspectRatio>,
 
     /// The height of the font used in the chart. Passed to [SVG text](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text). Default is 16.
     #[prop(into, optional)]
-    font_height: Option<MaybeSignal<f64>>,
+    font_height: Option<Signal<f64>>,
 
     /// The width must be the exact width of a monospaced character in the font used. Along with font_height, it is used to calculate the dimensions of text. These dimensions are then fed into layout composition to render the chart. The default is 10.
     #[prop(into, optional)]
-    font_width: Option<MaybeSignal<f64>>,
+    font_width: Option<Signal<f64>>,
 
     /// Debug mode. If enabled shows lines around components and prints render info to the console. Useful for getting an idea of how the chart is rendering itself. Below is an example of how you might use it in development. Default is false.
     ///
@@ -139,11 +139,11 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     /// # }
     /// ```
     #[prop(into, optional)]
-    debug: MaybeSignal<bool>,
+    debug: Signal<bool>,
 
     /// Padding adds spacing around chart components. Default is the font width.
     #[prop(into, optional)]
-    padding: Option<MaybeSignal<Padding>>,
+    padding: Option<Signal<Padding>>,
 
     /// Top edge components. See [IntoEdge](crate::IntoEdge) for details. Default is none.
     #[prop(into, optional)]
@@ -179,7 +179,7 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     let have_dimensions = Memo::new(move |_| watch.bounds.get().is_some());
     let width = Memo::new(move |_| watch.bounds.get().unwrap_or_default().width());
     let height = Memo::new(move |_| watch.bounds.get().unwrap_or_default().height());
-    let calc = AspectRatio::known_signal(aspect_ratio.clone(), width, height);
+    let calc = AspectRatio::known_signal(aspect_ratio, width, height);
     let env_size = move || {
         if aspect_ratio.get().is_env() {
             "100%"
@@ -211,7 +211,7 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
         <div
             node_ref=root
             class="_chartistry"
-            style:width=env_size.clone()
+            style:width=env_size
             style:height=env_size
             style="overflow: visible;">
             <DebugRect label="Chart" debug=debug />

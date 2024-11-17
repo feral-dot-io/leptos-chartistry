@@ -124,7 +124,7 @@ impl AspectRatio {
     }
 
     pub(crate) fn known_signal(
-        aspect_ratio: MaybeSignal<Self>,
+        aspect_ratio: Signal<Self>,
         env_width: Memo<f64>,
         env_height: Memo<f64>,
     ) -> Memo<KnownAspectRatio> {
