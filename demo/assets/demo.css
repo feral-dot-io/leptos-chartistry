@@ -64,6 +64,10 @@ main {
     padding-top: 0;
 }
 
+main>article {
+    margin: 2em auto;
+}
+
 #demo>._chartistry {
     background-color: #fff;
     border: 1px solid #000;
@@ -139,13 +143,15 @@ h2,
 h3,
 fieldset>legend {
     background-color: #fff;
-    border-top: 0.2em solid #fc7089;
-    border-radius: 0.5em;
     margin: 0;
-    padding: 0.5em 2em;
-    width: fit-content;
     font-size: 110%;
     font-weight: bold;
+}
+
+.cards-row>h2 {
+    border-top: 0.2em solid #fc7089;
+    border-radius: 0.5em;
+    padding: 0.5em 2em;
 }
 
 ._chartistry h2,
@@ -163,9 +169,9 @@ fieldset>legend {
     padding: 1em;
 }
 
-.connect-heading {
-    margin-top: -1.5em !important;
-    margin-bottom: 0.5em !important;
+.underline {
+    border-bottom: 0.2em solid #fc7089;
+    width: fit-content;
 }
 
 #examples p.debug-box {
@@ -175,7 +181,7 @@ fieldset>legend {
 .cards-row {
     display: flex;
     flex-flow: row;
-    margin: 1.5em 0;
+    margin: 1em 0;
     gap: 2em 0.5em;
 }
 
@@ -189,7 +195,7 @@ fieldset>legend {
 .cards {
     display: flex;
     flex-flow: row wrap;
-    gap: 2em 0.5em;
+    gap: 0.5em;
 }
 
 #examples h2 a,
@@ -209,14 +215,6 @@ fieldset>legend {
 
 .cards figure.slim {
     width: min-content;
-}
-
-.cards figure>figcaption {
-    margin-top: -2em;
-}
-
-.cards figure>figcaption>p {
-    margin-top: 0;
 }
 
 .cards figure.my-theme {
@@ -271,6 +269,7 @@ fieldset>legend {
 .example .debug {
     width: fit-content;
     height: fit-content;
+    margin-top: -1em;
 }
 
 .example .code {
