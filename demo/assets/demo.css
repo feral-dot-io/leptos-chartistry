@@ -263,11 +263,7 @@ fieldset>legend {
 }
 
 #examples section {
-    margin-top: 2em;
-}
-
-#examples section>h2 {
-    margin-top: -2em;
+    margin: 1em 0;
 }
 
 #aspect-ratio>._chartistry:first-child {

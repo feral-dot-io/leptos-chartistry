@@ -383,7 +383,7 @@ pub fn Examples() -> impl IntoView {
             </div>
 
             <section id="aspect-ratio" class="background-box">
-                <h2><a href="examples.html#aspect-ratio">"Aspect ratio"</a></h2>
+                <h2 class="always-underline"><a href="examples.html#aspect-ratio">"Aspect ratio"</a></h2>
                 <AspectRatioSunspots debug=app.debug.into() />
                 <p><ShowCode id="aspect-ratio" code=include_str!("../examples/aspect_sunspots.rs") /></p>
             </section>
