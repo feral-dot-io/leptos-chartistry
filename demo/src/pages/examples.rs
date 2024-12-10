@@ -253,7 +253,7 @@ pub fn view_example(example: Example) -> impl IntoView {
         <article class="example">
             <div class="cards">
                 <Card example=example h1=true />
-                <div class="background-box debug">
+                <div class="background-box debug-box">
                     <label>
                         <input type="checkbox" prop:checked=app.debug
                             on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
@@ -262,7 +262,6 @@ pub fn view_example(example: Example) -> impl IntoView {
                 </div>
             </div>
             <div class="background-box code">
-                <h2 class="connect-heading">"Example code"</h2>
                 <div inner_html=example.code() />
             </div>
         </article>

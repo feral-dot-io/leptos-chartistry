@@ -174,10 +174,6 @@ fieldset>legend {
     width: fit-content;
 }
 
-#examples p.debug-box {
-    width: fit-content;
-}
-
 .cards-row {
     display: flex;
     flex-flow: row;
@@ -266,10 +262,9 @@ fieldset>legend {
     padding: 1em 2em;
 }
 
-.example .debug {
+.debug-box {
     width: fit-content;
     height: fit-content;
-    margin-top: -1em;
 }
 
 .example .code {
