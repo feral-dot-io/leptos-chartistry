@@ -232,10 +232,12 @@ fieldset>legend {
     border: 1px solid #fff;
 }
 
+.cards figure.my-theme figcaption h1,
 .cards figure.my-theme figcaption h3 {
     background-color: #2b303b;
 }
 
+.cards figure.my-theme figcaption h1>a,
 .cards figure.my-theme figcaption h3>a {
     color: #c0c5ce !important;
 }
