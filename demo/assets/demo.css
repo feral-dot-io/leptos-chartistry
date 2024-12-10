@@ -44,15 +44,37 @@ header>nav>p {
 }
 
 header a {
-    text-decoration: none;
-    color: #222;
     padding: 0.2em 0;
 }
 
-header a:hover {
+h1>a,
+h2>a,
+h3>a,
+h4>a,
+h5>a,
+h6>a,
+header a,
+.always-underline {
+    text-decoration: none;
+    color: #222;
+}
+
+h1>a:hover,
+h2>a:hover,
+h3>a:hover,
+h4>a:hover,
+h5>a:hover,
+h6>a:hover,
+header a:hover,
+.always-underline {
     text-decoration: underline;
     text-decoration-color: #fc7089;
     text-decoration-thickness: 0.3em;
+    text-underline-position: under;
+}
+
+.always-underline {
+    width: fit-content;
 }
 
 header>.badges a>img {
@@ -60,18 +82,13 @@ header>.badges a>img {
 }
 
 main {
-    padding: 2em;
-    padding-top: 0;
-}
-
-main>article {
-    margin: 2em auto;
+    margin: 1em;
 }
 
 #demo>._chartistry {
     background-color: #fff;
     border: 1px solid #000;
-    margin: 2em auto;
+    margin: 1em auto;
     width: fit-content;
 }
 
@@ -169,11 +186,6 @@ fieldset>legend {
     padding: 1em;
 }
 
-.underline {
-    border-bottom: 0.2em solid #fc7089;
-    width: fit-content;
-}
-
 .cards-row {
     display: flex;
     flex-flow: row;
@@ -194,11 +206,6 @@ fieldset>legend {
     gap: 0.5em;
 }
 
-#examples h2 a,
-#examples h3 a {
-    text-decoration: none;
-    color: #222;
-}
 
 .cards h2>em {
     font-weight: normal;
@@ -271,8 +278,12 @@ fieldset>legend {
     /* From syntax theme in build.rs */
     background-color: #2b303b;
     border: 1px solid #fff;
-    margin: 2em auto;
+    margin: 1em auto;
     /* Keep vaguely left aligned */
     margin-left: 0;
     width: fit-content;
+}
+
+.example .code pre {
+    margin: 0;
 }

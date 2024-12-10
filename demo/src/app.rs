@@ -87,7 +87,7 @@ fn NotFound() -> impl IntoView {
     view! {
         <article id="status404">
             <div class="background-box">
-                <h1 class="underline">"Page not found"</h1>
+                <h1 class="always-underline">"Page not found"</h1>
                 <p>"The page you are looking for does not exist."</p>
             </div>
         </article>
