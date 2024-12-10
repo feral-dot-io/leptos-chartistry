@@ -305,7 +305,7 @@ pub fn Example(example: Example) -> impl IntoView {
                 <div inner_html=example.code() />
             </div>
         </article>
-    }
+    }.into_any()
 }
 
 #[component]
@@ -378,7 +378,7 @@ pub fn Examples() -> impl IntoView {
                 <p><ShowCode id="aspect-ratio" code=include_str!("../examples/aspect_sunspots.rs") /></p>
             </section>
         </article>
-    }
+    }.into_any()
 }
 
 #[component]

@@ -72,7 +72,7 @@ fn NotFound() -> impl IntoView {
                 "The page you are looking for does not exist."
             </p>
         </article>
-    }
+    }.into_any()
 }
 
 pub fn provide_app_context() {

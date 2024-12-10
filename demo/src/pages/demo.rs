@@ -335,7 +335,7 @@ pub fn Demo() -> impl IntoView {
                 <OptionsCard title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
             </div>
         </article>
-    }
+    }.into_any()
 }
 
 #[component]
