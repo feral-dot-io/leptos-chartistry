@@ -122,7 +122,7 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     /// view! {
     ///     <p>
     ///         <label>
-    ///             <input type="checkbox" input type="checkbox"
+    ///             <input type="checkbox"
     ///                 on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
     ///             " Toggle debug mode"
     ///         </label>
