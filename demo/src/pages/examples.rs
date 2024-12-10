@@ -9,16 +9,15 @@ use leptos::{
     prelude::*,
 };
 use leptos_router::{
-    components::{Outlet, ParentRoute, Route},
     hooks::{use_location, use_navigate},
-    MatchNestedRoutes, NavigateOptions, StaticSegment,
+    NavigateOptions,
 };
 use strum::VariantArray;
 use web_sys::{HtmlDialogElement, MouseEvent};
 
 #[derive(Copy, Clone, Debug, PartialEq, VariantArray)]
 pub enum Example {
-    // Note: changes here must also update `Routes`
+    // Note: changes here requires an update to routes and impl_example_view
     Line,
     StackedLine,
     Bar,
@@ -73,7 +72,7 @@ impl Example {
         }
     }
 
-    fn id(self) -> &'static str {
+    pub const fn id(self) -> &'static str {
         match self {
             Self::Line => "series-line",
             Self::StackedLine => "series-line-stack",
@@ -222,43 +221,7 @@ impl Example {
             })),
         }
     }
-
-    fn page_view(self) -> impl IntoView {
-        // Note: page-specific variants that do more than just the card view should be referenced here. Falls back to the card view if not implemented.
-        view! {
-            <Example example=self />
-        }
-    }
 }
-
-#[component]
-pub fn Routes() -> impl MatchNestedRoutes + Clone {
-    view! {
-        <ParentRoute path=StaticSegment("examples") view=|| view!(<Outlet />)>
-            <Route path=StaticSegment("series-line") view=|| Example::Line.page_view() />
-            <Route path=StaticSegment("series-line-stack") view=|| Example::StackedLine.page_view() />
-            <Route path=StaticSegment("series-bar") view=|| Example::Bar.page_view() />
-            <Route path=StaticSegment("edge-legend") view=|| Example::Legend.page_view() />
-            <Route path=StaticSegment("edge-tick-labels") view=|| Example::TickLabels.page_view() />
-            <Route path=StaticSegment("edge-rotated-label") view=|| Example::RotatedLabel.page_view() />
-            <Route path=StaticSegment("edge-layout") view=|| Example::EdgeLayout.page_view() />
-            <Route path=StaticSegment("inner-axis-marker") view=|| Example::AxisMarker.page_view() />
-            <Route path=StaticSegment("inner-grid-line") view=|| Example::GridLine.page_view() />
-            <Route path=StaticSegment("inner-guide-line") view=|| Example::GuideLine.page_view() />
-            <Route path=StaticSegment("inner-legend") view=|| Example::InsetLegend.page_view() />
-            <Route path=StaticSegment("inner-layout") view=|| Example::InnerLayout.page_view() />
-            <Route path=StaticSegment("interpolation-mixed") view=|| Example::MixedInterpolation.page_view() />
-            <Route path=StaticSegment("interpolation-stepped") view=|| Example::Stepped.page_view() />
-            <Route path=StaticSegment("feature-tooltip") view=|| Example::Tooltip.page_view() />
-            <Route path=StaticSegment("feature-colours") view=|| Example::Colours.page_view() />
-            <Route path=StaticSegment("feature-markers") view=|| Example::Markers.page_view() />
-            <Route path=StaticSegment("feature-markers-2") view=|| Example::Markers2.page_view() />
-            <Route path=StaticSegment("feature-line-gradient") view=|| Example::LineGradient.page_view() />
-            <Route path=StaticSegment("feature-css") view=|| Example::Css.page_view() />
-        </ParentRoute>
-    }.into_inner()
-}
-
 
 #[component]
 fn Card(example: Example, #[prop(optional)] h1: bool) -> impl IntoView {
@@ -284,8 +247,7 @@ fn Card(example: Example, #[prop(optional)] h1: bool) -> impl IntoView {
     }
 }
 
-#[component]
-pub fn Example(example: Example) -> impl IntoView {
+pub fn view_example(example: Example) -> impl IntoView {
     let app = use_app_context();
     view! {
         <article class="example">
@@ -304,8 +266,58 @@ pub fn Example(example: Example) -> impl IntoView {
                 <div inner_html=example.code() />
             </div>
         </article>
-    }.into_any()
+    }
+    .into_any()
 }
+
+macro_rules! impl_example_view {
+    ( $id:ident, $view:ident ) => {
+        #[component]
+        pub fn $view() -> impl IntoView {
+            let app = use_app_context();
+            view! {
+                <article class="example">
+                    <div class="cards">
+                        <Card example=Example::$id h1=true />
+                        <div class="background-box debug">
+                            <label>
+                                <input type="checkbox" prop:checked=app.debug
+                                    on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
+                                " Toggle debug mode"
+                            </label>
+                        </div>
+                    </div>
+                    <div class="background-box code">
+                        <h2 class="connect-heading">"Example code"</h2>
+                        <div inner_html=Example::$id.code() />
+                    </div>
+                </article>
+            }
+            .into_any()
+        }
+    };
+}
+
+impl_example_view!(Line, LineView);
+impl_example_view!(StackedLine, StackedLineView);
+impl_example_view!(Bar, BarView);
+impl_example_view!(Legend, LegendView);
+impl_example_view!(TickLabels, TickLabelsView);
+impl_example_view!(RotatedLabel, RotatedLabelView);
+impl_example_view!(EdgeLayout, EdgeLayoutView);
+impl_example_view!(AxisMarker, AxisMarkerView);
+impl_example_view!(GridLine, GridLineView);
+impl_example_view!(GuideLine, GuideLineView);
+impl_example_view!(InsetLegend, InsetLegendView);
+impl_example_view!(InnerLayout, InnerLayoutView);
+impl_example_view!(MixedInterpolation, MixedInterpolationView);
+impl_example_view!(Stepped, SteppedView);
+impl_example_view!(Tooltip, TooltipView);
+impl_example_view!(Colours, ColoursView);
+impl_example_view!(Markers, MarkersView);
+impl_example_view!(Markers2, Markers2View);
+impl_example_view!(LineGradient, LineGradientView);
+impl_example_view!(Css, CssView);
 
 #[component]
 pub fn Examples() -> impl IntoView {
