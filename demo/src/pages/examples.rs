@@ -18,6 +18,7 @@ use web_sys::{HtmlDialogElement, MouseEvent};
 
 #[derive(Copy, Clone, Debug, PartialEq, VariantArray)]
 pub enum Example {
+    // Note: changes here must also update `Routes`
     Line,
     StackedLine,
     Bar,
@@ -230,36 +231,34 @@ impl Example {
     }
 }
 
-// TODO: this is a partial static re-implementation of Routes
 #[component]
 pub fn Routes() -> impl MatchNestedRoutes + Clone {
     view! {
         <ParentRoute path=StaticSegment("examples") view=|| view!(<Outlet />)>
-            <Route path=StaticSegment("series-line.html") view=|| Example::Line.page_view() />
-            <Route path=StaticSegment("stacked-line.html") view=|| Example::StackedLine.page_view() />
+            <Route path=StaticSegment("series-line") view=|| Example::Line.page_view() />
+            <Route path=StaticSegment("series-line-stack") view=|| Example::StackedLine.page_view() />
+            <Route path=StaticSegment("series-bar") view=|| Example::Bar.page_view() />
+            <Route path=StaticSegment("edge-legend") view=|| Example::Legend.page_view() />
+            <Route path=StaticSegment("edge-tick-labels") view=|| Example::TickLabels.page_view() />
+            <Route path=StaticSegment("edge-rotated-label") view=|| Example::RotatedLabel.page_view() />
+            <Route path=StaticSegment("edge-layout") view=|| Example::EdgeLayout.page_view() />
+            <Route path=StaticSegment("inner-axis-marker") view=|| Example::AxisMarker.page_view() />
+            <Route path=StaticSegment("inner-grid-line") view=|| Example::GridLine.page_view() />
+            <Route path=StaticSegment("inner-guide-line") view=|| Example::GuideLine.page_view() />
+            <Route path=StaticSegment("inner-legend") view=|| Example::InsetLegend.page_view() />
+            <Route path=StaticSegment("inner-layout") view=|| Example::InnerLayout.page_view() />
+            <Route path=StaticSegment("interpolation-mixed") view=|| Example::MixedInterpolation.page_view() />
+            <Route path=StaticSegment("interpolation-stepped") view=|| Example::Stepped.page_view() />
+            <Route path=StaticSegment("feature-tooltip") view=|| Example::Tooltip.page_view() />
+            <Route path=StaticSegment("feature-colours") view=|| Example::Colours.page_view() />
+            <Route path=StaticSegment("feature-markers") view=|| Example::Markers.page_view() />
+            <Route path=StaticSegment("feature-markers-2") view=|| Example::Markers2.page_view() />
+            <Route path=StaticSegment("feature-line-gradient") view=|| Example::LineGradient.page_view() />
+            <Route path=StaticSegment("feature-css") view=|| Example::Css.page_view() />
         </ParentRoute>
     }.into_inner()
 }
 
-/*
-#[component(transparent)]
-pub fn Routes(prefix: &'static str) -> impl IntoView {
-    use leptos_router::*;
-    // Note: this was incredibly awkward and fiddly to get right. The `Route::children` attribute requires a `Fragment` built from a `Vec<View>`. The `View` must be made up of a transparent `Route` component. It seems any deviation from this e.g., using `CollectView` results in a "tried to mount a Transparent node." error from Leptos.
-    let children = Example::VARIANTS
-        .iter()
-        .map(|ex| {
-            view! {
-                <Route path=format!("/{}.html", ex.id()) view=|| ex.page_view() />
-            }
-        })
-        .map(|r| r.into_view())
-        .collect::<Fragment>();
-    view! {
-        <Route path=prefix view=|| view!(<Outlet />) children=Box::new(|| children) />
-    }
-}
-*/
 
 #[component]
 fn Card(example: Example, #[prop(optional)] h1: bool) -> impl IntoView {
