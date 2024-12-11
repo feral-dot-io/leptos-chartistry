@@ -9,32 +9,33 @@ crate-type = ["cdylib", "rlib"]
 axum = { version = "0.7", optional = true }
 console_error_panic_hook = "0.1"
 console_log = "1.0"
-leptos = "0.6"
-leptos_axum = { version = "0.6", optional = true }
+leptos = "0.7"
+leptos_axum = { version = "0.7", optional = true }
 # Use leptos_chartistry.version = "..." instead
 leptos-chartistry.path = "../../leptos-chartistry"
-leptos_router.version = "0.6"
-leptos-use = "0.13"
+leptos_meta = "0.7"
+leptos_router.version = "0.7"
+leptos-use = "0.14"
 log = "0.4"
-tokio = { version = "1.40", features = [ "full" ], optional = true }
-tower = { version = "0.4", optional = true }
-tower-http = { version = "0.5", features = ["fs"], optional = true }
-wasm-bindgen = "0.2.93"
+tokio = { version = "1.42", features = [ "full" ], optional = true }
+tower = { version = "0.5", optional = true }
+tower-http = { version = "0.6", features = ["fs"], optional = true }
+wasm-bindgen = "0.2.99"
 
 [features]
 hydrate = [
   "leptos/hydrate",
-  "leptos_router/hydrate",
 ]
 ssr = [
   "dep:axum",
   "dep:leptos_axum",
-  "dep:tokio",
   "dep:tower",
   "dep:tower-http",
+  "dep:tokio",
   "leptos/ssr",
-  "leptos_router/ssr",
+  "leptos_meta/ssr",
   "leptos-use/ssr",
+  "leptos_router/ssr",
 ]
 
 [package.metadata.leptos]

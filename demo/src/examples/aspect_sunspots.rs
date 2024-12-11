@@ -1,5 +1,5 @@
 use crate::data;
-use leptos::*;
+use leptos::prelude::*;
 use leptos_chartistry::*;
 
 #[component]
@@ -12,7 +12,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
         Series::new(|data: &data::Sunspots| data.year).line(|data: &data::Sunspots| data.sunspots);
 
     // Width slider
-    let (width, set_width) = create_signal(0.8);
+    let (width, set_width) = signal(0.8);
     let SLIDER_RANGE: f64 = 60.0;
     let frame_width = move || format!("{}%", (100.0 - SLIDER_RANGE) + SLIDER_RANGE * width.get());
     let change_width = move |ev| {
@@ -46,7 +46,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
                 tooltip=Tooltip::left_cursor()
 
                 series=series.clone()
-                data=data::daily_sunspots />
+                data=Signal::derive(data::daily_sunspots) />
         </div>
 
         <p>"Try changing the chart width and see how the chart looks different "
@@ -71,7 +71,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
                 tooltip=Tooltip::left_cursor()
 
                 series=series
-                data=data::daily_sunspots />
+                data=Signal::derive(data::daily_sunspots) />
         </div>
 
         <p>"Source: "<a href="https://www.sidc.be/silso/">"Sunspot data from "

@@ -4,15 +4,16 @@ use crate::{
     state::State,
     Tick, TickLabels, AXIS_MARKER_COLOUR,
 };
-use leptos::*;
+use leptos::prelude::*;
 use std::cmp::{Ordering, Reverse};
 
 /// Default gap distance from cursor to tooltip when shown.
 pub const TOOLTIP_CURSOR_DISTANCE: f64 = 10.0;
 
 /// Builds a mouse tooltip that shows X and Y values for the nearest data. Drawn in HTML as an overlay.
-#[derive(Clone)]
-pub struct Tooltip<X: 'static, Y: 'static> {
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
+pub struct Tooltip<X: Tick, Y: Tick> {
     /// Where the tooltip is placed when shown.
     pub placement: RwSignal<TooltipPlacement>,
     /// How the tooltip Y value table is sorted.
@@ -113,9 +114,9 @@ impl<X: Tick, Y: Tick> Default for Tooltip<X, Y> {
         Self {
             placement: RwSignal::default(),
             sort_by: RwSignal::default(),
-            cursor_distance: create_rw_signal(TOOLTIP_CURSOR_DISTANCE),
-            skip_missing: create_rw_signal(false),
-            show_x_ticks: create_rw_signal(true),
+            cursor_distance: RwSignal::new(TOOLTIP_CURSOR_DISTANCE),
+            skip_missing: RwSignal::new(false),
+            show_x_ticks: RwSignal::new(true),
             x_ticks: TickLabels::default(),
             y_ticks: TickLabels::default(),
         }
@@ -220,7 +221,7 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
     let x_body = {
         let nearest_data_x = state.pre.data.nearest_data_x(state.hover_position_x);
         let x_format = x_ticks.format;
-        let avail_width = Signal::derive(move || with!(|inner| inner.width()));
+        let avail_width = Signal::derive(move || inner.read().width());
         let x_ticks = x_ticks.generate_x(&state.pre, avail_width);
         move || {
             // Hide ticks?
@@ -228,33 +229,29 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
                 return "".to_string();
             }
             let x_format = x_format.get();
-            with!(|nearest_data_x, x_ticks| {
-                nearest_data_x.as_ref().map_or_else(
-                    || "no data".to_string(),
-                    |x_value| (x_format)(x_value, x_ticks.state.as_ref()),
-                )
-            })
+            nearest_data_x.read().as_ref().map_or_else(
+                || "no data".to_string(),
+                |x_value| (x_format)(x_value, x_ticks.read().state.as_ref()),
+            )
         }
     };
 
     let format_y_value = {
-        let avail_height = Signal::derive(move || with!(|inner| inner.height()));
+        let avail_height = Signal::derive(move || inner.read().height());
         let y_format = y_ticks.format;
         let y_ticks = y_ticks.generate_y(&state.pre, avail_height);
         move |y_value: Option<Y>| {
             let y_format = y_format.get();
-            y_ticks.with(|y_ticks| {
-                y_value.as_ref().map_or_else(
-                    || "-".to_string(),
-                    |y_value| (y_format)(y_value, y_ticks.state.as_ref()),
-                )
-            })
+            y_value.as_ref().map_or_else(
+                || "-".to_string(),
+                |y_value| (y_format)(y_value, y_ticks.read().state.as_ref()),
+            )
         }
     };
 
     let nearest_y_values = {
         let nearest_data_y = state.pre.data.nearest_data_y(state.hover_position_x);
-        create_memo(move |_| {
+        Memo::new(move |_| {
             let mut y_values = nearest_data_y.get();
             // Skip missing?
             if skip_missing.get() {

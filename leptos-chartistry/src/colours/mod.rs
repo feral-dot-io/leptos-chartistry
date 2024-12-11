@@ -4,7 +4,7 @@ mod scheme;
 pub use colourmaps::*;
 pub use scheme::{ColourScheme, DivergingGradient, LinearGradientSvg, SequentialGradient};
 
-use leptos::*;
+use leptos::prelude::*;
 use std::str::FromStr;
 
 /// A colour in RGB format.
@@ -62,26 +62,6 @@ impl FromStr for Colour {
         let green = u8::from_str_radix(&s[2..4], 16).map_err(|e| e.to_string())?;
         let blue = u8::from_str_radix(&s[4..6], 16).map_err(|e| e.to_string())?;
         Ok(Colour { red, green, blue })
-    }
-}
-
-impl IntoAttribute for Colour {
-    fn into_attribute(self) -> Attribute {
-        self.to_string().into_attribute()
-    }
-
-    fn into_attribute_boxed(self: Box<Self>) -> Attribute {
-        self.to_string().into_attribute()
-    }
-}
-
-impl IntoAttribute for &Colour {
-    fn into_attribute(self) -> Attribute {
-        (*self).into_attribute()
-    }
-
-    fn into_attribute_boxed(self: Box<Self>) -> Attribute {
-        (*self).into_attribute()
     }
 }
 

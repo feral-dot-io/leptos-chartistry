@@ -5,12 +5,13 @@ use crate::{
     edge::Edge,
     series::{Snippet, UseY},
     state::{PreState, State},
-    Padding,
+    Padding, Tick,
 };
-use leptos::*;
+use leptos::{either::Either, prelude::*};
 
 /// Builds a legend for the chart [series](crate::Series). Orientated along the axis of its placed edge. Drawn in HTML.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Legend {
     /// Anchor of the legend.
     pub anchor: RwSignal<Anchor>,
@@ -19,7 +20,7 @@ pub struct Legend {
 impl Legend {
     pub(crate) fn new(anchor: Anchor) -> Self {
         Self {
-            anchor: create_rw_signal(anchor),
+            anchor: RwSignal::new(anchor),
         }
     }
 
@@ -36,7 +37,7 @@ impl Legend {
         Self::new(Anchor::End)
     }
 
-    pub(crate) fn width<X, Y>(state: &PreState<X, Y>) -> Signal<f64> {
+    pub(crate) fn width<X: Tick, Y: Tick>(state: &PreState<X, Y>) -> Signal<f64> {
         let font_height = state.font_height;
         let font_width = state.font_width;
         let padding = state.padding;
@@ -54,7 +55,7 @@ impl Legend {
         })
     }
 
-    pub(crate) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    pub(crate) fn fixed_height<X: Tick, Y: Tick>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         let font_height = state.font_height;
         let padding = state.padding;
         Signal::derive(move || font_height.get() + padding.get().height())
@@ -64,7 +65,10 @@ impl Legend {
         UseLayout::Legend(self.clone())
     }
 
-    pub(super) fn to_vertical_use<X, Y>(&self, state: &PreState<X, Y>) -> UseVerticalLayout {
+    pub(super) fn to_vertical_use<X: Tick, Y: Tick>(
+        &self,
+        state: &PreState<X, Y>,
+    ) -> UseVerticalLayout {
         UseVerticalLayout {
             width: Self::width(state),
             layout: UseLayout::Legend(self.clone()),
@@ -73,9 +77,9 @@ impl Legend {
 }
 
 #[component]
-pub(crate) fn Legend<X: Clone + 'static, Y: Clone + 'static>(
+pub(crate) fn Legend<X: Tick, Y: Tick>(
     legend: Legend,
-    #[prop(into)] edge: MaybeSignal<Edge>,
+    #[prop(into)] edge: Signal<Edge>,
     bounds: Memo<Bounds>,
     state: State<X, Y>,
 ) -> impl IntoView {
@@ -86,7 +90,7 @@ pub(crate) fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     let series = state.pre.data.series;
 
     // Don't apply padding on the edges of our axis i.e., maximise the space we extend over
-    let padding = create_memo(move |_| {
+    let padding = Memo::new(move |_| {
         let padding = padding.get();
         if edge.get().is_horizontal() {
             Padding::sides(padding.top, 0.0, padding.bottom, 0.0)
@@ -99,9 +103,13 @@ pub(crate) fn Legend<X: Clone + 'static, Y: Clone + 'static>(
     let html = move || {
         let edge = edge.get();
         let body = if edge.is_horizontal() {
-            view!(<HorizontalBody series=series state=state.clone() />)
+            Either::Left(view! {
+                <HorizontalBody series=series state=state.clone() />
+            })
         } else {
-            view!(<VerticalBody series=series state=state.clone() />)
+            Either::Right(view! {
+                <VerticalBody series=series state=state.clone() />
+            })
         };
         view! {
             <div
@@ -135,10 +143,7 @@ pub(crate) fn Legend<X: Clone + 'static, Y: Clone + 'static>(
 }
 
 #[component]
-fn VerticalBody<X: Clone + 'static, Y: Clone + 'static>(
-    series: Memo<Vec<UseY>>,
-    state: State<X, Y>,
-) -> impl IntoView {
+fn VerticalBody<X: Tick, Y: Tick>(series: Memo<Vec<UseY>>, state: State<X, Y>) -> impl IntoView {
     let padding = move || {
         let p = state.pre.padding.get();
         format!("0 {}px 0 {}px", p.right, p.left)
@@ -158,14 +163,12 @@ fn VerticalBody<X: Clone + 'static, Y: Clone + 'static>(
 }
 
 #[component]
-fn HorizontalBody<X: Clone + 'static, Y: Clone + 'static>(
-    series: Memo<Vec<UseY>>,
-    state: State<X, Y>,
-) -> impl IntoView {
+fn HorizontalBody<X: Tick, Y: Tick>(series: Memo<Vec<UseY>>, state: State<X, Y>) -> impl IntoView {
     let padding_left = move |i| {
         (i != 0)
             .then_some(state.pre.padding.get().left)
             .map(|p| format!("{}px", p))
+            .unwrap_or_default()
     };
     view! {
         <tr>

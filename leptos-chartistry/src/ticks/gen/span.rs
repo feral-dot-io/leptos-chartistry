@@ -1,5 +1,6 @@
 use super::{Format, Span};
-use std::rc::Rc;
+use crate::Tick;
+use std::sync::Arc;
 
 pub struct VerticalSpan {
     avail_height: f64,
@@ -25,23 +26,23 @@ impl<Tick> Span<Tick> for VerticalSpan {
     }
 }
 
-pub type TickFormatFn<Tick> = dyn Fn(&Tick, &dyn Format<Tick = Tick>) -> String;
+pub type TickFormatFn<Tick> = dyn (Fn(&Tick, &dyn Format<Tick = Tick>) -> String) + Send + Sync;
 
-pub struct HorizontalSpan<Tick: 'static> {
+pub struct HorizontalSpan<XY: Tick> {
     font_width: f64,
     min_chars: usize,
     padding_width: f64,
     avail_width: f64,
-    format: Rc<TickFormatFn<Tick>>,
+    format: Arc<TickFormatFn<XY>>,
 }
 
-impl<Tick> HorizontalSpan<Tick> {
+impl<XY: Tick> HorizontalSpan<XY> {
     pub fn new(
         font_width: f64,
         min_chars: usize,
         padding_width: f64,
         avail_width: f64,
-        format: Rc<TickFormatFn<Tick>>,
+        format: Arc<TickFormatFn<XY>>,
     ) -> Self {
         Self {
             font_width,
@@ -52,17 +53,17 @@ impl<Tick> HorizontalSpan<Tick> {
         }
     }
 
-    pub fn identity_format() -> Rc<TickFormatFn<Tick>> {
-        Rc::new(|tick, state| state.format(tick))
+    pub fn identity_format() -> Arc<TickFormatFn<XY>> {
+        Arc::new(|tick, state| state.format(tick))
     }
 }
 
-impl<Tick> Span<Tick> for HorizontalSpan<Tick> {
+impl<XY: Tick> Span<XY> for HorizontalSpan<XY> {
     fn length(&self) -> f64 {
         self.avail_width
     }
 
-    fn consumed(&self, state: &dyn Format<Tick = Tick>, ticks: &[Tick]) -> f64 {
+    fn consumed(&self, state: &dyn Format<Tick = XY>, ticks: &[XY]) -> f64 {
         let max_chars = ticks
             .iter()
             .map(|tick| (self.format)(tick, state).len().max(self.min_chars))

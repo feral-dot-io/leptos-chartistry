@@ -1,13 +1,13 @@
-use super::UseInner;
-use crate::{colours::Colour, debug::DebugRect, state::State};
-use leptos::*;
-use std::{rc::Rc, str::FromStr};
+use crate::{colours::Colour, debug::DebugRect, state::State, Tick};
+use leptos::prelude::*;
+use std::str::FromStr;
 
 /// Default colour for axis markers.
 pub const AXIS_MARKER_COLOUR: Colour = Colour::from_rgb(0xD2, 0xD2, 0xD2);
 
 /// Builds an axis marker. This marks a boundary (e.g., zero or the chart edge) around the inner chart area.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct AxisMarker {
     /// Placement of the marker.
     pub placement: RwSignal<AxisPlacement>,
@@ -40,10 +40,10 @@ pub enum AxisPlacement {
 impl AxisMarker {
     fn new(placement: AxisPlacement) -> Self {
         Self {
-            placement: create_rw_signal(placement),
-            colour: create_rw_signal(AXIS_MARKER_COLOUR),
-            arrow: create_rw_signal(true),
-            width: create_rw_signal(1.0),
+            placement: RwSignal::new(placement),
+            colour: RwSignal::new(AXIS_MARKER_COLOUR),
+            arrow: RwSignal::new(true),
+            width: RwSignal::new(1.0),
         }
     }
 
@@ -116,19 +116,16 @@ impl FromStr for AxisPlacement {
     }
 }
 
-impl<X, Y> UseInner<X, Y> for AxisMarker {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <AxisMarker marker=(*self).clone() state=state /> )
-    }
-}
-
 #[component]
-fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) -> impl IntoView {
+pub(super) fn AxisMarker<X: Tick, Y: Tick>(
+    marker: AxisMarker,
+    state: State<X, Y>,
+) -> impl IntoView {
     let debug = state.pre.debug;
     let zero = state.svg_zero;
     let inner = state.layout.inner;
 
-    let pos = create_memo(move |_| {
+    let pos = Memo::new(move |_| {
         let inner = inner.get();
         let (top, right, bottom, left) = (
             inner.top_y(),
@@ -149,11 +146,11 @@ fn AxisMarker<X: 'static, Y: 'static>(marker: AxisMarker, state: State<X, Y>) ->
         (in_bounds, coords)
     });
     // Check coords are within projection bounds
-    let in_bounds = create_memo(move |_| pos.get().0);
-    let x1 = create_memo(move |_| pos.get().1 .0);
-    let y1 = create_memo(move |_| pos.get().1 .1);
-    let x2 = create_memo(move |_| pos.get().1 .2);
-    let y2 = create_memo(move |_| pos.get().1 .3);
+    let in_bounds = Memo::new(move |_| pos.get().0);
+    let x1 = Memo::new(move |_| pos.get().1 .0);
+    let y1 = Memo::new(move |_| pos.get().1 .1);
+    let x2 = Memo::new(move |_| pos.get().1 .2);
+    let y2 = Memo::new(move |_| pos.get().1 .3);
 
     let arrow = move || {
         if marker.arrow.get() {

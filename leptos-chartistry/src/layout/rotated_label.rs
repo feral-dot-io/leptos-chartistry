@@ -1,13 +1,13 @@
-use std::str::FromStr;
-
 use super::{UseLayout, UseVerticalLayout};
 use crate::{
     bounds::Bounds,
     debug::DebugRect,
     edge::Edge,
     state::{PreState, State},
+    Tick,
 };
-use leptos::*;
+use leptos::prelude::*;
+use std::str::FromStr;
 
 /// Label placement on the main-axis of a component. An edge layout's main-axis runs parallel to its given edge. Similar to SVG's [text-anchor](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/text-anchor) or CSS's [justify-content](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content).
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -24,7 +24,8 @@ pub enum Anchor {
 /// Builds a rotated label to match the orientation of the axis it's placed on.
 ///
 /// Warning: does not wrap text. Extra text will not be clipped.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct RotatedLabel {
     /// Text to display.
     pub text: RwSignal<String>,
@@ -35,8 +36,8 @@ pub struct RotatedLabel {
 impl RotatedLabel {
     fn new(anchor: Anchor, text: String) -> Self {
         Self {
-            text: create_rw_signal(text),
-            anchor: create_rw_signal(anchor),
+            text: RwSignal::new(text),
+            anchor: RwSignal::new(anchor),
         }
     }
 
@@ -53,7 +54,7 @@ impl RotatedLabel {
         Self::new(Anchor::End, text.into())
     }
 
-    fn size<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    fn size<X: Tick, Y: Tick>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         let text = self.text;
         let font_height = state.font_height;
         let padding = state.padding;
@@ -66,7 +67,7 @@ impl RotatedLabel {
         })
     }
 
-    pub(super) fn fixed_height<X, Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    pub(super) fn fixed_height<X: Tick, Y: Tick>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         self.size(state)
     }
 
@@ -74,7 +75,10 @@ impl RotatedLabel {
         UseLayout::RotatedLabel(self.clone())
     }
 
-    pub(super) fn to_vertical_use<X, Y>(&self, state: &PreState<X, Y>) -> UseVerticalLayout {
+    pub(super) fn to_vertical_use<X: Tick, Y: Tick>(
+        &self,
+        state: &PreState<X, Y>,
+    ) -> UseVerticalLayout {
         // Note: width is height because it's rotated
         UseVerticalLayout {
             width: self.size(state),
@@ -129,7 +133,7 @@ impl std::fmt::Display for Anchor {
 }
 
 #[component]
-pub(super) fn RotatedLabel<X: 'static, Y: 'static>(
+pub(super) fn RotatedLabel<X: Tick, Y: Tick>(
     label: RotatedLabel,
     edge: Edge,
     bounds: Memo<Bounds>,
@@ -141,7 +145,7 @@ pub(super) fn RotatedLabel<X: 'static, Y: 'static>(
     let padding = state.pre.padding;
 
     let content = Signal::derive(move || padding.get().apply(bounds.get()));
-    let position = create_memo(move |_| {
+    let position = Memo::new(move |_| {
         let c = content.get();
         let (top, right, bottom, left) = (c.top_y(), c.right_x(), c.bottom_y(), c.left_x());
         let (centre_x, centre_y) = (c.centre_x(), c.centre_y());

@@ -3,20 +3,23 @@
   inputs = {
     nixpkgs.url = "nixpkgs";
     utils.url = "flake-utils";
-
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    crane.url = "github:ipetkov/crane";
 
     advisory-db = {
       url = "github:rustsec/advisory-db";
       flake = false;
+    };
+    cargo-leptos-src = {
+      url = "github:leptos-rs/cargo-leptos?tag=v0.2.24";
+      flake = false; # Only provides a devShell
+    };
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    trunk-src = {
+      url = "github:trunk-rs/trunk";
+      flake = false; # Avoid breakage if added
     };
   };
 
@@ -40,10 +43,34 @@
         craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
         # Utilities
+        cargo-leptos-local = craneLib.buildPackage {
+          src = craneLib.cleanCargoSource inputs.cargo-leptos-src;
+          strictDeps = true;
+          buildInputs = with pkgs; [
+            openssl
+            pkg-config
+            wasm-bindgen-cli-local
+          ];
+          cargoExtraArgs = "--no-default-features --features no_downloads";
+          doCheck = false;
+        };
+
+        trunk-local = craneLib.buildPackage {
+          src = inputs.trunk-src; # Don't clean source
+          strictDeps = true;
+          buildInputs = with pkgs; [
+            openssl
+            pkg-config
+            wasm-bindgen-cli-local
+          ];
+          cargoExtraArgs = "--no-default-features --features rustls";
+          doCheck = false;
+        };
+
         wasm-bindgen-cli-local = pkgs.wasm-bindgen-cli.override {
-          version = "0.2.93"; # Note: must be kept in sync with Cargo.lock
-          hash = "sha256-DDdu5mM3gneraM85pAepBXWn3TMofarVR4NbjMdz3r0=";
-          cargoHash = "sha256-birrg+XABBHHKJxfTKAMSlmTVYLmnmqMDfRnmG6g/YQ=";
+          version = "0.2.99"; # Note: must be kept in sync with Cargo.lock
+          hash = "sha256-1AN2E9t/lZhbXdVznhTcniy+7ZzlaEp/gwLEAucs6EA=";
+          cargoHash = "sha256-DbwAh8RJtW38LJp+J9Ht8fAROK9OabaJ85D9C/Vkve4=";
         };
 
         # Build demo
@@ -118,8 +145,9 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            trunk
+          packages = [
+            cargo-leptos-local
+            trunk-local
             wasm-bindgen-cli-local
           ];
         };

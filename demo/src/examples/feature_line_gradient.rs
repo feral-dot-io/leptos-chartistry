@@ -1,5 +1,5 @@
 use super::MyData;
-use leptos::*;
+use leptos::prelude::*;
 use leptos_chartistry::*;
 
 // Move Y so that values cross zero to demonstrate a diverging gradient

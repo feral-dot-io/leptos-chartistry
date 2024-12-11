@@ -6,9 +6,10 @@ use crate::{
     state::{PreState, State},
     Tick,
 };
-use leptos::*;
+use leptos::prelude::*;
 
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct Layout {
     pub outer: Memo<Bounds>,
     pub top: Vec<Memo<Bounds>>,
@@ -27,7 +28,7 @@ pub struct DeferredRender {
 }
 
 impl DeferredRender {
-    pub fn render<X: Clone, Y: Clone>(self, state: State<X, Y>) -> View {
+    pub fn render<X: Tick, Y: Tick>(self, state: State<X, Y>) -> impl IntoView {
         self.layout.render(self.edge, self.bounds, state)
     }
 }
@@ -73,13 +74,13 @@ impl Layout {
             KnownAspectRatio::inner_width_signal(aspect_ratio, left_width, right_width);
 
         // Bounds
-        let outer = create_memo(move |_| {
+        let outer = Memo::new(move |_| {
             Bounds::new(
                 left_width.get() + avail_width.get() + right_width.get(),
                 top_height.get() + inner_height.get() + bottom_height.get(),
             )
         });
-        let inner = create_memo(move |_| {
+        let inner = Memo::new(move |_| {
             outer.get().shrink(
                 top_height.get(),
                 right_width.get(),
@@ -89,27 +90,27 @@ impl Layout {
         });
 
         // Edge bounds
-        let top_bounds = create_memo(move |_| {
+        let top_bounds = Memo::new(move |_| {
             let i = inner.get();
             Bounds::from_points(i.left_x(), outer.get().top_y(), i.right_x(), i.top_y())
         });
-        let right_bounds = create_memo(move |_| {
+        let right_bounds = Memo::new(move |_| {
             let i = inner.get();
             Bounds::from_points(i.right_x(), i.top_y(), outer.get().right_x(), i.bottom_y())
         });
-        let bottom_bounds = create_memo(move |_| {
+        let bottom_bounds = Memo::new(move |_| {
             let i = inner.get();
             let bottom_y = outer.get().bottom_y();
             Bounds::from_points(i.left_x(), i.bottom_y(), i.right_x(), bottom_y)
         });
-        let left_bounds = create_memo(move |_| {
+        let left_bounds = Memo::new(move |_| {
             let i = inner.get();
             Bounds::from_points(outer.get().left_x(), i.top_y(), i.left_x(), i.bottom_y())
         });
 
         // Find the width of each X
         let data_len = state.data.len;
-        let x_width = create_memo(move |_| inner.get().width() / data_len.get() as f64);
+        let x_width = Memo::new(move |_| inner.get().width() / data_len.get() as f64);
 
         // State signals
         let layout = Layout {
@@ -160,7 +161,7 @@ impl Layout {
     }
 }
 
-fn collect_heights<X: Tick, Y>(
+fn collect_heights<X: Tick, Y: Tick>(
     items: &[EdgeLayout<X>],
     state: &PreState<X, Y>,
 ) -> Vec<Signal<f64>> {
@@ -185,7 +186,7 @@ fn use_vertical<X: Tick, Y: Tick>(
 }
 
 fn sum_sizes(sizes: Vec<Signal<f64>>) -> Memo<f64> {
-    create_memo(move |_| sizes.iter().map(|opt| opt.get()).sum::<f64>())
+    Memo::new(move |_| sizes.iter().map(|opt| opt.get()).sum::<f64>())
 }
 
 fn option_bounds(edge: Edge, outer: Memo<Bounds>, sizes: Vec<Signal<f64>>) -> Vec<Memo<Bounds>> {
@@ -195,7 +196,7 @@ fn option_bounds(edge: Edge, outer: Memo<Bounds>, sizes: Vec<Signal<f64>>) -> Ve
         .map(|size| {
             let prev = seen.clone();
             seen.push(size);
-            create_memo(move |_| {
+            Memo::new(move |_| {
                 // Proximal "nearest" and distal "furthest" are distances from the inner edge
                 let proximal = prev.iter().map(|s| s.get()).sum::<f64>();
                 let distal = proximal + size.get();

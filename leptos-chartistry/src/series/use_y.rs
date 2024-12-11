@@ -2,10 +2,11 @@ use super::{
     bar::{RenderBar, UseBar},
     line::{RenderLine, UseLine},
 };
-use crate::{bounds::Bounds, debug::DebugRect, state::State};
-use leptos::*;
+use crate::{bounds::Bounds, debug::DebugRect, state::State, Tick};
+use leptos::{either::Either, prelude::*};
 
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct UseY {
     pub id: usize,
     pub name: RwSignal<String>,
@@ -37,7 +38,7 @@ impl UseY {
     }
 
     fn taster_bounds(font_height: Memo<f64>, font_width: Memo<f64>) -> Memo<Bounds> {
-        create_memo(move |_| Bounds::new(font_width.get() * 2.5, font_height.get()))
+        Memo::new(move |_| Bounds::new(font_width.get() * 2.5, font_height.get()))
     }
 
     pub fn snippet_width(font_height: Memo<f64>, font_width: Memo<f64>) -> Signal<f64> {
@@ -47,29 +48,29 @@ impl UseY {
 }
 
 #[component]
-pub(super) fn RenderUseY<X: 'static, Y: 'static>(
+pub(super) fn RenderUseY<X: Tick, Y: Tick>(
     use_y: UseY,
     state: State<X, Y>,
     positions: Signal<Vec<(f64, f64)>>,
 ) -> impl IntoView {
     let desc = use_y.desc.clone();
     match desc {
-        UseYDesc::Line(line) => view! {
+        UseYDesc::Line(line) => Either::Left(view! {
             <RenderLine
                 use_y=use_y
                 line=line
                 data=state.pre.data
                 positions=positions
                 markers=positions />
-        },
-        UseYDesc::Bar(bar) => view! {
+        }),
+        UseYDesc::Bar(bar) => Either::Right(view! {
             <RenderBar bar=bar state=state positions=positions />
-        },
+        }),
     }
 }
 
 #[component]
-pub fn Snippet<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl IntoView {
+pub fn Snippet<X: Tick, Y: Tick>(series: UseY, state: State<X, Y>) -> impl IntoView {
     let debug = state.pre.debug;
     let name = series.name;
     view! {
@@ -82,7 +83,7 @@ pub fn Snippet<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl
 }
 
 #[component]
-fn Taster<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl IntoView {
+fn Taster<X: Tick, Y: Tick>(series: UseY, state: State<X, Y>) -> impl IntoView {
     const Y_OFFSET: f64 = 2.0;
     let debug = state.pre.debug;
     let font_width = state.pre.font_width;
@@ -102,18 +103,18 @@ fn Taster<X: 'static, Y: 'static>(series: UseY, state: State<X, Y>) -> impl Into
                 let bounds = bounds.get();
                 vec![(bounds.centre_x(), bounds.centre_y() + Y_OFFSET)]
             });
-            view! {
+            Either::Left(view! {
                 <RenderLine
                     use_y=series.clone()
                     line=line.clone()
                     data=state.pre.data
                     positions=positions
                     markers=markers />
-            }
+            })
         }
-        UseYDesc::Bar(bar) => view! {
+        UseYDesc::Bar(bar) => Either::Right(view! {
             <RenderBar bar=bar.clone() state=state positions=positions />
-        },
+        }),
     };
 
     view! {

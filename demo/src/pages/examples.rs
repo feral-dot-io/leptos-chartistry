@@ -2,14 +2,15 @@ use crate::{
     examples::{aspect_sunspots::AspectRatioSunspots, *},
     use_app_context,
 };
-use js_sys::wasm_bindgen::JsCast;
-use leptos::{html::Dialog, *};
-use leptos_router::{use_location, use_navigate, NavigateOptions};
+use leptos::{
+    either::{Either, EitherOf10},
+    prelude::*,
+};
 use strum::VariantArray;
-use web_sys::{HtmlDialogElement, MouseEvent};
 
 #[derive(Copy, Clone, Debug, PartialEq, VariantArray)]
 pub enum Example {
+    // Note: changes here requires an update to routes and impl_example_view
     Line,
     StackedLine,
     Bar,
@@ -64,7 +65,7 @@ impl Example {
         }
     }
 
-    fn id(self) -> &'static str {
+    pub const fn id(self) -> &'static str {
         match self {
             Self::Line => "series-line",
             Self::StackedLine => "series-line-stack",
@@ -139,11 +140,11 @@ impl Example {
         }
     }
 
-    fn extra_class(self) -> Option<AttributeValue> {
+    fn extra_class(self) -> (&'static str, bool) {
         match self {
-            Self::LineGradient => Some("slim".into()),
-            Self::Css => Some("my-theme".into()),
-            _ => None,
+            Self::LineGradient => ("slim", true),
+            Self::Css => ("my-theme", true),
+            _ => ("", false),
         }
     }
 
@@ -151,52 +152,67 @@ impl Example {
         let de = use_app_context().debug.into();
         let da = load_data();
         match self {
-            Self::Line => view!(<series_line::Example debug=de data=da />),
-            Self::StackedLine => view!(<series_line_stack::Example debug=de data=da />),
-            Self::Bar => view!(<series_bar::Example debug=de data=da />),
-            Self::Legend => view!(<edge_legend::Example debug=de data=da />),
-            Self::TickLabels => view!(<edge_tick_labels::Example debug=de data=da />),
-            Self::RotatedLabel => view!(<edge_rotated_label::Example debug=de data=da />),
-            Self::EdgeLayout => view!(<edge_layout::Example debug=de data=da />),
-            Self::AxisMarker => view!(<inner_axis_marker::Example debug=de data=da />),
-            Self::GridLine => view!(<inner_grid_line::Example debug=de data=da />),
-            Self::GuideLine => view!(<inner_guide_line::Example debug=de data=da />),
-            Self::InsetLegend => view!(<inner_legend::Example debug=de data=da />),
-            Self::InnerLayout => view!(<inner_layout::Example debug=de data=da />),
-            Self::MixedInterpolation => view!(<interpolation_mixed::Example debug=de data=da />),
-            Self::Stepped => view!(<interpolation_stepped::Example debug=de data=da />),
-            Self::Tooltip => view!(<feature_tooltip::Example debug=de data=da />),
-            Self::Colours => view!(<feature_colours::Example debug=de data=da />),
-            Self::Markers => view!(<feature_markers::Example debug=de data=da />),
-            Self::Markers2 => view!(<feature_markers_2::Example debug=de data=da />),
-            Self::LineGradient => view!(<feature_line_gradient::Example debug=de data=da />),
-            Self::Css => view!(<feature_css::Example debug=de data=da />),
+            Self::Line => Either::Left(EitherOf10::A(view! {
+                <series_line::Example debug=de data=da />
+            })),
+            Self::StackedLine => Either::Left(EitherOf10::B(view! {
+                <series_line_stack::Example debug=de data=da />
+            })),
+            Self::Bar => Either::Left(EitherOf10::C(view! {
+                <series_bar::Example debug=de data=da />
+            })),
+            Self::Legend => Either::Left(EitherOf10::D(view! {
+                <edge_legend::Example debug=de data=da />
+            })),
+            Self::TickLabels => Either::Left(EitherOf10::E(view! {
+                <edge_tick_labels::Example debug=de data=da />
+            })),
+            Self::RotatedLabel => Either::Left(EitherOf10::F(view! {
+                <edge_rotated_label::Example debug=de data=da />
+            })),
+            Self::EdgeLayout => Either::Left(EitherOf10::G(view! {
+                <edge_layout::Example debug=de data=da />
+            })),
+            Self::AxisMarker => Either::Left(EitherOf10::H(view! {
+                <inner_axis_marker::Example debug=de data=da />
+            })),
+            Self::GridLine => Either::Left(EitherOf10::I(view! {
+                <inner_grid_line::Example debug=de data=da />
+            })),
+            Self::GuideLine => Either::Left(EitherOf10::J(view! {
+                <inner_guide_line::Example debug=de data=da />
+            })),
+            Self::InsetLegend => Either::Right(EitherOf10::A(view! {
+                <inner_legend::Example debug=de data=da />
+            })),
+            Self::InnerLayout => Either::Right(EitherOf10::B(view! {
+                <inner_layout::Example debug=de data=da />
+            })),
+            Self::MixedInterpolation => Either::Right(EitherOf10::C(view! {
+                <interpolation_mixed::Example debug=de data=da />
+            })),
+            Self::Stepped => Either::Right(EitherOf10::D(view! {
+                <interpolation_stepped::Example debug=de data=da />
+            })),
+            Self::Tooltip => Either::Right(EitherOf10::E(view! {
+                <feature_tooltip::Example debug=de data=da />
+            })),
+            Self::Colours => Either::Right(EitherOf10::F(view! {
+                <feature_colours::Example debug=de data=da />
+            })),
+            Self::Markers => Either::Right(EitherOf10::G(view! {
+                <feature_markers::Example debug=de data=da />
+            })),
+            Self::Markers2 => Either::Right(EitherOf10::H(view! {
+                <feature_markers_2::Example debug=de data=da />
+            })),
+            Self::LineGradient => Either::Right(EitherOf10::I(view! {
+                <feature_line_gradient::Example debug=de data=da />
+            })),
+            Self::Css => Either::Right(EitherOf10::J(view! {
+                <feature_css::Example debug=de data=da />
+            })),
         }
-    }
-
-    fn page_view(self) -> impl IntoView {
-        // Note: page-specific variants that do more than just the card view should be referenced here. Falls back to the card view if not implemented.
-        view! {
-            <Example example=self />
-        }
-    }
-}
-
-#[component(transparent)]
-pub fn Routes(prefix: &'static str) -> impl IntoView {
-    use leptos_router::*;
-    // Note: this was incredibly awkward and fiddly to get right. The `Route::children` attribute requires a `Fragment` built from a `Vec<View>`. The `View` must be made up of a transparent `Route` component. It seems any deviation from this e.g., using `CollectView` results in a "tried to mount a Transparent node." error from Leptos.
-    let children = Example::VARIANTS
-        .iter()
-        .map(|ex| {
-            view! {
-                <Route path=format!("/{}.html", ex.id()) view=|| ex.page_view() />
-            }
-        })
-        .map(|r| r.into_view())
-        .collect::<Fragment>();
-    view! {
-        <Route path=prefix view=|| view!(<Outlet />) children=Box::new(|| children) />
     }
 }
 
@@ -205,42 +221,45 @@ fn Card(example: Example, #[prop(optional)] h1: bool) -> impl IntoView {
     let id = example.id();
     let url = format!("examples/{id}.html");
     let heading = if h1 {
-        view!( <h1 id=id><a href=&url>{example.title()}</a></h1> ).into_view()
+        Either::Left(view! {
+            <h1 id=id><a href=url.clone()>{example.title()}</a></h1>
+        })
     } else {
-        view!( <h3 id=id><a href=&url>{example.title()}</a></h3> ).into_view()
+        Either::Right(view! {
+            <h3 id=id><a href=url.clone()>{example.title()}</a></h3>
+        })
     };
     view! {
         <figure class:background-box=true class=example.extra_class()>
             <figcaption>
                 {heading}
-                <p>{example.description()} " " <a href=&url>"Show example code"</a></p>
+                <p>{example.description()} " " <a href=url>"Show example code"</a></p>
             </figcaption>
             {example.card_view()}
         </figure>
     }
 }
 
-#[component]
-pub fn Example(example: Example) -> impl IntoView {
+pub fn view_example(example: Example) -> impl IntoView {
     let app = use_app_context();
     view! {
         <article class="example">
             <div class="cards">
                 <Card example=example h1=true />
-                <div class="background-box debug">
+                <div class="background-box debug-box">
                     <label>
-                        <input type="checkbox" type="checkbox" prop:checked=app.debug
+                        <input type="checkbox" prop:checked=app.debug
                             on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
                         " Toggle debug mode"
                     </label>
                 </div>
             </div>
             <div class="background-box code">
-                <h2 class="connect-heading">"Example code"</h2>
                 <div inner_html=example.code() />
             </div>
         </article>
     }
+    .into_any()
 }
 
 #[component]
@@ -251,7 +270,7 @@ pub fn Examples() -> impl IntoView {
         <article id="examples">
             <p class="debug-box background-box">
                 <label>
-                    <input type="checkbox" type="checkbox" prop:checked=app.debug
+                    <input type="checkbox" prop:checked=app.debug
                         on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
                     " Toggle debug mode"
                 </label>
@@ -308,68 +327,9 @@ pub fn Examples() -> impl IntoView {
             </div>
 
             <section id="aspect-ratio" class="background-box">
-                <h2><a href="examples.html#aspect-ratio">"Aspect ratio"</a></h2>
+                <h2 class="always-underline"><a href="examples.html#aspect-ratio">"Aspect ratio"</a></h2>
                 <AspectRatioSunspots debug=app.debug.into() />
-                <p><ShowCode id="aspect-ratio" code=include_str!("../examples/aspect_sunspots.rs") /></p>
             </section>
         </article>
-    }
-}
-
-#[component]
-fn ShowCode(#[prop(into)] id: String, #[prop(into)] code: String) -> impl IntoView {
-    let dialog = create_node_ref::<Dialog>();
-    let href = format!("examples.html#{}", id);
-
-    // Opens dialogue on demand
-    let show_modal = move |dialog: HtmlElement<Dialog>| {
-        dialog
-            .show_modal()
-            .expect("unable to show example code dialog")
-    };
-
-    let on_click = move |_| {
-        dialog.get().map(show_modal);
-    };
-    let on_dismiss = move |ev: MouseEvent| {
-        if let Some(dialog) = dialog.get() {
-            if let Some(target) = ev.target() {
-                // Skip if click was inside the dialog
-                if target.dyn_ref::<HtmlDialogElement>().is_some() {
-                    dialog.close();
-                    // Navigate away from the fragment
-                    use_navigate()(
-                        &use_location().pathname.get(),
-                        NavigateOptions {
-                            resolve: true,
-                            replace: true,
-                            scroll: false,
-                            state: Default::default(),
-                        },
-                    );
-                }
-            }
-        }
-    };
-
-    // Show if page fragment matches ID
-    // TODO investigate why this triggers a panic https://docs.rs/leptos/latest/leptos/struct.NodeRef.html#method.on_load
-    create_render_effect(move |_| {
-        if let Some(dialog) = dialog.get() {
-            let hash = use_location().hash.get().trim_start_matches('#').to_owned();
-            let hash: String = js_sys::decode_uri(&hash)
-                .map(|s| s.into())
-                .unwrap_or_default();
-            if hash == id {
-                let _ = dialog.on_mount(show_modal);
-            }
-        }
-    });
-
-    view! {
-        <a href=href on:click=on_click>"Show example code"</a>
-        <dialog node_ref=dialog on:click=on_dismiss>
-            <pre><code>{code}</code></pre>
-        </dialog>
-    }
+    }.into_any()
 }

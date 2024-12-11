@@ -9,8 +9,8 @@ use crate::{
     series::GetYValue,
     ColourScheme, Tick,
 };
-use leptos::*;
-use std::rc::Rc;
+use leptos::prelude::*;
+use std::sync::Arc;
 
 /// Suggested colour scheme for a linear gradient on a line. Uses darker colours for lower values and lighter colours for higher values. Assumes a light background.
 pub const LINEAR_GRADIENT: SequentialGradient = LIPARI;
@@ -41,8 +41,9 @@ pub const DIVERGING_GRADIENT: DivergingGradient = BERLIN;
 ///     .line(Line::new(|data: &MyData| data.y2).with_name("apples"));
 /// ```
 /// See this in action with the [legend example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#legend).
+#[non_exhaustive]
 pub struct Line<T, Y> {
-    get_y: Rc<dyn GetYValue<T, Y>>,
+    get_y: Arc<dyn GetYValue<T, Y>>,
     /// Name of the line. Used in the legend.
     pub name: RwSignal<String>,
     /// Colour of the line. If not set, the next colour in the series will be used.
@@ -70,16 +71,16 @@ impl<T, Y> Line<T, Y> {
     /// Create a new line. The `get_y` function is used to extract the Y value from your struct.
     ///
     /// See the module documentation for examples.
-    pub fn new(get_y: impl Fn(&T) -> Y + 'static) -> Self
+    pub fn new(get_y: impl Fn(&T) -> Y + Send + Sync + 'static) -> Self
     where
         Y: Tick,
     {
         Self {
-            get_y: Rc::new(get_y),
+            get_y: Arc::new(get_y),
             name: RwSignal::default(),
             colour: RwSignal::default(),
             gradient: RwSignal::default(),
-            width: 1.0.into(),
+            width: RwSignal::new(1.0),
             interpolation: RwSignal::default(),
             marker: Marker::default(),
         }
@@ -138,31 +139,31 @@ impl<T, Y> Clone for Line<T, Y> {
     }
 }
 
-impl<T, Y: Tick, F: Fn(&T) -> Y + 'static> From<F> for Line<T, Y> {
+impl<T, Y: Tick, F: Fn(&T) -> Y + Send + Sync + 'static> From<F> for Line<T, Y> {
     fn from(f: F) -> Self {
         Self::new(f)
     }
 }
 
-impl<T, Y: Tick, U: Fn(&T) -> Y> GetYValue<T, Y> for U {
+impl<T, Y: Tick, U: Fn(&T) -> Y + Send + Sync> GetYValue<T, Y> for U {
     fn value(&self, t: &T) -> Y {
         self(t)
     }
 
-    fn cumulative_value(&self, t: &T) -> Y {
+    fn stacked_value(&self, t: &T) -> Y {
         self(t)
     }
 }
 
 impl<T, Y> ApplyUseSeries<T, Y> for Line<T, Y> {
-    fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
+    fn apply_use_series(self: Arc<Self>, series: &mut SeriesAcc<T, Y>) {
         let colour = series.next_colour();
         _ = series.push_line(colour, (*self).clone());
     }
 }
 
 impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
-    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Arc<dyn GetYValue<T, Y>>) {
         let override_colour = self.colour;
         let colour = Signal::derive(move || override_colour.get().unwrap_or(colour.get()));
         let line = UseY::new_line(
@@ -181,7 +182,7 @@ impl<T, Y> IntoUseLine<T, Y> for Line<T, Y> {
 }
 
 #[component]
-pub fn RenderLine<X: 'static, Y: 'static>(
+pub fn RenderLine<X: Tick, Y: Tick>(
     use_y: UseY,
     line: UseLine,
     data: UseData<X, Y>,
@@ -209,15 +210,16 @@ pub fn RenderLine<X: 'static, Y: 'static>(
             .get()
             .unwrap_or_else(|| LINEAR_GRADIENT.into())
     });
-    let range_y = Signal::derive(move || data.range_y.with(|range_y| range_y.positions()));
+    let range_y = Signal::derive(move || data.range_y.read().positions());
 
+    let width = line.width;
     view! {
         <g
             class="_chartistry_line"
             stroke=stroke
             stroke-linecap="round"
             stroke-linejoin="bevel"
-            stroke-width=line.width>
+            stroke-width=width>
             <defs>
                 <Show when=move || line.gradient.get().is_some()>
                     <LinearGradientSvg

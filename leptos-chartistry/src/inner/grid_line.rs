@@ -1,10 +1,8 @@
-use super::UseInner;
 use crate::{
     colours::Colour, debug::DebugRect, projection::Projection, state::State, ticks::GeneratedTicks,
     Tick, TickLabels,
 };
-use leptos::*;
-use std::rc::Rc;
+use leptos::prelude::*;
 
 /// Default colour for grid lines.
 pub const GRID_LINE_COLOUR: Colour = Colour::from_rgb(0xEF, 0xF2, 0xFA);
@@ -12,19 +10,20 @@ pub const GRID_LINE_COLOUR: Colour = Colour::from_rgb(0xEF, 0xF2, 0xFA);
 macro_rules! impl_grid_line {
     ($name:ident) => {
         /// Builds a tick-aligned grid line across the inner chart area.
-        #[derive(Clone)]
-        pub struct $name<Tick: 'static> {
+        #[derive(Clone, Debug, PartialEq)]
+        #[non_exhaustive]
+        pub struct $name<XY: Tick> {
             /// Width of the grid line.
             pub width: RwSignal<f64>,
             /// Colour of the grid line.
             pub colour: RwSignal<Colour>,
             /// Ticks to align the grid line to.
-            pub ticks: TickLabels<Tick>,
+            pub ticks: TickLabels<XY>,
         }
 
-        impl<Tick: crate::Tick> $name<Tick> {
+        impl<XY: Tick> $name<XY> {
             /// Creates a new grid line from a set of ticks.
-            pub fn from_ticks(ticks: impl Into<TickLabels<Tick>>) -> Self {
+            pub fn from_ticks(ticks: impl Into<TickLabels<XY>>) -> Self {
                 Self {
                     ticks: ticks.into(),
                     ..Default::default()
@@ -38,11 +37,11 @@ macro_rules! impl_grid_line {
             }
         }
 
-        impl<Tick: crate::Tick> Default for $name<Tick> {
+        impl<XY: Tick> Default for $name<XY> {
             fn default() -> Self {
                 Self {
-                    width: 1.0.into(),
-                    colour: create_rw_signal(GRID_LINE_COLOUR),
+                    width: RwSignal::new(1.0),
+                    colour: RwSignal::new(GRID_LINE_COLOUR),
                     ticks: TickLabels::default(),
                 }
             }
@@ -55,13 +54,13 @@ impl_grid_line!(YGridLine);
 
 macro_rules! impl_use_grid_line {
     ($name:ident) => {
-        struct $name<Tick: 'static> {
+        pub struct $name<XY: Tick> {
             width: RwSignal<f64>,
             colour: RwSignal<Colour>,
-            ticks: Signal<GeneratedTicks<Tick>>,
+            ticks: Memo<GeneratedTicks<XY>>,
         }
 
-        impl<Tick> Clone for $name<Tick> {
+        impl<XY: Tick> Clone for $name<XY> {
             fn clone(&self) -> Self {
                 Self {
                     width: self.width,
@@ -77,43 +76,34 @@ impl_use_grid_line!(UseXGridLine);
 impl_use_grid_line!(UseYGridLine);
 
 impl<X: Tick> XGridLine<X> {
-    pub(crate) fn use_horizontal<Y>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+    pub(crate) fn use_horizontal<Y: Tick>(self, state: &State<X, Y>) -> UseXGridLine<X> {
         let inner = state.layout.inner;
-        let avail_width = Signal::derive(move || with!(|inner| inner.width()));
-        Rc::new(UseXGridLine {
+        let avail_width = Signal::derive(move || inner.with(|inner| inner.width()));
+        UseXGridLine {
             width: self.width,
             colour: self.colour,
             ticks: self.ticks.generate_x(&state.pre, avail_width),
-        })
+        }
     }
 }
 
 impl<Y: Tick> YGridLine<Y> {
-    pub(crate) fn use_vertical<X>(self, state: &State<X, Y>) -> Rc<dyn UseInner<X, Y>> {
+    pub(crate) fn use_vertical<X: Tick>(self, state: &State<X, Y>) -> UseYGridLine<Y> {
         let inner = state.layout.inner;
-        let avail_height = Signal::derive(move || with!(|inner| inner.height()));
-        Rc::new(UseYGridLine {
+        let avail_height = Signal::derive(move || inner.with(|inner| inner.height()));
+        UseYGridLine {
             width: self.width,
             colour: self.colour,
             ticks: self.ticks.generate_y(&state.pre, avail_height),
-        })
-    }
-}
-
-impl<X: Tick, Y> UseInner<X, Y> for UseXGridLine<X> {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <ViewXGridLine line=(*self).clone() state=state /> )
-    }
-}
-
-impl<X, Y: Tick> UseInner<X, Y> for UseYGridLine<Y> {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <ViewYGridLine line=(*self).clone() state=state /> )
+        }
     }
 }
 
 #[component]
-fn ViewXGridLine<X: Tick, Y: 'static>(line: UseXGridLine<X>, state: State<X, Y>) -> impl IntoView {
+pub(super) fn XGridLine<X: Tick, Y: Tick>(
+    line: UseXGridLine<X>,
+    state: State<X, Y>,
+) -> impl IntoView {
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
@@ -147,7 +137,10 @@ fn ViewXGridLine<X: Tick, Y: 'static>(line: UseXGridLine<X>, state: State<X, Y>)
 }
 
 #[component]
-fn ViewYGridLine<X: 'static, Y: Tick>(line: UseYGridLine<Y>, state: State<X, Y>) -> impl IntoView {
+pub(super) fn YGridLine<X: Tick, Y: Tick>(
+    line: UseYGridLine<Y>,
+    state: State<X, Y>,
+) -> impl IntoView {
     let debug = state.pre.debug;
     let inner = state.layout.inner;
     let proj = state.projection;
@@ -180,8 +173,8 @@ fn ViewYGridLine<X: 'static, Y: Tick>(line: UseYGridLine<Y>, state: State<X, Y>)
     }
 }
 
-fn for_ticks<Tick: crate::Tick>(
-    ticks: Signal<GeneratedTicks<Tick>>,
+fn for_ticks<XY: Tick>(
+    ticks: Memo<GeneratedTicks<XY>>,
     proj: Signal<Projection>,
     is_x: bool,
 ) -> Vec<(f64, String)> {

@@ -9,10 +9,11 @@ use crate::{
     Series, Tick,
 };
 use data::Data;
-use leptos::*;
+use leptos::prelude::*;
 
 #[derive(Clone)]
-pub struct UseData<X: 'static, Y: 'static> {
+#[non_exhaustive]
+pub struct UseData<X: Tick, Y: Tick> {
     data: Memo<Data<X, Y>>,
     pub len: Memo<usize>,
     pub series: Memo<Vec<UseY>>,
@@ -22,13 +23,16 @@ pub struct UseData<X: 'static, Y: 'static> {
 }
 
 impl<X: Tick, Y: Tick> UseData<X, Y> {
-    pub fn new<T: 'static>(series: Series<T, X, Y>, data: Signal<Vec<T>>) -> UseData<X, Y> {
+    pub fn new<T: Send + Sync + 'static>(
+        series: Series<T, X, Y>,
+        data: Signal<Vec<T>>,
+    ) -> UseData<X, Y> {
         let lines = series.to_use_lines();
 
         // Data values
         let data = {
             let lines = lines.clone();
-            create_memo(move |_| {
+            Memo::new(move |_| {
                 let get_x = series.get_x.clone();
                 data.with(|data| {
                     Data::new(
@@ -45,11 +49,11 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
         };
 
         // Range signals
-        let range_x: Memo<Range<X>> = create_memo(move |_| {
+        let range_x: Memo<Range<X>> = Memo::new(move |_| {
             data.with(|data| data.range_x())
                 .maybe_update(vec![series.min_x.get(), series.max_x.get()])
         });
-        let range_y: Memo<Range<Y>> = create_memo(move |_| {
+        let range_y: Memo<Range<Y>> = Memo::new(move |_| {
             data.with(|data| data.range_y())
                 .maybe_update(vec![series.min_y.get(), series.max_y.get()])
         });
@@ -57,18 +61,18 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
         // Sort series by name
         let series = {
             let (lines, _): (Vec<_>, Vec<_>) = lines.into_iter().unzip();
-            create_memo(move |_| {
+            Memo::new(move |_| {
                 let mut lines = lines.clone();
                 lines.sort_by_key(|line| line.name.get());
                 lines
             })
         };
         let includes_bars =
-            create_memo(move |_| series.get().iter().any(|use_y| use_y.bar().is_some()));
+            Memo::new(move |_| series.get().iter().any(|use_y| use_y.bar().is_some()));
 
         UseData {
             data,
-            len: create_memo(move |_| with!(|data| data.len())),
+            len: Memo::new(move |_| data.with(|data| data.len())),
             series,
             includes_bars,
             range_x,
@@ -80,19 +84,19 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
 impl<X: Tick, Y: Tick> UseData<X, Y> {
     pub fn nearest_data_x(&self, pos_x: Memo<f64>) -> Memo<Option<X>> {
         let data = self.data;
-        create_memo(move |_| data.with(|data| data.nearest_data_x(pos_x.get())))
+        Memo::new(move |_| data.with(|data| data.nearest_data_x(pos_x.get())))
     }
 
     pub fn nearest_position_x(&self, pos_x: Memo<f64>) -> Memo<Option<f64>> {
         let data = self.data;
-        create_memo(move |_| data.with(|data| data.nearest_position_x(pos_x.get())))
+        Memo::new(move |_| data.with(|data| data.nearest_position_x(pos_x.get())))
     }
 
     // TODO: this can never be None
     pub fn nearest_data_y(&self, pos_x: Memo<f64>) -> Memo<Vec<(UseY, Option<Y>)>> {
         let series = self.series;
         let data = self.data;
-        create_memo(move |_| {
+        Memo::new(move |_| {
             let y_values = data.with(|data| data.nearest_data_y(pos_x.get()));
             series
                 .get()

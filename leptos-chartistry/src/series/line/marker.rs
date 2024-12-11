@@ -1,12 +1,13 @@
 use super::UseLine;
 use crate::colours::Colour;
-use leptos::*;
+use leptos::{either::EitherOf7, prelude::*};
 
 // Scales our marker (drawn -1 to 1) to a 1.0 line width
 const WIDTH_TO_MARKER: f64 = 8.0;
 
 /// Describes a line point marker.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Marker {
     /// Shape of the marker. Default is no marker.
     pub shape: RwSignal<MarkerShape>,
@@ -46,9 +47,9 @@ impl Default for Marker {
         Self {
             shape: RwSignal::default(),
             colour: RwSignal::default(),
-            scale: create_rw_signal(1.0),
+            scale: RwSignal::new(1.0),
             border: RwSignal::default(),
-            border_width: create_rw_signal(0.0),
+            border_width: RwSignal::new(0.0),
         }
     }
 }
@@ -63,7 +64,7 @@ impl Marker {
     /// Create a new marker with the given shape.
     pub fn from_shape(shape: impl Into<MarkerShape>) -> Self {
         Self {
-            shape: create_rw_signal(shape.into()),
+            shape: RwSignal::new(shape.into()),
             ..Default::default()
         }
     }
@@ -107,14 +108,15 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
     });
 
     let markers = move || {
-        // Avoid the cost of empty nodes
-        if marker.shape.get() == MarkerShape::None {
-            return ().into_view();
-        }
-
+        let shape = marker.shape.get();
         // Size of our marker: proportionate to our line width
         let line_width = line.width.get();
         let diameter = line_width * WIDTH_TO_MARKER * marker.scale.get();
+
+        // Avoid the cost of empty nodes
+        if shape != MarkerShape::None {
+            return vec![].collect_view();
+        };
 
         positions.with(|positions| {
             positions
@@ -123,7 +125,7 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
                 .map(|&(x, y)| {
                     view! {
                         <MarkerShape
-                            shape=marker.shape.get()
+                            shape=shape
                             x=x
                             y=y
                             diameter=diameter
@@ -156,9 +158,9 @@ fn MarkerShape(
 ) -> impl IntoView {
     let radius = diameter / 2.0;
     match shape {
-        MarkerShape::None => ().into_view(),
+        MarkerShape::None => EitherOf7::A(()),
 
-        MarkerShape::Circle => view! {
+        MarkerShape::Circle => EitherOf7::B(view! {
             // Radius to fit inside our square / diamond -- not the viewbox rect
             <circle
                 cx=x
@@ -166,38 +168,32 @@ fn MarkerShape(
                 r=(45.0_f64).to_radians().sin() * radius
                 paint-order="stroke fill"
             />
-        }
-        .into_view(),
+        }),
 
-        MarkerShape::Square => view! {
+        MarkerShape::Square => EitherOf7::C(view! {
             <Diamond x=x y=y radius=radius rotate=45 />
-        }
-        .into_view(),
+        }),
 
-        MarkerShape::Diamond => view! {
+        MarkerShape::Diamond => EitherOf7::D(view! {
             <Diamond x=x y=y radius=radius />
-        }
-        .into_view(),
+        }),
 
-        MarkerShape::Triangle => view! {
+        MarkerShape::Triangle => EitherOf7::E(view! {
             <polygon
                 points=format!("{},{} {},{} {},{}",
                     x, y - radius,
                     x - radius, y + radius,
                     x + radius, y + radius)
                 paint-order="stroke fill"/>
-        }
-        .into_view(),
+        }),
 
-        MarkerShape::Plus => view! {
+        MarkerShape::Plus => EitherOf7::F(view! {
             <PlusPath x=x y=y diameter=diameter leg=line_width />
-        }
-        .into_view(),
+        }),
 
-        MarkerShape::Cross => view! {
+        MarkerShape::Cross => EitherOf7::G(view! {
             <PlusPath x=x y=y diameter=diameter leg=line_width rotate=45 />
-        }
-        .into_view(),
+        }),
     }
 }
 

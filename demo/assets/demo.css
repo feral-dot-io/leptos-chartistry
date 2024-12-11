@@ -44,15 +44,37 @@ header>nav>p {
 }
 
 header a {
-    text-decoration: none;
-    color: #222;
     padding: 0.2em 0;
 }
 
-header a:hover {
+h1>a,
+h2>a,
+h3>a,
+h4>a,
+h5>a,
+h6>a,
+header a,
+.always-underline {
+    text-decoration: none;
+    color: #222;
+}
+
+h1>a:hover,
+h2>a:hover,
+h3>a:hover,
+h4>a:hover,
+h5>a:hover,
+h6>a:hover,
+header a:hover,
+.always-underline {
     text-decoration: underline;
     text-decoration-color: #fc7089;
     text-decoration-thickness: 0.3em;
+    text-underline-position: under;
+}
+
+.always-underline {
+    width: fit-content;
 }
 
 header>.badges a>img {
@@ -60,21 +82,20 @@ header>.badges a>img {
 }
 
 main {
-    padding: 2em;
-    padding-top: 0;
+    margin: 1em;
 }
 
 #demo>._chartistry {
     background-color: #fff;
     border: 1px solid #000;
-    margin: 2em auto;
+    margin: 1em auto;
     width: fit-content;
 }
 
 #demo>.outer {
-    margin: 2em auto;
+    margin: 1em auto;
     display: flex;
-    gap: 2em 0.5em;
+    gap: 1em 0.5em;
     flex-wrap: wrap;
     justify-content: center;
     align-items: flex-start;
@@ -139,13 +160,23 @@ h2,
 h3,
 fieldset>legend {
     background-color: #fff;
-    border-top: 0.2em solid #fc7089;
-    border-radius: 0.5em;
     margin: 0;
-    padding: 0.5em 2em;
-    width: fit-content;
     font-size: 110%;
     font-weight: bold;
+}
+
+fieldset>legend {
+    grid-column: span 2;
+    float: left;
+    text-align: center;
+    margin-bottom: 0.5em;
+    color: #222;
+}
+
+.cards-row>h2 {
+    border-top: 0.2em solid #fc7089;
+    border-radius: 0.5em;
+    padding: 0.5em 2em;
 }
 
 ._chartistry h2,
@@ -163,19 +194,10 @@ fieldset>legend {
     padding: 1em;
 }
 
-.connect-heading {
-    margin-top: -1.5em !important;
-    margin-bottom: 0.5em !important;
-}
-
-#examples p.debug-box {
-    width: fit-content;
-}
-
 .cards-row {
     display: flex;
     flex-flow: row;
-    margin: 1.5em 0;
+    margin: 1em 0;
     gap: 2em 0.5em;
 }
 
@@ -189,14 +211,9 @@ fieldset>legend {
 .cards {
     display: flex;
     flex-flow: row wrap;
-    gap: 2em 0.5em;
+    gap: 0.5em;
 }
 
-#examples h2 a,
-#examples h3 a {
-    text-decoration: none;
-    color: #222;
-}
 
 .cards h2>em {
     font-weight: normal;
@@ -211,22 +228,16 @@ fieldset>legend {
     width: min-content;
 }
 
-.cards figure>figcaption {
-    margin-top: -2em;
-}
-
-.cards figure>figcaption>p {
-    margin-top: 0;
-}
-
 .cards figure.my-theme {
     border: 1px solid #fff;
 }
 
+.cards figure.my-theme figcaption h1,
 .cards figure.my-theme figcaption h3 {
     background-color: #2b303b;
 }
 
+.cards figure.my-theme figcaption h1>a,
 .cards figure.my-theme figcaption h3>a {
     color: #c0c5ce !important;
 }
@@ -252,11 +263,7 @@ fieldset>legend {
 }
 
 #examples section {
-    margin-top: 2em;
-}
-
-#examples section>h2 {
-    margin-top: -2em;
+    margin: 1em 0;
 }
 
 #aspect-ratio>._chartistry:first-child {
@@ -268,7 +275,7 @@ fieldset>legend {
     padding: 1em 2em;
 }
 
-.example .debug {
+.debug-box {
     width: fit-content;
     height: fit-content;
 }
@@ -277,8 +284,12 @@ fieldset>legend {
     /* From syntax theme in build.rs */
     background-color: #2b303b;
     border: 1px solid #fff;
-    margin: 2em auto;
+    margin: 1em auto;
     /* Keep vaguely left aligned */
     margin-left: 0;
     width: fit-content;
+}
+
+.example .code pre {
+    margin: 0;
 }

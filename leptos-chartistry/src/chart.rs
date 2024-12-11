@@ -10,7 +10,7 @@ use crate::{
     use_watched_node::{use_watched_node, UseWatchedNode},
     AspectRatio, Padding, Series, Tick,
 };
-use leptos::{html::Div, *};
+use leptos::{html::Div, prelude::*};
 
 pub const FONT_HEIGHT: f64 = 16.0;
 pub const FONT_WIDTH: f64 = 10.0;
@@ -23,7 +23,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// There is an [large, assorted list of examples](https://feral-dot-io.github.io/leptos-chartistry/examples.html) available. See below for a quick [line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#line-chart):
 /// ```rust
-/// use leptos::*;
+/// use leptos::prelude::*;
 /// use leptos_chartistry::*;
 ///
 /// # use chrono::prelude::*;
@@ -79,7 +79,7 @@ pub const FONT_WIDTH: f64 = 10.0;
 /// You'll also have access to this API via [`RwSignals`](https://docs.rs/leptos/latest/leptos/struct.RwSignal.html) allowing you to make changes after the chart creation. This enables fine-grained reactivity.
 ///
 /// ```rust
-/// # use leptos::*;
+/// # use leptos::prelude::*;
 /// # use leptos_chartistry::*;
 /// # #[component]
 /// # fn FindGrainedComponent() -> impl IntoView {
@@ -96,33 +96,33 @@ pub const FONT_WIDTH: f64 = 10.0;
 ///
 /// See the props below for more details. Copy and paste [examples](https://feral-dot-io.github.io/leptos-chartistry/examples.html) to get going quickly.
 #[component]
-pub fn Chart<T: 'static, X: Tick, Y: Tick>(
+pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     /// Determines the width and height of the chart. Charts with a different aspect ratio and axis ranges are difficult to compare. You're encouraged to pick an [inner aspect ratio](AspectRatio::inner_ratio) while the closest to a "don't think about it" approach is to automatically [use the environment](AspectRatio::environment).
     ///
     /// See [AspectRatio](AspectRatio) for a detailed explanation.
     #[prop(into)]
-    aspect_ratio: MaybeSignal<AspectRatio>,
+    aspect_ratio: Signal<AspectRatio>,
 
     /// The height of the font used in the chart. Passed to [SVG text](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text). Default is 16.
     #[prop(into, optional)]
-    font_height: Option<MaybeSignal<f64>>,
+    font_height: Option<Signal<f64>>,
 
     /// The width must be the exact width of a monospaced character in the font used. Along with font_height, it is used to calculate the dimensions of text. These dimensions are then fed into layout composition to render the chart. The default is 10.
     #[prop(into, optional)]
-    font_width: Option<MaybeSignal<f64>>,
+    font_width: Option<Signal<f64>>,
 
     /// Debug mode. If enabled shows lines around components and prints render info to the console. Useful for getting an idea of how the chart is rendering itself. Below is an example of how you might use it in development. Default is false.
     ///
     /// ```rust
-    /// # use leptos::*;
+    /// # use leptos::prelude::*;
     /// # use leptos_chartistry::*;
     /// # #[component]
     /// # fn DebugComponent() -> impl IntoView {
-    /// let (debug, set_debug) = create_signal(true);
+    /// let (debug, set_debug) = signal(true);
     /// view! {
     ///     <p>
     ///         <label>
-    ///             <input type="checkbox" input type="checkbox"
+    ///             <input type="checkbox"
     ///                 on:input=move |ev| set_debug.set(event_target_checked(&ev)) />
     ///             " Toggle debug mode"
     ///         </label>
@@ -139,11 +139,11 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     /// # }
     /// ```
     #[prop(into, optional)]
-    debug: MaybeSignal<bool>,
+    debug: Signal<bool>,
 
     /// Padding adds spacing around chart components. Default is the font width.
     #[prop(into, optional)]
-    padding: Option<MaybeSignal<Padding>>,
+    padding: Option<Signal<Padding>>,
 
     /// Top edge components. See [IntoEdge](crate::IntoEdge) for details. Default is none.
     #[prop(into, optional)]
@@ -172,14 +172,14 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
     #[prop(into)]
     data: Signal<Vec<T>>,
 ) -> impl IntoView {
-    let root = create_node_ref::<Div>();
+    let root = NodeRef::<Div>::new();
     let watch = use_watched_node(root);
 
     // Aspect ratio signal
-    let have_dimensions = create_memo(move |_| watch.bounds.get().is_some());
-    let width = create_memo(move |_| watch.bounds.get().unwrap_or_default().width());
-    let height = create_memo(move |_| watch.bounds.get().unwrap_or_default().height());
-    let calc = AspectRatio::known_signal(aspect_ratio.clone(), width, height);
+    let have_dimensions = Memo::new(move |_| watch.bounds.get().is_some());
+    let width = Memo::new(move |_| watch.bounds.get().unwrap_or_default().width());
+    let height = Memo::new(move |_| watch.bounds.get().unwrap_or_default().height());
+    let calc = AspectRatio::known_signal(aspect_ratio, width, height);
     let env_size = move || {
         if aspect_ratio.get().is_env() {
             "100%"
@@ -188,10 +188,10 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
         }
     };
 
-    let debug = create_memo(move |_| debug.get());
-    let font_height = create_memo(move |_| font_height.map(|f| f.get()).unwrap_or(FONT_HEIGHT));
-    let font_width = create_memo(move |_| font_width.map(|f| f.get()).unwrap_or(FONT_WIDTH));
-    let padding = create_memo(move |_| {
+    let debug = Memo::new(move |_| debug.get());
+    let font_height = Memo::new(move |_| font_height.map(|f| f.get()).unwrap_or(FONT_HEIGHT));
+    let font_width = Memo::new(move |_| font_width.map(|f| f.get()).unwrap_or(FONT_WIDTH));
+    let padding = Memo::new(move |_| {
         padding
             .map(|p| p.get())
             .unwrap_or_else(move || Padding::from(font_width.get()))
@@ -211,7 +211,7 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
         <div
             node_ref=root
             class="_chartistry"
-            style:width=env_size.clone()
+            style:width=env_size
             style:height=env_size
             style="overflow: visible;">
             <DebugRect label="Chart" debug=debug />
@@ -220,10 +220,10 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
                     watch=watch.clone()
                     pre_state=pre.clone()
                     aspect_ratio=calc
-                    top=top.as_slice()
-                    right=right.as_slice()
-                    bottom=bottom.as_slice()
-                    left=left.as_slice()
+                    top=top.clone()
+                    right=right.clone()
+                    bottom=bottom.clone()
+                    left=left.clone()
                     inner=inner.clone()
                     tooltip=tooltip.clone()
                 />
@@ -233,28 +233,28 @@ pub fn Chart<T: 'static, X: Tick, Y: Tick>(
 }
 
 #[component]
-fn RenderChart<'a, X: Tick, Y: Tick>(
+fn RenderChart<X: Tick, Y: Tick>(
     watch: UseWatchedNode,
     pre_state: PreState<X, Y>,
     aspect_ratio: Memo<KnownAspectRatio>,
-    top: &'a [EdgeLayout<X>],
-    right: &'a [EdgeLayout<Y>],
-    bottom: &'a [EdgeLayout<X>],
-    left: &'a [EdgeLayout<Y>],
+    top: Vec<EdgeLayout<X>>,
+    right: Vec<EdgeLayout<Y>>,
+    bottom: Vec<EdgeLayout<X>>,
+    left: Vec<EdgeLayout<Y>>,
     inner: Vec<InnerLayout<X, Y>>,
     tooltip: Tooltip<X, Y>,
 ) -> impl IntoView {
     let debug = pre_state.debug;
 
     // Compose edges
-    let (layout, edges) = Layout::compose(top, right, bottom, left, aspect_ratio, &pre_state);
+    let (layout, edges) = Layout::compose(&top, &right, &bottom, &left, aspect_ratio, &pre_state);
 
     // Finalise state
     let projection = {
         let range_x = pre_state.data.range_x;
         let range_y = pre_state.data.range_y;
         let includes_bars = pre_state.data.includes_bars;
-        create_memo(move |_| {
+        Memo::new(move |_| {
             let mut inner = layout.inner.get();
             // If we include bars, shrink the sides by half the width of X
             if includes_bars.get() {
@@ -285,7 +285,7 @@ fn RenderChart<'a, X: Tick, Y: Tick>(
         <svg
             width=move || format!("{}px", outer.get().width())
             height=move || format!("{}px", outer.get().height())
-            viewBox=move || with!(|outer| format!("0 0 {} {}", outer.width(), outer.height()))
+            viewBox=move || outer.with(|outer| format!("0 0 {} {}", outer.width(), outer.height()))
             style="display: block; overflow: visible;">
             <DebugRect label="RenderChart" debug=debug bounds=vec![outer.into()] />
             <CommonDefs />

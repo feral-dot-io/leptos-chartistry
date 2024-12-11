@@ -16,14 +16,14 @@ chrono = "0.4"
 console_error_panic_hook = "0.1"
 console_log = "1.0"
 js-sys = "0.3"
-leptos = { version = "0.6", features = ["csr"] }
+leptos = { version = "0.7", features = ["csr"] }
 leptos-chartistry = { path = "../leptos-chartistry" }
-leptos_meta = { version = "0.6", features = ["csr"] }
-leptos_router = { version = "0.6", features = ["csr"] }
-leptos-use = "0.13"
+leptos_meta.version = "0.7"
+leptos_router.version = "0.7"
+leptos-use = "0.14"
 log = "0.4"
-strum = { version = "0.26.2", features = ["derive"] }
+strum = { version = "0.26", features = ["derive"] }
 web-sys = "0.3"
 
 # Pinned. Must also be specified in flake.nix
-wasm-bindgen = "= 0.2.93"
+wasm-bindgen = "= 0.2.99"

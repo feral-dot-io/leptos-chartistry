@@ -4,6 +4,7 @@ use crate::Tick;
 pub struct Range<T>(Option<InnerRange<T>>);
 
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct InnerRange<T> {
     pub min: (T, f64),
     pub max: (T, f64),

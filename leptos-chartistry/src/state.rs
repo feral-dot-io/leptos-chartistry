@@ -2,10 +2,11 @@ use crate::{
     layout::Layout, projection::Projection, series::UseData, use_watched_node::UseWatchedNode,
     Padding, Tick,
 };
-use leptos::signal_prelude::*;
+use leptos::prelude::*;
 
 #[derive(Clone)]
-pub struct PreState<X: 'static, Y: 'static> {
+#[non_exhaustive]
+pub struct PreState<X: Tick, Y: Tick> {
     pub debug: Signal<bool>,
     pub font_height: Memo<f64>,
     pub font_width: Memo<f64>,
@@ -14,7 +15,8 @@ pub struct PreState<X: 'static, Y: 'static> {
 }
 
 #[derive(Clone)]
-pub struct State<X: 'static, Y: 'static> {
+#[non_exhaustive]
+pub struct State<X: Tick, Y: Tick> {
     pub pre: PreState<X, Y>,
     pub layout: Layout,
     pub projection: Signal<Projection>,
@@ -31,7 +33,7 @@ pub struct State<X: 'static, Y: 'static> {
     pub hover_position_x: Memo<f64>,
 }
 
-impl<X, Y> PreState<X, Y> {
+impl<X: Tick, Y: Tick> PreState<X, Y> {
     pub fn new(
         debug: Signal<bool>,
         font_height: Memo<f64>,
@@ -61,17 +63,17 @@ impl<X: Tick, Y: Tick> State<X, Y> {
         let hover_inner = node.mouse_hover_inner(layout.inner);
 
         // Data
-        let hover_position = create_memo(move |_| {
+        let hover_position = Memo::new(move |_| {
             let (mouse_x, mouse_y) = mouse_chart.get();
             proj.get().svg_to_position(mouse_x, mouse_y)
         });
-        let hover_position_x = create_memo(move |_| hover_position.get().0);
+        let hover_position_x = Memo::new(move |_| hover_position.get().0);
 
         Self {
             pre,
             layout,
             projection: proj,
-            svg_zero: create_memo(move |_| proj.get().position_to_svg(0.0, 0.0)),
+            svg_zero: Memo::new(move |_| proj.get().position_to_svg(0.0, 0.0)),
 
             mouse_page: node.mouse_page,
             mouse_chart,

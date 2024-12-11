@@ -11,7 +11,7 @@
 //! Below is an example chart:
 //!
 //! ```rust
-//! use leptos::*;
+//! use leptos::prelude::*;
 //! use leptos_chartistry::*;
 //!
 //! # use chrono::prelude::*;
@@ -90,4 +90,4 @@ pub use series::{
     Bar, BarPlacement, Interpolation, Line, Marker, MarkerShape, Series, Stack, Step, BAR_GAP,
     BAR_GAP_INNER, DIVERGING_GRADIENT, LINEAR_GRADIENT, SERIES_COLOUR_SCHEME, STACK_COLOUR_SCHEME,
 };
-pub use ticks::{AlignedFloats, Period, Tick, Timestamps};
+pub use ticks::{AlignedFloats, Period, Tick, TickFormat, Timestamps};

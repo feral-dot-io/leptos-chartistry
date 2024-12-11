@@ -1,7 +1,6 @@
-use super::UseInner;
 use crate::{bounds::Bounds, colours::Colour, debug::DebugRect, state::State, Tick};
-use leptos::*;
-use std::{rc::Rc, str::FromStr};
+use leptos::prelude::*;
+use std::str::FromStr;
 
 /// Default colour for guide lines.
 pub const GUIDE_LINE_COLOUR: Colour = Colour::from_rgb(0x9A, 0x9A, 0x9A);
@@ -9,7 +8,8 @@ pub const GUIDE_LINE_COLOUR: Colour = Colour::from_rgb(0x9A, 0x9A, 0x9A);
 macro_rules! impl_guide_line {
     ($name:ident) => {
         /// Builds a mouse guide line. Aligned over the mouse position or nearest data.
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq)]
+        #[non_exhaustive]
         pub struct $name {
             /// Alignment of the guide line.
             pub align: RwSignal<AlignOver>,
@@ -22,9 +22,9 @@ macro_rules! impl_guide_line {
         impl $name {
             fn new(align: AlignOver) -> Self {
                 Self {
-                    align: create_rw_signal(align.into()),
-                    width: create_rw_signal(1.0),
-                    colour: create_rw_signal(GUIDE_LINE_COLOUR),
+                    align: RwSignal::new(align.into()),
+                    width: RwSignal::new(1.0),
+                    colour: RwSignal::new(GUIDE_LINE_COLOUR),
                 }
             }
 
@@ -68,19 +68,20 @@ pub enum AlignOver {
 }
 
 #[derive(Clone)]
-struct UseXGuideLine(XGuideLine);
+pub struct UseXGuideLine(XGuideLine);
+
 #[derive(Clone)]
-struct UseYGuideLine(YGuideLine);
+pub struct UseYGuideLine(YGuideLine);
 
 impl XGuideLine {
-    pub(crate) fn use_horizontal<X: Tick, Y: Tick>(self) -> Rc<dyn UseInner<X, Y>> {
-        Rc::new(UseXGuideLine(self))
+    pub(crate) fn use_horizontal(self) -> UseXGuideLine {
+        UseXGuideLine(self)
     }
 }
 
 impl YGuideLine {
-    pub(crate) fn use_vertical<X, Y>(self) -> Rc<dyn UseInner<X, Y>> {
-        Rc::new(UseYGuideLine(self))
+    pub(crate) fn use_vertical(self) -> UseYGuideLine {
+        UseYGuideLine(self)
     }
 }
 
@@ -104,26 +105,18 @@ impl FromStr for AlignOver {
     }
 }
 
-impl<X: Tick, Y: Tick> UseInner<X, Y> for UseXGuideLine {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <XGuideLine line=self.0.clone() state=state /> )
-    }
-}
-
-impl<X, Y> UseInner<X, Y> for UseYGuideLine {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <YGuideLine line=self.0.clone() state=state /> )
-    }
-}
-
 #[component]
-fn XGuideLine<X: Tick, Y: Tick>(line: XGuideLine, state: State<X, Y>) -> impl IntoView {
+pub(super) fn XGuideLine<X: Tick, Y: Tick>(
+    line: UseXGuideLine,
+    state: State<X, Y>,
+) -> impl IntoView {
+    let line = line.0;
     let inner = state.layout.inner;
     let mouse_chart = state.mouse_chart;
 
     // Data alignment
     let nearest_pos_x = state.pre.data.nearest_position_x(state.hover_position_x);
-    let nearest_svg_x = create_memo(move |_| {
+    let nearest_svg_x = Memo::new(move |_| {
         nearest_pos_x
             .get()
             .map(|pos_x| state.projection.get().position_to_svg(pos_x, 0.0).0)
@@ -145,7 +138,11 @@ fn XGuideLine<X: Tick, Y: Tick>(line: XGuideLine, state: State<X, Y>) -> impl In
 }
 
 #[component]
-fn YGuideLine<X: 'static, Y: 'static>(line: YGuideLine, state: State<X, Y>) -> impl IntoView {
+pub(super) fn YGuideLine<X: Tick, Y: Tick>(
+    line: UseYGuideLine,
+    state: State<X, Y>,
+) -> impl IntoView {
+    let line = line.0;
     let inner = state.layout.inner;
     let mouse_chart = state.mouse_chart;
     // TODO align over
@@ -160,7 +157,7 @@ fn YGuideLine<X: 'static, Y: 'static>(line: YGuideLine, state: State<X, Y>) -> i
 }
 
 #[component]
-fn GuideLine<X: 'static, Y: 'static>(
+fn GuideLine<X: Tick, Y: Tick>(
     id: &'static str,
     width: RwSignal<f64>,
     colour: RwSignal<Colour>,
@@ -170,10 +167,10 @@ fn GuideLine<X: 'static, Y: 'static>(
     let debug = state.pre.debug;
     let hover_inner = state.hover_inner;
 
-    let x1 = create_memo(move |_| pos.get().left_x());
-    let y1 = create_memo(move |_| pos.get().top_y());
-    let x2 = create_memo(move |_| pos.get().right_x());
-    let y2 = create_memo(move |_| pos.get().bottom_y());
+    let x1 = Memo::new(move |_| pos.get().left_x());
+    let y1 = Memo::new(move |_| pos.get().top_y());
+    let x2 = Memo::new(move |_| pos.get().right_x());
+    let y2 = Memo::new(move |_| pos.get().bottom_y());
 
     // Don't render if any of the coordinates are NaN i.e., no data
     let have_data = Signal::derive(move || {

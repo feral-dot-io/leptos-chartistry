@@ -11,21 +11,23 @@ use crate::{
     Tick,
 };
 use chrono::prelude::*;
-use leptos::*;
-use std::rc::Rc;
+use leptos::prelude::*;
+use std::sync::Arc;
 
 /// Builds tick labels for an axis.
 ///
 /// Note that ticks lack an identity resulting in generators and labels not being reactive.
-pub struct TickLabels<Tick: 'static> {
+#[derive(Debug, PartialEq)]
+#[non_exhaustive]
+pub struct TickLabels<XY: Tick> {
     /// Minimum number of characters to display for each tick label.
     ///
     /// Helpful for giving a fixed width to labels e.g., if your graph can display 0-100 then it might show a shorter label on "0" or "42" to "100". Needed to have the same inner chart ratio when using an outer chart ratio. Can also be useful for aligning a list of charts.
     pub min_chars: RwSignal<usize>,
     /// Format function for the tick labels. See [TickLabels::with_format] for details.
-    pub format: RwSignal<Rc<TickFormatFn<Tick>>>,
+    pub format: RwSignal<Arc<TickFormatFn<XY>>>,
     /// Tick generator for the labels.
-    pub generator: RwSignal<Rc<dyn TickGen<Tick = Tick>>>,
+    pub generator: RwSignal<Arc<dyn TickGen<Tick = XY> + Send + Sync>>,
 }
 
 #[derive(Clone)]
@@ -33,7 +35,7 @@ pub struct UseTickLabels {
     ticks: Signal<Vec<(f64, String)>>,
 }
 
-impl<Tick> Clone for TickLabels<Tick> {
+impl<XY: Tick> Clone for TickLabels<XY> {
     fn clone(&self) -> Self {
         Self {
             min_chars: self.min_chars,
@@ -43,9 +45,9 @@ impl<Tick> Clone for TickLabels<Tick> {
     }
 }
 
-impl<Tick: crate::Tick> Default for TickLabels<Tick> {
+impl<XY: Tick> Default for TickLabels<XY> {
     fn default() -> Self {
-        Self::from_generator(Tick::tick_label_generator())
+        Self::from_generator(XY::tick_label_generator())
     }
 }
 
@@ -58,8 +60,8 @@ impl TickLabels<f64> {
 
 impl<Tz> TickLabels<DateTime<Tz>>
 where
-    Tz: TimeZone + 'static,
-    Tz::Offset: std::fmt::Display,
+    Tz: TimeZone + Send + Sync + 'static,
+    Tz::Offset: std::fmt::Display + Send + Sync,
 {
     /// Creates a new tick label generator for timestamps. See [Timestamps] for details.
     pub fn timestamps() -> Self {
@@ -67,13 +69,13 @@ where
     }
 }
 
-impl<Tick: crate::Tick> TickLabels<Tick> {
-    /// Creates a new tick label generator from a tick generator.
-    pub fn from_generator(gen: impl TickGen<Tick = Tick> + 'static) -> Self {
+impl<XY: Tick> TickLabels<XY> {
+    /// Creates a new tick label generator from a tick generator. Use [AlignedFloats] or [Timestamps] for available generators.
+    pub fn from_generator(gen: impl TickGen<Tick = XY> + 'static) -> Self {
         Self {
             min_chars: RwSignal::default(),
             format: RwSignal::new(HorizontalSpan::identity_format()),
-            generator: create_rw_signal(Rc::new(gen)),
+            generator: RwSignal::new(Arc::new(gen)),
         }
     }
 
@@ -88,13 +90,13 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
     /// This is a function that takes a `Tick` and a formatter and returns a `String`. It gives an opportunity to customise tick label format. The formatter is the resulting state of the tick generator and does the default aciton. For example if aligned floats decides to use "1000s" then the formatter will use that.
     pub fn with_format(
         self,
-        format: impl Fn(&Tick, &dyn TickFormat<Tick = Tick>) -> String + 'static,
+        format: impl Fn(&XY, &dyn TickFormat<Tick = XY>) -> String + Send + Sync + 'static,
     ) -> Self {
-        self.format.set(Rc::new(format));
+        self.format.set(Arc::new(format));
         self
     }
 
-    fn map_ticks(&self, gen: Signal<GeneratedTicks<Tick>>) -> Signal<Vec<(f64, String)>> {
+    fn map_ticks(&self, gen: Memo<GeneratedTicks<XY>>) -> Signal<Vec<(f64, String)>> {
         let format = self.format;
         Signal::derive(move || {
             let format = format.get();
@@ -108,10 +110,10 @@ impl<Tick: crate::Tick> TickLabels<Tick> {
     }
 }
 
-impl<Gen, Tick> From<Gen> for TickLabels<Tick>
+impl<Gen, XY> From<Gen> for TickLabels<XY>
 where
-    Gen: TickGen<Tick = Tick> + 'static,
-    Tick: crate::Tick,
+    Gen: TickGen<Tick = XY> + 'static,
+    XY: Tick,
 {
     fn from(gen: Gen) -> Self {
         Self::from_generator(gen)
@@ -119,11 +121,11 @@ where
 }
 
 impl<X: Tick> TickLabels<X> {
-    pub(crate) fn generate_x<Y>(
+    pub(crate) fn generate_x<Y: Tick>(
         &self,
         state: &PreState<X, Y>,
         avail_width: Signal<f64>,
-    ) -> Signal<GeneratedTicks<X>> {
+    ) -> Memo<GeneratedTicks<X>> {
         let font_width = state.font_width;
         let padding = state.padding;
         let range_x = state.data.range_x;
@@ -132,7 +134,7 @@ impl<X: Tick> TickLabels<X> {
             format,
             generator,
         } = self.clone();
-        create_memo(move |_| {
+        Memo::new(move |_| {
             range_x
                 .get()
                 .range()
@@ -148,16 +150,15 @@ impl<X: Tick> TickLabels<X> {
                 })
                 .unwrap_or_else(GeneratedTicks::none)
         })
-        .into()
     }
 
-    pub(super) fn fixed_height<Y>(&self, state: &PreState<X, Y>) -> Signal<f64> {
+    pub(super) fn fixed_height<Y: Tick>(&self, state: &PreState<X, Y>) -> Signal<f64> {
         let font_height = state.font_height;
         let padding = state.padding;
         Signal::derive(move || font_height.get() + padding.get().height())
     }
 
-    pub(super) fn to_horizontal_use<Y>(
+    pub(super) fn to_horizontal_use<Y: Tick>(
         &self,
         state: &PreState<X, Y>,
         avail_width: Memo<f64>,
@@ -169,16 +170,16 @@ impl<X: Tick> TickLabels<X> {
 }
 
 impl<Y: Tick> TickLabels<Y> {
-    pub(crate) fn generate_y<X>(
+    pub(crate) fn generate_y<X: Tick>(
         &self,
         state: &PreState<X, Y>,
         avail_height: Signal<f64>,
-    ) -> Signal<GeneratedTicks<Y>> {
+    ) -> Memo<GeneratedTicks<Y>> {
         let font_height = state.font_height;
         let padding = state.padding;
         let range_y = state.data.range_y;
         let generator = self.generator;
-        create_memo(move |_| {
+        Memo::new(move |_| {
             range_y
                 .get()
                 .range()
@@ -191,10 +192,9 @@ impl<Y: Tick> TickLabels<Y> {
                 })
                 .unwrap_or_else(GeneratedTicks::none)
         })
-        .into()
     }
 
-    pub(super) fn to_vertical_use<X>(
+    pub(super) fn to_vertical_use<X: Tick>(
         &self,
         state: &PreState<X, Y>,
         avail_height: Memo<f64>,
@@ -207,7 +207,7 @@ impl<Y: Tick> TickLabels<Y> {
     }
 }
 
-fn mk_width<X, Y>(
+fn mk_width<X: Tick, Y: Tick>(
     min_chars: RwSignal<usize>,
     state: &PreState<X, Y>,
     ticks: Signal<Vec<(f64, String)>>,
@@ -246,7 +246,7 @@ fn align_tick_labels(labels: Vec<String>) -> Vec<String> {
 }
 
 #[component]
-pub(super) fn TickLabels<X: Clone + 'static, Y: Clone + 'static>(
+pub(super) fn TickLabels<X: Tick, Y: Tick>(
     ticks: UseTickLabels,
     edge: Edge,
     bounds: Memo<Bounds>,
@@ -279,7 +279,7 @@ pub(super) fn TickLabels<X: Clone + 'static, Y: Clone + 'static>(
 }
 
 #[component]
-fn TickLabel<X: 'static, Y: 'static>(
+fn TickLabel<X: Tick, Y: Tick>(
     edge: Edge,
     outer: Memo<Bounds>,
     state: State<X, Y>,
@@ -315,10 +315,10 @@ fn TickLabel<X: 'static, Y: 'static>(
             }
         }
     });
-    let content = create_memo(move |_| padding.get().apply(bounds.get()));
+    let content = Memo::new(move |_| padding.get().apply(bounds.get()));
 
     // Determine text position
-    let text_position = create_memo(move |_| {
+    let text_position = Memo::new(move |_| {
         let content = content.get();
         match edge {
             Edge::Top | Edge::Bottom => ("middle", content.centre_x()),

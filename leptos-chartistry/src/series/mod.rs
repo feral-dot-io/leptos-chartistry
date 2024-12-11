@@ -12,9 +12,12 @@ pub use stack::{Stack, STACK_COLOUR_SCHEME};
 pub use use_data::{RenderData, UseData};
 pub use use_y::{Snippet, UseY};
 
-use crate::colours::{Colour, ColourScheme};
-use leptos::signal_prelude::*;
-use std::rc::Rc;
+use crate::{
+    colours::{Colour, ColourScheme},
+    Tick,
+};
+use leptos::prelude::*;
+use std::sync::Arc;
 
 /// Arbitrary colours for a brighter palette than BATLOW
 pub const SERIES_COLOUR_SCHEME: [Colour; 10] = [
@@ -30,12 +33,12 @@ pub const SERIES_COLOUR_SCHEME: [Colour; 10] = [
     Colour::from_rgb(0xea, 0x60, 0xdf), // Pink
 ];
 
-type GetX<T, X> = Rc<dyn Fn(&T) -> X>;
-type GetY<T, Y> = Rc<dyn GetYValue<T, Y>>;
+type GetX<T, X> = Arc<dyn Fn(&T) -> X + Send + Sync>;
+type GetY<T, Y> = Arc<dyn GetYValue<T, Y>>;
 
-trait GetYValue<T, Y> {
+trait GetYValue<T, Y>: Send + Sync {
     fn value(&self, t: &T) -> Y;
-    fn cumulative_value(&self, t: &T) -> Y;
+    fn stacked_value(&self, t: &T) -> Y;
 }
 
 /// Describes how to render a series of data. A series is a collection of lines, bars, etc. that share the same X and Y axes.
@@ -107,9 +110,10 @@ trait GetYValue<T, Y> {
 ///
 /// Finally, like most other components, you can control aspects such as the colour scheme and data ranges of X and Y.
 #[derive(Clone)]
-pub struct Series<T: 'static, X: 'static, Y: 'static> {
+#[non_exhaustive]
+pub struct Series<T: Send + Sync + 'static, X: Tick, Y: Tick> {
     get_x: GetX<T, X>,
-    series: Vec<Rc<dyn ApplyUseSeries<T, Y>>>,
+    series: Vec<Arc<dyn ApplyUseSeries<T, Y> + Send + Sync>>,
     /// Optional minimum X value. Extends the lower bound of the X axis if set.
     pub min_x: RwSignal<Option<X>>,
     /// Optional maximum X value. Extends the upper bound of the X axis if set.
@@ -123,7 +127,7 @@ pub struct Series<T: 'static, X: 'static, Y: 'static> {
 }
 
 trait ApplyUseSeries<T, Y> {
-    fn apply_use_series(self: Rc<Self>, _: &mut SeriesAcc<T, Y>);
+    fn apply_use_series(self: Arc<Self>, _: &mut SeriesAcc<T, Y>);
 }
 
 trait IntoUseLine<T, Y> {
@@ -142,20 +146,20 @@ struct SeriesAcc<T, Y> {
     lines: Vec<(UseY, GetY<T, Y>)>,
 }
 
-impl<T, X, Y> Series<T, X, Y> {
+impl<T: Send + Sync, X: Tick, Y: Tick> Series<T, X, Y> {
     /// Create a new series. The `get_x` function is used to extract the X value from your struct.
     ///
     /// Intended to be a simple closure over your own data. For example `Series::new(|t: &MyType| t.x)`
     ///
     /// Next: add lines or stacks to the series with [Series::line] or [Series::stack].
-    pub fn new(get_x: impl Fn(&T) -> X + 'static) -> Self {
+    pub fn new(get_x: impl Fn(&T) -> X + Send + Sync + 'static) -> Self {
         Self {
-            get_x: Rc::new(get_x),
+            get_x: Arc::new(get_x),
             min_x: RwSignal::default(),
             max_x: RwSignal::default(),
             min_y: RwSignal::default(),
             max_y: RwSignal::default(),
-            colours: create_rw_signal(SERIES_COLOUR_SCHEME.into()),
+            colours: RwSignal::new(SERIES_COLOUR_SCHEME.into()),
             series: Vec::new(),
         }
     }
@@ -202,7 +206,7 @@ impl<T, X, Y> Series<T, X, Y> {
 
     /// Adds a line to the series. See [Line] for more details.
     pub fn line(mut self, line: impl Into<Line<T, Y>>) -> Self {
-        self.series.push(Rc::new(line.into()));
+        self.series.push(Arc::new(line.into()));
         self
     }
 
@@ -216,7 +220,7 @@ impl<T, X, Y> Series<T, X, Y> {
 
     /// Adds a bar to the series. See [Bar] for more details.
     pub fn bar(mut self, bar: impl Into<Bar<T, Y>>) -> Self {
-        self.series.push(Rc::new(bar.into()));
+        self.series.push(Arc::new(bar.into()));
         self
     }
 
@@ -247,10 +251,10 @@ impl<T, X, Y> Series<T, X, Y> {
     }
 }
 
-impl<T, X, Y: std::ops::Add<Output = Y>> Series<T, X, Y> {
+impl<T: Send + Sync, X: Tick> Series<T, X, f64> {
     /// Adds a stack to the series. See [Stack] for more details.
-    pub fn stack(mut self, stack: impl Into<Stack<T, Y>>) -> Self {
-        self.series.push(Rc::new(stack.into()));
+    pub fn stack(mut self, stack: impl Into<Stack<T, f64>>) -> Self {
+        self.series.push(Arc::new(stack.into()));
         self
     }
 }
@@ -270,7 +274,7 @@ impl<T, Y> SeriesAcc<T, Y> {
         let id = self.colour_id;
         self.colour_id += 1;
         let colours = self.colours;
-        create_memo(move |_| colours.get().by_index(id))
+        Memo::new(move |_| colours.get().by_index(id))
     }
 
     fn push_line(&mut self, colour: Memo<Colour>, line: impl IntoUseLine<T, Y>) -> GetY<T, Y> {

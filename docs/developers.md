@@ -52,7 +52,6 @@ Features to add:
     - Add "tend to centre" cursor
 
 - 0.2 bump:
-    - non_exhaustive on all structs with public fields
     - Tooltip.class + possibly elsewhere
     - Move Tooltip.show_x_ticks to TickLabels
     - Consider removing anything that can be controlled exclusively by CSS

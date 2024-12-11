@@ -1,4 +1,4 @@
-use leptos::*;
+use leptos::{either::Either, prelude::*};
 
 use crate::bounds::Bounds;
 
@@ -8,13 +8,13 @@ pub fn DebugRect(
     #[prop(into)] debug: Signal<bool>,
     #[prop(optional)] bounds: Vec<Signal<Bounds>>,
 ) -> impl IntoView {
-    (move || {
+    move || {
         if !debug.get() {
-            return view!().into_view();
+            return Either::Left(());
         };
 
         log::debug!("rendering {}", label);
-        bounds
+        let rects = bounds
             .clone()
             .into_iter()
             .map(|bounds| {
@@ -30,7 +30,7 @@ pub fn DebugRect(
                     />
                 }
             })
-            .collect_view()
-    })
-    .into_view()
+            .collect_view();
+        Either::Right(rects)
+    }
 }

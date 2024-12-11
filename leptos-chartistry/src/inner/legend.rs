@@ -1,10 +1,9 @@
-use super::UseInner;
-use crate::{edge::Edge, state::State, Anchor, Legend};
-use leptos::*;
-use std::rc::Rc;
+use crate::{edge::Edge, state::State, Anchor, Legend, Tick};
+use leptos::prelude::*;
 
 /// Builds an inset legend for the chart [series](crate::Series). Differs from [Legend](struct@Legend) by being placed inside the chart area.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct InsetLegend {
     /// Edge of the chart area to place the legend.
     pub edge: RwSignal<Edge>,
@@ -15,7 +14,7 @@ pub struct InsetLegend {
 impl InsetLegend {
     fn new(edge: Edge, anchor: Anchor) -> Self {
         Self {
-            edge: create_rw_signal(edge),
+            edge: RwSignal::new(edge),
             legend: Legend::new(anchor),
         }
     }
@@ -54,14 +53,8 @@ impl InsetLegend {
     }
 }
 
-impl<X: Clone, Y: Clone> UseInner<X, Y> for InsetLegend {
-    fn render(self: Rc<Self>, state: State<X, Y>) -> View {
-        view!( <InsetLegend legend=(*self).clone() state=state /> )
-    }
-}
-
 #[component]
-fn InsetLegend<X: Clone + 'static, Y: Clone + 'static>(
+pub(super) fn InsetLegend<X: Tick, Y: Tick>(
     legend: InsetLegend,
     state: State<X, Y>,
 ) -> impl IntoView {
@@ -69,7 +62,7 @@ fn InsetLegend<X: Clone + 'static, Y: Clone + 'static>(
     let inner = state.layout.inner;
     let width = Legend::width(&state.pre);
     let height = legend.fixed_height(&state.pre);
-    let bounds = create_memo(move |_| {
+    let bounds = Memo::new(move |_| {
         let inner = inner.get();
         let height = height.get();
         let width = width.get();

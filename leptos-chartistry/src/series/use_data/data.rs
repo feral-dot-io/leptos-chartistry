@@ -6,6 +6,7 @@ use crate::{
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Data<X, Y> {
     data_x: Vec<X>,
     data_y: Vec<HashMap<usize, Y>>,
@@ -46,15 +47,16 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
             for (&id, get_y) in &get_ys {
                 let y = get_y.value(datum);
                 // Note: cumulative can differ from Y when stacked
-                let y_cumulative = get_y.cumulative_value(datum);
-                built.range_y.update(&y_cumulative);
+                let y_stacked = get_y.stacked_value(datum);
+                built.range_y.update(&y_stacked);
+
                 // Insert
                 y_data.insert(id, y);
                 built
                     .coords
                     .entry(id)
                     .or_insert_with(|| Vec::with_capacity(cap))
-                    .push((x_position, y_cumulative.position()));
+                    .push((x_position, y_stacked.position()));
             }
 
             // Insert
@@ -127,7 +129,7 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::rc::Rc;
+    use std::sync::Arc;
 
     #[derive(Clone, Debug, PartialEq)]
     struct MyData {
@@ -150,10 +152,10 @@ mod tests {
 
     fn test_data(data: &[MyData]) -> Data<f64, f64> {
         let mut get_ys = HashMap::<usize, GetY<_, _>>::new();
-        get_ys.insert(66, Rc::new(|d: &MyData| d.y1));
-        get_ys.insert(5, Rc::new(|d: &MyData| d.y2));
+        get_ys.insert(66, Arc::new(|d: &MyData| d.y1));
+        get_ys.insert(5, Arc::new(|d: &MyData| d.y2));
 
-        Data::new(Rc::new(|d: &MyData| d.x), get_ys, data)
+        Data::new(Arc::new(|d: &MyData| d.x), get_ys, data)
     }
 
     #[test]

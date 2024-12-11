@@ -3,9 +3,8 @@ use crate::{
     colours::{Colour, ColourScheme, BATLOW},
     Line,
 };
-use leptos::signal_prelude::*;
-use std::ops::Add;
-use std::rc::Rc;
+use leptos::prelude::*;
+use std::sync::Arc;
 
 /// Default colour scheme for stack. Assumes a light background with dark values for high values.
 pub const STACK_COLOUR_SCHEME: [Colour; 10] = BATLOW;
@@ -22,6 +21,7 @@ pub const STACK_COLOUR_SCHEME: [Colour; 10] = BATLOW;
 /// ```
 /// See this in action with the [stacked line chart example](https://feral-dot-io.github.io/leptos-chartistry/examples.html#stacked-line-chart).
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct Stack<T, Y> {
     lines: Vec<Line<T, Y>>,
     /// Colour scheme for the stack. Interpolates colours across the whole scheme.
@@ -61,7 +61,7 @@ impl<T, Y> Default for Stack<T, Y> {
     fn default() -> Self {
         Self {
             lines: Vec::new(),
-            colours: ColourScheme::from(STACK_COLOUR_SCHEME).invert().into(),
+            colours: RwSignal::new(ColourScheme::from(STACK_COLOUR_SCHEME).invert()),
         }
     }
 }
@@ -76,17 +76,21 @@ impl<T, Y, I: IntoIterator<Item = Line<T, Y>>> From<I> for Stack<T, Y> {
     }
 }
 
-impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> for Stack<T, Y> {
-    fn apply_use_series(self: Rc<Self>, series: &mut SeriesAcc<T, Y>) {
+impl<T: 'static> ApplyUseSeries<T, f64> for Stack<T, f64> {
+    fn apply_use_series(self: Arc<Self>, series: &mut SeriesAcc<T, f64>) {
         let colours = self.colours;
-        let mut previous = None;
         let total_lines = self.lines.len();
+        let mut previous = Vec::with_capacity(total_lines);
         for (id, line) in self.lines.clone().into_iter().enumerate() {
-            let colour = create_memo(move |_| colours.get().interpolate(id, total_lines));
-            let line = StackedLine::new(line, previous.clone());
+            let colour = Memo::new(move |_| colours.get().interpolate(id, total_lines));
+            let line = StackedLine {
+                line,
+                previous: previous.clone(),
+            };
+            // Add line
             let get_y = series.push_line(colour, line);
             // Sum next line with this one
-            previous = Some(get_y);
+            previous.push(get_y);
         }
     }
 }
@@ -94,41 +98,37 @@ impl<T: 'static, Y: std::ops::Add<Output = Y> + 'static> ApplyUseSeries<T, Y> fo
 #[derive(Clone)]
 struct StackedLine<T, Y> {
     line: Line<T, Y>,
-    previous: Option<Rc<dyn GetYValue<T, Y>>>,
+    previous: Vec<Arc<dyn GetYValue<T, Y>>>,
 }
 
 #[derive(Clone)]
 struct UseStackLine<T, Y> {
-    current: Rc<dyn GetYValue<T, Y>>,
-    previous: Option<Rc<dyn GetYValue<T, Y>>>,
+    line: Arc<dyn GetYValue<T, Y>>,
+    previous: Vec<Arc<dyn GetYValue<T, Y>>>,
 }
 
-impl<T, Y> StackedLine<T, Y> {
-    pub fn new(line: Line<T, Y>, previous: Option<Rc<dyn GetYValue<T, Y>>>) -> Self {
-        Self { line, previous }
-    }
-}
-
-impl<T: 'static, Y: Add<Output = Y> + 'static> IntoUseLine<T, Y> for StackedLine<T, Y> {
-    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Rc<dyn GetYValue<T, Y>>) {
+impl<T: 'static> IntoUseLine<T, f64> for StackedLine<T, f64> {
+    fn into_use_line(self, id: usize, colour: Memo<Colour>) -> (UseY, Arc<dyn GetYValue<T, f64>>) {
         let (line, get_y) = self.line.into_use_line(id, colour);
-        let get_y = Rc::new(UseStackLine {
-            current: get_y,
+        let get_y = Arc::new(UseStackLine {
+            line: get_y,
             previous: self.previous.clone(),
         });
         (line, get_y)
     }
 }
 
-impl<T, Y: Add<Output = Y>> GetYValue<T, Y> for UseStackLine<T, Y> {
-    fn value(&self, t: &T) -> Y {
-        self.current.value(t)
+impl<T> GetYValue<T, f64> for UseStackLine<T, f64> {
+    fn value(&self, t: &T) -> f64 {
+        self.line.value(t)
     }
 
-    fn cumulative_value(&self, t: &T) -> Y {
-        self.previous.as_ref().map_or_else(
-            || self.current.cumulative_value(t),
-            |prev| self.current.cumulative_value(t) + prev.cumulative_value(t),
-        )
+    fn stacked_value(&self, t: &T) -> f64 {
+        self.previous
+            .iter()
+            .chain(std::iter::once(&self.line))
+            .map(|get_y| get_y.value(t))
+            .filter(|v| v.is_normal())
+            .sum()
     }
 }

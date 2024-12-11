@@ -1,5 +1,8 @@
 use chrono::prelude::*;
-use leptos::*;
+use leptos::{
+    either::{EitherOf4, EitherOf7},
+    prelude::*,
+};
 use leptos_chartistry::*;
 use std::str::FromStr;
 
@@ -121,20 +124,20 @@ pub fn f64_to_dt(at: f64) -> DateTime<Local> {
 #[component]
 pub fn Demo() -> impl IntoView {
     // General options
-    let (debug, set_debug) = create_signal(false);
-    let padding = create_rw_signal(FONT_WIDTH);
-    let font_height = create_rw_signal(FONT_HEIGHT);
-    let font_width = create_rw_signal(FONT_WIDTH);
+    let (debug, set_debug) = signal(false);
+    let padding = RwSignal::new(FONT_WIDTH);
+    let font_height = RwSignal::new(FONT_HEIGHT);
+    let font_width = RwSignal::new(FONT_WIDTH);
 
     // Aspect ratio
-    let aspect = create_rw_signal(AspectOption::default());
-    let calc = create_rw_signal(AspectCalc::default());
-    let width = create_rw_signal(WIDTH);
-    let height = create_rw_signal(HEIGHT);
-    let ratio = create_rw_signal(1.0);
+    let aspect = RwSignal::new(AspectOption::default());
+    let calc = RwSignal::new(AspectCalc::default());
+    let width = RwSignal::new(WIDTH);
+    let height = RwSignal::new(HEIGHT);
+    let ratio = RwSignal::new(1.0);
 
     // Data
-    let (data, _) = create_signal(load_data());
+    let (data, _) = signal(load_data());
     let lines = vec![
         Line::new(|w: &Wave| w.sine)
             .with_name("sine")
@@ -148,8 +151,8 @@ pub fn Demo() -> impl IntoView {
             ),
     ];
     let edit_lines = lines.clone();
-    let (line_tab, set_line_tab) = create_signal(0);
-    let set_line_tab = move |ev: ev::Event| {
+    let (line_tab, set_line_tab) = signal(0);
+    let set_line_tab = move |ev: web_sys::Event| {
         let tab_index = event_target_value(&ev).parse().unwrap_or_default();
         set_line_tab.set(tab_index);
     };
@@ -193,17 +196,17 @@ pub fn Demo() -> impl IntoView {
     };
 
     // Layout options
-    let top: RwSignal<Options<EdgeLayout<_>>> = Options::create_signal(vec![RotatedLabel::middle(
+    let top: RwSignal<Options<EdgeLayout<_>>> = Options::signal(vec![RotatedLabel::middle(
         "Hello and welcome to Chartistry!",
     )]);
-    let right = Options::create_signal(vec![Legend::middle()]);
-    let bottom = Options::create_signal(vec![
+    let right = Options::signal(vec![Legend::middle()]);
+    let bottom = Options::signal(vec![
         x_ticks.clone().into_edge(),
         RotatedLabel::middle("This demo shows most of the available options. Edit things below...")
             .into_edge(),
     ]);
-    let left = Options::create_signal(vec![y_ticks.clone().into_edge()]);
-    let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::create_signal(vec![
+    let left = Options::signal(vec![y_ticks.clone().into_edge()]);
+    let inner: RwSignal<Options<InnerLayout<DateTime<_>, f64>>> = Options::signal(vec![
         AxisMarker::horizontal_zero().into_inner(),
         AxisMarker::left_edge().into_inner(),
         XGridLine::from_ticks(x_ticks).into_inner(),
@@ -230,7 +233,7 @@ pub fn Demo() -> impl IntoView {
                     series=series.clone()
                     data=data
                 />
-            }}
+            }.into_any()}
 
             <div class="outer">
                 <fieldset class="options">
@@ -332,35 +335,35 @@ pub fn Demo() -> impl IntoView {
                 <OptionsCard title="Right" options=right labels=ALL_EDGE_OPTIONS detail=edge_layout_opts />
             </div>
         </article>
-    }
+    }.into_any()
 }
 
 #[component]
-fn OptionsCard<Full, FullView, FullIV, Label>(
+fn OptionsCard<Opt, OptView, OptIV, Label>(
     title: &'static str,
-    options: RwSignal<Options<Full>>,
+    options: RwSignal<Options<Opt>>,
     labels: &'static [Label],
-    detail: FullView,
+    detail: OptView,
 ) -> impl IntoView
 where
-    Full: Clone + From<Label> + 'static,
-    FullView: Fn(Full) -> FullIV + 'static,
-    FullIV: IntoView,
-    Label: Copy + Default + From<Full> + FromStr + PartialEq + ToString + 'static,
+    Opt: Clone + From<Label> + Send + Sync + 'static,
+    OptView: Fn(Opt) -> OptIV + Send + Sync + 'static,
+    OptIV: Send + Sync + IntoView + 'static,
+    Label: Copy + Default + From<Opt> + FromStr + PartialEq + ToString + Send + Sync + 'static,
 {
-    let (option, set_option) = create_signal(Label::default());
+    let (option, set_option) = signal(Label::default());
     let on_label_change =
         move |ev| set_option.set(event_target_value(&ev).parse().unwrap_or_default());
 
     let on_move_up = move |index| move |_| options.set(options.get().move_up(index));
     let on_move_down = move |index| move |_| options.set(options.get().move_down(index));
     let on_remove = move |index| move |_| options.set(options.get().remove(index));
-    let on_new_line = move |ev: ev::MouseEvent| {
+    let on_new_line = move |ev: web_sys::MouseEvent| {
         ev.prevent_default();
         options.set(options.get().add(option.get()));
     };
 
-    let existing_rows = Signal::derive(move || {
+    let existing_rows = move || {
         let options = options.get().into_inner();
         let last = options.len().saturating_sub(1);
         options
@@ -378,12 +381,13 @@ where
                 }
             })
             .collect_view()
-    });
+            .into_any()
+    };
 
     view! {
         <fieldset class=title.to_lowercase()>
             <legend>{title}</legend>
-            {move || existing_rows}
+            {existing_rows}
             <p>
                 <span></span>
                 <span>
@@ -401,12 +405,13 @@ where
 }
 
 impl<Opt> Options<Opt> {
-    fn create_signal<IO>(opts: impl IntoIterator<Item = IO>) -> RwSignal<Self>
+    fn signal<IO>(opts: impl IntoIterator<Item = IO>) -> RwSignal<Self>
     where
         IO: Into<Opt>,
+        Opt: Send + Sync + 'static,
     {
         let opts = opts.into_iter().map(Into::into).collect();
-        create_rw_signal(Self(opts))
+        RwSignal::new(Self(opts))
     }
 
     pub fn add(mut self, opt: impl Into<Opt>) -> Self {
@@ -513,8 +518,8 @@ impl FromStr for EdgeOption {
     }
 }
 
-impl<Tick> From<EdgeLayout<Tick>> for EdgeOption {
-    fn from(layout: EdgeLayout<Tick>) -> Self {
+impl<XY: Tick> From<EdgeLayout<XY>> for EdgeOption {
+    fn from(layout: EdgeLayout<XY>) -> Self {
         match layout {
             EdgeLayout::RotatedLabel(_) => Self::RotatedLabel,
             EdgeLayout::Legend(_) => Self::Legend,
@@ -524,7 +529,7 @@ impl<Tick> From<EdgeLayout<Tick>> for EdgeOption {
     }
 }
 
-impl<Tick: leptos_chartistry::Tick> From<EdgeOption> for EdgeLayout<Tick> {
+impl<XY: Tick> From<EdgeOption> for EdgeLayout<XY> {
     fn from(option: EdgeOption) -> Self {
         match option {
             EdgeOption::RotatedLabel => Self::RotatedLabel(RotatedLabel::middle("")),
@@ -599,51 +604,42 @@ impl<X: Tick, Y: Tick> From<InnerOption> for InnerLayout<X, Y> {
     }
 }
 
-fn edge_layout_opts<Tick: 'static>(option: EdgeLayout<Tick>) -> impl IntoView {
+fn edge_layout_opts<XY: Tick>(option: EdgeLayout<XY>) -> impl IntoView {
     match option {
-        EdgeLayout::RotatedLabel(label) => view! {
+        EdgeLayout::RotatedLabel(label) => EitherOf4::A(view! {
             <RotatedLabelOpts label=label />
-        }
-        .into_view(),
-        EdgeLayout::Legend(legend) => view! {
+        }),
+        EdgeLayout::Legend(legend) => EitherOf4::B(view! {
             <LegendOpts legend=legend />
-        }
-        .into_view(),
-        EdgeLayout::TickLabels(ticks) => view! {
+        }),
+        EdgeLayout::TickLabels(ticks) => EitherOf4::C(view! {
             <TickLabelsOpts ticks=ticks />
-        }
-        .into_view(),
-        _ => ().into_view(),
+        }),
+        _ => EitherOf4::D(()),
     }
 }
 
 fn inner_layout_opts<X: Tick, Y: Tick>(option: InnerLayout<X, Y>) -> impl IntoView {
     match option {
-        InnerLayout::AxisMarker(marker) => view! {
+        InnerLayout::AxisMarker(marker) => EitherOf7::A(view! {
             <AxisMarkerOpts marker=marker />
-        }
-        .into_view(),
-        InnerLayout::Legend(legend) => view! {
+        }),
+        InnerLayout::Legend(legend) => EitherOf7::B(view! {
             <InsetLegendOpts legend=legend />
-        }
-        .into_view(),
-        InnerLayout::XGridLine(line) => view! {
+        }),
+        InnerLayout::XGridLine(line) => EitherOf7::C(view! {
             <GridLineOpts width=line.width colour=line.colour />
-        }
-        .into_view(),
-        InnerLayout::YGridLine(line) => view! {
+        }),
+        InnerLayout::YGridLine(line) => EitherOf7::D(view! {
             <GridLineOpts width=line.width colour=line.colour />
-        }
-        .into_view(),
-        InnerLayout::XGuideLine(line) => view! {
+        }),
+        InnerLayout::XGuideLine(line) => EitherOf7::E(view! {
             <GuideLineOpts align=line.align width=line.width colour=line.colour />
-        }
-        .into_view(),
-        InnerLayout::YGuideLine(line) => view! {
+        }),
+        InnerLayout::YGuideLine(line) => EitherOf7::F(view! {
             <GuideLineOpts align=line.align width=line.width colour=line.colour />
-        }
-        .into_view(),
-        _ => ().into_view(),
+        }),
+        _ => EitherOf7::G(()),
     }
 }
 
@@ -655,9 +651,9 @@ fn WidthInput(width: RwSignal<f64>) -> impl IntoView {
 }
 
 #[component]
-fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
+fn StepInput<T: Clone + Default + ToString + FromStr + Send + Sync + 'static>(
     value: RwSignal<T>,
-    #[prop(into, optional)] id: Option<AttributeValue>,
+    #[prop(into, optional)] id: Option<String>,
     #[prop(into)] step: String,
     #[prop(into, optional)] min: Option<String>,
     #[prop(into, optional)] max: Option<String>,
@@ -673,7 +669,7 @@ fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
             step=step
             min=min
             max=max
-            value=value
+            value=move || value.get().to_string()
             on:input=on_change />
     }
 }
@@ -681,12 +677,12 @@ fn StepInput<T: Clone + Default + IntoAttribute + FromStr + 'static>(
 #[component]
 fn SelectOption<Opt>(
     #[prop(into)] label: String,
-    #[prop(into, optional)] id: Option<AttributeValue>,
+    id: Option<String>,
     value: RwSignal<Opt>,
     all: &'static [Opt],
 ) -> impl IntoView
 where
-    Opt: Clone + FromStr + PartialEq + ToString + 'static,
+    Opt: Clone + FromStr + PartialEq + ToString + Send + Sync + 'static,
 {
     let on_change = move |ev| value.set(event_target_value(&ev).parse().unwrap_or(all[0].clone()));
     view! {
@@ -703,7 +699,7 @@ where
 macro_rules! select_impl {
     ($fn:ident, $label:literal, $input:ident, $signal:ty, $all:path) => {
         #[component]
-        fn $fn(#[prop(into, optional)] id: Option<AttributeValue>, $input: RwSignal<$signal>) -> impl IntoView {
+        fn $fn(#[prop(into, optional)] id: Option<String>, $input: RwSignal<$signal>) -> impl IntoView {
             view!(<SelectOption id=id label=$label value=$input all=$all />)
         }
     };
@@ -724,7 +720,6 @@ select_impl!(
     AxisPlacement,
     ALL_AXIS_PLACEMENTS
 );
-select_impl!(SelectEdge, "Edge", edge, Edge, ALL_EDGES);
 select_impl!(
     SelectTooltipPlacement,
     "Placement",
@@ -764,7 +759,7 @@ select_impl!(
 
 #[component]
 fn SelectColour(
-    #[prop(into, optional)] id: Option<AttributeValue>,
+    #[prop(into, optional)] id: Option<String>,
     colour: RwSignal<Colour>,
 ) -> impl IntoView {
     let on_change = move |ev| {
@@ -849,7 +844,7 @@ fn LegendOpts(legend: Legend) -> impl IntoView {
 }
 
 #[component]
-fn TickLabelsOpts<Tick: 'static>(ticks: TickLabels<Tick>) -> impl IntoView {
+fn TickLabelsOpts<XY: Tick>(ticks: TickLabels<XY>) -> impl IntoView {
     view! {
         <label>"min width:"<StepInput value=ticks.min_chars step="1" min="0" /></label>
     }
@@ -875,7 +870,7 @@ fn AxisMarkerOpts(marker: AxisMarker) -> impl IntoView {
 #[component]
 fn InsetLegendOpts(legend: InsetLegend) -> impl IntoView {
     view! {
-        <SelectOption label="Edge" value=legend.edge all=ALL_EDGES />
+        <SelectOption label="Edge" id=None value=legend.edge all=ALL_EDGES />
         " "
         <LegendOpts legend=legend.legend />
     }
@@ -981,7 +976,7 @@ fn AspectRatio(
     };
 
     // When not used, our third var is just for show. Update it when the other two change.
-    create_effect(move |_| match calc.get() {
+    Effect::new(move |_| match calc.get() {
         AspectCalc::Ratio => ratio.set(width.get() / height.get()),
         AspectCalc::Width => width.set(height.get() * ratio.get()),
         AspectCalc::Height => height.set(width.get() / ratio.get()),

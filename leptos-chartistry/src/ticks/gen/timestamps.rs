@@ -1,11 +1,11 @@
 use super::{Format, GeneratedTicks, Generator, Span};
 use chrono::{prelude::*, Duration, DurationRound, Months};
-use std::{borrow::Borrow, fmt::Display, ops::Add, rc::Rc};
+use std::{borrow::Borrow, fmt::Display, ops::Add, sync::Arc};
 
 /// Generates timestamp ticks from a set of periods. Aligned to nice values (earlier periods).
 #[derive(Clone)]
 pub struct Timestamps<Tz> {
-    format: Rc<dyn TimestampFormat<Tz>>,
+    format: Arc<dyn TimestampFormat<Tz> + Send + Sync>,
     periods: Vec<Period>,
     tz: std::marker::PhantomData<Tz>,
 }
@@ -41,7 +41,7 @@ pub enum Period {
 
 #[derive(Clone)]
 struct State<Tz: TimeZone> {
-    format: Rc<dyn TimestampFormat<Tz>>,
+    format: Arc<dyn TimestampFormat<Tz> + Send + Sync>,
     all_periods: Vec<Period>,
     period: Period,
     tz: std::marker::PhantomData<Tz>,
@@ -69,7 +69,7 @@ where
         periods.dedup();
         periods.reverse();
         Self {
-            format: Rc::new(ShortFormat),
+            format: Arc::new(ShortFormat),
             periods,
             tz: std::marker::PhantomData,
         }
@@ -84,7 +84,7 @@ where
     ///
     /// A short format tries to use the smallest possible representation for a period while reducing ambiguity. and is intended to be used where space is constrained e.g., tick labels. For example, a second will be formatted as `HH:MM:SS` and a year as `YYYY`.
     pub fn with_short_format(mut self) -> Self {
-        self.format = Rc::new(ShortFormat);
+        self.format = Arc::new(ShortFormat);
         self
     }
 
@@ -92,24 +92,31 @@ where
     ///
     /// Unlike the short format, the long format is intended to be used where space is not constrained e.g., the tooltip.
     pub fn with_long_format(mut self) -> Self {
-        self.format = Rc::new(LongFormat);
+        self.format = Arc::new(LongFormat);
         self
     }
 
     /// Sets a fixed strftime format for timestamps. See [chrono::strftime](https://docs.rs/chrono/0.4.33/chrono/format/strftime/index.html).
     pub fn with_strftime(mut self, format: impl Into<String>) -> Self {
-        self.format = Rc::new(StrftimeFormat(format.into()));
+        self.format = Arc::new(StrftimeFormat(format.into()));
         self
     }
 
     /// Sets a custom format for timestamps. The given `Period` is the latest period that was selected. The `DateTime` is the timestamp to format.
-    pub fn with_format(mut self, f: impl Fn(Period, &DateTime<Tz>) -> String + 'static) -> Self {
-        self.format = Rc::new(f);
+    pub fn with_format(
+        mut self,
+        f: impl Fn(Period, &DateTime<Tz>) -> String + Send + Sync + 'static,
+    ) -> Self {
+        self.format = Arc::new(f);
         self
     }
 }
 
-impl<Tz: TimeZone + 'static> Generator for Timestamps<Tz> {
+impl<Tz> Generator for Timestamps<Tz>
+where
+    Tz: TimeZone + Send + Sync + 'static,
+    Tz::Offset: Send + Sync,
+{
     type Tick = DateTime<Tz>;
 
     fn generate(
@@ -413,6 +420,7 @@ impl<Tz: TimeZone> Add<Period> for DateTime<Tz> {
 mod tests {
     use super::super::HorizontalSpan;
     use super::*;
+    use crate::Tick;
 
     fn assert_ticks<Tick>(ticks: GeneratedTicks<Tick>, expected: Vec<&'static str>) {
         let GeneratedTicks { ticks, state } = ticks;
@@ -422,7 +430,7 @@ mod tests {
         assert_eq!(check, expected);
     }
 
-    fn mk_span<Tick: 'static>(width: f64) -> impl Span<Tick> {
+    fn mk_span<XY: Tick>(width: f64) -> impl Span<XY> {
         HorizontalSpan::new(6.0, 0, 2.0, width, HorizontalSpan::identity_format())
     }
 
