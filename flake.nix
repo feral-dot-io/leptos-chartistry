@@ -5,14 +5,17 @@
     utils.url = "flake-utils";
     crane.url = "github:ipetkov/crane";
 
+    advisory-db = {
+      url = "github:rustsec/advisory-db";
+      flake = false;
+    };
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    advisory-db = {
-      url = "github:rustsec/advisory-db";
-      flake = false;
+    trunk-src = {
+      url = "github:trunk-rs/trunk";
+      flake = false; # Avoid breakage if added
     };
   };
 
@@ -36,6 +39,18 @@
         craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
         # Utilities
+        trunk-local = craneLib.buildPackage {
+          src = inputs.trunk-src; # Don't clean source
+          strictDeps = true;
+          buildInputs = with pkgs; [
+            openssl
+            pkg-config
+            wasm-bindgen-cli-local
+          ];
+          cargoExtraArgs = "--no-default-features --features rustls";
+          doCheck = false;
+        };
+
         wasm-bindgen-cli-local = pkgs.wasm-bindgen-cli.override {
           version = "0.2.99"; # Note: must be kept in sync with Cargo.lock
           hash = "sha256-1AN2E9t/lZhbXdVznhTcniy+7ZzlaEp/gwLEAucs6EA=";
@@ -114,8 +129,8 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            trunk
+          packages = [
+            trunk-local
             wasm-bindgen-cli-local
           ];
         };

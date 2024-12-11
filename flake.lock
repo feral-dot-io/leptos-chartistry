@@ -50,6 +50,7 @@
         "crane": "crane",
         "nixpkgs": "nixpkgs",
         "rust-overlay": "rust-overlay",
+        "trunk-src": "trunk-src",
         "utils": "utils"
       }
     },
@@ -85,6 +86,22 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "trunk-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1733123562,
+        "narHash": "sha256-4ozA189dvIzr+A3YD9ZpHvolYqkcgDjxiAp3cdPhUqc=",
+        "owner": "trunk-rs",
+        "repo": "trunk",
+        "rev": "512c5b14f3b06e7ae50bfee007ffca79378b1877",
+        "type": "github"
+      },
+      "original": {
+        "owner": "trunk-rs",
+        "repo": "trunk",
         "type": "github"
       }
     },
