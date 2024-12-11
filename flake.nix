@@ -9,6 +9,10 @@
       url = "github:rustsec/advisory-db";
       flake = false;
     };
+    cargo-leptos-src = {
+      url = "github:leptos-rs/cargo-leptos?tag=v0.2.24";
+      flake = false; # Only provides a devShell
+    };
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -39,6 +43,18 @@
         craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
         # Utilities
+        cargo-leptos-local = craneLib.buildPackage {
+          src = craneLib.cleanCargoSource inputs.cargo-leptos-src;
+          strictDeps = true;
+          buildInputs = with pkgs; [
+            openssl
+            pkg-config
+            wasm-bindgen-cli-local
+          ];
+          cargoExtraArgs = "--no-default-features --features no_downloads";
+          doCheck = false;
+        };
+
         trunk-local = craneLib.buildPackage {
           src = inputs.trunk-src; # Don't clean source
           strictDeps = true;
@@ -130,6 +146,7 @@
       {
         devShells.default = pkgs.mkShell {
           packages = [
+            cargo-leptos-local
             trunk-local
             wasm-bindgen-cli-local
           ];

@@ -16,6 +16,22 @@
         "type": "github"
       }
     },
+    "cargo-leptos-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1733694131,
+        "narHash": "sha256-YF2Ocpr9ey1Rusb2ETZ9kVaMr+bUphbUm3KMnPG/HNU=",
+        "owner": "leptos-rs",
+        "repo": "cargo-leptos",
+        "rev": "bc8ce83041c4704232a65d40ef12a045c0c656e8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "leptos-rs",
+        "repo": "cargo-leptos",
+        "type": "github"
+      }
+    },
     "crane": {
       "locked": {
         "lastModified": 1733688869,
@@ -47,6 +63,7 @@
     "root": {
       "inputs": {
         "advisory-db": "advisory-db",
+        "cargo-leptos-src": "cargo-leptos-src",
         "crane": "crane",
         "nixpkgs": "nixpkgs",
         "rust-overlay": "rust-overlay",
