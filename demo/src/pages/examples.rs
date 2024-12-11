@@ -2,18 +2,11 @@ use crate::{
     examples::{aspect_sunspots::AspectRatioSunspots, *},
     use_app_context,
 };
-use js_sys::wasm_bindgen::JsCast;
 use leptos::{
     either::{Either, EitherOf10},
-    html::Dialog,
     prelude::*,
 };
-use leptos_router::{
-    hooks::{use_location, use_navigate},
-    NavigateOptions,
-};
 use strum::VariantArray;
-use web_sys::{HtmlDialogElement, MouseEvent};
 
 #[derive(Copy, Clone, Debug, PartialEq, VariantArray)]
 pub enum Example {
@@ -269,55 +262,6 @@ pub fn view_example(example: Example) -> impl IntoView {
     .into_any()
 }
 
-macro_rules! impl_example_view {
-    ( $id:ident, $view:ident ) => {
-        #[component]
-        pub fn $view() -> impl IntoView {
-            let app = use_app_context();
-            view! {
-                <article class="example">
-                    <div class="cards">
-                        <Card example=Example::$id h1=true />
-                        <div class="background-box debug">
-                            <label>
-                                <input type="checkbox" prop:checked=app.debug
-                                    on:input=move |ev| app.debug.set(event_target_checked(&ev)) />
-                                " Toggle debug mode"
-                            </label>
-                        </div>
-                    </div>
-                    <div class="background-box code">
-                        <h2 class="connect-heading">"Example code"</h2>
-                        <div inner_html=Example::$id.code() />
-                    </div>
-                </article>
-            }
-            .into_any()
-        }
-    };
-}
-
-impl_example_view!(Line, LineView);
-impl_example_view!(StackedLine, StackedLineView);
-impl_example_view!(Bar, BarView);
-impl_example_view!(Legend, LegendView);
-impl_example_view!(TickLabels, TickLabelsView);
-impl_example_view!(RotatedLabel, RotatedLabelView);
-impl_example_view!(EdgeLayout, EdgeLayoutView);
-impl_example_view!(AxisMarker, AxisMarkerView);
-impl_example_view!(GridLine, GridLineView);
-impl_example_view!(GuideLine, GuideLineView);
-impl_example_view!(InsetLegend, InsetLegendView);
-impl_example_view!(InnerLayout, InnerLayoutView);
-impl_example_view!(MixedInterpolation, MixedInterpolationView);
-impl_example_view!(Stepped, SteppedView);
-impl_example_view!(Tooltip, TooltipView);
-impl_example_view!(Colours, ColoursView);
-impl_example_view!(Markers, MarkersView);
-impl_example_view!(Markers2, Markers2View);
-impl_example_view!(LineGradient, LineGradientView);
-impl_example_view!(Css, CssView);
-
 #[component]
 pub fn Examples() -> impl IntoView {
     let app = use_app_context();
@@ -385,66 +329,7 @@ pub fn Examples() -> impl IntoView {
             <section id="aspect-ratio" class="background-box">
                 <h2 class="always-underline"><a href="examples.html#aspect-ratio">"Aspect ratio"</a></h2>
                 <AspectRatioSunspots debug=app.debug.into() />
-                <p><ShowCode id="aspect-ratio" code=include_str!("../examples/aspect_sunspots.rs") /></p>
             </section>
         </article>
     }.into_any()
-}
-
-#[component]
-fn ShowCode(#[prop(into)] id: String, #[prop(into)] code: String) -> impl IntoView {
-    let dialog = NodeRef::<Dialog>::new();
-    let href = format!("examples.html#{}", id);
-
-    // Opens dialogue on demand
-    let show_modal = move |dialog: HtmlDialogElement| {
-        dialog
-            .show_modal()
-            .expect("unable to show example code dialog")
-    };
-
-    let on_click = move |_| {
-        dialog.get().map(show_modal);
-    };
-    let on_dismiss = move |ev: MouseEvent| {
-        if let Some(dialog) = dialog.get() {
-            if let Some(target) = ev.target() {
-                // Skip if click was inside the dialog
-                if target.dyn_ref::<HtmlDialogElement>().is_some() {
-                    dialog.close();
-                    // Navigate away from the fragment
-                    use_navigate()(
-                        &use_location().pathname.get(),
-                        NavigateOptions {
-                            resolve: true,
-                            replace: true,
-                            scroll: false,
-                            state: Default::default(),
-                        },
-                    );
-                }
-            }
-        }
-    };
-
-    // Show if page fragment matches ID
-    // TODO investigate why this triggers a panic https://docs.rs/leptos/latest/leptos/struct.NodeRef.html#method.on_load
-    let _ = RenderEffect::new(move |_| {
-        if let Some(dialog) = dialog.get() {
-            let hash = use_location().hash.get().trim_start_matches('#').to_owned();
-            let hash: String = js_sys::decode_uri(&hash)
-                .map(|s| s.into())
-                .unwrap_or_default();
-            if hash == id {
-                show_modal(dialog);
-            }
-        }
-    });
-
-    view! {
-        <a href=href on:click=on_click>"Show example code"</a>
-        <dialog node_ref=dialog on:click=on_dismiss>
-            <pre><code>{code}</code></pre>
-        </dialog>
-    }
 }
