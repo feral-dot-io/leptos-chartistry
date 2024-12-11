@@ -1,6 +1,6 @@
 # Leptos Chartistry
 
-<p><a href="https://crates.io/crates/leptos-chartistry"><img src="https://img.shields.io/crates/v/leptos-chartistry.svg?style=for-the-badge" alt="Crates.io version" /></a><a href="https://docs.rs/leptos-chartistry"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=for-the-badge" alt="Docs.rs" /></a></p>
+<p><a href="https://crates.io/crates/leptos-chartistry"><img src="https://img.shields.io/crates/v/leptos-chartistry.svg?style=for-the-badge" alt="Crates.io version" /></a> &nbsp; <a href="https://docs.rs/leptos-chartistry"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=for-the-badge" alt="Docs.rs" /></a></p>
 
 Chartistry is an extensible charting library for [Leptos](https://github.com/leptos-rs/leptos). It provides a simple and easy to use `<Chart>` component.
 
