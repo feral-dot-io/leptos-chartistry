@@ -24,8 +24,12 @@ pub trait Span<Tick> {
     fn consumed(&self, state: &dyn Format<Tick = Tick>, ticks: &[Tick]) -> f64;
 }
 
+/// Formats a tick value into a string. The precise format will be picked by the tick generator. For example if [Timestamps] is used and is only showing years then the format will be `YYYY`.
 pub trait Format {
+    /// Our tick value.
     type Tick;
+
+    /// Formats a tick into a string according to the tick generator used.
     fn format(&self, value: &Self::Tick) -> String;
 }
 

@@ -70,7 +70,7 @@ where
 }
 
 impl<XY: Tick> TickLabels<XY> {
-    /// Creates a new tick label generator from a tick generator.
+    /// Creates a new tick label generator from a tick generator. Use [AlignedFloats] or [Timestamps] for available generators.
     pub fn from_generator(gen: impl TickGen<Tick = XY> + 'static) -> Self {
         Self {
             min_chars: RwSignal::default(),
