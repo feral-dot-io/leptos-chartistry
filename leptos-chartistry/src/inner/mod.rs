@@ -14,17 +14,17 @@ use leptos::{either::EitherOf6, prelude::*};
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum InnerLayout<X: Tick, Y: Tick> {
-    /// Axis marker. See [AxisMarker](axis_marker::AxisMarker) for details.
+    /// Axis marker. See [AxisMarker](struct@axis_marker::AxisMarker) for details.
     AxisMarker(axis_marker::AxisMarker),
-    /// X grid line. See [XGridLine](grid_line::XGridLine) for details.
+    /// X grid line. See [XGridLine](struct@grid_line::XGridLine) for details.
     XGridLine(grid_line::XGridLine<X>),
-    /// Y grid line. See [YGridLine](grid_line::YGridLine) for details.
+    /// Y grid line. See [YGridLine](struct@grid_line::YGridLine) for details.
     YGridLine(grid_line::YGridLine<Y>),
-    /// X guide line. See [XGuideLine](guide_line::XGuideLine) for details.
+    /// X guide line. See [XGuideLine](struct@guide_line::XGuideLine) for details.
     XGuideLine(guide_line::XGuideLine),
-    /// Y guide line. See [YGuideLine](guide_line::YGuideLine) for details.
+    /// Y guide line. See [YGuideLine](struct@guide_line::YGuideLine) for details.
     YGuideLine(guide_line::YGuideLine),
-    /// Inset legend. See [InsetLegend](legend::InsetLegend) for details.
+    /// Inset legend. See [InsetLegend](struct@legend::InsetLegend) for details.
     Legend(legend::InsetLegend),
 }
 
