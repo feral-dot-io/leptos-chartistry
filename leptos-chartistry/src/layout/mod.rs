@@ -14,10 +14,7 @@ use crate::{
 use leptos::{either::EitherOf3, prelude::*};
 
 /// All possible layout options for an edge of a [Chart](crate::Chart). See [IntoEdge](trait@IntoEdge) for details.
-///
-/// Avoid constructing directly.
 #[derive(Clone)]
-#[doc(hidden)]
 #[non_exhaustive]
 pub enum EdgeLayout<XY: Tick> {
     /// Legend. See [legend](struct@legend::Legend) for details.

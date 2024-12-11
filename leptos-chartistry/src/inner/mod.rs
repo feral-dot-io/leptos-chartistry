@@ -11,10 +11,7 @@ use legend::InsetLegend;
 use leptos::{either::EitherOf6, prelude::*};
 
 /// Inner layout options for a [Chart](crate::Chart). See [IntoInner](trait@IntoInner) for details.
-///
-/// Avoid constructing directly.
 #[derive(Clone)]
-#[doc(hidden)]
 #[non_exhaustive]
 pub enum InnerLayout<X: Tick, Y: Tick> {
     /// Axis marker. See [AxisMarker](axis_marker::AxisMarker) for details.
