@@ -15,10 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Security in case of vulnerabilities. -->
 
 ### Changed
-- Updated [Leptos](https://github.com/leptos-rs/leptos) to 0.7.
 - Most of the API now has `#[non_exhaustive]` on it.
 - Sealed [`Tick`](https://docs.rs/leptos-chartistry/latest/leptos_chartistry/trait.Tick.html) trait. [Open an issue](https://github.com/feral-dot-io/leptos-chartistry/issues) if you need a specific impl.
 - Most `<Tick: 'static>` generic bounds in the API have been changed to `<XY: Tick>`.
+- Updated [Leptos](https://github.com/leptos-rs/leptos) to 0.7.
+  - If compile times have gone out of the window, try the following:
+    - On any page with a call to `<Chart>`, add a call to [IntoAny::into_any](https://docs.rs/leptos/0.7.0/leptos/tachys/view/any_view/trait.IntoAny.html). For example: `view! { ... <Chart ... /> ... }.into_any()`
+    - Drop debug info by adding to your `Cargo.toml`: `[profile.dev] debug = false`
 
 ### Fixed
 - Stacked lines with an `f64::NAN` point are now correctly rendered.
