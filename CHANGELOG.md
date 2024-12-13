@@ -21,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated [Leptos](https://github.com/leptos-rs/leptos) to 0.7.
   - If compile times have gone out of the window, try the following:
     - On any page with a call to `<Chart>`, add a call to [IntoAny::into_any](https://docs.rs/leptos/0.7.0/leptos/tachys/view/any_view/trait.IntoAny.html). For example: `view! { ... <Chart ... /> ... }.into_any()`
-    - Drop debug info by adding to your `Cargo.toml`: `[profile.dev] debug = false`
+    - Drop debug info by adding to your `Cargo.toml`: `profile.dev.debug = false`
+  - If your charts use a degree of dynamism fitting for Leptos then you might see charts being drawn outside of bounds. This is a [derived memo bug in Leptos](https://github.com/leptos-rs/leptos/issues/3339)
 
 ### Fixed
 - Stacked lines with an `f64::NAN` point are now correctly rendered.
