@@ -19,7 +19,7 @@ pub struct PreState<X: Tick, Y: Tick> {
 pub struct State<X: Tick, Y: Tick> {
     pub pre: PreState<X, Y>,
     pub layout: Layout,
-    pub projection: Signal<Projection>,
+    pub projection: Memo<Projection>,
 
     pub svg_zero: Memo<(f64, f64)>,
 
@@ -56,7 +56,7 @@ impl<X: Tick, Y: Tick> State<X, Y> {
         pre: PreState<X, Y>,
         node: &UseWatchedNode,
         layout: Layout,
-        proj: Signal<Projection>,
+        proj: Memo<Projection>,
     ) -> Self {
         // Mouse
         let mouse_chart = node.mouse_chart;

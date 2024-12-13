@@ -264,7 +264,6 @@ fn RenderChart<X: Tick, Y: Tick>(
 
             Projection::new(inner, range_x.get().positions(), range_y.get().positions())
         })
-        .into()
     };
     let state = State::new(pre_state, &watch, layout, projection);
 

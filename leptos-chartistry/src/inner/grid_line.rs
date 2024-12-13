@@ -175,7 +175,7 @@ pub(super) fn YGridLine<X: Tick, Y: Tick>(
 
 fn for_ticks<XY: Tick>(
     ticks: Memo<GeneratedTicks<XY>>,
-    proj: Signal<Projection>,
+    proj: Memo<Projection>,
     is_x: bool,
 ) -> Vec<(f64, String)> {
     ticks.with(move |ticks| {
