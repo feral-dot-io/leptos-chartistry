@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Fixed for any bug fixes. -->
 <!-- Security in case of vulnerabilities. -->
 
+## [0.2.0] - 2024-12-13
 ### Changed
 - Most of the API now has `#[non_exhaustive]` on it.
 - Sealed [`Tick`](https://docs.rs/leptos-chartistry/latest/leptos_chartistry/trait.Tick.html) trait. [Open an issue](https://github.com/feral-dot-io/leptos-chartistry/issues) if you need a specific impl.
@@ -101,4 +102,5 @@ Series options:
 [0.1.5]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.4...v0.1.5
 [0.1.6]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.5...v0.1.6
 [0.1.7]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.6...v0.1.7
+[0.2.0]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.7...v0.2.0
 [unreleased]: https://github.com/feral-dot-io/leptos-chartistry/compare/v1.1.7...HEAD
