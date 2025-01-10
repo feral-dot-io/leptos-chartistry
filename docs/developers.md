@@ -63,8 +63,7 @@ Features to add:
 For the demo site:
 
 ```
-cd demo
-trunk serve --open
+trunk serve --config ./demo/Trunk.toml --open
 ```
 
 ## Release checklist
