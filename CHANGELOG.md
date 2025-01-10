@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Fixed for any bug fixes. -->
 <!-- Security in case of vulnerabilities. -->
 
+## [0.2.1] - 2025-01-10
+### Added
+- The examples use `leptos_chartistry::*` which rely on importing an `IntoInner` trait. This collides with `leptos::prelude::IntoInner` added in 0.7.1. The public API now declares `IntoInner as _` and `IntoEdge as _` fixing `leptos_chartistry::*` usage.
+### Changed
+- Updated [leptos-use dependency](https://github.com/Synphonyte/leptos-use) to 0.15.
+
 ## [0.2.0] - 2024-12-13
 ### Changed
 - Most of the API now has `#[non_exhaustive]` on it.
@@ -103,4 +109,5 @@ Series options:
 [0.1.6]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.5...v0.1.6
 [0.1.7]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.6...v0.1.7
 [0.2.0]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.7...v0.2.0
-[unreleased]: https://github.com/feral-dot-io/leptos-chartistry/compare/v1.1.7...HEAD
+[0.2.1]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.2.0...v0.2.1
+[unreleased]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.2.1...HEAD

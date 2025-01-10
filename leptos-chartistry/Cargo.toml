@@ -1,6 +1,6 @@
 [package]
 name = "leptos-chartistry"
-version = "0.2.0"
+version = "0.2.1"
 authors = [ "Joshua McQuistan <joshua.mcquistan@feral.io>" ]
 edition = "2021"
 description = "Chartistry is a charting library for Leptos"
@@ -15,7 +15,7 @@ categories = [ "graphics", "gui", "wasm", "web-programming" ]
 [dependencies]
 chrono = "0.4"
 leptos = "0.7"
-leptos-use = "0.14"
+leptos-use = "0.15"
 log = "0.4"
 web-sys = { version = "0.3", features = ["DomRectReadOnly"] }
 
