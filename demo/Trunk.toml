@@ -1,0 +1,14 @@
+trunk-version = "*"
+
+[build]
+target = "index.html"
+dist = "../dist"
+public_url = "/leptos-chartistry/"
+offline = true
+frozen = true
+locked = true
+minify = "on_release"
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8081

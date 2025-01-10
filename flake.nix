@@ -36,11 +36,19 @@
     utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = nixpkgs.legacyPackages.${system}.extend rust-overlay.overlays.default;
+        pkgs = nixpkgs.legacyPackages.${system}.appendOverlays [
+          rust-overlay.overlays.default
+          #self.overlays.tools
+        ];
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
           targets = [ "wasm32-unknown-unknown" ];
         };
-        craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
+        craneLib = ((crane.mkLib pkgs).overrideToolchain rustToolchain).overrideScope (
+          final: prev: {
+            trunk = trunk-local;
+            wasm-bindgen-cli = wasm-bindgen-cli-local;
+          }
+        );
 
         # Utilities
         cargo-leptos-local = craneLib.buildPackage {
@@ -108,8 +116,7 @@
             pname = "chartistry-demo";
             cargoArtifacts = wasmArtifacts;
             cargoExtraArgs = "--package=demo";
-            trunkExtraBuildArgs = "--public-url /leptos-chartistry";
-            trunkIndexPath = "demo/index.html";
+            trunkExtraBuildArgs = "--config=./demo/Trunk.toml";
             # Create symlinks for each of our pages. Enables a static site.
             postInstall = ''
               ln -s index.html $out/examples.html
