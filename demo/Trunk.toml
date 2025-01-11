@@ -4,9 +4,6 @@ trunk-version = "*"
 target = "index.html"
 dist = "../dist"
 public_url = "/leptos-chartistry/"
-offline = true
-frozen = true
-locked = true
 minify = "on_release"
 
 [serve]
