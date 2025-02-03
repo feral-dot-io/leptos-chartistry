@@ -40,6 +40,8 @@ pub enum TooltipPlacement {
     Hide,
     /// Shows the tooltip to the left of the cursor.
     LeftCursor,
+    /// Shows the tooltip to the right of the cursor.
+    RightCursor,
 }
 
 /// How the tooltip Y value table is sorted.
@@ -82,6 +84,11 @@ impl<X: Tick, Y: Tick> Tooltip<X, Y> {
     /// Creates a new tooltip left of the cursor. Uses default X and Y ticks.
     pub fn left_cursor() -> Self {
         Self::from_placement(TooltipPlacement::LeftCursor)
+    }
+
+    /// Creates a new toolptip right of the curser. Uses default X and Y ticks.
+    pub fn right_cursor() -> Self {
+        Self::from_placement(TooltipPlacement::RightCursor)
     }
 
     /// Sets the sort order of the Y value table.
@@ -159,6 +166,7 @@ impl std::fmt::Display for TooltipPlacement {
         match self {
             TooltipPlacement::Hide => write!(f, "Hide"),
             TooltipPlacement::LeftCursor => write!(f, "Left cursor"),
+            TooltipPlacement::RightCursor => write!(f, "Right cursor"),
         }
     }
 }
@@ -170,6 +178,7 @@ impl std::str::FromStr for TooltipPlacement {
         match s.to_lowercase().as_str() {
             "hide" => Ok(TooltipPlacement::Hide),
             "left cursor" => Ok(TooltipPlacement::LeftCursor),
+            "right cursor" => Ok(TooltipPlacement::RightCursor),
             _ => Err(format!("invalid TooltipPlacement: `{}`", s)),
         }
     }
@@ -302,7 +311,16 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
                 style="position: absolute; z-index: 1; width: max-content; height: max-content; transform: translateY(-50%); background-color: #fff; white-space: pre; font-family: monospace;"
                 style:border=format!("1px solid {}", AXIS_MARKER_COLOUR)
                 style:top=move || format!("calc({}px)", state.mouse_page.get().1)
-                style:right=move || format!("calc(100% - {}px + {}px)", state.mouse_page.get().0, cursor_distance.get())
+                style:left=move || if placement.get() == TooltipPlacement::RightCursor {
+                    format!("calc({}px + {}px)", state.mouse_page.get().0, cursor_distance.get())
+                } else {
+                    "auto".to_string()
+                }
+                style:right=move || if placement.get() == TooltipPlacement::LeftCursor {
+                    format!("calc(100% - {}px + {}px)", state.mouse_page.get().0, cursor_distance.get())
+                } else {
+                    "auto".to_string()
+                }
                 style:padding=move || padding.get().to_css_style()>
                 <h2
                     style="margin: 0; text-align: center;"
