@@ -179,6 +179,7 @@ pub fn RenderBar<X: Tick, Y: Tick>(
     let rects = move || {
         positions.with(|positions| {
             // Find the bottom Y position of each bar
+            // TODO Edge placement makes no sense with negative data
             let bottom_y = match bar.placement.get() {
                 BarPlacement::Zero => state.svg_zero.get().1,
                 BarPlacement::Edge => state.layout.inner.get().bottom_y(),
@@ -198,12 +199,18 @@ pub fn RenderBar<X: Tick, Y: Tick>(
             positions
                 .iter()
                 .map(|&(x, y)| {
+                    let height = bottom_y - y;
+                    let (y, height) = if height.is_sign_positive() {
+                        (y, height)
+                    } else {
+                        (bottom_y, -height) // Negative data point
+                    };
                     view! {
                         <rect
                             x=x + group_width * bar.group_id as f64 + offset
                             y=y
                             width=group_width_inner
-                            height=bottom_y - y />
+                            height=height />
                     }
                 })
                 .collect::<Vec<_>>()
