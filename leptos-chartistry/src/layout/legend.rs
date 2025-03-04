@@ -7,7 +7,7 @@ use crate::{
     state::{PreState, State},
     Padding, Tick,
 };
-use leptos::{either::Either, prelude::*};
+use leptos::{prelude::*};
 
 /// Builds a legend for the chart [series](crate::Series). Orientated along the axis of its placed edge. Drawn in HTML.
 #[derive(Clone, Debug, PartialEq)]
@@ -103,13 +103,9 @@ pub(crate) fn Legend<X: Tick, Y: Tick>(
     let html = move || {
         let edge = edge.get();
         let body = if edge.is_horizontal() {
-            Either::Left(view! {
-                <HorizontalBody series=series state=state.clone() />
-            })
+            view! {<HorizontalBody series=series state=state.clone() />}.into_any()
         } else {
-            Either::Right(view! {
-                <VerticalBody series=series state=state.clone() />
-            })
+            view! {<VerticalBody series=series state=state.clone() />}.into_any()
         };
         view! {
             <div
@@ -124,7 +120,7 @@ pub(crate) fn Legend<X: Tick, Y: Tick>(
                     </tbody>
                 </table>
             </div>
-        }
+        }.into_any()
     };
 
     view! {

@@ -11,7 +11,7 @@ use crate::{
     state::{PreState, State},
     Tick,
 };
-use leptos::{either::EitherOf3, prelude::*};
+use leptos::{prelude::*};
 
 /// All possible layout options for an edge of a [Chart](crate::Chart). See [IntoEdge](trait@IntoEdge) for details.
 #[derive(Clone)]
@@ -45,15 +45,9 @@ impl UseLayout {
         state: State<X, Y>,
     ) -> impl IntoView {
         match self {
-            Self::Legend(inner) => EitherOf3::A(view! {
-                <legend::Legend legend=inner edge=edge bounds=bounds state=state />
-            }),
-            Self::RotatedLabel(inner) => EitherOf3::B(view! {
-                <rotated_label::RotatedLabel label=inner edge=edge bounds=bounds state=state />
-            }),
-            Self::TickLabels(inner) => EitherOf3::C(view! {
-                <tick_labels::TickLabels ticks=inner edge=edge bounds=bounds state=state />
-            }),
+            Self::Legend(inner) => view! {<legend::Legend legend=inner edge=edge bounds=bounds state=state />}.into_any(),
+            Self::RotatedLabel(inner) => view! {<rotated_label::RotatedLabel label=inner edge=edge bounds=bounds state=state />}.into_any(),
+            Self::TickLabels(inner) => view! {<tick_labels::TickLabels ticks=inner edge=edge bounds=bounds state=state />}.into_any(),
         }
     }
 }

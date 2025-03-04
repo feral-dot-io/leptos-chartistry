@@ -1,6 +1,6 @@
 use super::UseLine;
 use crate::colours::Colour;
-use leptos::{either::EitherOf7, prelude::*};
+use leptos::prelude::*;
 
 // Scales our marker (drawn -1 to 1) to a 1.0 line width
 const WIDTH_TO_MARKER: f64 = 8.0;
@@ -115,7 +115,7 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
 
         // Avoid the cost of empty nodes
         if shape != MarkerShape::None {
-            return vec![].collect_view();
+            return view!{}.into_any();
         };
 
         positions.with(|positions| {
@@ -132,7 +132,7 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
                             line_width=line_width />
                     }
                 })
-                .collect_view()
+                .collect_view().into_any()
         })
     };
 
@@ -144,7 +144,7 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
             class="_chartistry_line_markers">
             {markers}
         </g>
-    }
+    }.into_any()
 }
 
 /// Renders the marker shape in a square. They should all be similar in size and not just extend to the edge e.g., square is a rotated diamond.
@@ -158,9 +158,9 @@ fn MarkerShape(
 ) -> impl IntoView {
     let radius = diameter / 2.0;
     match shape {
-        MarkerShape::None => EitherOf7::A(()),
+        MarkerShape::None => ().into_any(),
 
-        MarkerShape::Circle => EitherOf7::B(view! {
+        MarkerShape::Circle => view! {
             // Radius to fit inside our square / diamond -- not the viewbox rect
             <circle
                 cx=x
@@ -168,32 +168,32 @@ fn MarkerShape(
                 r=(45.0_f64).to_radians().sin() * radius
                 paint-order="stroke fill"
             />
-        }),
+        }.into_any(),
 
-        MarkerShape::Square => EitherOf7::C(view! {
+        MarkerShape::Square => view! {
             <Diamond x=x y=y radius=radius rotate=45 />
-        }),
+        }.into_any(),
 
-        MarkerShape::Diamond => EitherOf7::D(view! {
+        MarkerShape::Diamond => view! {
             <Diamond x=x y=y radius=radius />
-        }),
+        }.into_any(),
 
-        MarkerShape::Triangle => EitherOf7::E(view! {
+        MarkerShape::Triangle => view! {
             <polygon
                 points=format!("{},{} {},{} {},{}",
                     x, y - radius,
                     x - radius, y + radius,
                     x + radius, y + radius)
                 paint-order="stroke fill"/>
-        }),
+        }.into_any(),
 
-        MarkerShape::Plus => EitherOf7::F(view! {
+        MarkerShape::Plus => view! {
             <PlusPath x=x y=y diameter=diameter leg=line_width />
-        }),
+        }.into_any(),
 
-        MarkerShape::Cross => EitherOf7::G(view! {
+        MarkerShape::Cross => view! {
             <PlusPath x=x y=y diameter=diameter leg=line_width rotate=45 />
-        }),
+        }.into_any(),
     }
 }
 

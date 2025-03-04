@@ -28,7 +28,7 @@ pub fn DebugRect(
                         stroke="red"
                         stroke-width=1
                     />
-                }
+                }.into_any()
             })
             .collect_view();
         Either::Right(rects)

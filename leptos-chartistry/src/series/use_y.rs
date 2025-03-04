@@ -55,17 +55,15 @@ pub(super) fn RenderUseY<X: Tick, Y: Tick>(
 ) -> impl IntoView {
     let desc = use_y.desc.clone();
     match desc {
-        UseYDesc::Line(line) => Either::Left(view! {
+        UseYDesc::Line(line) => view! {
             <RenderLine
                 use_y=use_y
                 line=line
                 data=state.pre.data
                 positions=positions
                 markers=positions />
-        }),
-        UseYDesc::Bar(bar) => Either::Right(view! {
-            <RenderBar bar=bar state=state positions=positions />
-        }),
+        }.into_any(),
+        UseYDesc::Bar(bar) => view! {<RenderBar bar=bar state=state positions=positions />}.into_any(),
     }
 }
 
@@ -79,7 +77,7 @@ pub fn Snippet<X: Tick, Y: Tick>(series: UseY, state: State<X, Y>) -> impl IntoV
             <Taster series=series state=state />
             {name}
         </div>
-    }
+    }.into_any()
 }
 
 #[component]
@@ -129,5 +127,5 @@ fn Taster<X: Tick, Y: Tick>(series: UseY, state: State<X, Y>) -> impl IntoView {
             <DebugRect label="taster" debug=debug bounds=vec![bounds.into()] />
             {desc}
         </svg>
-    }
+    }.into_any()
 }
