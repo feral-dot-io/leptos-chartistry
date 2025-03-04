@@ -216,7 +216,7 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
             style="overflow: visible;">
             <DebugRect label="Chart" debug=debug />
             <Show when=move || have_dimensions.get() fallback=|| view!(<p>"Loading..."</p>)>
-                <RenderChart
+                {view!{<RenderChart
                     watch=watch.clone()
                     pre_state=pre.clone()
                     aspect_ratio=calc
@@ -226,7 +226,7 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
                     left=left.clone()
                     inner=inner.clone()
                     tooltip=tooltip.clone()
-                />
+                />}.into_any()}
             </Show>
         </div>
     }
@@ -270,14 +270,16 @@ fn RenderChart<X: Tick, Y: Tick>(
     // Render edges
     let edges = edges
         .into_iter()
-        .map(|r| r.render(state.clone()))
-        .collect_view();
+        .map(|r| r.render(state.clone()).into_any())
+        .collect_view()
+        .into_any();
 
     // Inner
     let inner = inner
         .into_iter()
-        .map(|opt| opt.into_use(&state).render(state.clone()))
-        .collect_view();
+        .map(|opt| opt.into_use(&state).render(state.clone()).into_any())
+        .collect_view()
+        .into_any();
 
     let outer = state.layout.outer;
     view! {
@@ -290,10 +292,11 @@ fn RenderChart<X: Tick, Y: Tick>(
             <CommonDefs />
             {inner}
             {edges}
-            <RenderData state=state.clone() />
+            {view!{<RenderData state=state.clone() />}.into_any()}
         </svg>
         <Tooltip tooltip=tooltip state=state />
     }
+    .into_any()
 }
 
 #[component]

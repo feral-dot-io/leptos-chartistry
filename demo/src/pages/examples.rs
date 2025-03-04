@@ -3,7 +3,7 @@ use crate::{
     use_app_context,
 };
 use leptos::{
-    either::{Either, EitherOf10},
+    either::{Either},
     prelude::*,
 };
 use strum::VariantArray;
@@ -152,66 +152,26 @@ impl Example {
         let de = use_app_context().debug.into();
         let da = load_data();
         match self {
-            Self::Line => Either::Left(EitherOf10::A(view! {
-                <series_line::Example debug=de data=da />
-            })),
-            Self::StackedLine => Either::Left(EitherOf10::B(view! {
-                <series_line_stack::Example debug=de data=da />
-            })),
-            Self::Bar => Either::Left(EitherOf10::C(view! {
-                <series_bar::Example debug=de data=da />
-            })),
-            Self::Legend => Either::Left(EitherOf10::D(view! {
-                <edge_legend::Example debug=de data=da />
-            })),
-            Self::TickLabels => Either::Left(EitherOf10::E(view! {
-                <edge_tick_labels::Example debug=de data=da />
-            })),
-            Self::RotatedLabel => Either::Left(EitherOf10::F(view! {
-                <edge_rotated_label::Example debug=de data=da />
-            })),
-            Self::EdgeLayout => Either::Left(EitherOf10::G(view! {
-                <edge_layout::Example debug=de data=da />
-            })),
-            Self::AxisMarker => Either::Left(EitherOf10::H(view! {
-                <inner_axis_marker::Example debug=de data=da />
-            })),
-            Self::GridLine => Either::Left(EitherOf10::I(view! {
-                <inner_grid_line::Example debug=de data=da />
-            })),
-            Self::GuideLine => Either::Left(EitherOf10::J(view! {
-                <inner_guide_line::Example debug=de data=da />
-            })),
-            Self::InsetLegend => Either::Right(EitherOf10::A(view! {
-                <inner_legend::Example debug=de data=da />
-            })),
-            Self::InnerLayout => Either::Right(EitherOf10::B(view! {
-                <inner_layout::Example debug=de data=da />
-            })),
-            Self::MixedInterpolation => Either::Right(EitherOf10::C(view! {
-                <interpolation_mixed::Example debug=de data=da />
-            })),
-            Self::Stepped => Either::Right(EitherOf10::D(view! {
-                <interpolation_stepped::Example debug=de data=da />
-            })),
-            Self::Tooltip => Either::Right(EitherOf10::E(view! {
-                <feature_tooltip::Example debug=de data=da />
-            })),
-            Self::Colours => Either::Right(EitherOf10::F(view! {
-                <feature_colours::Example debug=de data=da />
-            })),
-            Self::Markers => Either::Right(EitherOf10::G(view! {
-                <feature_markers::Example debug=de data=da />
-            })),
-            Self::Markers2 => Either::Right(EitherOf10::H(view! {
-                <feature_markers_2::Example debug=de data=da />
-            })),
-            Self::LineGradient => Either::Right(EitherOf10::I(view! {
-                <feature_line_gradient::Example debug=de data=da />
-            })),
-            Self::Css => Either::Right(EitherOf10::J(view! {
-                <feature_css::Example debug=de data=da />
-            })),
+            Self::Line => view! {<series_line::Example debug=de data=da />}.into_any(),
+            Self::StackedLine => view! {<series_line_stack::Example debug=de data=da />}.into_any(),
+            Self::Bar => view! {<series_bar::Example debug=de data=da />}.into_any(),
+            Self::Legend => view! {<edge_legend::Example debug=de data=da />}.into_any(),
+            Self::TickLabels => view! {<edge_tick_labels::Example debug=de data=da />}.into_any(),
+            Self::RotatedLabel => view! {<edge_rotated_label::Example debug=de data=da />}.into_any(),
+            Self::EdgeLayout => view! {<edge_layout::Example debug=de data=da />}.into_any(),
+            Self::AxisMarker => view! {<inner_axis_marker::Example debug=de data=da />}.into_any(),
+            Self::GridLine => view! {<inner_grid_line::Example debug=de data=da />}.into_any(),
+            Self::GuideLine => view! {<inner_guide_line::Example debug=de data=da />}.into_any(),
+            Self::InsetLegend => view! {<inner_legend::Example debug=de data=da />}.into_any(),
+            Self::InnerLayout => view! {<inner_layout::Example debug=de data=da />}.into_any(),
+            Self::MixedInterpolation => view! {<interpolation_mixed::Example debug=de data=da />}.into_any(),
+            Self::Stepped => view! {<interpolation_stepped::Example debug=de data=da />}.into_any(),
+            Self::Tooltip => view! {<feature_tooltip::Example debug=de data=da />}.into_any(),
+            Self::Colours => view! {<feature_colours::Example debug=de data=da />}.into_any(),
+            Self::Markers => view! {<feature_markers::Example debug=de data=da />}.into_any(),
+            Self::Markers2 => view! {<feature_markers_2::Example debug=de data=da />}.into_any(),
+            Self::LineGradient => view! {<feature_line_gradient::Example debug=de data=da />}.into_any(),
+            Self::Css => view! {<feature_css::Example debug=de data=da />}.into_any(),
         }
     }
 }

@@ -211,9 +211,10 @@ pub fn RenderBar<X: Tick, Y: Tick>(
                             y=y
                             width=group_width_inner
                             height=height />
-                    }
+                    }.into_any()
                 })
-                .collect::<Vec<_>>()
+                .collect_view()
+                .into_any()
         })
     };
     view! {

@@ -134,5 +134,5 @@ pub fn RenderData<X: Tick, Y: Tick>(state: State<X, Y>) -> impl IntoView {
                 <RenderUseY use_y=use_y.clone() state=state.clone() positions=mk_svg_coords(use_y.id) />
             </For>
         </g>
-    }
+    }.into_any()
 }
