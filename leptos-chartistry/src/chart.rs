@@ -169,8 +169,7 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     #[prop(into)]
     series: Series<T, X, Y>,
     /// Data to render. Must be sorted.
-    #[prop(into)]
-    data: Signal<Vec<T>>,
+    data: impl ChartData<T>,
 ) -> impl IntoView {
     let root = NodeRef::<Div>::new();
     let watch = use_watched_node(root);
@@ -204,7 +203,7 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     left.reverse();
 
     // Build data
-    let data = UseData::new(series, data);
+    let data = UseData::new(series, data.to_signal());
     let pre = PreState::new(debug.into(), font_height, font_width, padding.into(), data);
 
     view! {
@@ -311,5 +310,71 @@ fn CommonDefs() -> impl IntoView {
                 <path d="M0,0 L0,8 L7,4 z" fill="context-stroke" />
             </marker>
         </defs>
+    }
+}
+
+/// A trait that is implemented for types that can serve as chart data.
+/// 
+/// An implementation is provided for `Signal<impl AsRef<[T]>` (see [`Signal`]).
+/// An implementation is also provided for a few other standard types, such as [`Vec<T>`], for convenience and compatibility.
+/// 
+/// You can't implement this trait for your own types. You should implement `AsRef<[T]>` instead and wrap it in a signal.
+#[allow(private_bounds)]
+pub trait ChartData<T>: ChartDataSealed<T> {}
+impl<T, D> ChartData<T> for D where D: ChartDataSealed<T> {}
+
+trait ChartDataSealed<T> {
+    fn to_signal(self) -> Signal<impl AsRef<[T]> + Send + Sync + 'static>;
+}
+impl<T> ChartDataSealed<T> for Vec<T>
+where
+    T: Send + Sync + 'static,
+{
+    fn to_signal(self) -> Signal<impl AsRef<[T]>> {
+        Signal::<Vec<T>>::from(self)
+    }
+}
+impl<T, const N: usize> ChartDataSealed<T> for [T; N]
+where
+    T: Send + Sync + 'static,
+{
+    fn to_signal(self) -> Signal<impl AsRef<[T]>> {
+        Signal::<[T; N]>::from(self)
+    }
+}
+impl<T> ChartDataSealed<T> for &'static [T]
+where
+    T: Send + Sync + 'static,
+{
+    fn to_signal(self) -> Signal<impl AsRef<[T]>> {
+        Signal::<&[T]>::from(self)
+    }
+}
+
+impl<T, D> ChartDataSealed<T> for Signal<D>
+where
+    T: Send + Sync + 'static,
+    D: AsRef<[T]> + Send + Sync + 'static,
+{
+    fn to_signal(self) -> Signal<impl AsRef<[T]>> {
+        self
+    }
+}
+impl<T, D> ChartDataSealed<T> for ReadSignal<D>
+where
+    T: Send + Sync + 'static,
+    D: AsRef<[T]> + Send + Sync + 'static,
+{
+    fn to_signal(self) -> Signal<impl AsRef<[T]>> {
+        Signal::<D>::from(self)
+    }
+}
+impl<T, D> ChartDataSealed<T> for RwSignal<D>
+where
+    T: Send + Sync + 'static,
+    D: AsRef<[T]> + Send + Sync + 'static,
+{
+    fn to_signal(self) -> Signal<impl AsRef<[T]>> {
+        Signal::<D>::from(self)
     }
 }

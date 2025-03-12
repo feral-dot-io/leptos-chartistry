@@ -25,7 +25,7 @@ pub struct UseData<X: Tick, Y: Tick> {
 impl<X: Tick, Y: Tick> UseData<X, Y> {
     pub fn new<T: Send + Sync + 'static>(
         series: Series<T, X, Y>,
-        data: Signal<Vec<T>>,
+        data: Signal<impl AsRef<[T]> + Send + Sync + 'static>,
     ) -> UseData<X, Y> {
         let lines = series.to_use_lines();
 
@@ -42,7 +42,7 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
                             .into_iter()
                             .map(|(use_y, get_y)| (use_y.id, get_y))
                             .collect(),
-                        data,
+                        data.as_ref(),
                     )
                 })
             })
