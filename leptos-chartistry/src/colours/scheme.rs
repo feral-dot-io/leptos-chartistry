@@ -113,7 +113,7 @@ pub fn LinearGradientSvg(
     range_y: Signal<Option<(f64, f64)>>,
 ) -> impl IntoView {
     view! {
-        <linearGradient id=Some(id) x1="0%" y1="100%" x2="0%" y2="0%">
+        <linearGradient id=Some(id) gradientUnits="userSpaceOnUse" x1="0%" y1="100%" x2="0%" y2="0%">
             {move || scheme.get().stops(range_y.get().unwrap_or_default())}
         </linearGradient>
     }
