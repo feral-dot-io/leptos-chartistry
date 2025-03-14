@@ -172,7 +172,7 @@ fn generate_stops(swatches: &[Colour], from: f64, step: f64) -> impl IntoView {
         // % of the index (0.0 - 1.0)
         .map(|(i, colour)| (from + i as f64 * step, colour))
         // Keep percentages in range
-        .filter(|&(percent, _)| percent > 0.0 && percent < 1.0)
+        .filter(|&(percent, _)| percent >= 0.0 && percent <= 1.0)
         .map(|(percent, colour)| {
             // Format as a percentage (0% - 100%)
             let offset = format!("{:.2}%", percent * 100.0);
