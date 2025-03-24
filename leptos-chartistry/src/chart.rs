@@ -119,6 +119,7 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     /// # #[component]
     /// # fn DebugComponent() -> impl IntoView {
     /// let (debug, set_debug) = signal(true);
+    /// # let data = Signal::<Vec<(f64, f64)>>::default();
     /// view! {
     ///     <p>
     ///         <label>
@@ -133,7 +134,7 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     ///         // ... fill in the rest of your props
     /// #       aspect_ratio=AspectRatio::from_outer_ratio(600.0, 300.0)
     /// #       series=Series::new(|(x, _): &(f64, f64)| *x).line(|(_, y): &(f64, f64)| *y)
-    /// #       data=Signal::default()
+    /// #       data=data
     ///     />
     /// }
     /// # }
