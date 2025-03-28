@@ -290,7 +290,8 @@ pub(crate) fn Tooltip<X: Tick, Y: Tick>(
                         {y_value}
                     </td>
                 </tr>
-            }.into_any()
+            }
+            .into_any()
         }
     };
 

@@ -231,5 +231,6 @@ pub fn RenderLine<X: Tick, Y: Tick>(
             <path d=path fill="none" />
             <marker::LineMarkers line=line positions=markers />
         </g>
-    }.into_any()
+    }
+    .into_any()
 }

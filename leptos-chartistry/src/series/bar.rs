@@ -211,7 +211,8 @@ pub fn RenderBar<X: Tick, Y: Tick>(
                             y=y
                             width=group_width_inner
                             height=height />
-                    }.into_any()
+                    }
+                    .into_any()
                 })
                 .collect_view()
                 .into_any()

@@ -105,6 +105,8 @@ Series options:
 [#10]: https://github.com/feral-dot-io/leptos-chartistry/pull/10
 [#12]: https://github.com/feral-dot-io/leptos-chartistry/pull/12
 [#15]: https://github.com/feral-dot-io/leptos-chartistry/pull/15
+[#44]: https://github.com/feral-dot-io/leptos-chartistry/pull/44
+[#48]: https://github.com/feral-dot-io/leptos-chartistry/pull/48
 [0.1.0]: https://github.com/feral-dot-io/leptos-chartistry/releases/tag/v0.1.0
 [0.1.1]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.0...v0.1.1
 [0.1.2]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.1...v0.1.2

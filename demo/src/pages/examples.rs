@@ -2,10 +2,7 @@ use crate::{
     examples::{aspect_sunspots::AspectRatioSunspots, *},
     use_app_context,
 };
-use leptos::{
-    either::{Either},
-    prelude::*,
-};
+use leptos::{either::Either, prelude::*};
 use strum::VariantArray;
 
 #[derive(Copy, Clone, Debug, PartialEq, VariantArray)]
@@ -157,20 +154,26 @@ impl Example {
             Self::Bar => view! {<series_bar::Example debug=de data=da />}.into_any(),
             Self::Legend => view! {<edge_legend::Example debug=de data=da />}.into_any(),
             Self::TickLabels => view! {<edge_tick_labels::Example debug=de data=da />}.into_any(),
-            Self::RotatedLabel => view! {<edge_rotated_label::Example debug=de data=da />}.into_any(),
+            Self::RotatedLabel => {
+                view! {<edge_rotated_label::Example debug=de data=da />}.into_any()
+            }
             Self::EdgeLayout => view! {<edge_layout::Example debug=de data=da />}.into_any(),
             Self::AxisMarker => view! {<inner_axis_marker::Example debug=de data=da />}.into_any(),
             Self::GridLine => view! {<inner_grid_line::Example debug=de data=da />}.into_any(),
             Self::GuideLine => view! {<inner_guide_line::Example debug=de data=da />}.into_any(),
             Self::InsetLegend => view! {<inner_legend::Example debug=de data=da />}.into_any(),
             Self::InnerLayout => view! {<inner_layout::Example debug=de data=da />}.into_any(),
-            Self::MixedInterpolation => view! {<interpolation_mixed::Example debug=de data=da />}.into_any(),
+            Self::MixedInterpolation => {
+                view! {<interpolation_mixed::Example debug=de data=da />}.into_any()
+            }
             Self::Stepped => view! {<interpolation_stepped::Example debug=de data=da />}.into_any(),
             Self::Tooltip => view! {<feature_tooltip::Example debug=de data=da />}.into_any(),
             Self::Colours => view! {<feature_colours::Example debug=de data=da />}.into_any(),
             Self::Markers => view! {<feature_markers::Example debug=de data=da />}.into_any(),
             Self::Markers2 => view! {<feature_markers_2::Example debug=de data=da />}.into_any(),
-            Self::LineGradient => view! {<feature_line_gradient::Example debug=de data=da />}.into_any(),
+            Self::LineGradient => {
+                view! {<feature_line_gradient::Example debug=de data=da />}.into_any()
+            }
             Self::Css => view! {<feature_css::Example debug=de data=da />}.into_any(),
         }
     }

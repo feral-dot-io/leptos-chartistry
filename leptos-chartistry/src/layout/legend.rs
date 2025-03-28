@@ -7,7 +7,7 @@ use crate::{
     state::{PreState, State},
     Padding, Tick,
 };
-use leptos::{prelude::*};
+use leptos::prelude::*;
 
 /// Builds a legend for the chart [series](crate::Series). Orientated along the axis of its placed edge. Drawn in HTML.
 #[derive(Clone, Debug, PartialEq)]
@@ -120,7 +120,8 @@ pub(crate) fn Legend<X: Tick, Y: Tick>(
                     </tbody>
                 </table>
             </div>
-        }.into_any()
+        }
+        .into_any()
     };
 
     view! {

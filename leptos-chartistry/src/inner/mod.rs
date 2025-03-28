@@ -8,7 +8,7 @@ use axis_marker::AxisMarker;
 use grid_line::{XGridLine, YGridLine};
 use guide_line::{XGuideLine, YGuideLine};
 use legend::InsetLegend;
-use leptos::{prelude::*};
+use leptos::prelude::*;
 
 /// Inner layout options for a [Chart](crate::Chart). See [IntoInner](trait@IntoInner) for details.
 #[derive(Clone)]

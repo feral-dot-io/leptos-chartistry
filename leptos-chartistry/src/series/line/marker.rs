@@ -115,7 +115,7 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
 
         // Avoid the cost of empty nodes
         if shape != MarkerShape::None {
-            return view!{}.into_any();
+            return ().into_any();
         };
 
         positions.with(|positions| {
@@ -132,7 +132,8 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
                             line_width=line_width />
                     }
                 })
-                .collect_view().into_any()
+                .collect_view()
+                .into_any()
         })
     };
 
@@ -144,7 +145,8 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
             class="_chartistry_line_markers">
             {markers}
         </g>
-    }.into_any()
+    }
+    .into_any()
 }
 
 /// Renders the marker shape in a square. They should all be similar in size and not just extend to the edge e.g., square is a rotated diamond.
@@ -168,15 +170,18 @@ fn MarkerShape(
                 r=(45.0_f64).to_radians().sin() * radius
                 paint-order="stroke fill"
             />
-        }.into_any(),
+        }
+        .into_any(),
 
         MarkerShape::Square => view! {
             <Diamond x=x y=y radius=radius rotate=45 />
-        }.into_any(),
+        }
+        .into_any(),
 
         MarkerShape::Diamond => view! {
             <Diamond x=x y=y radius=radius />
-        }.into_any(),
+        }
+        .into_any(),
 
         MarkerShape::Triangle => view! {
             <polygon
@@ -185,15 +190,18 @@ fn MarkerShape(
                     x - radius, y + radius,
                     x + radius, y + radius)
                 paint-order="stroke fill"/>
-        }.into_any(),
+        }
+        .into_any(),
 
         MarkerShape::Plus => view! {
             <PlusPath x=x y=y diameter=diameter leg=line_width />
-        }.into_any(),
+        }
+        .into_any(),
 
         MarkerShape::Cross => view! {
             <PlusPath x=x y=y diameter=diameter leg=line_width rotate=45 />
-        }.into_any(),
+        }
+        .into_any(),
     }
 }
 
