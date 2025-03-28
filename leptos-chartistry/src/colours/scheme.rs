@@ -139,7 +139,7 @@ impl ColourScheme {
     /// Stops for a diverging gradient. Finds the zero value and spreads the swatches over 0% to zero and zero to 100%.
     fn diverging_stops(&self, (bottom_y, top_y): (f64, f64)) -> impl IntoView {
         // Find zero value as a % of the range (0.0 to 1.0)
-        let zero = (1.0 - (-bottom_y) / (top_y - bottom_y)).clamp(0.0, 1.0);
+        let zero = (1.0 - top_y / (top_y - bottom_y)).clamp(0.0, 1.0);
         // Separate swatches
         let (below_zero, above_zero) = self.diverging_swatches();
         // Determine step size
