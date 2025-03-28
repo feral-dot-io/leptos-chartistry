@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.2] - 2025-02-27
 ### Fixed
 - Negative bar chart values [#44].
+- Speed up compilation times [#48].
 
 ## [0.2.1] - 2025-01-10
 ### Added
@@ -114,4 +115,5 @@ Series options:
 [0.1.7]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.6...v0.1.7
 [0.2.0]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.1.7...v0.2.0
 [0.2.1]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.2.0...v0.2.1
+[0.2.2]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.2.1...v0.2.2
 [unreleased]: https://github.com/feral-dot-io/leptos-chartistry/compare/v0.2.1...HEAD
