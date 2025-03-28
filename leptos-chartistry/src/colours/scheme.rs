@@ -113,7 +113,7 @@ pub fn LinearGradientSvg(
     range_y: Signal<Option<(f64, f64)>>,
 ) -> impl IntoView {
     view! {
-        <linearGradient id=Some(id) x1="0%" y1="100%" x2="0%" y2="0%">
+        <linearGradient id=Some(id) gradientUnits="userSpaceOnUse" x1="0%" y1="100%" x2="0%" y2="0%">
             {move || scheme.get().stops(range_y.get().unwrap_or_default())}
         </linearGradient>
     }
@@ -173,7 +173,7 @@ fn generate_stops(swatches: &[Colour], from: f64, step: f64) -> impl IntoView {
         // % of the index (0.0 - 1.0)
         .map(|(i, colour)| (from + i as f64 * step, colour))
         // Keep percentages in range
-        .filter(|&(percent, _)| percent > 0.0 && percent < 1.0)
+        .filter(|&(percent, _)| percent >= 0.0 && percent <= 1.0)
         .map(|(percent, colour)| {
             // Format as a percentage (0% - 100%)
             let offset = format!("{:.2}%", percent * 100.0);
