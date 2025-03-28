@@ -130,20 +130,19 @@ impl ColourScheme {
         }
     }
 
-    // Stops for a sequential gradient. Evenly spreads the swatches over 0% to 100%.
+    /// Stops for a sequential gradient. Evenly spreads the swatches over 0% to 100%.
     fn sequential_stops(&self) -> impl IntoView {
         let step = 1.0 / self.swatches.len().saturating_sub(1) as f64;
         generate_stops(&self.swatches, 0.0, step)
     }
 
-    // Stops for a diverging gradient. Finds the zero value and spreads the swatches over 0% to zero and zero to 100%.
+    /// Stops for a diverging gradient. Finds the zero value and spreads the swatches over 0% to zero and zero to 100%.
     fn diverging_stops(&self, (bottom_y, top_y): (f64, f64)) -> impl IntoView {
         // Find zero value as a % of the range (0.0 to 1.0)
         let zero = (1.0 - (-bottom_y) / (top_y - bottom_y)).clamp(0.0, 1.0);
         // Separate swatches
         let (below_zero, above_zero) = self.diverging_swatches();
         // Determine step size
-        //let step = 1.0 / self.swatches.len() as f64;
         let below_step = zero * 1.0 / below_zero.len() as f64;
         let above_step = (1.0 - zero) * 1.0 / above_zero.len() as f64;
         // Start at the midpoint of first step so that offset is in the middle of the step
@@ -155,7 +154,7 @@ impl ColourScheme {
         }
     }
 
-    // Separate the swatches into two halves at the zero value. The first half is below zero and the second half is the rest (zero and above). If not a diverging gradient, all swatches will be seen as above zero.
+    /// Separate the swatches into two halves at the zero value. The first half is below zero and the second half is the rest (zero and above). If not a diverging gradient, all swatches will be seen as above zero.
     fn diverging_swatches(&self) -> (&[Colour], &[Colour]) {
         if let Some(zero_index) = self.zero {
             self.swatches.split_at(zero_index)
@@ -165,7 +164,7 @@ impl ColourScheme {
     }
 }
 
-// Generates a <stop> for each swatch. Offset is generated using `from + i * step` where i is the index of the swatch. The offset is formatted as a percentage (0% to 100%). `from` and `step` must be 0.0 to 1.0.
+/// Generates a <stop> for each swatch. Offset is generated using `from + i * step` where i is the index of the swatch. The offset is formatted as a percentage (0% to 100%). `from` and `step` must be 0.0 to 1.0.
 fn generate_stops(swatches: &[Colour], from: f64, step: f64) -> impl IntoView {
     swatches
         .iter()
