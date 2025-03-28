@@ -80,5 +80,5 @@ pub(super) fn InsetLegend<X: Tick, Y: Tick>(
         <g class="_chartistry_legend_inset">
             <Legend legend=legend edge=edge bounds=bounds state=state />
         </g>
-    }
+    }.into_any()
 }

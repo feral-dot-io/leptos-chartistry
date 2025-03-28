@@ -8,7 +8,7 @@ use axis_marker::AxisMarker;
 use grid_line::{XGridLine, YGridLine};
 use guide_line::{XGuideLine, YGuideLine};
 use legend::InsetLegend;
-use leptos::{either::EitherOf6, prelude::*};
+use leptos::{prelude::*};
 
 /// Inner layout options for a [Chart](crate::Chart). See [IntoInner](trait@IntoInner) for details.
 #[derive(Clone)]
@@ -59,24 +59,12 @@ impl<X: Tick, Y: Tick> InnerLayout<X, Y> {
 impl<X: Tick, Y: Tick> UseInner<X, Y> {
     pub(super) fn render(self, state: State<X, Y>) -> impl IntoView {
         match self {
-            Self::AxisMarker(inner) => EitherOf6::A(view! {
-                <AxisMarker marker=inner state=state />
-            }),
-            Self::XGridLine(inner) => EitherOf6::B(view! {
-                <XGridLine line=inner state=state />
-            }),
-            Self::YGridLine(inner) => EitherOf6::C(view! {
-                <YGridLine line=inner state=state />
-            }),
-            Self::XGuideLine(inner) => EitherOf6::D(view! {
-                <XGuideLine line=inner state=state />
-            }),
-            Self::YGuideLine(inner) => EitherOf6::E(view! {
-                <YGuideLine line=inner state=state />
-            }),
-            Self::Legend(inner) => EitherOf6::F(view! {
-                <InsetLegend legend=inner state=state />
-            }),
+            Self::AxisMarker(inner) => view! {<AxisMarker marker=inner state=state />}.into_any(),
+            Self::XGridLine(inner) => view! {<XGridLine line=inner state=state />}.into_any(),
+            Self::YGridLine(inner) => view! {<YGridLine line=inner state=state />}.into_any(),
+            Self::XGuideLine(inner) => view! {<XGuideLine line=inner state=state />}.into_any(),
+            Self::YGuideLine(inner) => view! {<YGuideLine line=inner state=state />}.into_any(),
+            Self::Legend(inner) => view! {<InsetLegend legend=inner state=state />}.into_any(),
         }
     }
 }
