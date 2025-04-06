@@ -28,6 +28,18 @@ impl<T> Range<T> {
         }
     }
 
+    pub fn replace(mut self, start: Option<T>, end: Option<T>) -> Self
+    where
+        T: Tick,
+    {
+        if let Some(range) = self.0.as_mut() {
+            range.replace(start, end);
+            self
+        } else {
+            self.maybe_update(vec![start, end])
+        }
+    }
+
     pub fn maybe_update(mut self, ts: Vec<Option<T>>) -> Self
     where
         T: Tick,
@@ -47,6 +59,15 @@ impl<T> Range<T> {
     pub fn positions(&self) -> Option<(f64, f64)> {
         self.0.as_ref().map(|r| (r.min.1, r.max.1))
     }
+
+    pub(super) fn contains_pos(&self, position: &f64) -> bool
+    where
+        T: Tick,
+    {
+        self.range()
+            .map(|(start, end)| (start.position()..=end.position()).contains(position))
+            .unwrap_or(true)
+    }
 }
 
 impl<T: Tick> InnerRange<T> {
@@ -65,6 +86,15 @@ impl<T: Tick> InnerRange<T> {
             return None;
         }
         Some(pos)
+    }
+
+    pub fn replace(&mut self, min: Option<T>, max: Option<T>) {
+        if let Some(pos) = min.as_ref().and_then(Self::position) {
+            self.min = (min.unwrap(), pos);
+        }
+        if let Some(pos) = max.as_ref().and_then(Self::position) {
+            self.max = (max.unwrap(), pos);
+        }
     }
 
     pub fn update(&mut self, t: &T) {

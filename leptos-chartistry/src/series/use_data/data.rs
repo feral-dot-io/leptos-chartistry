@@ -121,8 +121,8 @@ impl<X: Tick, Y: Tick> Data<X, Y> {
         self.nearest_index(pos_x).map(|index| self.x_to_data[index])
     }
 
-    pub fn series_positions(&self, id: usize) -> Vec<(f64, f64)> {
-        self.coords.get(&id).cloned().unwrap_or_default()
+    pub fn series_positions(&self, id: usize) -> &[(f64, f64)] {
+        self.coords.get(&id).map(std::ops::Deref::deref).unwrap_or_default()
     }
 }
 
