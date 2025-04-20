@@ -9,13 +9,14 @@ crate-type = ["cdylib", "rlib"]
 axum = { version = "0.7", optional = true }
 console_error_panic_hook = "0.1"
 console_log = "1.0"
-leptos = "0.7"
-leptos_axum = { version = "0.7", optional = true }
+leptos = "0.8.0-rc2"
+leptos_axum = { version = "0.8.0-rc2", optional = true }   
+leptos_meta = "0.8.0-rc2"   
+leptos_router = "0.8.0-rc2"   
+leptos-routes = "0.3.1"   
 # Use leptos_chartistry.version = "..." instead
 leptos-chartistry.path = "../../leptos-chartistry"
-leptos_meta = "0.7"
-leptos_router.version = "0.7"
-leptos-use = "0.15"
+leptos-use = "0.16.0-beta"
 log = "0.4"
 tokio = { version = "1.42", features = [ "full" ], optional = true }
 tower = { version = "0.5", optional = true }
