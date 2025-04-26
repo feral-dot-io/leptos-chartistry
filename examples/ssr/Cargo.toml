@@ -13,7 +13,7 @@ leptos = "0.8.0-rc2"
 leptos_axum = { version = "0.8.0-rc2", optional = true }   
 leptos_meta = "0.8.0-rc2"   
 leptos_router = "0.8.0-rc2"   
-leptos-routes = "0.3.1"   
+# leptos-routes = "0.3.1"   
 # Use leptos_chartistry.version = "..." instead
 leptos-chartistry.path = "../../leptos-chartistry"
 leptos-use = "0.16.0-beta"
