@@ -9,6 +9,6 @@ opt-level = "z"
 panic = "abort"
 strip = true
 
-# Compile times have exploded and sometimes result in wasm linker errors with Leptos 0.7. This reduces the impact.
+# Compile times have exploded and sometimes result in wasm linker errors with Leptos 0.8. This reduces the impact.
 [profile.dev]
 debug = false
