@@ -596,7 +596,7 @@ dependencies = [
  "js-sys",
  "leptos 0.8.2",
  "leptos-chartistry",
- "leptos-use",
+ "leptos-use 0.15.2",
  "leptos_meta",
  "leptos_router",
  "log",
@@ -1363,7 +1363,7 @@ version = "0.2.1"
 dependencies = [
  "chrono",
  "leptos 0.8.2",
- "leptos-use",
+ "leptos-use 0.16.0-beta",
  "log",
  "web-sys",
 ]
@@ -1383,6 +1383,31 @@ dependencies = [
  "js-sys",
  "lazy_static",
  "leptos 0.7.7",
+ "paste",
+ "send_wrapper",
+ "thiserror 2.0.12",
+ "unic-langid",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "leptos-use"
+version = "0.16.0-beta"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46cf32bdd1bbf6ef2154427b54a70c2eba1b693d47c5a6087ed8554cb3463880"
+dependencies = [
+ "cfg-if",
+ "chrono",
+ "codee 0.3.0",
+ "cookie",
+ "default-struct-builder",
+ "futures-util",
+ "gloo-timers",
+ "js-sys",
+ "lazy_static",
+ "leptos 0.8.2",
  "paste",
  "send_wrapper",
  "thiserror 2.0.12",
@@ -1806,7 +1831,7 @@ dependencies = [
  "console_log",
  "leptos 0.8.2",
  "leptos-chartistry",
- "leptos-use",
+ "leptos-use 0.16.0-beta",
  "leptos_axum",
  "leptos_meta",
  "leptos_router",

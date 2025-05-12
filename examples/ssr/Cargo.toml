@@ -15,7 +15,7 @@ leptos_axum = { version = "0.8", optional = true }
 leptos-chartistry.path = "../../leptos-chartistry"
 leptos_meta = "0.8"
 leptos_router.version = "0.8"
-leptos-use = "0.15"
+leptos-use = "0.16.0-beta"
 log = "0.4"
 tokio = { version = "1.42", features = [ "full" ], optional = true }
 tower = { version = "0.5", optional = true }
