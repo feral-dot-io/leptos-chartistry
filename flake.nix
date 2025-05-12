@@ -10,7 +10,7 @@
       flake = false;
     };
     cargo-leptos-src = {
-      url = "github:leptos-rs/cargo-leptos?tag=v0.2.24";
+      url = "github:leptos-rs/cargo-leptos?tag=v0.2.34";
       flake = false; # Only provides a devShell
     };
     rust-overlay = {
@@ -18,7 +18,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     trunk-src = {
-      url = "github:trunk-rs/trunk";
+      url = "github:trunk-rs/trunk?tag=v0.21.14";
       flake = false; # Avoid breakage if added
     };
   };
@@ -54,6 +54,9 @@
         cargo-leptos-local = craneLib.buildPackage {
           src = craneLib.cleanCargoSource inputs.cargo-leptos-src;
           strictDeps = true;
+          nativeBuildInputs = with pkgs; [
+            perl
+          ];
           buildInputs = with pkgs; [
             openssl
             pkg-config
@@ -67,7 +70,6 @@
           src = inputs.trunk-src; # Don't clean source
           strictDeps = true;
           buildInputs = with pkgs; [
-            openssl
             pkg-config
             wasm-bindgen-cli-local
           ];
