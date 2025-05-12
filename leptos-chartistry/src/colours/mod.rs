@@ -4,7 +4,6 @@ mod scheme;
 pub use colourmaps::*;
 pub use scheme::{ColourScheme, DivergingGradient, LinearGradientSvg, SequentialGradient};
 
-use leptos::prelude::*;
 use std::str::FromStr;
 
 /// A colour in RGB format.
