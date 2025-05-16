@@ -26,4 +26,4 @@ strum = { version = "0.26", features = ["derive"] }
 web-sys = "0.3"
 
 # Pinned. Must also be specified in flake.nix
-wasm-bindgen = "= 0.2.99"
+wasm-bindgen = "= 0.2.100"

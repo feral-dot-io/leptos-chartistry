@@ -1,11 +1,12 @@
-use crate::bounds::Bounds;
-use leptos::{html::Div, prelude::*};
-use leptos_use::{
-    use_element_hover, use_mouse_with_options, use_resize_observer_with_options, UseMouseCoordType,
-    UseMouseOptions, UseMouseSourceType, UseResizeObserverOptions,
-};
 use std::convert::Infallible;
+
+use leptos::{html::Div, prelude::{Get, Memo, NodeRef, Signal}, reactive::signal};
+use leptos_use::{
+    core::IntoElementMaybeSignal, use_element_hover, use_mouse_with_options, use_resize_observer_with_options, UseMouseCoordType, UseMouseOptions, UseMouseSourceType, UseResizeObserverOptions
+};
 use web_sys::ResizeObserverBoxOptions;
+
+use crate::bounds::Bounds;
 
 #[derive(Clone, Debug)]
 #[non_exhaustive]
@@ -22,7 +23,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     // Note also that the box_ option doesn't seem to work for us so wrap in another <div>
     let (bounds, set_bounds) = signal::<Option<Bounds>>(None);
     use_resize_observer_with_options(
-        node,
+        node.into_element_maybe_signal(),
         move |entries, _| {
             let rect = &entries[0].target().get_bounding_client_rect();
             let rect = Bounds::new(rect.width(), rect.height());
@@ -37,7 +38,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     // Mouse position
     let mouse_page = use_mouse_with_options(
         UseMouseOptions::default()
-            .target(node)
+            .target(node.into_element_maybe_signal())
             .coord_type(UseMouseCoordType::<Infallible>::Page)
             .reset_on_touch_ends(true),
     );
@@ -53,7 +54,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     // Mouse relative to SVG
     let mouse_client = use_mouse_with_options(
         UseMouseOptions::default()
-            .target(node)
+            .target(node.into_element_maybe_signal())
             .coord_type(UseMouseCoordType::<Infallible>::Client)
             .reset_on_touch_ends(true),
     );
@@ -72,7 +73,7 @@ pub fn use_watched_node(node: NodeRef<Div>) -> UseWatchedNode {
     .into();
 
     // Mouse inside SVG?
-    let el_hover = use_element_hover(node);
+    let el_hover = use_element_hover(node.into_element_maybe_signal());
     let mouse_chart_hover = Memo::new(move |_| {
         let (x, y) = mouse_chart.get();
         mouse_page_type.get() != UseMouseSourceType::Unset
