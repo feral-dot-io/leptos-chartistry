@@ -114,7 +114,7 @@ pub(super) fn LineMarkers(line: UseLine, positions: Signal<Vec<(f64, f64)>>) -> 
         let diameter = line_width * WIDTH_TO_MARKER * marker.scale.get();
 
         // Avoid the cost of empty nodes
-        if shape != MarkerShape::None {
+        if shape == MarkerShape::None {
             return ().into_any();
         };
 
