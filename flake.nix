@@ -10,7 +10,7 @@
       flake = false;
     };
     cargo-leptos-src = {
-      url = "github:leptos-rs/cargo-leptos?tag=v0.2.24";
+      url = "github:leptos-rs/cargo-leptos?tag=v0.2.34";
       flake = false; # Only provides a devShell
     };
     rust-overlay = {
@@ -18,7 +18,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     trunk-src = {
-      url = "github:trunk-rs/trunk";
+      url = "github:trunk-rs/trunk?tag=v0.21.14";
       flake = false; # Avoid breakage if added
     };
   };
@@ -54,6 +54,9 @@
         cargo-leptos-local = craneLib.buildPackage {
           src = craneLib.cleanCargoSource inputs.cargo-leptos-src;
           strictDeps = true;
+          nativeBuildInputs = with pkgs; [
+            perl
+          ];
           buildInputs = with pkgs; [
             openssl
             pkg-config
@@ -67,7 +70,6 @@
           src = inputs.trunk-src; # Don't clean source
           strictDeps = true;
           buildInputs = with pkgs; [
-            openssl
             pkg-config
             wasm-bindgen-cli-local
           ];
@@ -76,9 +78,9 @@
         };
 
         wasm-bindgen-cli-local = pkgs.wasm-bindgen-cli.override {
-          version = "0.2.99"; # Note: must be kept in sync with Cargo.lock
-          hash = "sha256-1AN2E9t/lZhbXdVznhTcniy+7ZzlaEp/gwLEAucs6EA=";
-          cargoHash = "sha256-DbwAh8RJtW38LJp+J9Ht8fAROK9OabaJ85D9C/Vkve4=";
+          version = "0.2.100"; # Note: must be kept in sync with Cargo.lock
+          hash = "sha256-3RJzK7mkYFrs7C/WkhW9Rr4LdP5ofb2FdYGz1P7Uxog=";
+          cargoHash = "sha256-tD0OY2PounRqsRiFh8Js5nyknQ809ZcHMvCOLrvYHRE=";
         };
 
         # Build demo
