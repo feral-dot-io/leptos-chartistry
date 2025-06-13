@@ -6,7 +6,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-axum = { version = "0.7", optional = true }
+axum = { version = "0.8", optional = true }
 console_error_panic_hook = "0.1"
 console_log = "1.0"
 leptos = "0.8"
