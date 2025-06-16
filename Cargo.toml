@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "demo", "examples/ssr", "leptos-chartistry" ]
+members = [ "demo", "examples/ssr", "issue-52", "leptos-chartistry" ]
 
 [profile.release]
 codegen-units = 1

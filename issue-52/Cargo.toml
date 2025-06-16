@@ -1,0 +1,26 @@
+[package]
+name = "issue-52"
+version = "0.0.0"
+edition = "2021"
+
+[build-dependencies]
+anyhow = "1.0"
+glob = "0.3"
+syntect = "5.0"
+
+[dependencies]
+chrono = "0.4"
+console_error_panic_hook = "0.1"
+console_log = "1.0"
+js-sys = "0.3"
+leptos = { version = "0.8", features = ["csr"] }
+leptos-chartistry = { path = "../leptos-chartistry" }
+leptos_meta.version = "0.8"
+leptos_router.version = "0.8"
+leptos-use = "0.16.0"
+log = "0.4"
+strum = { version = "0.26", features = ["derive"] }
+web-sys = "0.3"
+
+# Pinned. Must also be specified in flake.nix
+wasm-bindgen = "= 0.2.100"

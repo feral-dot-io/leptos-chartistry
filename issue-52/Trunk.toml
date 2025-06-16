@@ -1,0 +1,10 @@
+trunk-version = "*"
+
+[build]
+target = "index.html"
+dist = "../dist"
+minify = "on_release"
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8081
