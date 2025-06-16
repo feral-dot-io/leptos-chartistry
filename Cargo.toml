@@ -7,7 +7,12 @@ codegen-units = 1
 lto = true
 opt-level = "z"
 panic = "abort"
-strip = true
+
+# With Leptos 0.8 the following error comes up:
+# > [wasm-validator error in function 4178] unexpected false: Bulk memory operations require bulk memory [--enable-bulk-memory],
+# When the following is enabled:
+#strip = true
+# Discovered by https://github.com/leptos-rs/cargo-leptos/issues/441
 
 # Compile times have exploded and sometimes result in wasm linker errors with Leptos 0.7. This reduces the impact.
 [profile.dev]
