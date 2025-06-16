@@ -14,8 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Fixed for any bug fixes. -->
 <!-- Security in case of vulnerabilities. -->
 
-## [0.2.2] - 2025-02-27
+## [0.2.2] - 2025-06-16
 ### Fixed
+- Update Leptos to 0.8.
+- Update leptos-use to 0.16.
 - Negative bar chart values [#44].
 - Speed up compilation times [#48].
 - Zero line position is miscalculated for diverging gradients.
