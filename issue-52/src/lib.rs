@@ -40,8 +40,12 @@ pub fn App() -> impl IntoView {
     // Now we can sort the result by our parsed time
     data_points2.sort_by_key(|p| p.parsed_time);
 
-    let series = Series::new(|p: &DataPoint2| p.parsed_time)
-        .line(Line::new(|p: &DataPoint2| p.value).with_name("Conductivity"));
+    let series = Series::new(|p: &DataPoint2| p.parsed_time).line(
+        Line::new(|p: &DataPoint2| p.value)
+            .with_name("Conductivity")
+            // The fix: interpolation is set to Linear
+            .with_interpolation(Interpolation::Linear),
+    );
 
     for point in &data_points2 {
         log::debug!(
