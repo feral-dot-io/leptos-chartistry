@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Negative bar chart values [#44].
 - Speed up compilation times [#48].
 - Zero line position is miscalculated for diverging gradients.
+- Avoid the cost of empty marker nodes.
 
 ## [0.2.1] - 2025-01-10
 ### Added
