@@ -51,11 +51,11 @@ impl<X: Tick, Y: Tick> UseData<X, Y> {
         // Range signals
         let range_x: Memo<Range<X>> = Memo::new(move |_| {
             data.with(|data| data.range_x())
-                .maybe_update(vec![series.min_x.get(), series.max_x.get()])
+                .replace(series.min_x.get(), series.max_x.get())
         });
         let range_y: Memo<Range<Y>> = Memo::new(move |_| {
             data.with(|data| data.range_y())
-                .maybe_update(vec![series.min_y.get(), series.max_y.get()])
+                .replace(series.min_y.get(), series.max_y.get())
         });
 
         // Sort series by name
@@ -116,9 +116,25 @@ pub fn RenderData<X: Tick, Y: Tick>(state: State<X, Y>) -> impl IntoView {
     let mk_svg_coords = move |id| {
         Signal::derive(move || {
             let proj = state.projection.get();
+            let range_x = data.range_x.get();
+            let range_y = data.range_y.get();
             data.data.with(|data| {
                 data.series_positions(id)
-                    .into_iter()
+                    .iter()
+                    .copied()
+                    .map(|pos| {
+                        let x = if range_x.contains_pos(&pos.0) {
+                            pos.0
+                        } else {
+                            f64::NAN
+                        };
+                        let y = if range_y.contains_pos(&pos.1) {
+                            pos.1
+                        } else {
+                            f64::NAN
+                        };
+                        (x, y)
+                    })
                     .map(|(x, y)| proj.position_to_svg(x, y))
                     .collect::<Vec<_>>()
             })
