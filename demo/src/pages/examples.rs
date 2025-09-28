@@ -3,6 +3,7 @@ use crate::{
     use_app_context,
 };
 use leptos::{either::Either, prelude::*};
+use leptos_router::AsPath;
 use strum::VariantArray;
 
 #[derive(Copy, Clone, Debug, PartialEq, VariantArray)]
@@ -62,29 +63,8 @@ impl Example {
         }
     }
 
-    pub const fn id(self) -> &'static str {
-        match self {
-            Self::Line => "series-line",
-            Self::StackedLine => "series-line-stack",
-            Self::Bar => "series-bar",
-            Self::Legend => "edge-legend",
-            Self::TickLabels => "edge-tick-labels",
-            Self::RotatedLabel => "edge-rotated-label",
-            Self::EdgeLayout => "edge-layout",
-            Self::AxisMarker => "inner-axis-marker",
-            Self::GridLine => "inner-grid-line",
-            Self::GuideLine => "inner-guide-line",
-            Self::InsetLegend => "inner-legend",
-            Self::InnerLayout => "inner-layout",
-            Self::MixedInterpolation => "interpolation-mixed",
-            Self::Stepped => "interpolation-stepped",
-            Self::Tooltip => "feature-tooltip",
-            Self::Colours => "feature-colours",
-            Self::Markers => "feature-markers",
-            Self::Markers2 => "feature-markers-2",
-            Self::LineGradient => "feature-line-gradient",
-            Self::Css => "feature-css",
-        }
+    pub fn id(self) -> &'static str {
+        self.as_path().trim_end_matches(".html")
     }
 
     fn description(self) -> &'static str {
@@ -175,6 +155,33 @@ impl Example {
                 view! {<feature_line_gradient::Example debug=de data=da />}.into_any()
             }
             Self::Css => view! {<feature_css::Example debug=de data=da />}.into_any(),
+        }
+    }
+}
+
+impl AsPath for Example {
+    fn as_path(&self) -> &'static str {
+        match self {
+            Self::Line => "series-line.html",
+            Self::StackedLine => "series-line-stack.html",
+            Self::Bar => "series-bar.html",
+            Self::Legend => "edge-legend.html",
+            Self::TickLabels => "edge-tick-labels.html",
+            Self::RotatedLabel => "edge-rotated-label.html",
+            Self::EdgeLayout => "edge-layout.html",
+            Self::AxisMarker => "inner-axis-marker.html",
+            Self::GridLine => "inner-grid-line.html",
+            Self::GuideLine => "inner-guide-line.html",
+            Self::InsetLegend => "inner-legend.html",
+            Self::InnerLayout => "inner-layout.html",
+            Self::MixedInterpolation => "interpolation-mixed.html",
+            Self::Stepped => "interpolation-stepped.html",
+            Self::Tooltip => "feature-tooltip.html",
+            Self::Colours => "feature-colours.html",
+            Self::Markers => "feature-markers.html",
+            Self::Markers2 => "feature-markers-2.html",
+            Self::LineGradient => "feature-line-gradient.html",
+            Self::Css => "feature-css.html",
         }
     }
 }
