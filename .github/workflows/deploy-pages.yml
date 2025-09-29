@@ -23,10 +23,6 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix build .#demo --print-build-logs
-      - name: Adjust permissions
-        run: |
-          chown -R $(id -u):$(id -g) ./result
-          chmod -R a+rwx ./result
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./result
