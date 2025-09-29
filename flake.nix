@@ -10,7 +10,7 @@
       flake = false;
     };
     cargo-leptos-src = {
-      url = "github:leptos-rs/cargo-leptos?tag=v0.2.34";
+      url = "github:leptos-rs/cargo-leptos?tag=v0.2.44";
       flake = false; # Only provides a devShell
     };
     rust-overlay = {
@@ -77,11 +77,8 @@
           doCheck = false;
         };
 
-        wasm-bindgen-cli-local = pkgs.wasm-bindgen-cli.override {
-          version = "0.2.100"; # Note: must be kept in sync with Cargo.lock
-          hash = "sha256-3RJzK7mkYFrs7C/WkhW9Rr4LdP5ofb2FdYGz1P7Uxog=";
-          cargoHash = "sha256-tD0OY2PounRqsRiFh8Js5nyknQ809ZcHMvCOLrvYHRE=";
-        };
+        # Pinned to match {demo,ssr}/Cargo.toml
+        wasm-bindgen-cli-local = pkgs.wasm-bindgen-cli_0_2_100;
 
         # Build demo
         src =

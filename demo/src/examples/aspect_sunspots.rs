@@ -13,7 +13,7 @@ pub fn AspectRatioSunspots(debug: Signal<bool>) -> impl IntoView {
 
     // Width slider
     let (width, set_width) = signal(0.8);
-    let SLIDER_RANGE: f64 = 60.0;
+    const SLIDER_RANGE: f64 = 60.0;
     let frame_width = move || format!("{}%", (100.0 - SLIDER_RANGE) + SLIDER_RANGE * width.get());
     let change_width = move |ev| {
         let value = event_target_value(&ev)
