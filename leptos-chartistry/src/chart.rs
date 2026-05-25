@@ -175,8 +175,14 @@ pub fn Chart<T: Send + Sync + 'static, X: Tick, Y: Tick>(
     let root = NodeRef::<Div>::new();
     let watch = use_watched_node(root);
 
-    // Aspect ratio signal
-    let have_dimensions = Memo::new(move |_| watch.bounds.get().is_some());
+    // Aspect ratio signal. When the aspect ratio is Known (caller passed an
+    // explicit width/height/ratio), dimensions are available immediately —
+    // only the Env variant depends on the client-only resize observer. Gating
+    // Known on `watch.bounds` means SSR renders the "Loading..." fallback
+    // instead of the chart, even though everything needed to lay it out is
+    // already in hand.
+    let have_dimensions =
+        Memo::new(move |_| !aspect_ratio.get().is_env() || watch.bounds.get().is_some());
     let width = Memo::new(move |_| watch.bounds.get().unwrap_or_default().width());
     let height = Memo::new(move |_| watch.bounds.get().unwrap_or_default().height());
     let calc = AspectRatio::known_signal(aspect_ratio, width, height);
