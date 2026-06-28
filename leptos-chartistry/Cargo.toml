@@ -15,10 +15,11 @@ categories = [ "graphics", "gui", "wasm", "web-programming" ]
 [dependencies]
 chrono = "0.4"
 leptos = "0.8"
-leptos-use = "0.18"
+leptos-use = "0.19"
 log = "0.4"
 web-sys = { version = "0.3", features = ["DomRectReadOnly"] }
 
 [features]
 ssr = ["leptos/ssr", "leptos-use/ssr"]
+
  
